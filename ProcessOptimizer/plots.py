@@ -14,7 +14,7 @@ from matplotlib.pyplot import cm
 from matplotlib.ticker import LogLocator
 from matplotlib.ticker import MaxNLocator, FuncFormatter
 from scipy.optimize import OptimizeResult
-
+from ProcessOptimizer import expected_minimum
 from .space import Categorical
 
 
@@ -428,11 +428,16 @@ def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
     """
     # Here we define the parameters for which to plot the red dot (2d plot) and the red dotted line (1d plot).
     # These same parameters will be used for evaluating the plots when not using partial dependence.
+    space = result.space
     if isinstance(pars,str):
         if pars == 'result':
             # Using the best observed result
             x_vals = result.x
         elif pars == 'expected_minimum':
+            # Check if there are any strings in the parameter list
+            strings_in_list = [s for s in result.x if isinstance(s,str)]
+            if strings_in_list:
+                raise ValueError('expected_minimum does not support categorical values')
             # Do a gradient based minimum search using scipys own minimizer
             if expected_minimum_samples: # If a value for expected_minimum_samples has been parsed
                 x_vals,_ = expected_minimum(result, n_random_starts=expected_minimum_samples, random_state=None)
@@ -457,7 +462,6 @@ def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
         x_eval = x_vals
     else:
         x_eval = None
-    space = result.space
     rvs_transformed = space.transform(space.rvs(n_samples=n_samples))
     samples, minimum, _ = _map_categories(space, result.x_iters, x_vals)
 
@@ -640,3 +644,17 @@ def _cat_format(dimension, x, _):
     """Categorical axis tick formatter function.  Returns the name of category
     `x` in `dimension`.  Used with `matplotlib.ticker.FuncFormatter`."""
     return str(dimension.categories[int(x)])
+
+def expected_min_random_sampling(model, space, n_samples = 100000):
+    """Minimums search by doing naive random sampling, Returns the parameters
+    that gave the minimum function value"""
+
+    # sample points from search space
+    random_samples = space.rvs(n_samples=n_samples)
+    
+    # make estimations with surrogate
+    y_random = model.predict(space.transform(random_samples))
+    index_best_objective = np.argmin(y_random)
+    min_x = random_samples[index_best_objective]
+    
+    return min_x
