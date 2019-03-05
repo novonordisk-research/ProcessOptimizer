@@ -16,7 +16,7 @@ from matplotlib.ticker import MaxNLocator, FuncFormatter
 from scipy.optimize import OptimizeResult
 from ProcessOptimizer import expected_minimum
 from .space import Categorical
-
+import time
 
 def plot_convergence(*args, **kwargs):
     """Plot one or several convergence traces.
@@ -457,6 +457,7 @@ def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
     """
     # Here we define the parameters for which to plot the red dot (2d plot) and the red dotted line (1d plot).
     # These same parameters will be used for evaluating the plots when not using partial dependence.
+    t_start = time.time()
     space = result.space
     if isinstance(pars,str):
         if pars == 'result':
@@ -507,32 +508,36 @@ def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
 
     fig.subplots_adjust(left=0.05, right=0.95, bottom=0.05, top=0.95,
                         hspace=0.1, wspace=0.1)
-
+    p_time = np.zeros([space.n_dims,space.n_dims])
     for i in range(space.n_dims):
         for j in range(space.n_dims):
             if i == j:
+                p_start = time.time()
                 xi, yi = dependence(space, result.models[-1], i,
                                             j=None,
                                             sample_points=rvs_transformed,
                                             n_points=n_points,x_eval = x_eval)
+                p_time[i,j] = time.time()-p_start
 
                 ax[i, i].plot(xi, yi)
                 ax[i, i].axvline(minimum[i], linestyle="--", color="r", lw=1)
 
             # lower triangle
             elif i > j:
+                p_start = time.time()
                 xi, yi, zi = dependence(space, result.models[-1],
-                                                i, j,
-                                                rvs_transformed, n_points,x_eval = x_eval)
+                                                i, j=j,
+                                                sample_points=rvs_transformed, n_points=n_points,x_eval = x_eval)
+                p_time[i,j] = time.time()-p_start
                 ax[i, j].contourf(xi, yi, zi, levels,
                                   locator=locator, cmap='viridis_r')
                 ax[i, j].scatter(samples[:, j], samples[:, i],
                                  c='k', s=10, lw=0.)
                 ax[i, j].scatter(minimum[j], minimum[i],
                                  c=['r'], s=20, lw=0.)
-
+    t_end = time.time()-t_start
     return _format_scatter_plot_axes(ax, space, ylabel="Partial dependence",
-                                     dim_labels=dimensions)
+                                     dim_labels=dimensions), t_end,p_time
 
 
 def plot_evaluations(result, bins=20, dimensions=None):
