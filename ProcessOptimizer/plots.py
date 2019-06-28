@@ -519,8 +519,8 @@ def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
             # lower triangle
             elif i > j:
                 xi, yi, zi = dependence(space, result.models[-1],
-                                                i, j,
-                                                rvs_transformed, n_points,x_eval = x_eval)
+                                                i, j = j,
+                                                sample_points=rvs_transformed, n_points = n_points,x_eval = x_eval)
                 ax[i, j].contourf(xi, yi, zi, levels,
                                   locator=locator, cmap='viridis_r')
                 ax[i, j].scatter(samples[:, j], samples[:, i],
@@ -688,3 +688,36 @@ def expected_min_random_sampling(model, space, n_samples = 100000):
     min_x = random_samples[index_best_objective]
     
     return min_x
+
+def get_polys():
+    res = 10
+    vals = [0.5,0.1]
+    poly_all = []
+    samples_valid_list = []
+    for i_dim in range(space.n_dims):
+        low = space.dimensions[i_dim].low
+        high = space.dimensions[i_dim].high
+        x = np.linspace(low,high,res)
+        samples_valid = [False]*len(x)
+        for i_x in range(len(x)):
+            vals_test = vals.copy()
+            vals_test[i_dim] = x[i_x]
+            samples_valid[i_x] = cons.validate_sample(vals_test)
+        samples_valid
+
+        x_all = []
+        polygoing = False
+        x_poly_start = 0
+        x_poly_end = 0
+        for i in range(len(x)):
+            if not polygoing and not samples_valid[i]: # Start of region
+                polygoing = not polygoing
+                x_poly_start = x[i]
+            elif polygoing and samples_valid[i]:
+                polygoing = not polygoing
+                x_poly_end = x[i]
+                x_all.append([x_poly_start,x_poly_end])
+            elif i == len(x)-1 and polygoing:
+                x_poly_end = x[i]
+                x_all.append([x_poly_start,x_poly_end])
+        poly_all.append(x_all)
