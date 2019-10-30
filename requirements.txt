@@ -5,4 +5,3 @@ matplotlib
 pytest
 nose
 pyaml
-bokeh
