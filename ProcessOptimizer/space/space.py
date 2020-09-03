@@ -689,10 +689,7 @@ class Space(object):
         columns = []
 
         for dim in self.dimensions:
-            if sp_version < (0, 16):
-                columns.append(dim.rvs(n_samples=n_samples))
-            else:
-                columns.append(dim.rvs(n_samples=n_samples, random_state=rng))
+            columns.append(dim.rvs(n_samples=n_samples, random_state=rng))
 
         # Transpose
         rows = []
