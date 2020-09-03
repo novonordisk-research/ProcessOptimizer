@@ -1,7 +1,7 @@
 numpy
 scipy
 pandas
-scikit-learn>=0.21
+scikit-learn==0.21.0
 matplotlib
 pytest
 nose
