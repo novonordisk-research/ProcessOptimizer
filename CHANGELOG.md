@@ -1,5 +1,11 @@
 # Release history
 
+## Version 0.4.8
+
+### Bugfixes
+
+Locked SKlearn to version 0.21.0 to avoid install errors.
+
 ## Version 0.4.7
 
 ### Bugfixes
