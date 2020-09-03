@@ -1,5 +1,11 @@
 # Release history
 
+## Version 0.4.9
+
+### Bugfixes
+
+Version number increased due to reupload to pypi.
+
 ## Version 0.4.8
 
 ### Bugfixes
