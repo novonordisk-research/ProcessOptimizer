@@ -1,5 +1,21 @@
 # Release history
 
+## Version 0.5.0
+
+### Changes
+
+Remove dependency on scipy>=0.14.0 *
+Remove dependency on scikit-learn==0.21.0 *^
+Remove dependency on bokeh==1.4.0 *
+Remove dependency on tornado==5.1.1 *
+*from setup.py
+^from requirements.txt
+Change gpr (as in skopt #943) to reflect changes in sklearn gpr-module 
+     (relates to normalilzation)
+Change searchCV to reflect skopt #939 and #904 (relates to np.mask and imports)
+Changes in tests (skopt#939)
+Change in Bokeh_plot.py to fix bug when Bokeh>=2.2.0
+
 ## Version 0.4.9
 
 ### Bugfixes
