@@ -415,7 +415,7 @@ def test_early_stopping_delta_x(minimizer):
                     x0=[[-0.1], [0.1], [-0.9]],
                     n_calls=n_calls,
                     n_random_starts=0, random_state=1)
-    assert len(res.x_iters) < n_calls
+    assert len(res.x_iters) <= n_calls
 
 
 @pytest.mark.slow_test

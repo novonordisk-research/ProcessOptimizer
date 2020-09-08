@@ -13,8 +13,10 @@ Remove dependency on tornado==5.1.1 *
 Change gpr (as in skopt #943) to reflect changes in sklearn gpr-module 
      (relates to normalilzation)
 Change searchCV to reflect skopt #939 and #904 (relates to np.mask and imports)
-Changes in tests (skopt#939 and #808)
+Changes in tests (skopt#939 and #808). Extensive changes in tests!
 Change in Bokeh_plot.py to fix bug when Bokeh>=2.2.0
+
+TODO: look more into implemented normalizations in skopt.
 
 ## Version 0.4.9
 

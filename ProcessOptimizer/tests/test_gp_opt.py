@@ -73,7 +73,7 @@ def test_n_jobs():
 @pytest.mark.fast_test
 def test_gpr_default():
     """Smoke test that gp_minimize does not fail for default values."""
-    gp_minimize(branin, ((-5.0, 10.0), (0.0, 15.0)), n_random_starts=1,
+    gp_minimize(branin, ((-5.0, 10.0), (0.0, 15.0)), n_random_starts=2,
                 n_calls=2)
 
 
