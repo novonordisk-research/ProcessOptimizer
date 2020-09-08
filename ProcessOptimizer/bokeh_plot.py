@@ -473,7 +473,7 @@ def get_colorbar_as_rgba():
     view = img.view(dtype=np.uint8).reshape((ydim, xdim, 4))
     view[:, :, :] = np.flipud(X)
     plt.close()
-    return view
+    return img
 
 
 def get_plt_contour_as_rgba(xi, yi, zi, confidence, cmap=None, draw_confidence=None):
