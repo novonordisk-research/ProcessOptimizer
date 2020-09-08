@@ -1,4 +1,4 @@
-from math import log
+
 import numpy as np
 import pytest
 
@@ -45,8 +45,7 @@ class ConstantGPRSurrogate(object):
         models the logarithm of the time.
         """
         X = np.array(X)
-        y = np.array(y)
-        gpr = cook_estimator("GP", self.space, random_state=0)
+        gpr = cook_estimator("GP", self.space, normalize_y=False)
         gpr.fit(X, np.log(np.ravel(X)))
         self.estimators_ = []
         self.estimators_.append(ConstSurrogate())
@@ -151,7 +150,7 @@ def test_acquisition_per_second(acq_func):
 def test_gaussian_acquisition_check_inputs():
     model = ConstantGPRSurrogate(Space(((1.0, 9.0),)))
     with pytest.raises(ValueError) as err:
-        vals = _gaussian_acquisition(np.arange(1, 5), model)
+        _gaussian_acquisition(np.arange(1, 5), model)
     assert("it must be 2-dimensional" in err.value.args[0])
 
 

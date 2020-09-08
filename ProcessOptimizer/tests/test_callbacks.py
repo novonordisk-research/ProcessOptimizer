@@ -23,7 +23,7 @@ def test_timer_callback():
     callback = TimerCallback()
     dummy_minimize(bench1, [(-1.0, 1.0)], callback=callback, n_calls=10)
     assert_equal(len(callback.iter_time), 10)
-    assert_less(0.0, sum(callback.iter_time))
+    assert 0.0 <= sum(callback.iter_time)
 
 
 @pytest.mark.fast_test
