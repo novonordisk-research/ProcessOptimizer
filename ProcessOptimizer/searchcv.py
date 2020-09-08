@@ -469,7 +469,7 @@ class BayesSearchCV(BaseSearchCV):
         # applicable for that candidate. Use defaultdict as each candidate may
         # not contain all the params
         param_results = defaultdict(partial(
-            MaskedArray,
+            np.ma.array,
             np.empty(n_candidates,),
             mask=True,
             dtype=object))
