@@ -1,3 +1,4 @@
+import numpy as np
 from sklearn.utils.testing import assert_array_equal
 from sklearn.utils.testing import assert_less
 import pytest
@@ -54,17 +55,17 @@ def test_gp_minimize_bench3(search, acq):
 def test_gp_minimize_bench4(search, acq):
     # this particular random_state picks "2" twice so we can make an extra
     # call to the objective without repeating options
-    check_minimize(bench4, 0.0,
-                   [("-2", "-1", "0", "1", "2")], search, acq, 1.05, 6, 2)
+    check_minimize(bench4, 0,
+                   [("-2", "-1", "0", "1", "2")], search, acq, 1.05, 20)
 
 
 @pytest.mark.fast_test
 def test_n_jobs():
     r_single = gp_minimize(bench3, [(-2.0, 2.0)], acq_optimizer="lbfgs",
-                           acq_func="EI", n_calls=2, n_random_starts=1,
+                           acq_func="EI", n_calls=4, n_random_starts=2,
                            random_state=1, noise=1e-10)
     r_double = gp_minimize(bench3, [(-2.0, 2.0)], acq_optimizer="lbfgs",
-                           acq_func="EI", n_calls=2, n_random_starts=1,
+                           acq_func="EI", n_calls=4, n_random_starts=2,
                            random_state=1, noise=1e-10, n_jobs=2)
     assert_array_equal(r_single.x_iters, r_double.x_iters)
 
@@ -84,7 +85,7 @@ def test_use_given_estimator():
     noise_correct = 1e+5
     noise_fake = 1e-10
     estimator = cook_estimator("GP", domain, noise=noise_correct)
-    res = gp_minimize(branin, domain, n_calls=1, n_random_starts=1,
+    res = gp_minimize(branin, domain, n_calls=4, n_random_starts=2,
                       base_estimator=estimator, noise=noise_fake)
 
     assert res['models'][-1].noise == noise_correct

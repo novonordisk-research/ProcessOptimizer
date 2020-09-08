@@ -3,8 +3,8 @@ search with interface similar to those of GridSearchCV
 """
 
 import pytest
-import time
 
+import numpy as np
 from sklearn.utils.testing import assert_greater
 from sklearn.datasets import load_iris, make_classification
 from sklearn.model_selection import train_test_split
@@ -337,7 +337,7 @@ def test_search_cv_internal_parameter_types():
             return self
 
         def score(self, X, y):
-            return 0.0
+            return np.random.uniform()
 
     # Below is example code that used to not work.
     X, y = make_classification(10, 4)

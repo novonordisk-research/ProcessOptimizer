@@ -43,7 +43,7 @@ def test_dump_and_load():
                       x0=[0.],
                       acq_func="LCB",
                       n_calls=2,
-                      n_random_starts=0,
+                      n_random_starts=1,
                       random_state=1)
 
     # Test normal dumping and loading
