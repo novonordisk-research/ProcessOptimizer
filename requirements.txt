@@ -5,6 +5,5 @@ scikit-learn
 matplotlib
 pytest
 nose
-pyaml
 bokeh
 six
