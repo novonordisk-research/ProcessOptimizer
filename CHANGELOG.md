@@ -1,5 +1,13 @@
 # Release history
 
+## Version 0.5.1
+
+### Bugfixes
+
+Removed check for numpy version in constraints.py
+Updated example/constraints.ipynb
+
+
 ## Version 0.5.0
 
 ### Changes
