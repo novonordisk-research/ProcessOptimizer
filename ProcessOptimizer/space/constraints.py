@@ -1,5 +1,6 @@
 from sklearn.utils import check_random_state
-from sklearn.utils.fixes import sp_version
+#from sklearn.utils.fixes import sp_version
+#import scipy.version.version as sp_version
 from .space import Real, Integer, Categorical, Space
 import numpy as np
 class Constraints:
@@ -79,9 +80,9 @@ class Constraints:
                 if self.single[i]: # If a dimension has a "Single"-type constraint we just sample that value
                     column = np.full(n_samples, self.single[i].value)
                 else: # Using the default rvs() for the given dimension
-                    if sp_version < (0, 16):
+                    try:
                         column = (dim.rvs(n_samples=n_samples))
-                    else:
+                    except:
                         column = (dim.rvs(n_samples=n_samples, random_state=rng))
                 columns.append(column)
 
