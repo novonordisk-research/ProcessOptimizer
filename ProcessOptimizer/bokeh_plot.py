@@ -74,7 +74,7 @@ def set_globals(parsed_result):
         label="Draw upper confidence limit", button_type="default")
     dropdown_eval_method = Select(title="Evaluation method:", value='Result', options=[
                                   'Result', 'Exp min', 'Exp min rand', 'Sliders'], width=200, height=40)
-    slider_n_points = Slider(start=1, end=20, value=10,
+    slider_n_points = Slider(start=1, end=40, value=20,
                              step=1, title="n-points", width=200, height=10)
     y_value = Div(text="""""", width=300, height=200)
     colorbar = Div()  # We initiate colorbar as an empty div first and then change it to a plot in case we want to show it
@@ -400,7 +400,7 @@ def get_x_eval_selectors_list(result, active_list, x_eval):
             # This object gets a title equal to the parameter number, and the value is set to
             # x_eval
             select = Select(
-                title='X'+str(i), value=x_eval[i], options=cats, width=200, height=15)
+                title='X'+str(i), value=x_eval[i], options=cats, width=200, height=45)
             # Here we define a callback that updates the appropiate red markers by changing
             # with the current value of the selector by changing the global "source" variable
             # The callback function is written in javascript
