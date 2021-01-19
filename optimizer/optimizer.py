@@ -129,6 +129,11 @@ class Optimizer(object):
         -  "length_scale" [list] a list of floats
         - "n_restarts_optimizer" [int]
         - "n_jobs" [int]
+        
+    * `n_objectives` [int, default=1]:
+        Number of objectives to be optimized. 
+        When n_objectives>1 the optimizer will fit models for each objective and the Pareto front can be approximated using NSGA2
+
 
 
     Attributes
@@ -369,6 +374,8 @@ class Optimizer(object):
                 "n_points should be int > 0, got " + str(n_points)
             )
 
+        # These are the only filling strategies which are supported
+        
         supported_fill_strategies = ["rand", "lhs", "stbr",None]
 
         if space_fill not in supported_fill_strategies:
@@ -377,6 +384,7 @@ class Optimizer(object):
                 str(supported_fill_strategies) + ", " + "got %s" % space_fill
             )
 
+        
         if space_fill=="rand":
 
             return self.space.rvs(n_samples=n_points)
@@ -387,25 +395,25 @@ class Optimizer(object):
         
         elif space_fill=="stbr":
             
-            
+            # Steienerberger sampling can not be used from an empty Xi set
             if self.Xi == []:
                 raise ValueError(
                     "Steinerberger sampling requires initial points but got [] " 
                     )
 
     
-                        
+            
             if n_points is None:
+                # Returns a single Steinerberger point
                 X=self.stbr_scipy()
             else:
-                copy=self.copy()
-                X=[]
-                X=copy.stbr_scipy(n_points=n_points)
+                # Returns 'n_points' Steinerberger points
+                X=self.stbr_scipy(n_points=n_points)
         
             return X
                 
                 
-        if n_points is None:
+        if n_points is None or n_points==1:
             return self._ask()
 
         supported_strategies = ["cl_min", "cl_mean", "cl_max"]
@@ -488,6 +496,7 @@ class Optimizer(object):
                 # The samples are evaluated starting form lhs_samples[0]
                 return self._lhs_samples[len(self._lhs_samples)-self._n_initial_points]
             else:
+                print('here')
                 return self.space.rvs(random_state=self.rng)[0]
         else:
             if not self.models:
@@ -565,6 +574,13 @@ class Optimizer(object):
                 self.Xi.append(x)
                 self.yi.append(y)
                 self._n_initial_points -= 1
+                
+                
+         # If we have been handed a batch of multiobjective points  
+        elif self.n_objectives> 1 and is_2Dlistlike(x) and is_2Dlistlike(y):               
+            self.Xi.extend(x)
+            self.yi.extend(y)
+            self._n_initial_points -= len(y)
         # If we have been handed a single multiobjective point    
         elif self.n_objectives> 1 and is_listlike(x) and is_listlike(y):
             self.Xi.append(x)
@@ -583,43 +599,53 @@ class Optimizer(object):
         else:
             raise ValueError("Type of arguments `x` (%s) and `y` (%s) "
                              "not compatible." % (type(x), type(y)))
-
+ 
         # optimizer learned something new - discard cache
         self.cache_ = {}
 
         # after being "told" n_initial_points we switch from sampling
-        # random points to using a surrogate model
+        # random points to using a surrogate model(s)
         if (fit and self._n_initial_points <= 0 and
                 self.base_estimator_ is not None):
             transformed_bounds = np.array(self.space.transformed_bounds)
             est = clone(self.base_estimator_)
 
 
+            # If the problem containts multiblie objectives a model has to be fitted for each objective
             if self.n_objectives > 1:
-                #print("more than 1 dimension told")
-                # fit an estimator to each dimension
+
+                # fit an estimator to each objective
                 obj_models=[]
                 for i in range(self.n_objectives):
                     est = clone(self.base_estimator_)
                     y_list= [item[i] for item in self.yi]
                     est.fit(self.space.transform(self.Xi), y_list)
                     obj_models.append(est)
-                    
-                self.models = obj_models
+                
+                # Append all objective functions
+                self.models.append(obj_models)
                     
 
-                prob=0.25
+                # Setting the probability of using Steinerberger for the next point (exploration)
+                # The probability for using the NSGAII algorithm is 1-prob_stbr (exploitation)
+                prob_stbr=0.25
+                
+                # Simulate a random number 
                 random_uniform_number= np.random.uniform()
-                #print("random number=" + str(random_uniform_number))
-                if random_uniform_number < prob:
-                    #print("steinerberger chosen")
+
+                # The random number decides what strategy to use for the next point
+                if random_uniform_number < prob_stbr:
+                    
+                    # self._next_x is found via stbr_scipy
                     next_x=self.stbr_scipy()
                     self._next_x=next_x[0]
 
                 else:
-                    #print("NSGA2 chosen")
+
+                    # The Pareto front is approximated using the NSGAII algorithm
                     pop, logbook, front = self.NSGAII()
-                                        
+            
+                    # The best point in the Pareto front is found (the point furthest from existing measurements)
                     next_x= self.best_Pareto_point( pop, front)
                     self._next_x = self.space.inverse_transform(
                     next_x.reshape((1, -1)))[0]
@@ -708,6 +734,7 @@ class Optimizer(object):
                 self._next_x = self.space.inverse_transform(
                     next_x.reshape((1, -1)))[0]
         # Pack results
+
         return create_result(self.Xi, self.yi, self.space, self.rng,
                              models=self.models)
 
@@ -722,9 +749,22 @@ class Optimizer(object):
                 if not (np.ndim(y) == 1 and len(y) == 2):
                     raise TypeError("expected y to be (func_val, t)")
                     
+       # Check batch tell with multiobjective          
+        if is_2Dlistlike(x) and is_2Dlistlike(y) and self.n_objectives > 1:
+                for y_values in y:
+                    for y_value in y_values:
+                        if not isinstance(y_value, Number):
+                            raise ValueError("expected y to be a list of list of scalars")
+                    
+        # Check batch tell with single objective
+        elif is_listlike(y) and is_2Dlistlike(x) and self.n_objectives ==1:
+                for y_value in y:
+                        if not isinstance(y_value, Number):
+                            raise ValueError("expected y to be a list of scalars")
+                    
         
-        # If we have been handed a single multiobjective point. Do not feed multiple multiobjective points at the same time
-        if is_listlike(y):
+        # Check single tell with multiobjective
+        elif is_listlike(y):
                 # Check if the observation has the correct number of objectives
                 if not len(y)==self.n_objectives:
                         raise ValueError("y does not have the same correct number of objective scores")    
@@ -734,14 +774,7 @@ class Optimizer(object):
                             raise ValueError("expected y to be a list of scalars")  
 
 
-
-        # if y isn't a scalar it means we have been handed a batch of points
-        elif is_listlike(y) and is_2Dlistlike(x):
-                for y_value in y:
-                    if not isinstance(y_value, Number):
-                        raise ValueError("expected y to be a list of scalars")
-
-
+        # Check single tell with single objective
         elif is_listlike(x):
             if not isinstance(y, Number):
                 raise ValueError("`func` should return a scalar")
@@ -851,8 +884,11 @@ class Optimizer(object):
         # Set base estimator to GP so transform always nomalizes
         copy=Optimizer(self.space,'GP', n_objectives=self.n_objectives, n_initial_points=999)
         for i in range(len(self.Xi)):
-            copy.tell(self.Xi[i], np.zeros(self.n_objectives).tolist())
-        #copy=self.copy()
+            if self.n_objectives == 1:
+                copy.tell(self.Xi[i], 0)
+            elif self.n_objectives > 1:
+                copy.tell(self.Xi[i], np.zeros(self.n_objectives).tolist())
+
                 
 
         # Initialize list with Steinerberger points
@@ -903,7 +939,7 @@ class Optimizer(object):
         return X
     
     
-    
+    # This function returns the Steinerberger sum for a given x
     def stbr_fun(self, x):
         # parameter to ensure that log argument is non-zero
         eta=10**-8
@@ -923,7 +959,7 @@ class Optimizer(object):
         return stbr_sum
         
         
-            
+    # This function returns the objective scores at x estimated by the models
     def __ObjectiveGP(self, x):
 
         Fator = 1.0e10
@@ -940,11 +976,12 @@ class Optimizer(object):
         #            Constraints -= y
     
         for i in range(self.n_objectives):
-            F[i] = self.models[i].predict(xx)[0]
+
+            F[i] = self.models[(len(self.yi)- self.n_initial_points_)][i].predict(xx)[0]
     
         return F
 
-
+# This function returns the point in the Pareto front, which is deemed the best (furthest away from existing observations)
     def best_Pareto_point(self, pop, front, q=0.5):
         
         Population = np.asarray(pop)
@@ -961,7 +998,7 @@ class Optimizer(object):
     
         return best_point
     
-    
+ # This function is used  in best_Pareto_point. For each point it gives a relative distance to the closest point
     def __LargestOfLeast(self, front, F):
             NF = len(front)
             MinDist = np.empty(NF)
@@ -974,6 +1011,7 @@ class Optimizer(object):
             Std = np.std(MinDist)
             return ArgMax, (MinDist-Mean)/(Std)
         
+    # This fuction returns the minimal distance between a point and a list of points
     @staticmethod
     def __MinimalDistance(X, Y):
         Y=np.asarray(Y)
@@ -989,21 +1027,17 @@ class Optimizer(object):
                 DistMin = Dist
         return DistMin
     
-    def NSGAII(self, plot=False):
+    # This function calls NSGAII to estimate the Pareto Front
+    def NSGAII(self, plot=False, MU=40):
 
         from ._NSGA2 import NSGAII
         pop, logbook, front = NSGAII(self.n_objectives,
                 self.__ObjectiveGP,
                 np.array(self.space.transformed_bounds),
-                MU=40)
+                MU=MU)
         
         if plot==True and self.n_objectives == 2:
             print("plotting not yet implemented directly")
-            
-            
-            
-            
-            
             
         return pop, logbook, front
 
