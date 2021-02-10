@@ -580,24 +580,28 @@ class Optimizer(object):
             self.Xi.extend(x)
             self.yi.extend(y)
             self._n_initial_points -= len(y)
+            
+            
         # If we have been handed a single multiobjective point    
         elif self.n_objectives> 1 and is_listlike(x) and is_listlike(y):
             self.Xi.append(x)
             self.yi.append(y)
             self._n_initial_points -= 1
             
-        # if y isn't a scalar it means we have been handed a batch of points
-        elif is_listlike(y) and is_2Dlistlike(x):
+        # if we have been handed a batch of single objective points
+        elif is_listlike(y) and is_2Dlistlike(x) and self.n_objectives==1:
             self.Xi.extend(x)
             self.yi.extend(y)
             self._n_initial_points -= len(y)
-        elif is_listlike(x):
+            
+        # if we have been handed a single point with a single objective        
+        elif is_listlike(x) and self.n_objectives==1:
             self.Xi.append(x)
             self.yi.append(y)
             self._n_initial_points -= 1
         else:
             raise ValueError("Type of arguments `x` (%s) and `y` (%s) "
-                             "not compatible." % (type(x), type(y)))
+                             "not compatible when number of objectives is (%s)." % (type(x), type(y),self.n_objectives))
  
         # optimizer learned something new - discard cache
         self.cache_ = {}
@@ -755,7 +759,7 @@ class Optimizer(object):
                 for y_values in y:
                     for y_value in y_values:
                         if not isinstance(y_value, Number):
-                            raise ValueError("expected y to be a list of list of scalars")
+                            raise ValueError("expected y to be a list of lists of scalars")
                     
         # Check batch tell with single objective
         elif is_listlike(y) and is_2Dlistlike(x) and self.n_objectives ==1:
@@ -768,7 +772,7 @@ class Optimizer(object):
         elif is_listlike(y):
                 # Check if the observation has the correct number of objectives
                 if not len(y)==self.n_objectives:
-                        raise ValueError("y does not have the same correct number of objective scores")    
+                        raise ValueError("y does not have the correct number of objective scores")    
                 # Check if all objective scores are numbers            
                 for y_value in y:
                         if not isinstance(y_value, Number):
