@@ -6,7 +6,7 @@ For examples on use checkout https://scikit-optimize.github.io/.
 ## Installation
 
 ProcessOptimizer can be installed using "pip install ProcessOptimizer"
-The repository and examples can be found at https://github.com/bytesandbrains/ProcessOptimizer/
+The repository and examples can be found at https://github.com/novonordisk-research/ProcessOptimizer
 ProcessOptimizer can also be installed by running `pip install -e .` in top directory of the downloaded repository.
 
 ## PyPi
