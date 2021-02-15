@@ -29,7 +29,6 @@ from ..utils import is_2Dlistlike
 from ..utils import normalize_dimensions
 
 
-
 class Optimizer(object):
     """Run bayesian optimisation loop.
 
@@ -129,11 +128,6 @@ class Optimizer(object):
         -  "length_scale" [list] a list of floats
         - "n_restarts_optimizer" [int]
         - "n_jobs" [int]
-        
-    * `n_objectives` [int, default=1]:
-        Number of objectives to be optimized. 
-        When n_objectives>1 the optimizer will fit models for each objective and the Pareto front can be approximated using NSGA2
-
 
 
     Attributes
@@ -156,12 +150,8 @@ class Optimizer(object):
                  acq_func="gp_hedge",
                  acq_optimizer="auto",
                  random_state=None, acq_func_kwargs=None,
-                 acq_optimizer_kwargs=None, n_objectives=1):
+                 acq_optimizer_kwargs=None):
         self.rng = check_random_state(random_state)
-        
-        
-        # Set the number of objectives
-        self.n_objectives= n_objectives
 
         # Configure acquisition function
 
@@ -169,7 +159,7 @@ class Optimizer(object):
         self.acq_func = acq_func
         self.acq_func_kwargs = acq_func_kwargs
 
-        allowed_acq_funcs = ["gp_hedge", "EI", "LCB", "PI", "EIps", "PIps" , ""]
+        allowed_acq_funcs = ["gp_hedge", "EI", "LCB", "PI", "EIps", "PIps"]
         if self.acq_func not in allowed_acq_funcs:
             raise ValueError("expected acq_func to be in %s, got %s" %
                              (",".join(allowed_acq_funcs), self.acq_func))
@@ -309,7 +299,7 @@ class Optimizer(object):
             acq_optimizer=self.acq_optimizer,
             acq_func_kwargs=self.acq_func_kwargs,
             acq_optimizer_kwargs=self.acq_optimizer_kwargs,
-            random_state=random_state, n_objectives=self.n_objectives
+            random_state=random_state,
         )
 
         # It is important to copy the constraints so that a call to '_tell()' will create a valid _next_x
@@ -325,7 +315,7 @@ class Optimizer(object):
 
         return optimizer
 
-    def ask(self, n_points=None, strategy="cl_min", space_fill=None):
+    def ask(self, n_points=None, strategy="cl_min"):
         """Query point or multiple points at which objective should be evaluated.
 
         * `n_points` [int or None, default=None]:
@@ -355,65 +345,9 @@ class Optimizer(object):
                objective and so on. The type of lie defines different
                flavours of `cl_x` strategies.
 
-
-         * space_fill [string or None, default="None"]
-           Method used for space filling after initialization. This parameter is ignored if Space_fill = None.
-           Supported options are `"rand"`, `"lhs"` or `"stbr"`.
-         
-           - If set to "rand", then random points from the parameter space is returned
-           
-           - If set to "lhs", then points sampled by latin hypercube from the parameter space is returned
-           
-           - If set to "stbr", then the Steinerberger sampling medthod is used. For details on this method see:
-
-             https://arxiv.org/abs/1902.03269
         """
 
-        if not ((isinstance(n_points, int) and n_points > 0)  or n_points is None) :
-            raise ValueError(
-                "n_points should be int > 0, got " + str(n_points)
-            )
-
-        # These are the only filling strategies which are supported
-        
-        supported_fill_strategies = ["rand", "lhs", "stbr",None]
-
-        if space_fill not in supported_fill_strategies:
-            raise ValueError(
-                "Expected space filling to be one of " +
-                str(supported_fill_strategies) + ", " + "got %s" % space_fill
-            )
-
-        
-        if space_fill=="rand":
-
-            return self.space.rvs(n_samples=n_points)
-        
-        elif space_fill=="lhs": 
-            
-            return self.space.lhs(n_points)
-        
-        elif space_fill=="stbr":
-            
-            # Steienerberger sampling can not be used from an empty Xi set
-            if self.Xi == []:
-                raise ValueError(
-                    "Steinerberger sampling requires initial points but got [] " 
-                    )
-
-    
-            
-            if n_points is None:
-                # Returns a single Steinerberger point
-                X=self.stbr_scipy()
-            else:
-                # Returns 'n_points' Steinerberger points
-                X=self.stbr_scipy(n_points=n_points)
-        
-            return X
-                
-                
-        if n_points is None or n_points==1:
+        if n_points is None:
             return self._ask()
 
         supported_strategies = ["cl_min", "cl_mean", "cl_max"]
@@ -480,8 +414,6 @@ class Optimizer(object):
         observations have been `tell`ed, after that `base_estimator` is used
         to determine the next point.
         """
-        
-        
         if self._n_initial_points > 0 or self.base_estimator_ is None:
             # this will not make a copy of `self.rng` and hence keep advancing
             # our random state.
@@ -503,16 +435,11 @@ class Optimizer(object):
                                    "model has been fit.")
 
             next_x = self._next_x
-            
             min_delta_x = min([self.space.distance(next_x, xi)
-                           for xi in self.Xi])
-            
-            
-            
+                               for xi in self.Xi])
             if abs(min_delta_x) <= 1e-8:
                 warnings.warn("The objective has been evaluated "
                               "at this point before.")
-                
 
             # return point computed from last call to tell()
             return next_x
@@ -573,19 +500,6 @@ class Optimizer(object):
                 self.Xi.append(x)
                 self.yi.append(y)
                 self._n_initial_points -= 1
-                
-                
-         # If we have been handed a batch of multiobjective points  
-        elif self.n_objectives> 1 and is_2Dlistlike(x) and is_2Dlistlike(y):               
-            self.Xi.extend(x)
-            self.yi.extend(y)
-            self._n_initial_points -= len(y)
-        # If we have been handed a single multiobjective point    
-        elif self.n_objectives> 1 and is_listlike(x) and is_listlike(y):
-            self.Xi.append(x)
-            self.yi.append(y)
-            self._n_initial_points -= 1
-            
         # if y isn't a scalar it means we have been handed a batch of points
         elif is_listlike(y) and is_2Dlistlike(x):
             self.Xi.extend(x)
@@ -598,144 +512,92 @@ class Optimizer(object):
         else:
             raise ValueError("Type of arguments `x` (%s) and `y` (%s) "
                              "not compatible." % (type(x), type(y)))
- 
+
         # optimizer learned something new - discard cache
         self.cache_ = {}
 
         # after being "told" n_initial_points we switch from sampling
-        # random points to using a surrogate model(s)
+        # random points to using a surrogate model
         if (fit and self._n_initial_points <= 0 and
                 self.base_estimator_ is not None):
             transformed_bounds = np.array(self.space.transformed_bounds)
             est = clone(self.base_estimator_)
 
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                est.fit(self.space.transform(self.Xi), self.yi)
 
-            # If the problem containts multiblie objectives a model has to be fitted for each objective
-            if self.n_objectives > 1:
+            if hasattr(self, "next_xs_") and self.acq_func == "gp_hedge":
+                self.gains_ -= est.predict(np.vstack(self.next_xs_))
+            self.models.append(est)
 
-                # fit an estimator to each objective
-                obj_models=[]
-                for i in range(self.n_objectives):
-                    est = clone(self.base_estimator_)
-                    y_list= [item[i] for item in self.yi]
+            # even with BFGS as optimizer we want to sample a large number
+            # of points and then pick the best ones as starting points
+            if self._constraints:
+                # We use another sampling method if constraints have been added
+                X = self.space.transform(self._constraints.rvs(
+                    n_samples=self.n_points, random_state=self.rng))
+            else:
+                X = self.space.transform(self.space.rvs(
+                    n_samples=self.n_points, random_state=self.rng))
+
+            self.next_xs_ = []
+            for cand_acq_func in self.cand_acq_funcs_:
+                values = _gaussian_acquisition(
+                    X=X, model=est, y_opt=np.min(self.yi),
+                    acq_func=cand_acq_func,
+                    acq_func_kwargs=self.acq_func_kwargs)
+                # Find the minimum of the acquisition function by randomly
+                # sampling points from the space. If constraints are present
+                # we use this strategy
+                if self.acq_optimizer == "sampling" or self._constraints:
+                    next_x = X[np.argmin(values)]
+
+                # Use BFGS to find the mimimum of the acquisition function, the
+                # minimization starts from `n_restarts_optimizer` different
+                # points and the best minimum is used
+                elif self.acq_optimizer == "lbfgs":
+                    x0 = X[np.argsort(values)[:self.n_restarts_optimizer]]
+
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore")
-                        est.fit(self.space.transform(self.Xi), y_list)
-                    obj_models.append(est)
-                
-                # Append all objective functions
-                self.models.append(obj_models)
-                    
+                        results = Parallel(n_jobs=self.n_jobs)(
+                            delayed(fmin_l_bfgs_b)(
+                                gaussian_acquisition_1D, x,
+                                args=(est, np.min(self.yi), cand_acq_func,
+                                      self.acq_func_kwargs),
+                                bounds=self.space.transformed_bounds,
+                                approx_grad=False,
+                                maxiter=20)
+                            for x in x0)
 
-                # Setting the probability of using Steinerberger for the next point (exploration)
-                # The probability for using the NSGAII algorithm is 1-prob_stbr (exploitation)
-                prob_stbr=0.25
-                
-                # Simulate a random number 
-                random_uniform_number= np.random.uniform()
+                    cand_xs = np.array([r[0] for r in results])
+                    cand_acqs = np.array([r[1] for r in results])
+                    next_x = cand_xs[np.argmin(cand_acqs)]
 
-                # The random number decides what strategy to use for the next point
-                if random_uniform_number < prob_stbr:
-                    
-                    # self._next_x is found via stbr_scipy
-                    next_x=self.stbr_scipy()
-                    self._next_x=next_x[0]
+                # lbfgs should handle this but just in case there are
+                # precision errors.
+                if not self.space.is_categorical:
+                    next_x = np.clip(
+                        next_x, transformed_bounds[:, 0],
+                        transformed_bounds[:, 1])
+                self.next_xs_.append(next_x)
 
-                else:
+            if self.acq_func == "gp_hedge":
+                logits = np.array(self.gains_)
+                logits -= np.max(logits)
+                exp_logits = np.exp(self.eta * logits)
+                probs = exp_logits / np.sum(exp_logits)
+                next_x = self.next_xs_[np.argmax(self.rng.multinomial(1,
+                                                                      probs))]
+            else:
+                next_x = self.next_xs_[0]
 
-                    # The Pareto front is approximated using the NSGAII algorithm
-                    pop, logbook, front = self.NSGAII()
-            
-                    # The best point in the Pareto front is found (the point furthest from existing measurements)
-                    next_x= self.best_Pareto_point( pop, front)
-                    self._next_x = self.space.inverse_transform(
-                    next_x.reshape((1, -1)))[0]
+            # note the need for [0] at the end
+            self._next_x = self.space.inverse_transform(
+                next_x.reshape((1, -1)))[0]
 
-
-
-
-                
-                
-                
-                
-
-
-            if self.n_objectives == 1:
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    est.fit(self.space.transform(self.Xi), self.yi)
-                    
-                if hasattr(self, "next_xs_") and self.acq_func == "gp_hedge":
-                    self.gains_ -= est.predict(np.vstack(self.next_xs_))
-                self.models.append(est)
-    
-                # even with BFGS as optimizer we want to sample a large number
-                # of points and then pick the best ones as starting points
-                if self._constraints:
-                    # We use another sampling method if constraints have been added
-                    X = self.space.transform(self._constraints.rvs(
-                        n_samples=self.n_points, random_state=self.rng))
-                else:
-                    X = self.space.transform(self.space.rvs(
-                        n_samples=self.n_points, random_state=self.rng))
-    
-                self.next_xs_ = []
-                for cand_acq_func in self.cand_acq_funcs_:
-                    values = _gaussian_acquisition(
-                        X=X, model=est, y_opt=np.min(self.yi),
-                        acq_func=cand_acq_func,
-                        acq_func_kwargs=self.acq_func_kwargs)
-                    # Find the minimum of the acquisition function by randomly
-                    # sampling points from the space. If constraints are present
-                    # we use this strategy
-                    if self.acq_optimizer == "sampling" or self._constraints:
-                        next_x = X[np.argmin(values)]
-    
-                    # Use BFGS to find the mimimum of the acquisition function, the
-                    # minimization starts from `n_restarts_optimizer` different
-                    # points and the best minimum is used
-                    elif self.acq_optimizer == "lbfgs":
-                        x0 = X[np.argsort(values)[:self.n_restarts_optimizer]]
-    
-                        with warnings.catch_warnings():
-                            warnings.simplefilter("ignore")
-                            results = Parallel(n_jobs=self.n_jobs)(
-                                delayed(fmin_l_bfgs_b)(
-                                    gaussian_acquisition_1D, x,
-                                    args=(est, np.min(self.yi), cand_acq_func,
-                                          self.acq_func_kwargs),
-                                    bounds=self.space.transformed_bounds,
-                                    approx_grad=False,
-                                    maxiter=20)
-                                for x in x0)
-    
-                        cand_xs = np.array([r[0] for r in results])
-                        cand_acqs = np.array([r[1] for r in results])
-                        next_x = cand_xs[np.argmin(cand_acqs)]
-    
-                    # lbfgs should handle this but just in case there are
-                    # precision errors.
-                    if not self.space.is_categorical:
-                        next_x = np.clip(
-                            next_x, transformed_bounds[:, 0],
-                            transformed_bounds[:, 1])
-                    self.next_xs_.append(next_x)
-    
-                if self.acq_func == "gp_hedge":
-                    logits = np.array(self.gains_)
-                    logits -= np.max(logits)
-                    exp_logits = np.exp(self.eta * logits)
-                    probs = exp_logits / np.sum(exp_logits)
-                    next_x = self.next_xs_[np.argmax(self.rng.multinomial(1,
-                                                                          probs))]
-                else:
-                    next_x = self.next_xs_[0]
-    
-                # note the need for [0] at the end
-                self._next_x = self.space.inverse_transform(
-                    next_x.reshape((1, -1)))[0]
         # Pack results
-
         return create_result(self.Xi, self.yi, self.space, self.rng,
                              models=self.models)
 
@@ -749,39 +611,16 @@ class Optimizer(object):
             elif is_listlike(x):
                 if not (np.ndim(y) == 1 and len(y) == 2):
                     raise TypeError("expected y to be (func_val, t)")
-                    
-       # Check batch tell with multiobjective          
-        if is_2Dlistlike(x) and is_2Dlistlike(y) and self.n_objectives > 1:
-                for y_values in y:
-                    for y_value in y_values:
-                        if not isinstance(y_value, Number):
-                            raise ValueError("expected y to be a list of list of scalars")
-                    
-        # Check batch tell with single objective
-        elif is_listlike(y) and is_2Dlistlike(x) and self.n_objectives ==1:
-                for y_value in y:
-                        if not isinstance(y_value, Number):
-                            raise ValueError("expected y to be a list of scalars")
-                    
-        
-        # Check single tell with multiobjective
-        elif is_listlike(y):
-                # Check if the observation has the correct number of objectives
-                if not len(y)==self.n_objectives:
-                        raise ValueError("y does not have the same correct number of objective scores")    
-                # Check if all objective scores are numbers            
-                for y_value in y:
-                        if not isinstance(y_value, Number):
-                            raise ValueError("expected y to be a list of scalars")  
 
+        # if y isn't a scalar it means we have been handed a batch of points
+        elif is_listlike(y) and is_2Dlistlike(x):
+            for y_value in y:
+                if not isinstance(y_value, Number):
+                    raise ValueError("expected y to be a list of scalars")
 
-        # Check single tell with single objective
         elif is_listlike(x):
             if not isinstance(y, Number):
                 raise ValueError("`func` should return a scalar")
-                        
-                
-                
 
         else:
             raise ValueError("Type of arguments `x` (%s) and `y` (%s) "
@@ -863,182 +702,3 @@ class Optimizer(object):
             else:
                 raise TypeError("Expected bounds to be of type list, got %s" %
                                 (type(bounds)))
-    
-
-
-    
-    
-    def stbr_scipy(self, n_points=1):
-        from scipy.optimize import minimize
-        # Suggestion for improvemenet. Seperate categorical and real/integer space.
-        # Only solve Steinerberger minimization in real/integer sub space.
-        
-        
-        # Get bounds for variables in transformed space
-        # Needs to be a tuple of tuples with 0 and 1 for each transformed dimension
-        bounds=[]
-        for i in range(self.space.transformed_n_dims):
-            bounds.append((0.0,1.0))
-        bounds = tuple(tuple(sub) for sub in bounds) 
-
-        # Copy of the optimizer to not append new points to original  self.Xi
-        # Set base estimator to GP so transform always nomalizes
-        copy=Optimizer(self.space,'GP', n_objectives=self.n_objectives, n_initial_points=999)
-        for i in range(len(self.Xi)):
-            if self.n_objectives == 1:
-                copy.tell(self.Xi[i], 0)
-            elif self.n_objectives > 1:
-                copy.tell(self.Xi[i], np.zeros(self.n_objectives).tolist())
-
-                
-
-        # Initialize list with Steinerberger points
-        X=[]
-        # In each loop calculate the next Steinerberger point
-        for i in range(n_points):    
-            # lists with local minimum location and the function value of the Steinerberger sum at that point
-            loc_min=[]
-            fun_val=[]
-            # We use 15 lhs point as initial guesses for minimization
-            x0= copy.space.lhs(20)
-            x0=copy.space.transform(x0)
-            
-            # Loop over each initial guess and find a local minimum
-            for j in range(len(x0)):
-                res=minimize(copy.stbr_fun, x0=x0[j], bounds=bounds)
-                loc_min.append(res.x)
-                fun_val.append(res.fun)
-
-            # Decide the global minimum as the local minimum with the lowest function value
-            glob_min=loc_min[np.argmin(fun_val)]
-            next_X=np.asarray(glob_min).reshape(1,copy.space.transformed_n_dims)
-            # Transform back to original space
-            next_X=copy.space.inverse_transform(next_X)
-
-            # This deals with categorical variables, since they are not suited for Steinerberger
-            for dim, n in zip(self.space.dimensions, range(self.space.n_dims)):
-                    # Check if dimension is categorical
-                    if isinstance(dim, Categorical):
-                        # Make array with categories for that dimension
-                        categories=dim.categories
-                        # Make array with all instances of categories observed
-                        instances= np.array(copy.Xi)[:,n]
-                        # Calculate the number of instances of each category
-                        cat_population=np.zeros(len(categories))
-                        for category,i in zip(categories,range(len(categories))):
-                            cat_population[i]=(instances.tolist()).count(category)
-                        # Find the category with the lowest population
-                        least_populated=categories[np.argmin(cat_population)]
-                        # Set the category to the lowest populated category
-                        next_X[0][n]=least_populated       
-            
-            # Append point to list of new Steinerberger points
-            X.append(next_X[0])
-            # Append to Xi of copy optimizer
-            copy.Xi.append(next_X[0])
-        
-        return X
-    
-    
-    # This function returns the Steinerberger sum for a given x
-    def stbr_fun(self, x):
-        # parameter to ensure that log argument is non-zero
-        eta=10**-8
-        # Initialize Steinerberger sum
-        stbr_sum=0
-        # Transform initial points to [0,1]^d space
-        Xi=self.space.transform(self.Xi)
-        # for loop over all existing points
-        for i in range(len(Xi)):
-            # Calculate the factors in the Steinerberger term in each dimension
-            stbr_vector=(1 - np.log(2 * np.sin(np.pi * abs(x-Xi[i])) + eta) )
-            # Calculate the Steinerberger term by multiplying factor from each dimension
-            stbr_term=np.prod(stbr_vector)
-            # Add term to Steinerberger sum
-            stbr_sum = stbr_sum + stbr_term
-            
-        return stbr_sum
-        
-        
-    # This function returns the objective scores at x estimated by the models
-    def __ObjectiveGP(self, x):
-
-        #Fator = 1.0e10
-        F = [None] * self.n_objectives
-        xx = np.asarray(x).reshape(1, -1)
-    
-        #Constraints = 0.0
-        #for cons in self.constraints:
-        #    y = cons['fun'](x)
-        #    if cons['type'] == 'eq':
-        #        Constraints += np.abs(y)
-        #    elif cons['type'] == 'ineq':
-        #        if y < 0:
-        #            Constraints -= y
-    
-        for i in range(self.n_objectives):
-
-            F[i] = self.models[(len(self.yi)- self.n_initial_points_)][i].predict(xx)[0]
-    
-        return F
-
-# This function returns the point in the Pareto front, which is deemed the best (furthest away from existing observations)
-    def best_Pareto_point(self, pop, front, q=0.5):
-        
-        Population = np.asarray(pop)
-
-        IndexF, FatorF = self.__LargestOfLeast(front, self.yi)
-
-        IndexPop, FatorPop = self.__LargestOfLeast(Population,
-                                                   self.space.transform(self.Xi).tolist())
-
-        Fator = q * FatorF + (1- q) * FatorPop
-        Index_try = np.argmax(Fator)
-    
-        best_point = Population[Index_try]
-    
-        return best_point
-    
- # This function is used  in best_Pareto_point. For each point it gives a relative distance to the closest point
-    def __LargestOfLeast(self, front, F):
-            NF = len(front)
-            MinDist = np.empty(NF)
-            for i in range(NF):
-                MinDist[i] = self.__MinimalDistance(front[i], F)
-    
-            ArgMax = np.argmax(MinDist)
-    
-            Mean = MinDist.mean()
-            Std = np.std(MinDist)
-            return ArgMax, (MinDist-Mean)/(Std)
-        
-    # This fuction returns the minimal distance between a point and a list of points
-    @staticmethod
-    def __MinimalDistance(X, Y):
-        Y=np.asarray(Y)
-        N = len(X)
-        Npts = len(Y)
-        DistMin = float('inf')
-        for i in range(Npts):
-            Dist = 0.
-            for j in range(N):
-                Dist += (X[j]-Y[i, j])**2
-            Dist = np.sqrt(Dist)
-            if Dist < DistMin:
-                DistMin = Dist
-        return DistMin
-    
-    # This function calls NSGAII to estimate the Pareto Front
-    def NSGAII(self, plot=False, MU=40):
-
-        from ._NSGA2 import NSGAII
-        pop, logbook, front = NSGAII(self.n_objectives,
-                self.__ObjectiveGP,
-                np.array(self.space.transformed_bounds),
-                MU=MU)
-        
-        if plot==True and self.n_objectives == 2:
-            print("plotting not yet implemented directly")
-            
-        return pop, logbook, front
-
