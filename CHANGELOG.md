@@ -1,5 +1,15 @@
 # Release history
 
+## Version 0.6.0
+
+### Changes
+
+README changed to reflect move of repo to NN-research
+Steinerberger sampling added for improves spacefilling and explorative mode
+Multiobjective optimization added by NSGA and Pareto front
+Unused folders trimmed
+Added example notebooks on new functionality
+
 ## Version 0.5.1
 
 ### Bugfixes
