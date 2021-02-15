@@ -281,6 +281,7 @@ class Real(Dimension):
                 return np.log10(self.low), np.log10(self.high)
 
     def distance(self, a, b):
+
         """Compute distance between point `a` and `b`.
 
         Parameters
@@ -843,8 +844,12 @@ class Space(object):
             Second point.
         """
         distance = 0.
-        for a, b, dim in zip(point_a, point_b, self.dimensions):
-            distance += dim.distance(a, b)
+        if len(self.dimensions) > 1:
+            for a, b, dim in zip(point_a, point_b, self.dimensions):
+                distance += dim.distance(a, b)
+                
+        if len(self.dimensions) == 1:
+             distance +=  self.dimensions[0].distance(point_a[0], point_b[0])
 
         return distance
 
