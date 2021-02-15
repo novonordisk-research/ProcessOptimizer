@@ -9,7 +9,7 @@ in many contexts and accessible.
 ## Install
 
 ```
-pip install scikit-optimize
+pip install scikit-optimize / pip install ProcessOptimizer
 ```
 
 ## Getting started
@@ -64,7 +64,7 @@ from .utils import dump
 from .utils import expected_minimum
 from .utils import load
 
-__version__ = "0.5.1"
+__version__ = "0.6.0"
 
 
 __all__ = (
