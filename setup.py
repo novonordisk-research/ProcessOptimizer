@@ -13,5 +13,6 @@ setup(name='ProcessOptimizer',
       packages=['ProcessOptimizer', 'ProcessOptimizer.learning', 'ProcessOptimizer.optimizer', 'ProcessOptimizer.space',
                 'ProcessOptimizer.learning.gaussian_process'],
       install_requires=['numpy', 'matplotlib', 'scipy',
-                        'scikit-learn', 'bokeh', 'tornado', 'six']
+                        'scikit-learn', 'bokeh', 'tornado', 
+						'six', 'deap']
       )
