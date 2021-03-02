@@ -10,6 +10,7 @@ Two additional examples added
 
 Example on visualize_results.ipynb corrected to avoid warnings
 DEAP added as dependency for Pareto optimization
+normalize_y temporarely set to False until real fix from sklearn
 
 ## Version 0.6.0
 
