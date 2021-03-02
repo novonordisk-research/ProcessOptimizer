@@ -1,5 +1,16 @@
 # Release history
 
+## Version 0.6.1 [unpublished]
+
+### Changes
+
+Two additional examples added
+
+### Bugfixes
+
+Example on visualize_results.ipynb corrected to avoid warnings
+DEAP added as dependency for Pareto optimization
+
 ## Version 0.6.0
 
 ### Changes
