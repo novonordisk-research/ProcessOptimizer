@@ -1,7 +1,5 @@
 import pytest
 
-from sklearn.utils.testing import assert_less
-
 from ProcessOptimizer import dummy_minimize
 from ProcessOptimizer.benchmarks import bench1
 from ProcessOptimizer.benchmarks import bench2
