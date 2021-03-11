@@ -5,10 +5,9 @@ import pytest
 from scipy import optimize
 
 from sklearn.multioutput import MultiOutputRegressor
-from sklearn.utils.testing import assert_array_almost_equal
-from sklearn.utils.testing import assert_array_equal
-from sklearn.utils.testing import assert_greater
-from sklearn.utils.testing import assert_raises
+from numpy.testing import assert_array_almost_equal
+from numpy.testing import assert_array_equal
+from numpy.testing import assert_raises
 
 from ProcessOptimizer.acquisition import _gaussian_acquisition
 from ProcessOptimizer.acquisition import gaussian_acquisition_1D
