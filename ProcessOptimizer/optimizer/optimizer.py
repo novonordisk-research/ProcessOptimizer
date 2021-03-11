@@ -982,7 +982,7 @@ class Optimizer(object):
     
         for i in range(self.n_objectives):
 
-            F[i] = self.models[(len(self.yi)- self.n_initial_points_)][i].predict(xx)[0]
+            F[i] = self.models[-1][i].predict(xx)[0]
     
         return F
 
@@ -1009,7 +1009,6 @@ class Optimizer(object):
             MinDist = np.empty(NF)
             for i in range(NF):
                 MinDist[i] = self.__MinimalDistance(front[i], F)
-    
             ArgMax = np.argmax(MinDist)
     
             Mean = MinDist.mean()
