@@ -5,12 +5,14 @@
 ### Changes
 
 Two additional examples added
+Tests are primarily from numpy instead of sklearn
 
 ### Bugfixes
 
 Example on visualize_results.ipynb corrected to avoid warnings
 DEAP added as dependency for Pareto optimization
 normalize_y temporarely set to False until real fix from sklearn
+Handled a case in which feeding multible datapoints to the model would fail.
 
 ## Version 0.6.0
 
