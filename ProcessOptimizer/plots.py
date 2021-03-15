@@ -388,6 +388,7 @@ def dependence(space, model, i, j=None, sample_points=None,
         return xi, yi, np.array(zi).T
 
 
+
 def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
                    zscale='linear', dimensions=None,usepartialdependence=True, pars='result', expected_minimum_samples = None):
     """Pairwise dependence plot of the objective function.
@@ -504,34 +505,94 @@ def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
     fig.subplots_adjust(left=0.05, right=0.95, bottom=0.05, top=0.95,
                         hspace=0.1, wspace=0.1)
 
+    val_min_1d= float("inf")
+    val_max_1d= -float("inf")
+    val_min_2d= float("inf")
+    val_max_2d= -float("inf")
+
+    plots_data=[]
+
     for i in range(space.n_dims):
+        row = []
         for j in range(space.n_dims):
-            if i == j:
+            
+            
+            if j > i:  # We only plot the lower left half of the grid, to avoid duplicates.
+                break
+            
+            elif i == j:
                 xi, yi = dependence(space, result.models[-1], i,
                                             j=None,
                                             sample_points=rvs_transformed,
                                             n_points=n_points,x_eval = x_eval)
+                row.append({"xi": xi, "yi": yi})
 
+                if np.min(yi) < val_min_1d:
+                    val_min_1d = np.min(yi)
+                if np.max(yi) > val_max_1d:
+                    val_max_1d = np.max(yi)
+
+
+
+            # lower triangle
+            else:
+                xi, yi, zi = dependence(space, result.models[-1],
+                                                i, j,
+                                                rvs_transformed, n_points,x_eval = x_eval)
+                #print('filling with i,j=' + str(i) + str(j))
+                row.append({"xi": xi, "yi": yi, "zi": zi})
+
+                if np.min(zi) < val_min_2d:
+                    val_min_2d = np.min(zi)
+                if np.max(zi) > val_max_2d:
+                    val_max_2d = np.max(zi)
+                    
+        plots_data.append(row)
+    
+    for i in range(space.n_dims):
+        for j in range(space.n_dims):
+            
+            if j > i:  # We only plot the lower left half of the grid, to avoid duplicates.
+                break
+            
+            elif i == j:
+
+                xi = plots_data[i][j]["xi"]
+                yi = plots_data[i][j]["yi"]
+                
+                
                 ax[i, i].plot(xi, yi)
+                ax[i,i].set_ylim(val_min_1d,val_max_1d)
                 ax[i, i].axvline(minimum[i], linestyle="--", color="r", lw=1)
 
             # lower triangle
             elif i > j:
-                xi, yi, zi = dependence(space, result.models[-1],
-                                                i, j,
-                                                rvs_transformed, n_points,x_eval = x_eval)
-                ax[i, j].contourf(xi, yi, zi, levels,
-                                  locator=locator, cmap='viridis_r')
+
+                
+                xi = plots_data[i][j]["xi"]
+                yi = plots_data[i][j]["yi"]
+                zi = plots_data[i][j]["zi"]
+
+                contour_plot=ax[i, j].contourf(xi, yi, zi, levels,
+                                  locator=locator, cmap='viridis_r', vmin=val_min_2d, vmax=val_max_2d)
                 ax[i, j].scatter(samples[:, j], samples[:, i],
-                                 c='k', s=10, lw=0.)
+                                 c='darkorange', s=10, lw=0.)
                 ax[i, j].scatter(minimum[j], minimum[i],
                                  c=['r'], s=20, lw=0.)
+                    
+                if [i,j] == [1,0]:
+                    import matplotlib as mpl
+                    norm=mpl.colors.Normalize(vmin=val_min_2d,vmax=val_max_2d)   
+                    cb= ax[0][-1].figure.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap='viridis_r'),ax=ax[0][-1])
+                    cb.ax.locator_params(nbins=8)
+
     if usepartialdependence:
         ylabel="Partial dependence"
     else:
         ylabel="Dependence"
     return _format_scatter_plot_axes(ax, space, ylabel=ylabel,
                                         dim_labels=dimensions)
+
 
 
 def plot_evaluations(result, bins=20, dimensions=None):
@@ -687,3 +748,6 @@ def expected_min_random_sampling(model, space, n_samples = 100000):
     min_x = random_samples[index_best_objective]
     
     return min_x
+
+
+
