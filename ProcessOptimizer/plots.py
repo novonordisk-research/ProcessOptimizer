@@ -568,7 +568,6 @@ def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
             # lower triangle
             elif i > j:
 
-                
                 xi = plots_data[i][j]["xi"]
                 yi = plots_data[i][j]["yi"]
                 zi = plots_data[i][j]["zi"]
