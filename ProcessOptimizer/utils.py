@@ -53,22 +53,42 @@ def create_result(Xi, yi, space=None, rng=None, specs=None, models=None):
     -------
     * `res` [`OptimizeResult`, scipy object]:
         OptimizeResult instance with the required information.
+        
+       or if the optimizer is multiobjective:
+     * `results` [list of `OptimizeResult`, scipy object]:
+        OptimizeResult instance with the required information.
     """
     res = OptimizeResult()
     yi = np.asarray(yi)
-    if np.ndim(yi) == 2:
-        res.log_time = np.ravel(yi[:, 1])
-        yi = np.ravel(yi[:, 0])
-    best = np.argmin(yi)
-    res.x = Xi[best]
-    res.fun = yi[best]
-    res.func_vals = yi
-    res.x_iters = Xi
-    res.models = models
-    res.space = space
-    res.random_state = rng
-    res.specs = specs
-    return res
+    if np.ndim(yi) == 1:
+        best = np.argmin(yi)
+        res.x = Xi[best]
+        res.fun = yi[best]
+        res.func_vals = yi
+        res.x_iters = Xi
+        res.models = models
+        res.space = space
+        res.random_state = rng
+        res.specs = specs
+        return res
+    models=np.asarray(models)
+    results=[]
+    for i in range(yi.shape[1]):
+        res = OptimizeResult()
+        yi_single = np.ravel(yi[:, i])  
+        best = np.argmin(yi_single)
+        res.x = Xi[best]
+        res.fun = yi_single[best]
+        res.func_vals = yi_single
+        res.x_iters = Xi
+        res.models = models[:,i]
+        res.space = space
+        res.random_state = rng
+        res.specs = specs     
+        results.append(res)
+    return results
+
+    
 
 
 def eval_callbacks(callbacks, result):
