@@ -390,7 +390,7 @@ def dependence(space, model, i, j=None, sample_points=None,
 
 
 def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
-                   zscale='linear', dimensions=None,usepartialdependence=True, pars='result', expected_minimum_samples = None):
+                   zscale='linear', dimensions=None,usepartialdependence=True, pars='result', expected_minimum_samples = None, title=None):
     """Pairwise dependence plot of the objective function.
 
     The diagonal shows the dependence for dimension `i` with
@@ -446,6 +446,10 @@ def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
                             when using naive random sampling. Works with categorical values
     * `expected_minimum_samples` [float, default = None] Determines how many points should be evaluated
         to find the minimum when using 'expected_minimum' or 'expected_minimum_random'
+        
+    * `title` [str, default=None]
+        String to use as title of the figure
+
 
     Returns
     -------
@@ -504,6 +508,9 @@ def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
 
     fig.subplots_adjust(left=0.05, right=0.95, bottom=0.05, top=0.95,
                         hspace=0.1, wspace=0.1)
+    
+    if title is not None:
+        fig.suptitle(title)
 
     val_min_1d= float("inf")
     val_max_1d= -float("inf")
@@ -568,7 +575,6 @@ def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
             # lower triangle
             elif i > j:
 
-                
                 xi = plots_data[i][j]["xi"]
                 yi = plots_data[i][j]["yi"]
                 zi = plots_data[i][j]["zi"]
@@ -592,6 +598,29 @@ def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
         ylabel="Dependence"
     return _format_scatter_plot_axes(ax, space, ylabel=ylabel,
                                         dim_labels=dimensions)
+
+
+def plot_objectives(results, titles=None):
+    """Pairwise dependence plots of each of the objective functions.
+    Parameters
+    ----------
+    * `results` [list of `OptimizeResult`]
+        The list of results for which to create the objective plots.
+        
+    * `titles` [list of str, default=None]
+        The list of strings of the names of the objectives used as titles in the figures
+    
+    """
+
+    if titles== None:
+        for result in results:
+            plot_objective(result, title=None )
+        return
+    else:
+        for k in range(len(results)):
+            plot_objective(results[k], title=titles[k] )   
+        return
+    
 
 
 
@@ -623,6 +652,9 @@ def plot_evaluations(result, bins=20, dimensions=None):
     * `ax`: [`Axes`]:
         The matplotlib axes.
     """
+    if type(result) is list:
+        result=result[0]
+    
     space = result.space
     # Convert categoricals to integers, so we can ensure consistent ordering.
     # Assign indices to categories in the order they appear in the Dimension.

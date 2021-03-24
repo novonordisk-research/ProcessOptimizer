@@ -892,8 +892,8 @@ class Optimizer(object):
             if self.n_objectives == 1:
                 copy.tell(self.Xi[i], 0)
             elif self.n_objectives > 1:
-                copy.tell(self.Xi[i], np.zeros(self.n_objectives).tolist())
-
+                copy.Xi.append(self.Xi[i])
+                copy.yi.append(np.zeros(self.n_objectives).tolist())
                 
 
         # Initialize list with Steinerberger points
@@ -903,7 +903,7 @@ class Optimizer(object):
             # lists with local minimum location and the function value of the Steinerberger sum at that point
             loc_min=[]
             fun_val=[]
-            # We use 15 lhs point as initial guesses for minimization
+            # We use 20 lhs point as initial guesses for minimization
             x0= copy.space.lhs(20)
             x0=copy.space.transform(x0)
             
