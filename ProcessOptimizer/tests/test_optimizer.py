@@ -20,7 +20,7 @@ TREE_REGRESSORS = (ExtraTreesRegressor(random_state=2),
                    RandomForestRegressor(random_state=2),
                    GradientBoostingQuantileRegressor(random_state=2))
 ACQ_FUNCS_PS = ["EIps", "PIps"]
-ACQ_FUNCS_MIXED = ["EI", "EIps"]
+ACQ_FUNCS_MIXED = ["EI"] #, "EIps" removed
 ESTIMATOR_STRINGS = ["GP", "RF", "ET", "GBRT", "DUMMY",
                      "gp", "rf", "et", "gbrt", "dummy"]
 
@@ -173,7 +173,8 @@ def test_acq_optimizer(base_estimator):
                   n_initial_points=2, acq_optimizer='lbfgs')
     assert "should run with acq_optimizer='sampling'" in str(e.value)
 
-
+'''
+#Comment out per second acq func
 @pytest.mark.parametrize("base_estimator", TREE_REGRESSORS)
 @pytest.mark.parametrize("acq_func", ACQ_FUNCS_PS)
 def test_acq_optimizer_with_time_api(base_estimator, acq_func):
@@ -196,7 +197,7 @@ def test_acq_optimizer_with_time_api(base_estimator, acq_func):
 
     with pytest.raises(TypeError) as e:
         opt.tell(x2, bench1(x2))
-
+'''
 
 @pytest.mark.fast_test
 @pytest.mark.parametrize("acq_func", ACQ_FUNCS_MIXED)

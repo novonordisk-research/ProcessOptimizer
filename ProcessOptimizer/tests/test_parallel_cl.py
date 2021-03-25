@@ -18,7 +18,7 @@ import pytest
 supported_strategies = ["cl_min", "cl_mean", "cl_max"]
 
 # test one acq function that incorporates the runtime, and one that does not
-supported_acq_functions = ["EI", "EIps"]
+supported_acq_functions = ["EI"] #, "EIps" removed
 
 # Extract available surrogates, so that new ones are used automatically
 available_surrogates = [
