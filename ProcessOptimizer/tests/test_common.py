@@ -102,8 +102,7 @@ def test_minimizer_api_dummy_minimize(verbose, call):
     assert result.models == []
     check_minimizer_api(result, n_calls)
     check_minimizer_bounds(result, n_calls)
-    with pytest.raises(ValueError):
-        dummy_minimize(lambda x: x, [[-5, 10]])
+
 
 
 @pytest.mark.slow_test
@@ -124,8 +123,7 @@ def test_minimizer_api(verbose, call, minimizer):
 
     check_minimizer_api(result, n_calls, n_models)
     check_minimizer_bounds(result, n_calls)
-    with pytest.raises(ValueError):
-        minimizer(lambda x: x, [[-5, 10]])
+
 
 
 @pytest.mark.fast_test
