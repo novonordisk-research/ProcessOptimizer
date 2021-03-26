@@ -293,7 +293,7 @@ class BayesSearchCV(BaseSearchCV):
                  n_iter=50, scoring=None, fit_params=None, n_jobs=1,
                  n_points=1, iid='deprecated', refit=True, cv=None, verbose=0,
                  pre_dispatch='2*n_jobs', random_state=None,
-                 error_score='raise', return_train_score=False, logger=None):
+                 error_score='raise', return_train_score=False):
 
         self.search_spaces = search_spaces
         self.n_iter = n_iter
@@ -311,11 +311,6 @@ class BayesSearchCV(BaseSearchCV):
             warnings.warn("The `iid` parameter has been deprecated "
                           "and will be ignored.")
         self.iid = iid  # For sklearn repr pprint
-
-        if logger:
-            self.printfn = logger.info
-        else:
-            self.printfn = print
 
         super(BayesSearchCV, self).__init__(
             estimator=estimator, scoring=scoring,
@@ -406,7 +401,7 @@ class BayesSearchCV(BaseSearchCV):
         n_splits = cv.get_n_splits(X, y, groups)
         if self.verbose > 0 and isinstance(parameter_iterable, Sized):
             n_candidates = len(parameter_iterable)
-            self.printfn("Fitting {0} folds for each of {1} candidates, totalling"
+            print("Fitting {0} folds for each of {1} candidates, totalling"
                          " {2} fits".format(n_splits, n_candidates,
                                             n_candidates * n_splits))
 
