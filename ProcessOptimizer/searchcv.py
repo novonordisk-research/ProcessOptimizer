@@ -1,3 +1,5 @@
+import warnings
+
 try:
     from collections.abc import Sized
 except ImportError:
@@ -124,11 +126,6 @@ class BayesSearchCV(BaseSearchCV):
 
             - A string, giving an expression as a function of n_jobs,
               as in '2*n_jobs'
-
-    iid : boolean, default=True
-        If True, the data is assumed to be identically distributed across
-        the folds, and the loss minimized is the total loss per sample,
-        and not the mean loss across the folds.
 
     cv : int, cross-validation generator or an iterable, optional
         Determines the cross-validation splitting strategy.
@@ -294,7 +291,7 @@ class BayesSearchCV(BaseSearchCV):
 
     def __init__(self, estimator, search_spaces, optimizer_kwargs=None,
                  n_iter=50, scoring=None, fit_params=None, n_jobs=1,
-                 n_points=1, iid=True, refit=True, cv=None, verbose=0,
+                 n_points=1, iid='deprecated', refit=True, cv=None, verbose=0,
                  pre_dispatch='2*n_jobs', random_state=None,
                  error_score='raise', return_train_score=False, logger=None):
 
@@ -309,6 +306,11 @@ class BayesSearchCV(BaseSearchCV):
         # To be consistent with sklearn 0.21+, fit_params should be deprecated
         # in the constructor and be passed in ``fit``.
         self.fit_params = fit_params
+        
+        if iid != "deprecated":
+            warnings.warn("The `iid` parameter has been deprecated "
+                          "and will be ignored.")
+        self.iid = iid  # For sklearn repr pprint
 
         if logger:
             self.printfn = logger.info
@@ -317,7 +319,7 @@ class BayesSearchCV(BaseSearchCV):
 
         super(BayesSearchCV, self).__init__(
             estimator=estimator, scoring=scoring,
-            n_jobs=n_jobs, iid=iid, refit=refit, cv=cv, verbose=verbose,
+            n_jobs=n_jobs, refit=refit, cv=cv, verbose=verbose,
             pre_dispatch=pre_dispatch, error_score=error_score,
             return_train_score=return_train_score)
 
@@ -430,18 +432,20 @@ class BayesSearchCV(BaseSearchCV):
 
         # if one choose to see train score, "out" will contain train score info
         if self.return_train_score:
-            (train_scores, test_scores, test_sample_counts,
-             fit_time, score_time, parameters) = zip(*out)
+            (_fit_fail, train_scores, test_scores, test_sample_counts,
+             fit_time, score_time, parameters) = zip(*[dic.values()
+                                                       for dic in out])
         else:
-            (test_scores, test_sample_counts,
-             fit_time, score_time, parameters) = zip(*out)
+            (_fit_fail, test_scores, test_sample_counts,
+             fit_time, score_time, parameters) = zip(*[dic.values()
+                                                       for dic in out])
 
         candidate_params = parameters[::n_splits]
         n_candidates = len(candidate_params)
 
         results = dict()
 
-        def _store(key_name, array, weights=None, splits=False, rank=False):
+        def _store(key_name, array, splits=False, rank=False):
             """A small helper to store the scores/times to the cv_results_"""
             array = np.array(array, dtype=np.float64).reshape(n_candidates,
                                                               n_splits)
@@ -450,25 +454,19 @@ class BayesSearchCV(BaseSearchCV):
                     results["split%d_%s"
                             % (split_i, key_name)] = array[:, split_i]
 
-            array_means = np.average(array, axis=1, weights=weights)
+            array_means = np.average(array, axis=1)
             results['mean_%s' % key_name] = array_means
             # Weighted std is not directly available in numpy
             array_stds = np.sqrt(np.average((array -
                                              array_means[:, np.newaxis]) ** 2,
-                                            axis=1, weights=weights))
+                                            axis=1))
             results['std_%s' % key_name] = array_stds
 
             if rank:
                 results["rank_%s" % key_name] = np.asarray(
                     rankdata(-array_means, method='min'), dtype=np.int32)
 
-        # Computed the (weighted) mean and std for test scores alone
-        # NOTE test_sample counts (weights) remain the same for all candidates
-        test_sample_counts = np.array(test_sample_counts[:n_splits],
-                                      dtype=np.int)
-
-        _store('test_score', test_scores, splits=True, rank=True,
-               weights=test_sample_counts if self.iid else None)
+        _store('test_score', test_scores, splits=True, rank=True)
         if self.return_train_score:
             _store('train_score', train_scores, splits=True)
         _store('fit_time', fit_time)
