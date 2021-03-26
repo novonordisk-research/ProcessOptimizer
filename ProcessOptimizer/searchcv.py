@@ -564,7 +564,10 @@ class BayesSearchCV(BaseSearchCV):
         params = optimizer.ask(n_points=n_points)
 
         # convert parameters to python native types
-        params = [[np.array(v).item() for v in p] for p in params]
+        if n_points == 1:
+            params = [[np.array(v).item() for v in params]]
+        else:
+            params = [[np.array(v).item() for v in p] for p in params]
 
         # make lists into dictionaries
         params_dict = [point_asdict(search_space, p) for p in params]
