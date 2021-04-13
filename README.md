@@ -21,7 +21,7 @@ This readme.md is work in progress
  * [ProcessOptimizer](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#processoptimizer)
  * [Installation](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#installation)
  * [Contributions](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#contributions)
- * [Related work](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#related work)
+ * [Related work](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#related-work)
  * [PyPi](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#pypi)
  
 
