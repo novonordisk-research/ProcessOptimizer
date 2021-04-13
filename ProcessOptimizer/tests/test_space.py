@@ -583,12 +583,18 @@ def test_dimension_with_invalid_names(name):
 def test_purely_categorical_space():
     # Test reproduces the bug in #908, make sure it doesn't come back
     dims = [Categorical(['a', 'b', 'c']), Categorical(['A', 'B', 'C'])]
-    optimizer = Optimizer(dims, n_initial_points=2, random_state=3)
-
-    for _ in range(2):
-        x = optimizer.ask()
-        # before the fix this call raised an exception
-        optimizer.tell(x, np.random.uniform())
+    
+    with pytest.raises(ValueError, match= "GaussianProcessRegressor on a purely categorical space"
+                                 " is not supported. Please use another base estimator"):
+        opt = Optimizer(dims, n_initial_points=2, random_state=3)
+        #assert(Optimizer(dims, n_initial_points=2, random_state=3) == "GaussianProcessRegressor on a purely categorical space"
+                                 #" is not supported. Please use another base estimator")
+# =============================================================================
+#     for _ in range(2):
+#         x = optimizer.ask()
+#         # before the fix this call raised an exception
+#         optimizer.tell(x, np.random.uniform())
+# =============================================================================
 
 
 @pytest.mark.fast_test
