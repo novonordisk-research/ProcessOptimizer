@@ -453,14 +453,20 @@ class Optimizer(object):
 
             if strategy == "cl_min":
                 y_lie = np.min(opt.yi, axis=0).tolist() if opt.yi else np.zeros(opt.n_objectives).tolist()  # CL-min lie
+                if opt.n_objectives == 1 and not opt.yi:
+                    y_lie= y_lie[0]
                 t_lie = np.min(ti) if ti is not None else log(
                     sys.float_info.max)
             elif strategy == "cl_mean":
                 y_lie = np.mean(opt.yi, axis=0).tolist() if opt.yi else np.zeros(opt.n_objectives).tolist()  # CL-mean lie
+                if opt.n_objectives == 1 and not opt.yi:
+                    y_lie= y_lie[0]
                 t_lie = np.mean(ti) if ti is not None else log(
                     sys.float_info.max)
             else:
                 y_lie = np.max(opt.yi, axis=0).tolist() if opt.yi else np.zeros(opt.n_objectives).tolist() # CL-max lie
+                if opt.n_objectives == 1 and not opt.yi:
+                    y_lie= y_lie[0]
                 t_lie = np.max(ti) if ti is not None else log(
                     sys.float_info.max)
 
