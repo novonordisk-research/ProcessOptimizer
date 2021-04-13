@@ -33,18 +33,20 @@ For examples on use, checkout https://github.com/novonordisk-research/ProcessOpt
 
 ## Installation
 
-ProcessOptimizer can be installed using 'pip install ProcessOptimizer'
+ProcessOptimizer can be installed using `pip install ProcessOptimizer`
 The repository and examples can be found at https://github.com/novonordisk-research/ProcessOptimizer
 ProcessOptimizer can also be installed by running `pip install -e .` in top directory of the cloned repository.
 
 ## Contributions
 
 Feel free to play around with algorithm. Should you encounter errors while using ProcessOptimizer, please report them
-at https://github.com/novonordisk-research/ProcessOptimizer/issues. 
-To help solve the issues, please: 
-	- provide minimal amount of code to reproduce the error
-	- state versions of ProcesOptimizer, sklearn, numpy, ...
-	- describe the expected nehavior of the code
+at https://github.com/novonordisk-research/ProcessOptimizer/issues. <br>
+To help solve the issues, please: <br>
+
+- Provide minimal amount of code to reproduce the error
+- State versions of ProcesOptimizer, sklearn, numpy, ...
+- Describe the expected nehavior of the code <br>
+
 If you would like to contribute by making anything from documentation to feature-additions, THANK YOU. Please open a pull request 
 marked as *WIP* as early as possible and describe the issue you seek to solve and outline your planned solution.
 
@@ -61,5 +63,5 @@ To upload a new version to PyPi do the following in the root folder of the proje
 - Change version number in setup.py
 - Change version number in ProcessOptimizer/\_\_init\_\_.py
 - Remember to `pip install twine` if running in a new virtual env
-- run `python setup.py sdist bdist_wheel`
-- run `python -m twine upload dist/*` (make sure that /dist only contains relevant version)
+- Run `python setup.py sdist bdist_wheel`
+- Run `python -m twine upload dist/*` (make sure that /dist only contains relevant version)
