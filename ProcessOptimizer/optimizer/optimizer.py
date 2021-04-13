@@ -262,6 +262,9 @@ class Optimizer(object):
             dimensions = normalize_dimensions(dimensions)
         self.space = Space(dimensions)
 
+        if isinstance(self.base_estimator_, GaussianProcessRegressor) and self.space.is_categorical:
+                  raise ValueError("GaussianProcessRegressor on a purely categorical space"
+                                 " is not supported. Please use another base estimator")          
         # Latin hypercube sampling
 
         self._lhs = lhs
