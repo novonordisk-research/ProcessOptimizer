@@ -24,12 +24,18 @@ SEARCH = ["sampling", "lbfgs"]
 ACQUISITION = ["LCB", "EI"]
 
 
-@pytest.mark.slow_test
-@pytest.mark.parametrize("search", SEARCH)
-@pytest.mark.parametrize("acq", ACQUISITION)
-def test_gp_minimize_bench1(search, acq):
-    check_minimize(bench1, 0.,
-                   [(-2.0, 2.0)], search, acq, 0.05, 20)
+# Commented out due to lack of functionality of purely categorical space with GP
+# =============================================================================
+# @pytest.mark.fast_test
+# @pytest.mark.parametrize("search", ["sampling"])
+# @pytest.mark.parametrize("acq", ACQUISITION)
+# def test_gp_minimize_bench4(search, acq):
+#     # this particular random_state picks "2" twice so we can make an extra
+#     # call to the objective without repeating options
+#     check_minimize(bench4, 0,
+#                    [("-2", "-1", "0", "1", "2")], search, acq, 1.05, 20)
+# 
+# =============================================================================
 
 
 @pytest.mark.slow_test
