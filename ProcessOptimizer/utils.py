@@ -83,7 +83,6 @@ def create_result(Xi, yi, space=None, rng=None, specs=None, models=None):
         res.x_iters = Xi
         if models.size == 0:
             res.models = models
-            print(models)
         else:
             res.models = models[:,i]
         res.space = space
