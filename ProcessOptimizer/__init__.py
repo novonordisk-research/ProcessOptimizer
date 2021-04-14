@@ -64,7 +64,7 @@ from .utils import dump
 from .utils import expected_minimum
 from .utils import load
 
-__version__ = "0.6.0"
+__version__ = "0.6.1"
 
 
 __all__ = (
