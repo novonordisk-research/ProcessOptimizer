@@ -1,6 +1,8 @@
 # Release history
 
-## Version 0.6.1 [unpublished]
+## Version 0.6.2 [unpublished]
+
+## Version 0.6.1
 
 ### Changes
 
@@ -9,6 +11,7 @@ Tests are primarily from numpy instead of sklearn
 Changed plot_objective to use same color scale for each individual dependence plot and added colorbar
 Added plot_objectives, which plots all individual objective functions for multiobjective optimization
 Added a title parameter to plot_objective
+More informative ReadMe.md started
 
 ### Bugfixes
 
@@ -16,7 +19,8 @@ Example on visualize_results.ipynb corrected to avoid warnings
 DEAP added as dependency for Pareto optimization
 normalize_y temporarely set to False until real fix from sklearn
 Handled a case in which feeding multible datapoints to the model would fail.
-Added functionality to create_result to create a list of results in case of multiobjective optimization 
+Added functionality to create_result to create a list of results in case of multiobjective optimization
+Added a ValueError to warn users against using GP in entirely categorical spaces
 
 ## Version 0.6.0
 
