@@ -5,11 +5,11 @@ except ImportError:
 
 
 setup(name='ProcessOptimizer',
-      version='0.6.0',
+      version='0.6.1',
       description='Sequential model-based optimization toolbox (forked from scikit-optimize)',
       url='https://github.com/novonordisk-research/ProcessOptimizer',
       license='BSD',
-      author='Bytes and Brains',
+      author='Novo Nordisk, Research & Early Development',
       packages=['ProcessOptimizer', 'ProcessOptimizer.learning', 'ProcessOptimizer.optimizer', 'ProcessOptimizer.space',
                 'ProcessOptimizer.learning.gaussian_process'],
       install_requires=['numpy', 'matplotlib', 'scipy',
