@@ -262,6 +262,9 @@ class Optimizer(object):
             dimensions = normalize_dimensions(dimensions)
         self.space = Space(dimensions)
 
+        if isinstance(self.base_estimator_, GaussianProcessRegressor) and self.space.is_categorical:
+                  raise ValueError("GaussianProcessRegressor on a purely categorical space"
+                                 " is not supported. Please use another base estimator")          
         # Latin hypercube sampling
 
         self._lhs = lhs
@@ -325,7 +328,7 @@ class Optimizer(object):
 
         return optimizer
 
-    def ask(self, n_points=None, strategy="cl_min", space_fill=None):
+    def ask(self, n_points=None, strategy="stbr", space_fill=None):
         """Query point or multiple points at which objective should be evaluated.
 
         * `n_points` [int or None, default=None]:
@@ -340,7 +343,9 @@ class Optimizer(object):
             Method to use to sample multiple points (see also `n_points`
             description). This parameter is ignored if n_points = None.
             Supported options are `"cl_min"`, `"cl_mean"` or `"cl_max"`.
-
+            
+            -if set to `"stbr"` then steinerberger sampling is used
+              after first point.
             - If set to `"cl_min"`, then constant liar strtategy is used
                with lie objective value being minimum of observed objective
                values. `"cl_mean"` and `"cl_max"` means mean and max of values
@@ -416,7 +421,7 @@ class Optimizer(object):
         if n_points is None or n_points==1:
             return self._ask()
 
-        supported_strategies = ["cl_min", "cl_mean", "cl_max"]
+        supported_strategies = ["cl_min", "cl_mean", "cl_max", "stbr"]
 
         if not (isinstance(n_points, int) and n_points > 0):
             raise ValueError(
@@ -442,22 +447,31 @@ class Optimizer(object):
 
         X = []
         for i in range(n_points):
-            x = opt.ask()
+            if i>0 and strategy == "stbr" and self._n_initial_points <1:
+                x = opt.stbr_scipy[0]
+            else:
+                x = opt.ask()
             X.append(x)
 
             ti_available = "ps" in self.acq_func and len(opt.yi) > 0
             ti = [t for (_, t) in opt.yi] if ti_available else None
 
             if strategy == "cl_min":
-                y_lie = np.min(opt.yi) if opt.yi else 0.0  # CL-min lie
+                y_lie = np.min(opt.yi, axis=0).tolist() if opt.yi else np.zeros(opt.n_objectives).tolist()  # CL-min lie
+                if opt.n_objectives == 1 and not opt.yi:
+                    y_lie= y_lie[0]
                 t_lie = np.min(ti) if ti is not None else log(
                     sys.float_info.max)
             elif strategy == "cl_mean":
-                y_lie = np.mean(opt.yi) if opt.yi else 0.0  # CL-mean lie
+                y_lie = np.mean(opt.yi, axis=0).tolist() if opt.yi else np.zeros(opt.n_objectives).tolist()  # CL-mean lie
+                if opt.n_objectives == 1 and not opt.yi:
+                    y_lie= y_lie[0]
                 t_lie = np.mean(ti) if ti is not None else log(
                     sys.float_info.max)
             else:
-                y_lie = np.max(opt.yi) if opt.yi else 0.0  # CL-max lie
+                y_lie = np.max(opt.yi, axis=0).tolist() if opt.yi else np.zeros(opt.n_objectives).tolist() # CL-max lie
+                if opt.n_objectives == 1 and not opt.yi:
+                    y_lie= y_lie[0]
                 t_lie = np.max(ti) if ti is not None else log(
                     sys.float_info.max)
 

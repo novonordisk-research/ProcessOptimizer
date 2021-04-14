@@ -81,7 +81,10 @@ def create_result(Xi, yi, space=None, rng=None, specs=None, models=None):
         res.fun = yi_single[best]
         res.func_vals = yi_single
         res.x_iters = Xi
-        res.models = models[:,i]
+        if models.size == 0:
+            res.models = models
+        else:
+            res.models = models[:,i]
         res.space = space
         res.random_state = rng
         res.specs = specs     
