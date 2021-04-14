@@ -328,7 +328,7 @@ class Optimizer(object):
 
         return optimizer
 
-    def ask(self, n_points=None, strategy="cl_min", space_fill=None):
+    def ask(self, n_points=None, strategy="stbr", space_fill=None):
         """Query point or multiple points at which objective should be evaluated.
 
         * `n_points` [int or None, default=None]:
@@ -343,7 +343,9 @@ class Optimizer(object):
             Method to use to sample multiple points (see also `n_points`
             description). This parameter is ignored if n_points = None.
             Supported options are `"cl_min"`, `"cl_mean"` or `"cl_max"`.
-
+            
+            -if set to `"stbr"` then steinerberger sampling is used
+              after first point.
             - If set to `"cl_min"`, then constant liar strtategy is used
                with lie objective value being minimum of observed objective
                values. `"cl_mean"` and `"cl_max"` means mean and max of values
@@ -419,7 +421,7 @@ class Optimizer(object):
         if n_points is None or n_points==1:
             return self._ask()
 
-        supported_strategies = ["cl_min", "cl_mean", "cl_max"]
+        supported_strategies = ["cl_min", "cl_mean", "cl_max", "stbr"]
 
         if not (isinstance(n_points, int) and n_points > 0):
             raise ValueError(
@@ -445,7 +447,10 @@ class Optimizer(object):
 
         X = []
         for i in range(n_points):
-            x = opt.ask()
+            if i>0 and strategy == "stbr":
+                x = opt.stbr_scipy[0]
+            else:
+                x = opt.ask()
             X.append(x)
 
             ti_available = "ps" in self.acq_func and len(opt.yi) > 0
