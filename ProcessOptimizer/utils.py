@@ -80,7 +80,7 @@ def create_result(Xi, yi, space=None, rng=None, specs=None, models=None):
         res.x = Xi[best]
         res.fun = yi_single[best]
         res.func_vals = yi_single
-        res.x_iters = 
+        res.x_iters = Xi
         if models.size == 0:
             res.models = models
             print(models)
