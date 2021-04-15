@@ -1,6 +1,19 @@
 # Release history
 
+## Version 0.6.3 [unpublished]
+
 ## Version 0.6.2 [unpublished]
+
+### Changes
+
+Latin Hyper Cube set as standard "random"-point generator
+Automatic testing when commiting to develop is implemented
+Slight adjustment to documentation
+Unneccesary files pruned
+
+### Bugfixes
+
+test_deadline_stopper fixed as it was giving unreproducible results
 
 ## Version 0.6.1
 
