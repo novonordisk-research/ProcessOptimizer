@@ -71,7 +71,7 @@ class Optimizer(object):
         `x0` count as initialization points. If len(x0) < n_initial_points
         additional points are sampled at random.
 
-    * `lhs` [bool, default = True]:
+    * `lhs` [bool, default = False]:
         If set to true the optimizer will use latin hypercube sampling for the first n_initial_points
 
     * `acq_func` [string, default=`"gp_hedge"`]:
@@ -152,7 +152,7 @@ class Optimizer(object):
     """
 
     def __init__(self, dimensions, base_estimator="gp",
-                 n_random_starts=None, n_initial_points=10, lhs=True,
+                 n_random_starts=None, n_initial_points=10, lhs=False,
                  acq_func="gp_hedge",
                  acq_optimizer="auto",
                  random_state=None, acq_func_kwargs=None,
