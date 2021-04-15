@@ -3,7 +3,6 @@
 Scikit-Optimize is a community effort. Contributors include, in alphabetical order:
 
 * [andreh7][andreh7]
-* [Søren Bertelsen] [sqbl]
 * [Nuno Campos][nfcampos]
 * [Mehdi Cherti][mehdidc]
 * [Alexander Fabisch][AlexanderFabisch]
@@ -21,7 +20,6 @@ Scikit-Optimize is a community effort. Contributors include, in alphabetical ord
 The scikit-optimize logo was a contribution by
 [Jeremy Anderson][objectadjective] and **Rose Peng**.
 
-[sqbl]: https://github.com/sqbl
 [AlexanderFabisch]: https://github.com/AlexanderFabisch
 [mehdidc]: https://github.com/mehdidc
 [nfcampos]: https://github.com/nfcampos
