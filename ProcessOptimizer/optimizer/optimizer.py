@@ -448,7 +448,7 @@ class Optimizer(object):
         X = []
         for i in range(n_points):
             if i>0 and strategy == "stbr" and self._n_initial_points <1:
-                x = opt.stbr_scipy[0]
+                x = opt.stbr_scipy()[0]
             else:
                 x = opt.ask()
             X.append(x)
