@@ -2,104 +2,105 @@
 
 ## Version 0.6.3 [unpublished]
 
-## Version 0.6.2 [unpublished]
+## Version 0.6.2
 
 ### Changes
 
-Latin Hyper Cube set as standard "random"-point generator
-Automatic testing when commiting to develop is implemented
-Slight adjustment to documentation
-Unneccesary files pruned
+- Automatic testing when commiting to develop is implemented
+- Slight adjustment to documentation
+- Unneccesary files pruned
+- Visual change to changelog
 
 ### Bugfixes
 
-test_deadline_stopper fixed as it was giving unreproducible results
+- test_deadline_stopper fixed as it was giving unreproducible results
+- Fixed Steinerberger error
 
 ## Version 0.6.1
 
 ### Changes
 
-Two additional examples added
-Tests are primarily from numpy instead of sklearn
-Changed plot_objective to use same color scale for each individual dependence plot and added colorbar
-Added plot_objectives, which plots all individual objective functions for multiobjective optimization
-Added a title parameter to plot_objective
-More informative ReadMe.md started
+- Two additional examples added
+- Tests are primarily from numpy instead of sklearn
+- Changed plot_objective to use same color scale for each individual dependence plot and added colorbar
+- Added plot_objectives, which plots all individual objective functions for multiobjective optimization
+- Added a title parameter to plot_objective
+- More informative ReadMe.md started
 
 ### Bugfixes
 
-Example on visualize_results.ipynb corrected to avoid warnings
-DEAP added as dependency for Pareto optimization
-normalize_y temporarely set to False until real fix from sklearn
-Handled a case in which feeding multible datapoints to the model would fail.
-Added functionality to create_result to create a list of results in case of multiobjective optimization
-Added a ValueError to warn users against using GP in entirely categorical spaces
+- Example on visualize_results.ipynb corrected to avoid warnings
+- DEAP added as dependency for Pareto optimization
+- normalize_y temporarely set to False until real fix from sklearn
+- Handled a case in which feeding multible datapoints to the model would fail.
+- Added functionality to create_result to create a list of results in case of multiobjective optimization
+- Added a ValueError to warn users against using GP in entirely categorical spaces
 
 ## Version 0.6.0
 
 ### Changes
 
-README changed to reflect move of repo to NN-research
-Steinerberger sampling added for improves spacefilling and explorative mode
-Multiobjective optimization added by NSGA and Pareto front
-Unused folders trimmed
-Added example notebooks on new functionality
+- README changed to reflect move of repo to NN-research
+- Steinerberger sampling added for improves spacefilling and explorative mode
+- Multiobjective optimization added by NSGA and Pareto front
+- Unused folders trimmed
+- Added example notebooks on new functionality
 
 ## Version 0.5.1
 
 ### Bugfixes
 
-Removed check for numpy version in constraints.py
-Updated example/constraints.ipynb
+- Removed check for numpy version in constraints.py
+- Updated example/constraints.ipynb
 
 
 ## Version 0.5.0
 
 ### Changes
 
-Remove dependency on scipy>=0.14.0 *
-Remove dependency on scikit-learn==0.21.0 *^
-Remove dependency on bokeh==1.4.0 *
-Remove dependency on tornado==5.1.1 *
-*from setup.py
-^from requirements.txt
-Change gpr (as in skopt #943) to reflect changes in sklearn gpr-module 
+- Remove dependency on scipy>=0.14.0 *
+- Remove dependency on scikit-learn==0.21.0 *^
+- Remove dependency on bokeh==1.4.0 *
+- Remove dependency on tornado==5.1.1 *
+- *from setup.py
+- ^from requirements.txt
+- Change gpr (as in skopt #943) to reflect changes in sklearn gpr-module 
      (relates to normalilzation)
-Change searchCV to reflect skopt #939 and #904 (relates to np.mask and imports)
-Changes in tests (skopt#939 and #808). Extensive changes in tests!
-Change in Bokeh_plot.py to fix bug when Bokeh>=2.2.0
+- Change searchCV to reflect skopt #939 and #904 (relates to np.mask and imports)
+- Changes in tests (skopt#939 and #808). Extensive changes in tests!
+- Change in Bokeh_plot.py to fix bug when Bokeh>=2.2.0
 
-TODO: look more into implemented normalizations in skopt.
+- TODO: look more into implemented normalizations in skopt.
 
 ## Version 0.4.9
 
 ### Bugfixes
 
-Version number increased due to reupload to pypi.
+- Version number increased due to reupload to pypi.
 
 ## Version 0.4.8
 
 ### Bugfixes
 
-Locked SKlearn to version 0.21.0 to avoid install errors.
+- Locked SKlearn to version 0.21.0 to avoid install errors.
 
 ## Version 0.4.7
 
 ### Bugfixes
 
-Changed bokeh version to 1.4.0
+- Changed bokeh version to 1.4.0
 
 ## Version 0.4.6
 
 ### Bugfixes
 
-ProcessOptimizer.\_\_version\_\_ shows correct version.
-Removed \_version.py as we dont use versioneer anymore.
-Version needs to be changed manually in \_\_init\_\_ .py from now on.
+- ProcessOptimizer.\_\_version\_\_ shows correct version.
+- Removed \_version.py as we dont use versioneer anymore.
+- Version needs to be changed manually in \_\_init\_\_ .py from now on.
 
 ## Version 0.4.5
 
-Wrong upload. Please don't use this version
+- Wrong upload. Please don't use this version
 
 ## Version 0.4.4
 
