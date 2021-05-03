@@ -25,6 +25,7 @@ This readme.md is work in progress
 ## Table of Contents
  * [ProcessOptimizer](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#processoptimizer)
  * [Installation](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#installation)
+ * [How does it work?](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#how-does-it-work?)
  * [Contributions](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#contributions)
  * [Related work](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#related-work)
  * [PyPi](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#pypi)
@@ -82,7 +83,7 @@ Notice that this is an optimization tool and not a modelling tool. This means th
 
 The best observation against the number of observations can be plotted with plot_convergence:
  
-![BayesianOptimization in action](./examples/Convergence_plot .png)
+![BayesianOptimization in action](./examples/Convergence_plot.png)
 
 ## Contributions
 
