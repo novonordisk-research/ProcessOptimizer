@@ -45,43 +45,42 @@ ProcessOptimizer can also be installed by running `pip install -e .` in top dire
 
 ## How does it work?
 
-This package is intended for usage for real world process optimization of black-box functions. This could e.g. be some complex chemical reaction where no reliable analytical model mapping input variables to the output is readily available.
-Bayesian optimization is a great tool for optimizing black-box functions where the input space has many dimensions and the function is expensive to evaluate in terms of time or resources. Notice that this tool is designed to solve minimization problems. It is therefore important to define the scoring function such that it turns into a minimization problem.
-
-Below is an illustrative example of minimization of the Booth function in 2 dimensions using the ProcessOptimizer package. Notice that in real world applications the function would be black box (and typically the input space would have more than 2 dimensions). However, it would still be possible to evaluate the function given a set of input values and thus use the same framework for optimization.
-The Booth function is a 2-dimensional function defined by (Booth Function (sfu.ca)):
+This package is intended for real world process optimization problems of black-box functions. This could e.g. be some complex chemical reaction where no reliable analytical model mapping input variables to the output is readily available. <br/>
+Bayesian optimization is a great tool for optimizing black-box functions where the input space has many dimensions and the function is expensive to evaluate in terms of time and/or resources.<br/>
+**Notice that this tool is designed to solve minimization problems.** It is therefore important to define the scoring function such that it turns into a minimization problem. <br/>
+Below is an illustrative example of minimization of the Booth function in 2 dimensions using the `ProcessOptimizer` package. Notice that in real world applications the function would be black box (and typically the input space would have more than 2 dimensions). However, it would still be possible to evaluate the function given a set of input values and thus use the same framework for optimization. <br/>
+The Booth function is a 2-dimensional function defined by [Booth Function (sfu.ca)](https://www.sfu.ca/~ssurjano/booth.html) :
 ```python
 def Booth(x,y):
     return (x + 2*y - 7)**2 + (2*x + y - 5)**2 
 ```
-Below is an image of the function on the square x_i belongs to 0 , 5 for i= 1,2. The function has a global minimum at f(x*)=0, at x*=(1,3)
+Below is an image of the Booth function on the square $x_i \in [0,5]$ for i= 1,2. The function has a global minimum at f(x*)=0, at x*=(1,3).
 
 ![BayesianOptimization in action](./examples/Booth_function.png)
 
-Suppose you are given the task of minimizing the function on the domain only using empirical observations and without any analytical function.
-Working with the ProcessOptimizer package you simply define the space and create an optimizer object.
-The space object takes a list of dimensions which can either be Real, Integer or Categorical. Real dimensions are defined by the maximum and minimum values.
-The optimizer object initialized below uses GP (Gaussian Process). This means that after each step a Gaussian Process is fitted to the observations, which is used as a posterior distribution. Combined with an acquisition function the next point that should be explored can be determined. Notice that this process only takes place once n_initial_points of initial data has been aqcuired. In this case LHS (latin hypercube sampling) has been used as the initial sampling strategy for the first 6 points.
+Suppose you are given the task of minimizing the function on the domain only using empirical observations and without any analytical function. <br/>
+Working with the ProcessOptimizer package you simply define the `Space` and create an `Optimizer` object.<br/>
+The `Space` object takes a list of dimensions which can either be `Real`, `Integer` or `Categorical`. `Real` dimensions are defined by the maximum and minimum values.<br/>
+The `Optimizer` object initialized below uses GP (Gaussian Process). This means that after each step a Gaussian Process is fitted to the observations, which is used as a posterior distribution. Combined with an acquisition function the next point that should be explored can be determined. Notice that this process only takes place once n_initial_points of initial data has been aqcuired. In this case `LHS= True` (latin hypercube sampling) has been used as the initial sampling strategy for the first 6 points.
 ```python
 SPACE = Space([Real(0,5), Real(0,5))])   
 
 opt = Optimizer(SPACE, "GP", n_initial_points = 6, lhs=True)
 ```
-The optimizer can now be used in steps by calling the ask function, evaluating the function at the given Next_point and telling the optimizer the result:
+The optimizer can now be used in steps by calling the `.ask()` function, evaluating the function at the given `Next_point` and use `.tell()` the `Optimizer` the result:
 ```python
 Next_point = Opt.ask()
 Next_eval = Booth(Next_point[0], Next_point[1])
 res =Opt.tell(Next_point, Next_eval)
 ```
-The object returned by tell contains a model of the Gaussian Process predicted mean. This model can be plotted using plot_objective(res). Below is a gif of how the Gaussian Process predicted mean evolves after the first 6 initial points and until 25 points have been sampled in total.
+The object returned by tell contains a model of the Gaussian Process predicted mean. This model can be plotted using `plot_objective(res)`. Below is a gif of how the Gaussian Process predicted mean evolves after the first 6 initial points and until 20 points have been sampled in total.
 
 
 ![BayesianOptimization in action](./examples/BO_GIF.gif)
  
-Notice that this is an optimization tool and not a modelling tool. This means that the optimizer finds an approximate solution for the global minimum quickly however it does not guarantee that the Gaussian Process predicted mean is an accurate model on the entire domain.
+Notice that this is an optimization tool and not a modelling tool. This means that the optimizer finds an approximate solution for the global minimum quickly however it does not guarantee that the Gaussian Process predicted mean is an accurate model on the entire domain.<br/>
 
-
-The best observation against the number of observations can be plotted with plot_convergence:
+The best observation against the number of observations can be plotted with `plot_convergence(res)`:
  
 ![BayesianOptimization in action](./examples/Convergence_plot.png)
 
