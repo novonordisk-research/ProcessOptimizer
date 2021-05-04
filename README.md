@@ -54,7 +54,8 @@ The Booth function is a 2-dimensional function defined by [Booth Function (sfu.c
 def Booth(x,y):
     return (x + 2*y - 7)**2 + (2*x + y - 5)**2 
 ```
-Below is an image of the Booth function on the square $x_i \in [0,5]$ for i= 1,2. The function has a global minimum at f(x*)=0, at x*=(1,3).
+Below is an image of the Booth function on the square <img src="https://render.githubusercontent.com/render/math?math=x_i \in \[0,5\]">:
+
 
 ![BayesianOptimization in action](./examples/Booth_function.png)
 
