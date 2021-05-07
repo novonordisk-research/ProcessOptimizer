@@ -51,10 +51,10 @@ Bayesian optimization is a great tool for optimizing black-box functions where t
 Below is an illustrative example of minimization of the Booth function in 2 dimensions using the `ProcessOptimizer` package. Notice that in real world applications the function would be black box (and typically the input space would have more than 2 dimensions). However, it would still be possible to evaluate the function given a set of input values and thus use the same framework for optimization. <br/>
 The Booth function is a 2-dimensional function defined by [Booth Function (sfu.ca)](https://www.sfu.ca/~ssurjano/booth.html) :
 ```python
-def Booth(x,y):
-    return (x + 2*y - 7)**2 + (2*x + y - 5)**2 
+def Booth(x0,x1):
+    return (x0 + 2*x1 - 7)**2 + (2*x0 + x1 - 5)**2 
 ```
-Below is an image of the Booth function on the square <img src="https://render.githubusercontent.com/render/math?math=x,y \in \left[ 0,5 \right]">.
+Below is an image of the Booth function on the square <img src="https://render.githubusercontent.com/render/math?math=x_i \in \left[ 0,5 \right]"> for i=0,1.
 
 
 ![BayesianOptimization in action](./examples/Booth_function.png)
@@ -74,7 +74,7 @@ Next_point = Opt.ask()
 Next_eval = Booth(Next_point[0], Next_point[1])
 res =Opt.tell(Next_point, Next_eval)
 ```
-The object returned by tell contains a model of the Gaussian Process predicted mean. This model can be plotted using `plot_objective(res)`. Below is a gif of how the Gaussian Process predicted mean evolves after the first 6 initial points and until 20 points have been sampled in total.
+The object returned by tell contains a model of the Gaussian Process predicted mean. This model can be plotted using `plot_objective(res)`. Below is a gif of how the Gaussian Process predicted mean evolves after the first 6 initial points and until 20 points have been sampled in total. The orange dots visualise each evaluation of the function and the red dot shows the position of the minimum function evaluation. In the diagonal of the figure partial dependence plots are shown. These are used to visualise partial dependence of the model on each parameter (read more at [Greedy function approximation: A gradient boostingmachine](https://doi.org/10.1214/aos/1013203451) section 8.2).
 
 
 ![BayesianOptimization in action](./examples/BO_GIF.gif)
