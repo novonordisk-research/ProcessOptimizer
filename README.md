@@ -83,6 +83,7 @@ When a result has been obtained the user needs to tell the output to the `Optimi
 res = opt.tell([3.75, 3.75], 59.313996676981354)
 ```
 The `res` object returned by tell contains a model of the Gaussian Process predicted mean. This model can be plotted using `plot_objective(res)`. Below is a gif of how the Gaussian Process predicted mean evolves after the first 6 initial points and until 20 points have been sampled in total. The orange dots visualise each evaluation of the function and the red dot shows the position of the expected minimum. In the diagonal of the figure dependence plots are shown. These show how the function depend on each input variable with other input variables kept constant at the expected minimum.
+
 ![BayesianOptimization in action](./examples/BO_GIF.gif)
  
 Notice that this is an optimization tool and not a modelling tool. This means that the optimizer finds an approximate solution for the global minimum quickly however it does not guarantee that the Gaussian Process predicted mean is an accurate model on the entire domain.<br/>
