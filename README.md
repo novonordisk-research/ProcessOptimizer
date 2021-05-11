@@ -49,10 +49,10 @@ This package is intended for real world process optimization problems of black-b
 Bayesian optimization is a great tool for optimizing black-box functions where the input space has many dimensions and the function is expensive to evaluate in terms of time and/or resources.<br/>
 **Notice that this tool is designed to solve minimization problems.** It is therefore important to define the scoring function such that it turns into a minimization problem. <br/>
 Below is an illustrative example of minimization of the Booth function in 2 dimensions using the `ProcessOptimizer` package. Notice that in real world applications the function would be black box (and typically the input space would have more than 2 dimensions). However, it would still be possible to evaluate the function given a set of input values and thus use the same framework for optimization. <br/>
-The Booth function is a 2-dimensional function defined by [Booth Function (sfu.ca)](https://www.sfu.ca/~ssurjano/booth.html) :
+The Booth function is a 2-dimensional function defined by [Booth Function (sfu.ca)](https://www.sfu.ca/~ssurjano/booth.html). In this example uniformly distributed random noise between 0-5% of the function value is added using `np.random`.
 ```python
 def Booth(x0, x1):
-    return (x0 + 2 * x1 - 7)**2 + (2 * x0 + x1 - 5)**2 
+    return ((x0 + 2 * x1 - 7)**2 + (2 * x0 + x1 - 5)**2) * (1 + 0.05 * np.random.rand())
 ```
 Below is an image of the Booth function on the square <img src="https://render.githubusercontent.com/render/math?math=x_i \in \left[ 0,5 \right]"> for i=0,1.
 
@@ -68,15 +68,21 @@ SPACE = Space([Real(0,5), Real(0,5)])
 
 opt = Optimizer(SPACE, base_estimator = "GP", n_initial_points = 6, lhs = True)
 ```
-The optimizer can now be used in steps by calling the `.ask()` function, evaluating the function at the given `Next_point` and use `.tell()` the `Optimizer` the result:
+The optimizer can now be used in steps by calling the `.ask()` function, evaluating the function at the given point and use `.tell()` the `Optimizer` the result. In practise it would work like this. First ask the optimizer for the next point to perform an experiment:
 ```python
-Next_point = opt.ask()
-Next_eval = Booth(Next_point[0], Next_point[1])
-res = opt.tell(Next_point, Next_eval)
+opt.ask()
+>>> [3.75, 3.75]
 ```
-The object returned by tell contains a model of the Gaussian Process predicted mean. This model can be plotted using `plot_objective(res)`. Below is a gif of how the Gaussian Process predicted mean evolves after the first 6 initial points and until 20 points have been sampled in total. The orange dots visualise each evaluation of the function and the red dot shows the position of the minimum function evaluation. In the diagonal of the figure partial dependence plots are shown. These are used to visualise partial dependence of the model on each parameter (read more at [Greedy function approximation: A gradient boostingmachine](https://doi.org/10.1214/aos/1013203451) section 8.2).
-
-
+Now go to the laboratory or wherever the experiment can be performed and use the values above. In this example the experiment can simply be performed by evaluating the Booth function using the values above:
+```python
+Booth(3.75, 3.75)
+>>> 59.313996676981354
+```
+When a result has been obtained the user needs to tell the output to the `Optimizer`. This is done using the `.tell()` function:
+```python
+res = opt.tell([3.75, 3.75], 59.313996676981354)
+```
+The `res` object returned by tell contains a model of the Gaussian Process predicted mean. This model can be plotted using `plot_objective(res)`. Below is a gif of how the Gaussian Process predicted mean evolves after the first 6 initial points and until 20 points have been sampled in total. The orange dots visualise each evaluation of the function and the red dot shows the position of the expected minimum. In the diagonal of the figure dependence plots are shown. These show how the function depend on each input variable with other input variables kept constant at the expected minimum.
 ![BayesianOptimization in action](./examples/BO_GIF.gif)
  
 Notice that this is an optimization tool and not a modelling tool. This means that the optimizer finds an approximate solution for the global minimum quickly however it does not guarantee that the Gaussian Process predicted mean is an accurate model on the entire domain.<br/>
