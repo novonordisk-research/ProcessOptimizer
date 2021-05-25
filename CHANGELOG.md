@@ -1,6 +1,13 @@
 # Release history
 
-## Version 0.6.3 [unpublished]
+## Version 0.6.4 [unpublished]
+
+## Version 0.6.3
+
+### Changes
+
+- Improve documentation in README.md
+- Reset normalize_y to True and update requirements.txt
 
 ## Version 0.6.2
 

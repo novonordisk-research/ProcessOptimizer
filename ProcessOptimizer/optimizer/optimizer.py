@@ -1027,7 +1027,10 @@ class Optimizer(object):
     
             Mean = MinDist.mean()
             Std = np.std(MinDist)
-            return ArgMax, (MinDist-Mean)/(Std)
+            if Std == 0: #Quick workaround to avoid divide by zero, when 0 or 1 datapoints. Investigate alternatives in future.
+                return ArgMax, (MinDist-Mean)
+            else:
+                return ArgMax, (MinDist-Mean)/(Std)
         
     # This fuction returns the minimal distance between a point and a list of points
     @staticmethod
