@@ -9,7 +9,7 @@ from matplotlib.pyplot import cm
 from matplotlib.ticker import LogLocator
 from matplotlib.ticker import MaxNLocator, FuncFormatter
 from scipy.optimize import OptimizeResult
-from ProcessOptimizer import expected_minimum
+from ProcessOptimizer import expected_minimum, expected_minimum_random_sampling
 from .space import Categorical
 
 
@@ -390,7 +390,8 @@ def dependence(space, model, i, j=None, sample_points=None,
 
 
 def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
-                   zscale='linear', dimensions=None,usepartialdependence=True, pars='result', expected_minimum_samples = None, title=None):
+                   zscale='linear', dimensions=None, usepartialdependence=True, 
+                   pars='result', expected_minimum_samples = None, title=None):
     """Pairwise dependence plot of the objective function.
 
     The diagonal shows the dependence for dimension `i` with
@@ -444,6 +445,7 @@ def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
                             currently does not work with categorical values.
                         'expected_minimum_random' - Parameters that gives the best minimum
                             when using naive random sampling. Works with categorical values
+                            
     * `expected_minimum_samples` [float, default = None] Determines how many points should be evaluated
         to find the minimum when using 'expected_minimum' or 'expected_minimum_random'
         
@@ -476,9 +478,9 @@ def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
         elif pars == 'expected_minimum_random':
             # Do a minimum search by evaluating the function with n_samples sample values
             if expected_minimum_samples: # If a value for expected_minimum_samples has been parsed
-                x_vals = expected_min_random_sampling(result.models[-1], space, n_samples=expected_minimum_samples)
+                x_vals, _ = expected_minimum_random_sampling(result, n_random_starts=expected_minimum_samples, random_state=None)
             else: # Use standard of 10^n_parameters. Note this becomes very slow for many parameters
-                x_vals = expected_min_random_sampling(result.models[-1], space, n_samples=10**len(result.x))
+                x_vals, _ = expected_minimum_random_sampling(result, n_random_starts=100000, random_state=None)
         else:
             raise ValueError('Argument ´pars´ must be a valid string (´result´)')
     elif isinstance(pars,list):
@@ -765,21 +767,3 @@ def _cat_format(dimension, x, _):
     """Categorical axis tick formatter function.  Returns the name of category
     `x` in `dimension`.  Used with `matplotlib.ticker.FuncFormatter`."""
     return str(dimension.categories[int(x)])
-
-def expected_min_random_sampling(model, space, n_samples = 100000):
-    """Minimum search by doing naive random sampling, Returns the parameters
-    that gave the minimum function value"""
-    if n_samples > 100000:
-        n_samples = 100000
-    # sample points from search space
-    random_samples = space.rvs(n_samples=n_samples)
-    
-    # make estimations with surrogate
-    y_random = model.predict(space.transform(random_samples))
-    index_best_objective = np.argmin(y_random)
-    min_x = random_samples[index_best_objective]
-    
-    return min_x
-
-
-
