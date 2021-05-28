@@ -771,7 +771,7 @@ def _cat_format(dimension, x, _):
     return str(dimension.categories[int(x)])
 
 
-def plot_expectedminimum_development(result, figsize=(15,15), random_state=None):
+def plot_expected_minimum_convergence(result, figsize=(15,15), random_state=None):
     '''
     A function to perform a retrospective analysis of all the data points by 
     building successive models and predicting the mean of the functional value 
