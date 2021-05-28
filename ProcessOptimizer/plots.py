@@ -13,7 +13,7 @@ from scipy.stats.mstats import mquantiles
 from scipy.ndimage.filters import gaussian_filter1d
 from ProcessOptimizer import expected_minimum, expected_minimum_random_sampling
 from .space import Categorical
-
+from .optimizer import Optimizer
 
 def plot_convergence(*args, **kwargs):
     """Plot one or several convergence traces.
@@ -789,14 +789,14 @@ def plot_expected_minimum_convergence(result, figsize=(15,15), random_state=None
     for i in range(len(result.x_iters)):
         #Build an optimizer with as close to those used during the data 
         #generating as possible. TODO: add more details on the optimizer build
-        _opt = Optimizer(result.space.bounds, n_initial_points = 1)
+        _opt = Optimizer(result.space.bounds, n_initial_points = 1, random_state=random_state)
         #Tell the available data
         if i == 0:
             _result_internal = _opt.tell(result.x_iters[:i+1][0], result.func_vals[:i+1].item())
         else:
             _result_internal = _opt.tell(result.x_iters[:i+1],result.func_vals[:i+1].tolist())
         #Ask for the expected minimum in the result
-        _exp = po.expected_minimum(_result_internal)
+        _exp = expected_minimum(_result_internal, random_state=random_state)
         #Append expected minimum to list. To plot it later
         estimated_mins_x.append(_exp[0])
         estimated_mins_y.append(_exp[1])
