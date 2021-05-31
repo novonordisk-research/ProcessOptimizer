@@ -818,16 +818,19 @@ def plot_expected_minimum_convergence(result, figsize=(15,15), random_state=None
         #Smoothing quantiles for graphically pleasing plot
         quant_max_smooth = gaussian_filter1d([i[1] for i in quants_list], sigma=2)
         quant_min_smooth = gaussian_filter1d([i[0] for i in quants_list], sigma=2)
-        
+    
+    # Set the color
+    color = cm.viridis(np.linspace(0.25, 1.0, 1))
+
     # Do the actual plotting
     fig, (ax1, ax2) = plt.subplots(nrows=2, sharex=True, figsize=figsize)
-    ax1.fill_between(list(range(len(result.x_iters))), y1=quant_min_smooth,y2=quant_max_smooth,  alpha=0.7, color='red')
-    ax1.plot(list(range(len(result.x_iters))), estimated_mins_y)
+    ax1.fill_between(list(range(1, len(result.x_iters) + 1)), y1=quant_min_smooth,y2=quant_max_smooth,  alpha=0.5, color='grey')
+    ax1.plot(list(range(1,len(result.x_iters) + 1)), estimated_mins_y)
     ax1.set_ylabel('expected "y"-value @ expected min')
 
-    ax2.plot(list(range(len(result.x_iters))), distances)
+    ax2.plot(list(range(1, len(result.x_iters) + 1)), distances)
     ax2.set_ylabel('euclidian distance in x space from previous expected min')
-    ax2.set_xticks(list(range(len(result.x_iters))))
+    ax2.set_xticks(list(range(1, len(result.x_iters) + 1)))
 
-    plt.xlabel("Iteration#")
+    plt.xlabel("Number of calls $n$")
     return fig
