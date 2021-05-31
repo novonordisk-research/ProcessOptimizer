@@ -8,8 +8,8 @@ from bokeh.models.widgets import Slider, TextInput, Toggle, CheckboxButtonGroup,
 from bokeh.plotting import figure
 from bokeh.models.glyphs import Text, ImageRGBA
 from ProcessOptimizer.space import Integer, Categorical
-from ProcessOptimizer.plots import _map_categories, dependence, expected_min_random_sampling
-from ProcessOptimizer import expected_minimum
+from ProcessOptimizer.plots import _map_categories, dependence
+from ProcessOptimizer import expected_minimum, expected_minimum_random_sampling
 import numpy as np
 from bokeh.models.markers import Circle
 import matplotlib.pyplot as plt
@@ -520,8 +520,7 @@ def get_x_eval(result, active_list):
     elif eval_method == 'Exp min' and not any(iscat):
         x, _ = expected_minimum(result, n_random_starts=10, random_state=None)
     elif eval_method == 'Exp min rand':
-        x = expected_min_random_sampling(
-            result.models[-1], result.space, np.min([10**len(result.x), 10000]))
+        x = expected_minimum_random_sampling(result, n_random_starts=100000, random_state=None)
     else:
         ValueError('Could not find evalmethod from dropdown menu')
     return x

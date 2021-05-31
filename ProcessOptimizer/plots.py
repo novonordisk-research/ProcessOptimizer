@@ -771,7 +771,7 @@ def _cat_format(dimension, x, _):
     return str(dimension.categories[int(x)])
 
 
-def plot_expected_minimum_convergence(result, figsize=(15,15), random_state=None):
+def plot_expected_minimum_convergence(result, figsize=(15,15), random_state=None, sigma=0.5):
     '''
     A function to perform a retrospective analysis of all the data points by 
     building successive models and predicting the mean of the functional value 
@@ -816,8 +816,8 @@ def plot_expected_minimum_convergence(result, figsize=(15,15), random_state=None
             distances.append(distancefromlast)
         
         #Smoothing quantiles for graphically pleasing plot
-        quant_max_smooth = gaussian_filter1d([i[1] for i in quants_list], sigma=2)
-        quant_min_smooth = gaussian_filter1d([i[0] for i in quants_list], sigma=2)
+        quant_max_smooth = gaussian_filter1d([i[1] for i in quants_list], sigma=sigma)
+        quant_min_smooth = gaussian_filter1d([i[0] for i in quants_list], sigma=sigma)
     
     # Set the color
     color = cm.viridis(np.linspace(0.25, 1.0, 1))
