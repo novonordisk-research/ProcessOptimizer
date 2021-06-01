@@ -9,9 +9,11 @@ from matplotlib.pyplot import cm
 from matplotlib.ticker import LogLocator
 from matplotlib.ticker import MaxNLocator, FuncFormatter
 from scipy.optimize import OptimizeResult
+from scipy.stats.mstats import mquantiles
+from scipy.ndimage.filters import gaussian_filter1d
 from ProcessOptimizer import expected_minimum, expected_minimum_random_sampling
 from .space import Categorical
-
+from .optimizer import Optimizer
 
 def plot_convergence(*args, **kwargs):
     """Plot one or several convergence traces.
@@ -767,3 +769,68 @@ def _cat_format(dimension, x, _):
     """Categorical axis tick formatter function.  Returns the name of category
     `x` in `dimension`.  Used with `matplotlib.ticker.FuncFormatter`."""
     return str(dimension.categories[int(x)])
+
+
+def plot_expected_minimum_convergence(result, figsize=(15,15), random_state=None, sigma=0.5):
+    '''
+    A function to perform a retrospective analysis of all the data points by 
+    building successive models and predicting the mean of the functional value 
+    of the surogate model in the expected minimum together with a measure for 
+    the variability in the suggested mean value
+    This code "replays" the entire optimization, hence it builds quiet many models 
+    and can, thus, seem slow. 
+    TODO: Consider allowing user to subselect in data, to e.g. perform the analysis
+    using every n-th datapoint, or only performing the analysis for the last n datapoints
+    '''
+    estimated_mins_x = []
+    estimated_mins_y = []
+    quants_list = []
+    distances = []
+    for i in range(len(result.x_iters)):
+        #Build an optimizer with as close to those used during the data 
+        #generating as possible. TODO: add more details on the optimizer build
+        _opt = Optimizer(result.space.bounds, n_initial_points = 1, random_state=random_state)
+        #Tell the available data
+        if i == 0:
+            _result_internal = _opt.tell(result.x_iters[:i+1][0], result.func_vals[:i+1].item())
+        else:
+            _result_internal = _opt.tell(result.x_iters[:i+1],result.func_vals[:i+1].tolist())
+        #Ask for the expected minimum in the result
+        _exp = expected_minimum(_result_internal, random_state=random_state)
+        #Append expected minimum to list. To plot it later
+        estimated_mins_x.append(_exp[0])
+        estimated_mins_y.append(_exp[1])
+        #Transform x-value into transformed space and sample n times
+        #Make 95% quantiles of samples
+        transformed_point = _opt.space.transform([_exp[0],])
+        samples_of_y = _result_internal.models[-1].sample_y(transformed_point, n_samples=10000, random_state=random_state)
+        quants = mquantiles(samples_of_y.flatten(), [0.025,0.975])
+        quants_list.append(quants)
+        
+        #Calculate distance in x-space from last "believed" expected_min
+        if i == 0:
+            distancefromlast = _opt.space.distance(estimated_mins_x[-1], result.x) #opt.Xi[0]
+            distances.append(distancefromlast)
+        else:
+            distancefromlast = _opt.space.distance(estimated_mins_x[-1], estimated_mins_x[-2])
+            distances.append(distancefromlast)
+        
+        #Smoothing quantiles for graphically pleasing plot
+        quant_max_smooth = gaussian_filter1d([i[1] for i in quants_list], sigma=sigma)
+        quant_min_smooth = gaussian_filter1d([i[0] for i in quants_list], sigma=sigma)
+    
+    # Set the color
+    color = cm.viridis(np.linspace(0.25, 1.0, 1))
+
+    # Do the actual plotting
+    fig, (ax1, ax2) = plt.subplots(nrows=2, sharex=True, figsize=figsize)
+    ax1.fill_between(list(range(1, len(result.x_iters) + 1)), y1=quant_min_smooth,y2=quant_max_smooth,  alpha=0.5, color='grey')
+    ax1.plot(list(range(1,len(result.x_iters) + 1)), estimated_mins_y)
+    ax1.set_ylabel('expected "y"-value @ expected min')
+
+    ax2.plot(list(range(1, len(result.x_iters) + 1)), distances)
+    ax2.set_ylabel('euclidian distance in x space from previous expected min')
+    ax2.set_xticks(list(range(1, len(result.x_iters) + 1)))
+
+    plt.xlabel("Number of calls $n$")
+    return fig

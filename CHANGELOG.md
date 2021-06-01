@@ -2,6 +2,11 @@
 
 ## Version 0.6.4 [unpublished]
 
+### Changes
+
+- Add plot_expected_minimum_convergence
+- Recode expected_minimum_random_sampling and move to utils.py
+
 ## Version 0.6.3
 
 ### Changes
