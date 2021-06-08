@@ -1,11 +1,14 @@
 # Release history
 
-## Version 0.6.4 [unpublished]
+## Version 0.6.5 [unpublished]
+
+## Version 0.6.4
 
 ### Changes
 
 - Add plot_expected_minimum_convergence
 - Recode expected_minimum_random_sampling and move to utils.py
+- Update Readme to add illustrations on pypi
 
 ## Version 0.6.3
 
