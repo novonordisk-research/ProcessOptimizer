@@ -1,0 +1,944 @@
+.\setup.py:13:80: E501 line too long (94 > 79 characters)
+.\setup.py:17:80: E501 line too long (120 > 79 characters)
+.\setup.py:20:68: W291 trailing whitespace
+.\setup.py:21:1: W191 indentation contains tabs
+.\setup.py:21:1: E101 indentation contains mixed spaces and tabs
+.\ProcessOptimizer\callbacks.py:27:1: E302 expected 2 blank lines, found 1
+.\ProcessOptimizer\callbacks.py:270:80: E501 line too long (88 > 79 characters)
+.\ProcessOptimizer\callbacks.py:271:80: E501 line too long (83 > 79 characters)
+.\ProcessOptimizer\callbacks.py:276:80: E501 line too long (86 > 79 characters)
+.\ProcessOptimizer\plots.py:2:1: F401 'sys' imported but unused
+.\ProcessOptimizer\plots.py:18:1: E302 expected 2 blank lines, found 1
+.\ProcessOptimizer\plots.py:238:45: E741 ambiguous variable name 'l'
+.\ProcessOptimizer\plots.py:278:24: E127 continuation line over-indented for visual indent
+.\ProcessOptimizer\plots.py:278:58: E251 unexpected spaces around keyword / parameter equals
+.\ProcessOptimizer\plots.py:278:60: E251 unexpected spaces around keyword / parameter equals
+.\ProcessOptimizer\plots.py:310:75: W291 trailing whitespace
+.\ProcessOptimizer\plots.py:345:80: E501 line too long (83 > 79 characters)
+.\ProcessOptimizer\plots.py:357:80: E501 line too long (86 > 79 characters)
+.\ProcessOptimizer\plots.py:368:54: W291 trailing whitespace
+.\ProcessOptimizer\plots.py:394:1: E303 too many blank lines (3)
+.\ProcessOptimizer\plots.py:395:80: W291 trailing whitespace
+.\ProcessOptimizer\plots.py:396:59: E251 unexpected spaces around keyword / parameter equals
+.\ProcessOptimizer\plots.py:396:61: E251 unexpected spaces around keyword / parameter equals
+.\ProcessOptimizer\plots.py:439:80: E501 line too long (82 > 79 characters)
+.\ProcessOptimizer\plots.py:441:80: E501 line too long (87 > 79 characters)
+.\ProcessOptimizer\plots.py:442:80: E501 line too long (82 > 79 characters)
+.\ProcessOptimizer\plots.py:442:83: W291 trailing whitespace
+.\ProcessOptimizer\plots.py:445:80: E501 line too long (83 > 79 characters)
+.\ProcessOptimizer\plots.py:446:80: E501 line too long (81 > 79 characters)
+.\ProcessOptimizer\plots.py:448:80: E501 line too long (90 > 79 characters)
+.\ProcessOptimizer\plots.py:449:80: E501 line too long (91 > 79 characters)
+.\ProcessOptimizer\plots.py:450:1: W293 blank line contains whitespace
+.\ProcessOptimizer\plots.py:451:80: E501 line too long (103 > 79 characters)
+.\ProcessOptimizer\plots.py:452:80: E501 line too long (86 > 79 characters)
+.\ProcessOptimizer\plots.py:453:1: W293 blank line contains whitespace
+.\ProcessOptimizer\plots.py:463:80: E501 line too long (106 > 79 characters)
+.\ProcessOptimizer\plots.py:464:80: E501 line too long (106 > 79 characters)
+.\ProcessOptimizer\plots.py:467:23: E231 missing whitespace after ','
+.\ProcessOptimizer\plots.py:474:80: E501 line too long (92 > 79 characters)
+.\ProcessOptimizer\plots.py:476:41: E261 at least two spaces before inline comment
+.\ProcessOptimizer\plots.py:476:80: E501 line too long (98 > 79 characters)
+.\ProcessOptimizer\plots.py:477:23: E231 missing whitespace after ','
+.\ProcessOptimizer\plots.py:477:80: E501 line too long (112 > 79 characters)
+.\ProcessOptimizer\plots.py:478:18: E261 at least two spaces before inline comment
+.\ProcessOptimizer\plots.py:479:23: E231 missing whitespace after ','
+.\ProcessOptimizer\plots.py:479:80: E501 line too long (90 > 79 characters)
+.\ProcessOptimizer\plots.py:481:80: E501 line too long (89 > 79 characters)
+.\ProcessOptimizer\plots.py:482:41: E261 at least two spaces before inline comment
+.\ProcessOptimizer\plots.py:482:80: E501 line too long (98 > 79 characters)
+.\ProcessOptimizer\plots.py:483:80: E501 line too long (129 > 79 characters)
+.\ProcessOptimizer\plots.py:484:18: E261 at least two spaces before inline comment
+.\ProcessOptimizer\plots.py:484:80: E501 line too long (100 > 79 characters)
+.\ProcessOptimizer\plots.py:485:80: E501 line too long (111 > 79 characters)
+.\ProcessOptimizer\plots.py:487:80: E501 line too long (81 > 79 characters)
+.\ProcessOptimizer\plots.py:488:25: E231 missing whitespace after ','
+.\ProcessOptimizer\plots.py:489:42: E203 whitespace before ','
+.\ProcessOptimizer\plots.py:489:80: E501 line too long (118 > 79 characters)
+.\ProcessOptimizer\plots.py:515:1: W293 blank line contains whitespace
+.\ProcessOptimizer\plots.py:519:15: E225 missing whitespace around operator
+.\ProcessOptimizer\plots.py:520:15: E225 missing whitespace around operator
+.\ProcessOptimizer\plots.py:521:15: E225 missing whitespace around operator
+.\ProcessOptimizer\plots.py:522:15: E225 missing whitespace around operator
+.\ProcessOptimizer\plots.py:524:15: E225 missing whitespace around operator
+.\ProcessOptimizer\plots.py:529:1: W293 blank line contains whitespace
+.\ProcessOptimizer\plots.py:530:1: W293 blank line contains whitespace
+.\ProcessOptimizer\plots.py:531:13: E303 too many blank lines (2)
+.\ProcessOptimizer\plots.py:531:80: E501 line too long (91 > 79 characters)
+.\ProcessOptimizer\plots.py:533:1: W293 blank line contains whitespace
+.\ProcessOptimizer\plots.py:536:45: E127 continuation line over-indented for visual indent
+.\ProcessOptimizer\plots.py:537:45: E127 continuation line over-indented for visual indent
+.\ProcessOptimizer\plots.py:538:45: E127 continuation line over-indented for visual indent
+.\ProcessOptimizer\plots.py:538:62: E231 missing whitespace after ','
+.\ProcessOptimizer\plots.py:538:69: E251 unexpected spaces around keyword / parameter equals
+.\ProcessOptimizer\plots.py:538:71: E251 unexpected spaces around keyword / parameter equals
+.\ProcessOptimizer\plots.py:548:13: E303 too many blank lines (3)
+.\ProcessOptimizer\plots.py:551:49: E127 continuation line over-indented for visual indent
+.\ProcessOptimizer\plots.py:552:49: E127 continuation line over-indented for visual indent
+.\ProcessOptimizer\plots.py:552:74: E231 missing whitespace after ','
+.\ProcessOptimizer\plots.py:552:80: E501 line too long (90 > 79 characters)
+.\ProcessOptimizer\plots.py:552:81: E251 unexpected spaces around keyword / parameter equals
+.\ProcessOptimizer\plots.py:552:83: E251 unexpected spaces around keyword / parameter equals
+.\ProcessOptimizer\plots.py:553:17: E265 block comment should start with '# '
+.\ProcessOptimizer\plots.py:560:1: W293 blank line contains whitespace
+.\ProcessOptimizer\plots.py:562:1: W293 blank line contains whitespace
+.\ProcessOptimizer\plots.py:565:1: W293 blank line contains whitespace
+.\ProcessOptimizer\plots.py:566:80: E501 line too long (91 > 79 characters)
+.\ProcessOptimizer\plots.py:568:1: W293 blank line contains whitespace
+.\ProcessOptimizer\plots.py:573:1: W293 blank line contains whitespace
+.\ProcessOptimizer\plots.py:574:1: W293 blank line contains whitespace
+.\ProcessOptimizer\plots.py:575:17: E303 too many blank lines (2)
+.\ProcessOptimizer\plots.py:576:21: E231 missing whitespace after ','
+.\ProcessOptimizer\plots.py:576:44: E231 missing whitespace after ','
+.\ProcessOptimizer\plots.py:586:17: F841 local variable 'contour_plot' is assigned to but never used
+.\ProcessOptimizer\plots.py:586:29: E225 missing whitespace around operator
+.\ProcessOptimizer\plots.py:587:35: E128 continuation line under-indented for visual indent
+.\ProcessOptimizer\plots.py:587:80: E501 line too long (102 > 79 characters)
+.\ProcessOptimizer\plots.py:592:1: W293 blank line contains whitespace
+.\ProcessOptimizer\plots.py:593:22: E231 missing whitespace after ','
+.\ProcessOptimizer\plots.py:593:31: E231 missing whitespace after ','
+.\ProcessOptimizer\plots.py:595:25: E225 missing whitespace around operator
+.\ProcessOptimizer\plots.py:595:62: E231 missing whitespace after ','
+.\ProcessOptimizer\plots.py:595:79: W291 trailing whitespace
+.\ProcessOptimizer\plots.py:596:23: E225 missing whitespace around operator
+.\ProcessOptimizer\plots.py:596:80: E501 line too long (114 > 79 characters)
+.\ProcessOptimizer\plots.py:596:101: E231 missing whitespace after ','
+.\ProcessOptimizer\plots.py:600:15: E225 missing whitespace around operator
+.\ProcessOptimizer\plots.py:602:15: E225 missing whitespace around operator
+.\ProcessOptimizer\plots.py:604:41: E127 continuation line over-indented for visual indent
+.\ProcessOptimizer\plots.py:613:1: W293 blank line contains whitespace
+.\ProcessOptimizer\plots.py:615:80: E501 line too long (88 > 79 characters)
+.\ProcessOptimizer\plots.py:616:1: W293 blank line contains whitespace
+.\ProcessOptimizer\plots.py:619:14: E711 comparison to None should be 'if cond is None:'
+.\ProcessOptimizer\plots.py:619:14: E225 missing whitespace around operator
+.\ProcessOptimizer\plots.py:621:46: E202 whitespace before ')'
+.\ProcessOptimizer\plots.py:625:55: E202 whitespace before ')'
+.\ProcessOptimizer\plots.py:625:57: W291 trailing whitespace
+.\ProcessOptimizer\plots.py:627:1: W293 blank line contains whitespace
+.\ProcessOptimizer\plots.py:631:1: E303 too many blank lines (4)
+.\ProcessOptimizer\plots.py:660:15: E225 missing whitespace around operator
+.\ProcessOptimizer\plots.py:661:1: W293 blank line contains whitespace
+.\ProcessOptimizer\plots.py:774:58: E231 missing whitespace after ','
+.\ProcessOptimizer\plots.py:774:80: E501 line too long (93 > 79 characters)
+.\ProcessOptimizer\plots.py:776:77: W291 trailing whitespace
+.\ProcessOptimizer\plots.py:777:79: W291 trailing whitespace
+.\ProcessOptimizer\plots.py:778:78: W291 trailing whitespace
+.\ProcessOptimizer\plots.py:780:80: E501 line too long (82 > 79 characters)
+.\ProcessOptimizer\plots.py:780:83: W291 trailing whitespace
+.\ProcessOptimizer\plots.py:781:30: W291 trailing whitespace
+.\ProcessOptimizer\plots.py:782:80: E501 line too long (83 > 79 characters)
+.\ProcessOptimizer\plots.py:783:80: E501 line too long (89 > 79 characters)
+.\ProcessOptimizer\plots.py:790:9: E265 block comment should start with '# '
+.\ProcessOptimizer\plots.py:790:72: W291 trailing whitespace
+.\ProcessOptimizer\plots.py:791:9: E265 block comment should start with '# '
+.\ProcessOptimizer\plots.py:792:63: E251 unexpected spaces around keyword / parameter equals
+.\ProcessOptimizer\plots.py:792:65: E251 unexpected spaces around keyword / parameter equals
+.\ProcessOptimizer\plots.py:792:80: E501 line too long (94 > 79 characters)
+.\ProcessOptimizer\plots.py:793:9: E265 block comment should start with '# '
+.\ProcessOptimizer\plots.py:795:80: E501 line too long (96 > 79 characters)
+.\ProcessOptimizer\plots.py:797:62: E231 missing whitespace after ','
+.\ProcessOptimizer\plots.py:797:80: E501 line too long (94 > 79 characters)
+.\ProcessOptimizer\plots.py:798:9: E265 block comment should start with '# '
+.\ProcessOptimizer\plots.py:800:9: E265 block comment should start with '# '
+.\ProcessOptimizer\plots.py:803:9: E265 block comment should start with '# '
+.\ProcessOptimizer\plots.py:804:9: E265 block comment should start with '# '
+.\ProcessOptimizer\plots.py:805:58: E231 missing whitespace after ','
+.\ProcessOptimizer\plots.py:806:80: E501 line too long (122 > 79 characters)
+.\ProcessOptimizer\plots.py:807:59: E231 missing whitespace after ','
+.\ProcessOptimizer\plots.py:809:1: W293 blank line contains whitespace
+.\ProcessOptimizer\plots.py:810:9: E265 block comment should start with '# '
+.\ProcessOptimizer\plots.py:812:80: E501 line too long (93 > 79 characters)
+.\ProcessOptimizer\plots.py:812:83: E261 at least two spaces before inline comment
+.\ProcessOptimizer\plots.py:812:84: E262 inline comment should start with '# '
+.\ProcessOptimizer\plots.py:815:80: E501 line too long (94 > 79 characters)
+.\ProcessOptimizer\plots.py:817:1: W293 blank line contains whitespace
+.\ProcessOptimizer\plots.py:818:9: E265 block comment should start with '# '
+.\ProcessOptimizer\plots.py:819:80: E501 line too long (86 > 79 characters)
+.\ProcessOptimizer\plots.py:820:80: E501 line too long (86 > 79 characters)
+.\ProcessOptimizer\plots.py:821:1: W293 blank line contains whitespace
+.\ProcessOptimizer\plots.py:823:5: F841 local variable 'color' is assigned to but never used
+.\ProcessOptimizer\plots.py:827:80: E501 line too long (128 > 79 characters)
+.\ProcessOptimizer\plots.py:827:82: E231 missing whitespace after ','
+.\ProcessOptimizer\plots.py:828:26: E231 missing whitespace after ','
+.\ProcessOptimizer\searchcv.py:10:1: F401 'logging' imported but unused
+.\ProcessOptimizer\searchcv.py:24:5: F401 'numpy.ma.MaskedArray' imported but unused
+.\ProcessOptimizer\searchcv.py:55:80: E501 line too long (83 > 79 characters)
+.\ProcessOptimizer\searchcv.py:69:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\searchcv.py:71:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\searchcv.py:309:1: W293 blank line contains whitespace
+.\ProcessOptimizer\searchcv.py:405:26: E127 continuation line over-indented for visual indent
+.\ProcessOptimizer\searchcv.py:538:80: E501 line too long (86 > 79 characters)
+.\ProcessOptimizer\utils.py:56:1: W293 blank line contains whitespace
+.\ProcessOptimizer\utils.py:74:11: E225 missing whitespace around operator
+.\ProcessOptimizer\utils.py:75:12: E225 missing whitespace around operator
+.\ProcessOptimizer\utils.py:78:39: W291 trailing whitespace
+.\ProcessOptimizer\utils.py:87:34: E231 missing whitespace after ','
+.\ProcessOptimizer\utils.py:90:26: W291 trailing whitespace
+.\ProcessOptimizer\utils.py:94:1: W293 blank line contains whitespace
+.\ProcessOptimizer\utils.py:97:1: E303 too many blank lines (4)
+.\ProcessOptimizer\utils.py:150:80: E501 line too long (85 > 79 characters)
+.\ProcessOptimizer\utils.py:179:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\utils.py:220:80: E501 line too long (83 > 79 characters)
+.\ProcessOptimizer\utils.py:252:45: E128 continuation line under-indented for visual indent
+.\ProcessOptimizer\utils.py:276:80: E501 line too long (85 > 79 characters)
+.\ProcessOptimizer\utils.py:302:5: E303 too many blank lines (2)
+.\ProcessOptimizer\utils.py:345:80: E501 line too long (102 > 79 characters)
+.\ProcessOptimizer\utils.py:675:80: E501 line too long (90 > 79 characters)
+.\ProcessOptimizer\__init__.py:4:80: E501 line too long (87 > 79 characters)
+.\ProcessOptimizer\__init__.py:7:80: E501 line too long (145 > 79 characters)
+.\ProcessOptimizer\__init__.py:31:80: E501 line too long (129 > 79 characters)
+.\ProcessOptimizer\__init__.py:32:80: E501 line too long (98 > 79 characters)
+.\ProcessOptimizer\__init__.py:65:1: F401 '.utils.expected_minimum_random_sampling' imported but unused
+.\ProcessOptimizer\learning\gaussian_process\gpr.py:8:80: E501 line too long (92 > 79 characters)
+.\ProcessOptimizer\learning\gaussian_process\gpr.py:319:1: W293 blank line contains whitespace
+.\ProcessOptimizer\learning\gaussian_process\gpr.py:350:1: W293 blank line contains whitespace
+.\ProcessOptimizer\learning\gaussian_process\kernels.py:5:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\learning\gaussian_process\kernels.py:7:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\learning\gaussian_process\kernels.py:8:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\learning\gaussian_process\kernels.py:11:80: E501 line too long (94 > 79 characters)
+.\ProcessOptimizer\learning\gaussian_process\kernels.py:13:80: E501 line too long (86 > 79 characters)
+.\ProcessOptimizer\learning\gaussian_process\kernels.py:15:80: E501 line too long (94 > 79 characters)
+.\ProcessOptimizer\learning\gaussian_process\kernels.py:249:80: E501 line too long (125 > 79 characters)
+.\ProcessOptimizer\learning\gaussian_process\kernels.py:322:25: W605 invalid escape sequence '\s'
+.\ProcessOptimizer\learning\gaussian_process\__init__.py:1:1: F401 '.gpr.GaussianProcessRegressor' imported but unused
+.\ProcessOptimizer\learning\gaussian_process\tests\test_gpr.py:14:80: E501 line too long (89 > 79 characters)
+.\ProcessOptimizer\learning\gaussian_process\tests\test_kernels.py:19:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\learning\gaussian_process\tests\test_kernels.py:203:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\base.py:15:1: F401 'numpy as np' imported but unused
+.\ProcessOptimizer\optimizer\base.py:35:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\dummy.py:15:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\forest.py:3:1: F401 'sklearn.utils.check_random_state' imported but unused
+.\ProcessOptimizer\optimizer\forest.py:6:1: F401 '..utils.cook_estimator' imported but unused
+.\ProcessOptimizer\optimizer\forest.py:10:1: E303 too many blank lines (3)
+.\ProcessOptimizer\optimizer\forest.py:36:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\gbrt.py:36:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\gp.py:47:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\gp.py:92:47: W605 invalid escape sequence '\e'
+.\ProcessOptimizer\optimizer\gp.py:98:38: W605 invalid escape sequence '\e'
+.\ProcessOptimizer\optimizer\gp.py:100:59: W605 invalid escape sequence '\m'
+.\ProcessOptimizer\optimizer\gp.py:218:80: E501 line too long (83 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:33:1: E303 too many blank lines (3)
+.\ProcessOptimizer\optimizer\optimizer.py:57:80: E501 line too long (85 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:75:80: E501 line too long (101 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:90:38: W605 invalid escape sequence '\e'
+.\ProcessOptimizer\optimizer\optimizer.py:92:59: W605 invalid escape sequence '\m'
+.\ProcessOptimizer\optimizer\optimizer.py:128:80: E501 line too long (82 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:132:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:134:46: W291 trailing whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:135:80: E501 line too long (129 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:149:80: E501 line too long (89 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:161:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:162:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:163:9: E303 too many blank lines (2)
+.\ProcessOptimizer\optimizer\optimizer.py:164:26: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:172:75: E203 whitespace before ','
+.\ProcessOptimizer\optimizer\optimizer.py:172:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:224:80: E501 line too long (153 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:265:80: E501 line too long (100 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:266:19: E111 indentation is not a multiple of four
+.\ProcessOptimizer\optimizer\optimizer.py:266:19: E117 over-indented
+.\ProcessOptimizer\optimizer\optimizer.py:266:80: E501 line too long (91 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:267:34: E128 continuation line under-indented for visual indent
+.\ProcessOptimizer\optimizer\optimizer.py:267:80: E501 line too long (88 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:267:89: W291 trailing whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:294:80: E501 line too long (96 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:318:80: E501 line too long (105 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:346:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:365:80: E501 line too long (110 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:367:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:368:80: E501 line too long (86 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:369:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:370:80: E501 line too long (105 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:371:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:372:80: E501 line too long (111 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:377:61: E272 multiple spaces before keyword
+.\ProcessOptimizer\optimizer\optimizer.py:377:80: E501 line too long (84 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:377:83: E203 whitespace before ':'
+.\ProcessOptimizer\optimizer\optimizer.py:383:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:384:59: E231 missing whitespace after ','
+.\ProcessOptimizer\optimizer\optimizer.py:392:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:393:9: E303 too many blank lines (2)
+.\ProcessOptimizer\optimizer\optimizer.py:393:22: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:396:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:397:24: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:397:32: W291 trailing whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:398:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:400:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:401:24: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:402:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:406:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:406:81: W291 trailing whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:409:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:410:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:411:13: E303 too many blank lines (3)
+.\ProcessOptimizer\optimizer\optimizer.py:413:18: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:416:18: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:417:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:419:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:420:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:421:9: E303 too many blank lines (2)
+.\ProcessOptimizer\optimizer\optimizer.py:421:40: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:450:17: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:450:71: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:460:80: E501 line too long (120 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:462:26: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:466:80: E501 line too long (122 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:468:26: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:472:80: E501 line too long (119 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:472:107: E261 at least two spaces before inline comment
+.\ProcessOptimizer\optimizer\optimizer.py:474:26: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:497:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:498:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:499:9: E303 too many blank lines (2)
+.\ProcessOptimizer\optimizer\optimizer.py:504:80: E501 line too long (125 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:511:80: E501 line too long (87 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:520:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:522:28: E128 continuation line under-indented for visual indent
+.\ProcessOptimizer\optimizer\optimizer.py:523:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:524:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:525:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:526:13: E303 too many blank lines (3)
+.\ProcessOptimizer\optimizer\optimizer.py:529:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:531:13: E303 too many blank lines (2)
+.\ProcessOptimizer\optimizer\optimizer.py:590:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:591:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:592:10: E303 too many blank lines (2)
+.\ProcessOptimizer\optimizer\optimizer.py:592:10: E114 indentation is not a multiple of four (comment)
+.\ProcessOptimizer\optimizer\optimizer.py:592:67: W291 trailing whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:593:31: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:593:77: W291 trailing whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:597:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:598:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:599:9: E303 too many blank lines (2)
+.\ProcessOptimizer\optimizer\optimizer.py:599:63: W291 trailing whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:600:31: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:604:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:606:71: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:610:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:611:72: W291 trailing whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:612:50: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:618:80: E501 line too long (120 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:618:101: E231 missing whitespace after ','
+.\ProcessOptimizer\optimizer\optimizer.py:619:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:631:13: E303 too many blank lines (2)
+.\ProcessOptimizer\optimizer\optimizer.py:631:80: E501 line too long (103 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:635:27: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:638:27: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:643:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:646:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:648:17: E303 too many blank lines (2)
+.\ProcessOptimizer\optimizer\optimizer.py:648:80: E501 line too long (97 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:649:80: E501 line too long (94 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:650:26: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:651:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:652:43: W291 trailing whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:653:38: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:655:80: E501 line too long (83 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:657:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:659:27: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:660:33: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:664:80: E501 line too long (81 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:666:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:667:80: E501 line too long (113 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:668:27: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:668:52: E201 whitespace after '('
+.\ProcessOptimizer\optimizer\optimizer.py:670:21: E122 continuation line missing indentation or outdented
+.\ProcessOptimizer\optimizer\optimizer.py:675:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:676:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:677:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:678:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:681:13: E303 too many blank lines (10)
+.\ProcessOptimizer\optimizer\optimizer.py:685:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:689:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:693:80: E501 line too long (83 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:699:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:707:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:711:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:712:80: E501 line too long (83 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:717:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:729:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:733:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:741:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:748:80: E501 line too long (82 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:751:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:770:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:771:8: E114 indentation is not a multiple of four (comment)
+.\ProcessOptimizer\optimizer\optimizer.py:771:46: W291 trailing whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:773:17: E117 over-indented
+.\ProcessOptimizer\optimizer\optimizer.py:776:80: E501 line too long (91 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:777:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:779:74: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:780:17: E117 over-indented
+.\ProcessOptimizer\optimizer\optimizer.py:781:25: E117 over-indented
+.\ProcessOptimizer\optimizer\optimizer.py:782:80: E501 line too long (82 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:783:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:784:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:785:9: E303 too many blank lines (2)
+.\ProcessOptimizer\optimizer\optimizer.py:787:17: E117 over-indented (comment)
+.\ProcessOptimizer\optimizer\optimizer.py:788:17: E117 over-indented
+.\ProcessOptimizer\optimizer\optimizer.py:788:30: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:789:25: E117 over-indented
+.\ProcessOptimizer\optimizer\optimizer.py:789:80: E501 line too long (98 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:789:99: W291 trailing whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:790:60: W291 trailing whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:792:25: E117 over-indented
+.\ProcessOptimizer\optimizer\optimizer.py:793:80: E501 line too long (82 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:793:83: W291 trailing whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:796:9: E303 too many blank lines (2)
+.\ProcessOptimizer\optimizer\optimizer.py:800:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:801:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:802:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:804:9: E303 too many blank lines (4)
+.\ProcessOptimizer\optimizer\optimizer.py:828:80: E501 line too long (97 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:835:80: E501 line too long (84 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:851:80: E501 line too long (111 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:853:80: E501 line too long (108 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:860:80: E501 line too long (99 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:870:80: E501 line too long (81 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:872:80: E501 line too long (106 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:876:80: E501 line too long (84 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:879:80: E501 line too long (88 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:884:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:887:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:888:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:889:5: E303 too many blank lines (5)
+.\ProcessOptimizer\optimizer\optimizer.py:891:80: E501 line too long (83 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:893:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:894:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:895:9: E303 too many blank lines (2)
+.\ProcessOptimizer\optimizer\optimizer.py:896:80: E501 line too long (83 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:897:15: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:899:31: E231 missing whitespace after ','
+.\ProcessOptimizer\optimizer\optimizer.py:900:53: W291 trailing whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:904:13: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:904:34: E231 missing whitespace after ','
+.\ProcessOptimizer\optimizer\optimizer.py:904:80: E501 line too long (93 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:911:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:913:9: E303 too many blank lines (2)
+.\ProcessOptimizer\optimizer\optimizer.py:914:10: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:916:34: W291 trailing whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:917:80: E501 line too long (109 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:918:20: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:919:20: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:921:15: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:922:15: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:923:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:926:20: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:930:80: E501 line too long (91 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:931:21: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:932:19: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:932:50: E231 missing whitespace after ','
+.\ProcessOptimizer\optimizer\optimizer.py:932:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:934:19: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:936:80: E501 line too long (96 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:938:21: E117 over-indented (comment)
+.\ProcessOptimizer\optimizer\optimizer.py:939:21: E117 over-indented
+.\ProcessOptimizer\optimizer\optimizer.py:941:35: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:943:34: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:943:55: E231 missing whitespace after ','
+.\ProcessOptimizer\optimizer\optimizer.py:945:39: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:946:37: E231 missing whitespace after ','
+.\ProcessOptimizer\optimizer\optimizer.py:946:57: E231 missing whitespace after ','
+.\ProcessOptimizer\optimizer\optimizer.py:946:80: E501 line too long (81 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:947:46: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:947:80: E501 line too long (82 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:949:40: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:951:37: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:951:53: W291 trailing whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:952:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:957:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:959:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:960:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:961:5: E303 too many blank lines (2)
+.\ProcessOptimizer\optimizer\optimizer.py:962:5: E301 expected 1 blank line, found 0
+.\ProcessOptimizer\optimizer\optimizer.py:964:12: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:966:17: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:968:11: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:972:24: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:972:76: E202 whitespace before ')'
+.\ProcessOptimizer\optimizer\optimizer.py:973:80: E501 line too long (88 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:974:22: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:977:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:979:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:980:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:981:5: E303 too many blank lines (2)
+.\ProcessOptimizer\optimizer\optimizer.py:982:5: E301 expected 1 blank line, found 0
+.\ProcessOptimizer\optimizer\optimizer.py:984:9: E265 block comment should start with '# '
+.\ProcessOptimizer\optimizer\optimizer.py:987:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:988:9: E265 block comment should start with '# '
+.\ProcessOptimizer\optimizer\optimizer.py:989:9: E265 block comment should start with '# '
+.\ProcessOptimizer\optimizer\optimizer.py:996:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:1000:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:1003:80: E501 line too long (122 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:1005:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:1011:80: E501 line too long (90 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:1013:32: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:1015:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:1017:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:1019:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:1020:2: E114 indentation is not a multiple of four (comment)
+.\ProcessOptimizer\optimizer\optimizer.py:1020:80: E501 line too long (112 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:1022:13: E117 over-indented
+.\ProcessOptimizer\optimizer\optimizer.py:1027:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:1030:25: E261 at least two spaces before inline comment
+.\ProcessOptimizer\optimizer\optimizer.py:1030:26: E262 inline comment should start with '# '
+.\ProcessOptimizer\optimizer\optimizer.py:1030:80: E501 line too long (127 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:1034:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:1035:80: E501 line too long (84 > 79 characters)
+.\ProcessOptimizer\optimizer\optimizer.py:1038:10: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:1050:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:1056:17: E128 continuation line under-indented for visual indent
+.\ProcessOptimizer\optimizer\optimizer.py:1057:17: E128 continuation line under-indented for visual indent
+.\ProcessOptimizer\optimizer\optimizer.py:1059:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:1060:16: E712 comparison to True should be 'if cond is True:' or 'if cond:'
+.\ProcessOptimizer\optimizer\optimizer.py:1060:16: E225 missing whitespace around operator
+.\ProcessOptimizer\optimizer\optimizer.py:1062:1: W293 blank line contains whitespace
+.\ProcessOptimizer\optimizer\optimizer.py:1064:1: W391 blank line at end of file
+.\ProcessOptimizer\optimizer\_NSGA2.py:3:80: E501 line too long (81 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:2:1: E265 block comment should start with '# '
+.\ProcessOptimizer\space\constraints.py:3:1: E265 block comment should start with '# '
+.\ProcessOptimizer\space\constraints.py:6:1: E302 expected 2 blank lines, found 0
+.\ProcessOptimizer\space\constraints.py:7:40: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:19:32: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:21:32: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:21:50: E261 at least two spaces before inline comment
+.\ProcessOptimizer\space\constraints.py:21:80: E501 line too long (88 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:23:74: W291 trailing whitespace
+.\ProcessOptimizer\space\constraints.py:29:49: E261 at least two spaces before inline comment
+.\ProcessOptimizer\space\constraints.py:29:80: E501 line too long (84 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:32:37: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:33:16: E111 indentation is not a multiple of four
+.\ProcessOptimizer\space\constraints.py:34:39: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:36:39: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:38:39: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:40:39: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:43:80: E501 line too long (96 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:46:28: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:51:28: E251 unexpected spaces around keyword / parameter equals
+.\ProcessOptimizer\space\constraints.py:51:30: E251 unexpected spaces around keyword / parameter equals
+.\ProcessOptimizer\space\constraints.py:51:46: E251 unexpected spaces around keyword / parameter equals
+.\ProcessOptimizer\space\constraints.py:51:48: E251 unexpected spaces around keyword / parameter equals
+.\ProcessOptimizer\space\constraints.py:73:13: E221 multiple spaces before operator
+.\ProcessOptimizer\space\constraints.py:73:19: E261 at least two spaces before inline comment
+.\ProcessOptimizer\space\constraints.py:74:33: E261 at least two spaces before inline comment
+.\ProcessOptimizer\space\constraints.py:74:80: E501 line too long (90 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:76:37: E261 at least two spaces before inline comment
+.\ProcessOptimizer\space\constraints.py:76:80: E501 line too long (112 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:78:47: E261 at least two spaces before inline comment
+.\ProcessOptimizer\space\constraints.py:80:35: E261 at least two spaces before inline comment
+.\ProcessOptimizer\space\constraints.py:80:80: E501 line too long (108 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:82:22: E261 at least two spaces before inline comment
+.\ProcessOptimizer\space\constraints.py:85:21: E722 do not use bare 'except'
+.\ProcessOptimizer\space\constraints.py:86:80: E501 line too long (81 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:94:44: E261 at least two spaces before inline comment
+.\ProcessOptimizer\space\constraints.py:94:80: E501 line too long (98 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:100:80: E501 line too long (95 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:101:80: E501 line too long (159 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:103:80: E501 line too long (85 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:106:29: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:119:1: W293 blank line contains whitespace
+.\ProcessOptimizer\space\constraints.py:120:80: E501 line too long (102 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:122:39: E261 at least two spaces before inline comment
+.\ProcessOptimizer\space\constraints.py:122:80: E501 line too long (114 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:123:1: W293 blank line contains whitespace
+.\ProcessOptimizer\space\constraints.py:130:36: E261 at least two spaces before inline comment
+.\ProcessOptimizer\space\constraints.py:130:80: E501 line too long (89 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:131:80: E501 line too long (128 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:143:80: E501 line too long (118 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:147:1: W293 blank line contains whitespace
+.\ProcessOptimizer\space\constraints.py:148:9: E303 too many blank lines (2)
+.\ProcessOptimizer\space\constraints.py:156:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:162:1: E302 expected 2 blank lines, found 1
+.\ProcessOptimizer\space\constraints.py:166:80: E501 line too long (97 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:183:80: E501 line too long (86 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:184:80: E501 line too long (126 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:187:80: E501 line too long (108 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:190:80: E501 line too long (107 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:192:80: E501 line too long (142 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:194:80: E501 line too long (108 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:195:28: E225 missing whitespace around operator
+.\ProcessOptimizer\space\constraints.py:216:80: E501 line too long (122 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:219:28: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:220:80: E501 line too long (130 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:224:1: E302 expected 2 blank lines, found 1
+.\ProcessOptimizer\space\constraints.py:230:80: E501 line too long (94 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:231:29: E225 missing whitespace around operator
+.\ProcessOptimizer\space\constraints.py:235:80: E501 line too long (122 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:239:20: E111 indentation is not a multiple of four
+.\ProcessOptimizer\space\constraints.py:239:80: E501 line too long (114 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:242:20: E111 indentation is not a multiple of four
+.\ProcessOptimizer\space\constraints.py:242:80: E501 line too long (113 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:243:80: E501 line too long (108 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:244:80: E501 line too long (142 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:246:80: E501 line too long (108 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:247:28: E225 missing whitespace around operator
+.\ProcessOptimizer\space\constraints.py:250:36: E261 at least two spaces before inline comment
+.\ProcessOptimizer\space\constraints.py:254:1: E302 expected 2 blank lines, found 1
+.\ProcessOptimizer\space\constraints.py:255:41: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:256:60: W291 trailing whitespace
+.\ProcessOptimizer\space\constraints.py:259:80: E501 line too long (105 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:261:80: E501 line too long (116 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:270:80: E501 line too long (93 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:272:80: E501 line too long (94 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:274:80: E501 line too long (107 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:290:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:306:80: E501 line too long (127 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:310:80: E501 line too long (161 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:314:1: E302 expected 2 blank lines, found 1
+.\ProcessOptimizer\space\constraints.py:316:60: W291 trailing whitespace
+.\ProcessOptimizer\space\constraints.py:319:80: E501 line too long (106 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:321:80: E501 line too long (115 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:330:80: E501 line too long (93 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:332:80: E501 line too long (94 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:334:80: E501 line too long (107 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:366:80: E501 line too long (127 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:370:80: E501 line too long (161 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:374:1: E302 expected 2 blank lines, found 1
+.\ProcessOptimizer\space\constraints.py:375:52: E251 unexpected spaces around keyword / parameter equals
+.\ProcessOptimizer\space\constraints.py:375:54: E251 unexpected spaces around keyword / parameter equals
+.\ProcessOptimizer\space\constraints.py:378:80: E501 line too long (129 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:384:80: E501 line too long (96 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:390:80: E501 line too long (99 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:390:100: W291 trailing whitespace
+.\ProcessOptimizer\space\constraints.py:395:80: E501 line too long (115 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:397:80: E501 line too long (119 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:403:80: E501 line too long (104 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:405:80: E501 line too long (120 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:416:68: E225 missing whitespace around operator
+.\ProcessOptimizer\space\constraints.py:418:68: E225 missing whitespace around operator
+.\ProcessOptimizer\space\constraints.py:421:5: E303 too many blank lines (2)
+.\ProcessOptimizer\space\constraints.py:422:80: E501 line too long (111 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:426:80: E501 line too long (151 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:430:1: E302 expected 2 blank lines, found 1
+.\ProcessOptimizer\space\constraints.py:431:42: E251 unexpected spaces around keyword / parameter equals
+.\ProcessOptimizer\space\constraints.py:431:44: E251 unexpected spaces around keyword / parameter equals
+.\ProcessOptimizer\space\constraints.py:431:59: E251 unexpected spaces around keyword / parameter equals
+.\ProcessOptimizer\space\constraints.py:431:61: E251 unexpected spaces around keyword / parameter equals
+.\ProcessOptimizer\space\constraints.py:433:1: W293 blank line contains whitespace
+.\ProcessOptimizer\space\constraints.py:434:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:435:80: E501 line too long (93 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:445:80: E501 line too long (103 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:448:80: E501 line too long (107 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:451:32: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:483:30: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:488:48: E261 at least two spaces before inline comment
+.\ProcessOptimizer\space\constraints.py:488:80: E501 line too long (91 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:494:18: E261 at least two spaces before inline comment
+.\ProcessOptimizer\space\constraints.py:506:80: E501 line too long (119 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:510:80: E501 line too long (122 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:514:1: E302 expected 2 blank lines, found 1
+.\ProcessOptimizer\space\constraints.py:514:28: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:515:80: E501 line too long (86 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:528:80: E501 line too long (102 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:534:80: E501 line too long (105 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:536:33: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:537:38: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:539:44: E712 comparison to True should be 'if cond is True:' or 'if cond:'
+.\ProcessOptimizer\space\constraints.py:540:80: E501 line too long (115 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:543:34: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:544:35: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:544:71: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:544:80: E501 line too long (82 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:545:38: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:547:35: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:548:35: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:550:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:552:56: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:553:80: E501 line too long (135 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:554:35: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:555:80: E501 line too long (97 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:557:36: E701 multiple statements on one line (colon)
+.\ProcessOptimizer\space\constraints.py:557:61: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:557:80: E501 line too long (84 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:558:35: W291 trailing whitespace
+.\ProcessOptimizer\space\constraints.py:561:44: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:564:44: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:566:80: E501 line too long (149 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:568:1: E302 expected 2 blank lines, found 1
+.\ProcessOptimizer\space\constraints.py:568:30: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:570:35: E261 at least two spaces before inline comment
+.\ProcessOptimizer\space\constraints.py:572:80: E501 line too long (98 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:572:90: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:575:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:576:28: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:578:80: E501 line too long (144 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:578:117: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:579:30: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:581:80: E501 line too long (150 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:581:123: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:582:30: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:584:80: E501 line too long (158 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:584:131: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:588:1: E302 expected 2 blank lines, found 1
+.\ProcessOptimizer\space\constraints.py:588:21: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:602:22: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:602:46: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:605:80: E501 line too long (106 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:605:86: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:605:95: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:606:10: E261 at least two spaces before inline comment
+.\ProcessOptimizer\space\constraints.py:609:80: E501 line too long (120 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:609:104: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:611:1: E302 expected 2 blank lines, found 1
+.\ProcessOptimizer\space\constraints.py:611:20: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:625:22: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:625:46: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:627:80: E501 line too long (100 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:627:80: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:627:89: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:628:10: E261 at least two spaces before inline comment
+.\ProcessOptimizer\space\constraints.py:630:80: E501 line too long (116 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:630:100: E231 missing whitespace after ','
+.\ProcessOptimizer\space\constraints.py:632:1: E302 expected 2 blank lines, found 1
+.\ProcessOptimizer\space\constraints.py:637:9: E128 continuation line under-indented for visual indent
+.\ProcessOptimizer\space\constraints.py:638:9: E128 continuation line under-indented for visual indent
+.\ProcessOptimizer\space\constraints.py:638:9: E125 continuation line with same indent as next logical line
+.\ProcessOptimizer\space\constraints.py:639:80: E501 line too long (134 > 79 characters)
+.\ProcessOptimizer\space\constraints.py:642:1: W391 blank line at end of file
+.\ProcessOptimizer\space\constraints.py:642:1: W293 blank line contains whitespace
+.\ProcessOptimizer\space\space.py:10:1: F401 'sklearn.utils.fixes.sp_version' imported but unused
+.\ProcessOptimizer\space\space.py:301:80: E501 line too long (94 > 79 characters)
+.\ProcessOptimizer\space\space.py:409:80: E501 line too long (87 > 79 characters)
+.\ProcessOptimizer\space\space.py:543:80: E501 line too long (87 > 79 characters)
+.\ProcessOptimizer\space\space.py:552:9: E741 ambiguous variable name 'l'
+.\ProcessOptimizer\space\space.py:850:1: W293 blank line contains whitespace
+.\ProcessOptimizer\space\space.py:852:14: E111 indentation is not a multiple of four
+.\ProcessOptimizer\space\space.py:852:14: E117 over-indented
+.\ProcessOptimizer\space\space.py:852:25: E222 multiple spaces after operator
+.\ProcessOptimizer\space\space.py:870:80: E501 line too long (101 > 79 characters)
+.\ProcessOptimizer\space\transformers.py:33:5: E303 too many blank lines (2)
+.\ProcessOptimizer\space\__init__.py:5:1: F403 'from .space import *' used; unable to detect undefined names
+.\ProcessOptimizer\space\__init__.py:5:1: F401 '.space.*' imported but unused
+.\ProcessOptimizer\tests\test_acquisition.py:7:1: F401 'sklearn.multioutput.MultiOutputRegressor' imported but unused
+.\ProcessOptimizer\tests\test_acquisition.py:123:1: E305 expected 2 blank lines after class or function definition, found 1
+.\ProcessOptimizer\tests\test_acquisition.py:124:80: E501 line too long (118 > 79 characters)
+.\ProcessOptimizer\tests\test_acquisition.py:139:80: E501 line too long (107 > 79 characters)
+.\ProcessOptimizer\tests\test_acquisition.py:140:80: E501 line too long (109 > 79 characters)
+.\ProcessOptimizer\tests\test_acquisition.py:150:1: E302 expected 2 blank lines, found 1
+.\ProcessOptimizer\tests\test_acquisition.py:156:1: E305 expected 2 blank lines after class or function definition, found 1
+.\ProcessOptimizer\tests\test_callbacks.py:19:1: E302 expected 2 blank lines, found 1
+.\ProcessOptimizer\tests\test_callbacks.py:41:80: E501 line too long (104 > 79 characters)
+.\ProcessOptimizer\tests\test_callbacks.py:46:80: E501 line too long (104 > 79 characters)
+.\ProcessOptimizer\tests\test_callbacks.py:60:9: E128 continuation line under-indented for visual indent
+.\ProcessOptimizer\tests\test_common.py:22:1: F401 'ProcessOptimizer.benchmarks.bench4' imported but unused
+.\ProcessOptimizer\tests\test_common.py:108:1: E303 too many blank lines (3)
+.\ProcessOptimizer\tests\test_common.py:129:1: E303 too many blank lines (3)
+.\ProcessOptimizer\tests\test_common.py:245:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\tests\test_common.py:350:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\tests\test_common.py:362:2: W291 trailing whitespace
+.\ProcessOptimizer\tests\test_common.py:430:1: E305 expected 2 blank lines after class or function definition, found 1
+.\ProcessOptimizer\tests\test_common.py:431:80: E501 line too long (83 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:1:1: F401 'numpy as np' imported but unused
+.\ProcessOptimizer\tests\test_constraints.py:5:1: F401 'ProcessOptimizer.space.constraints.Sum' imported but unused
+.\ProcessOptimizer\tests\test_constraints.py:5:1: F401 'ProcessOptimizer.space.constraints.Conditional' imported but unused
+.\ProcessOptimizer\tests\test_constraints.py:5:1: F401 'ProcessOptimizer.space.constraints.check_constraints' imported but unused
+.\ProcessOptimizer\tests\test_constraints.py:5:1: F401 'ProcessOptimizer.space.constraints.check_bounds' imported but unused
+.\ProcessOptimizer\tests\test_constraints.py:5:1: F401 'ProcessOptimizer.space.constraints.check_value' imported but unused
+.\ProcessOptimizer\tests\test_constraints.py:5:80: E501 line too long (152 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:6:1: F401 'ProcessOptimizer.Optimizer' imported but unused
+.\ProcessOptimizer\tests\test_constraints.py:7:1: F401 'ProcessOptimizer.space.Real' imported but unused
+.\ProcessOptimizer\tests\test_constraints.py:7:1: F401 'ProcessOptimizer.space.Integer' imported but unused
+.\ProcessOptimizer\tests\test_constraints.py:7:1: F401 'ProcessOptimizer.space.Categorical' imported but unused
+.\ProcessOptimizer\tests\test_constraints.py:9:1: E265 block comment should start with '# '
+.\ProcessOptimizer\tests\test_constraints.py:11:1: F401 'numpy.testing.assert_almost_equal' imported but unused
+.\ProcessOptimizer\tests\test_constraints.py:12:1: F401 'numpy.testing.assert_array_almost_equal' imported but unused
+.\ProcessOptimizer\tests\test_constraints.py:13:1: F401 'numpy.testing.assert_array_equal' imported but unused
+.\ProcessOptimizer\tests\test_constraints.py:17:15: E225 missing whitespace around operator
+.\ProcessOptimizer\tests\test_constraints.py:17:28: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:19:1: E302 expected 2 blank lines, found 1
+.\ProcessOptimizer\tests\test_constraints.py:22:26: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:22:31: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:22:36: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:23:26: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:23:31: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:23:36: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:24:28: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:24:32: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:24:40: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:24:49: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:24:53: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:25:28: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:25:32: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:25:40: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:25:49: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:25:53: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:26:37: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:27:37: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:31:26: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:32:26: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:32:31: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:32:36: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:33:28: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:33:32: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:34:28: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:34:32: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:34:40: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:34:49: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:34:53: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:35:37: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:36:37: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:40:26: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:41:24: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:42:28: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:42:32: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:43:28: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:43:30: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:44:37: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:45:37: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:49:26: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:50:26: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:51:28: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:51:32: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:52:28: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:52:32: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:53:37: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:54:37: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:57:1: E302 expected 2 blank lines, found 1
+.\ProcessOptimizer\tests\test_constraints.py:60:13: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:60:17: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:61:13: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:61:16: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:62:13: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:62:17: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:63:16: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:63:21: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:63:26: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:64:16: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:64:21: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:64:26: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:65:16: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:65:20: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:65:23: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:66:16: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:66:21: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:66:25: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:66:29: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:66:31: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:66:36: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:67:16: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:67:21: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:67:26: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:68:16: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:68:21: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:68:26: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:69:16: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:69:20: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:69:23: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:70:16: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:70:21: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:70:25: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:70:29: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:70:31: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:70:36: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:74:20: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:74:24: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:76:20: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:76:27: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:77:1: W293 blank line contains whitespace
+.\ProcessOptimizer\tests\test_constraints.py:80:20: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:80:24: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:82:20: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:82:23: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:82:25: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:82:28: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:84:80: E501 line too long (95 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:86:17: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:86:19: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:88:17: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:88:21: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:90:20: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:90:23: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:90:28: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:92:20: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:92:25: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:92:28: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:93:1: W293 blank line contains whitespace
+.\ProcessOptimizer\tests\test_constraints.py:96:19: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:96:23: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:98:22: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:98:27: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:98:32: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:100:22: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:100:27: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:100:32: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:104:18: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:104:22: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:106:21: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:106:26: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:106:31: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:108:21: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:108:26: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:108:31: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:112:19: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:112:23: E231 missing whitespace after ','
+.\ProcessOptimizer\tests\test_constraints.py:113:1: E305 expected 2 blank lines after class or function definition, found 0
+.\ProcessOptimizer\tests\test_constraints.py:136:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:144:1: W293 blank line contains whitespace
+.\ProcessOptimizer\tests\test_constraints.py:152:80: E501 line too long (82 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:175:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:177:1: W293 blank line contains whitespace
+.\ProcessOptimizer\tests\test_constraints.py:196:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:197:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:211:80: E501 line too long (84 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:212:80: E501 line too long (84 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:216:80: E501 line too long (84 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:217:80: E501 line too long (84 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:226:1: W293 blank line contains whitespace
+.\ProcessOptimizer\tests\test_constraints.py:231:1: W293 blank line contains whitespace
+.\ProcessOptimizer\tests\test_constraints.py:250:80: E501 line too long (86 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:347:1: W293 blank line contains whitespace
+.\ProcessOptimizer\tests\test_constraints.py:404:1: W293 blank line contains whitespace
+.\ProcessOptimizer\tests\test_constraints.py:541:80: E501 line too long (107 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:563:80: E501 line too long (107 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:598:1: W293 blank line contains whitespace
+.\ProcessOptimizer\tests\test_constraints.py:619:1: W293 blank line contains whitespace
+.\ProcessOptimizer\tests\test_constraints.py:656:80: E501 line too long (92 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:671:80: E501 line too long (92 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:698:80: E501 line too long (92 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:719:80: E501 line too long (92 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:721:80: E501 line too long (93 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:726:80: E501 line too long (92 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:731:80: E501 line too long (92 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:755:80: E501 line too long (106 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:765:80: E501 line too long (112 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:771:80: E501 line too long (86 > 79 characters)
+.\ProcessOptimizer\tests\test_constraints.py:777:4: W292 no newline at end of file
+.\ProcessOptimizer\tests\test_constraints.py:777:80: E501 line too long (23607 > 79 characters)
+.\ProcessOptimizer\tests\test_gp_opt.py:1:1: F401 'numpy as np' imported but unused
+.\ProcessOptimizer\tests\test_gp_opt.py:9:1: F401 'ProcessOptimizer.benchmarks.bench4' imported but unused
+.\ProcessOptimizer\tests\test_gp_opt.py:51:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\tests\test_gp_opt.py:61:2: W291 trailing whitespace
+.\ProcessOptimizer\tests\test_optimizer.py:10:1: F401 'ProcessOptimizer.forest_minimize' imported but unused
+.\ProcessOptimizer\tests\test_optimizer.py:13:80: E501 line too long (80 > 79 characters)
+.\ProcessOptimizer\tests\test_optimizer.py:23:25: E261 at least two spaces before inline comment
+.\ProcessOptimizer\tests\test_optimizer.py:23:26: E262 inline comment should start with '# '
+.\ProcessOptimizer\tests\test_optimizer.py:176:1: E305 expected 2 blank lines after class or function definition, found 1
+.\ProcessOptimizer\tests\test_optimizer.py:202:1: E302 expected 2 blank lines, found 1
+.\ProcessOptimizer\tests\test_optimizer.py:292:5: E265 block comment should start with '# '
+.\ProcessOptimizer\tests\test_optimizer.py:299:5: E265 block comment should start with '# '
+.\ProcessOptimizer\tests\test_optimizer.py:313:21: E712 comparison to True should be 'if cond is True:' or 'if cond:'
+.\ProcessOptimizer\tests\test_optimizer.py:315:21: E712 comparison to False should be 'if cond is False:' or 'if not cond:'
+.\ProcessOptimizer\tests\test_parallel_cl.py:21:33: E261 at least two spaces before inline comment
+.\ProcessOptimizer\tests\test_parallel_cl.py:21:34: E262 inline comment should start with '# '
+.\ProcessOptimizer\tests\test_searchcv.py:270:1: E302 expected 2 blank lines, found 1
+.\ProcessOptimizer\tests\test_space.py:5:1: F401 'yaml' imported but unused
+.\ProcessOptimizer\tests\test_space.py:374:40: W291 trailing whitespace
+.\ProcessOptimizer\tests\test_space.py:376:1: E305 expected 2 blank lines after class or function definition, found 0
+.\ProcessOptimizer\tests\test_space.py:439:1: E302 expected 2 blank lines, found 0
+.\ProcessOptimizer\tests\test_space.py:517:9: F841 local variable 'dim' is assigned to but never used
+.\ProcessOptimizer\tests\test_space.py:524:80: E501 line too long (81 > 79 characters)
+.\ProcessOptimizer\tests\test_space.py:530:80: E501 line too long (83 > 79 characters)
+.\ProcessOptimizer\tests\test_space.py:586:1: W293 blank line contains whitespace
+.\ProcessOptimizer\tests\test_space.py:587:42: E251 unexpected spaces around keyword / parameter equals
+.\ProcessOptimizer\tests\test_space.py:587:80: E501 line too long (98 > 79 characters)
+.\ProcessOptimizer\tests\test_space.py:588:34: E127 continuation line over-indented for visual indent
+.\ProcessOptimizer\tests\test_space.py:588:80: E501 line too long (89 > 79 characters)
+.\ProcessOptimizer\tests\test_space.py:589:9: F841 local variable 'opt' is assigned to but never used
+.\ProcessOptimizer\tests\test_space.py:590:9: E265 block comment should start with '# '
+.\ProcessOptimizer\tests\test_space.py:590:80: E501 line too long (127 > 79 characters)
+.\ProcessOptimizer\tests\test_space.py:591:34: E114 indentation is not a multiple of four (comment)
+.\ProcessOptimizer\tests\test_space.py:591:34: E116 unexpected indentation (comment)
+.\ProcessOptimizer\tests\test_space.py:591:34: E265 block comment should start with '# '
+.\ProcessOptimizer\tests\test_space.py:591:80: E501 line too long (89 > 79 characters)
+.\ProcessOptimizer\tests\test_utils.py:184:80: E501 line too long (81 > 79 characters)
+.\ProcessOptimizer\tests\test_utils.py:185:1: F811 redefinition of unused 'test_normalize_dimensions' from line 174
