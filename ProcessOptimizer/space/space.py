@@ -259,7 +259,7 @@ class Real(Dimension):
            orignal space.
         """
         return np.clip(
-            super(Real, self).inverse_transform(Xt).astype(np.float),
+            super(Real, self).inverse_transform(Xt).astype(float),
             self.low, self.high
         )
 
