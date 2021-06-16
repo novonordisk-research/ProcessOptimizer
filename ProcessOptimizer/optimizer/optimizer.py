@@ -381,7 +381,7 @@ class Optimizer(object):
                 str(supported_strategies) + ", " + "got %s" % strategy
             )
     
-        if space_fill=="stbr_full":
+        if strategy =="stbr_full":
 
                     # Steienerberger sampling can not be used from an empty Xi set
                     if self.Xi == []:
