@@ -152,7 +152,7 @@ class Optimizer(object):
     """
 
     def __init__(self, dimensions, base_estimator="gp",
-                 n_random_starts=None, n_initial_points=10, lhs=False,
+                 n_random_starts=None, n_initial_points=10, lhs=True,
                  acq_func="gp_hedge",
                  acq_optimizer="auto",
                  random_state=None, acq_func_kwargs=None,

@@ -238,35 +238,60 @@ def test_exhaust_initial_calls(base_estimator):
     # at least n_initial_points via tell()
     opt = Optimizer([(-2.0, 2.0)], base_estimator, n_initial_points=2,
                     acq_optimizer="sampling", random_state=1)
+    X_start = opt.ask(2)
 
-    x0 = opt.ask()  # random point
-    x1 = opt.ask()  # random point
+    x0 = X_start[0]  # random point
+    x1 = X_start[1]  # random point
     assert x0 != x1
     # first call to tell()
     r1 = opt.tell(x1, 3.)
     assert len(r1.models) == 0
     x2 = opt.ask()  # random point
-    assert x1 != x2
-    # second call to tell()
-    r2 = opt.tell(x2, 4.)
-    if base_estimator.lower() == 'dummy':
-        assert len(r2.models) == 0
-    else:
-        assert len(r2.models) == 1
-    # this is the first non-random point
-    x3 = opt.ask()
-    assert x2 != x3
-    x4 = opt.ask()
-    r3 = opt.tell(x3, 1.)
-    # no new information was added so should be the same, unless we are using
-    # the dummy estimator which will forever return random points and never
-    # fits any models
-    if base_estimator.lower() == 'dummy':
-        assert x3 != x4
-        assert len(r3.models) == 0
-    else:
-        assert x3 == x4
-        assert len(r3.models) == 2
+    if opt._lhs == False:
+        assert x1 != x2
+        # second call to tell()
+        r2 = opt.tell(x2, 4.)
+        if base_estimator.lower() == 'dummy':
+            assert len(r2.models) == 0
+        else:
+            assert len(r2.models) == 1
+        # this is the first non-random point
+        x3 = opt.ask()
+        assert x2 != x3
+        x4 = opt.ask()
+        r3 = opt.tell(x3, 1.)
+        # no new information was added so should be the same, unless we are using
+        # the dummy estimator which will forever return random points and never
+        # fits any models
+        if base_estimator.lower() == 'dummy':
+            assert x3 != x4
+            assert len(r3.models) == 0
+        else:
+            assert x3 == x4
+            assert len(r3.models) == 2
+    
+    elif opt._lhs == True:
+        assert x1 == x2
+        # second call to tell()
+        r2 = opt.tell(x0, 4.)
+        if base_estimator.lower() == 'dummy':
+            assert len(r2.models) == 0
+        else:
+            assert len(r2.models) == 1
+        # this is the first non-random point
+        x3 = opt.ask()
+        assert x2 != x3
+        x4 = opt.ask()
+        r3 = opt.tell(x3, 1.)
+        # no new information was added so should be the same, unless we are using
+        # the dummy estimator which will forever return random points and never
+        # fits any models
+        if base_estimator.lower() == 'dummy':
+            assert x3 != x4
+            assert len(r3.models) == 0
+        else:
+            assert x3 == x4
+            assert len(r3.models) == 2
 
 
 @pytest.mark.fast_test
