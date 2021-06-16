@@ -1,18 +1,15 @@
-import time
-import matplotlib.pyplot as plt
-from ProcessOptimizer.benchmarks import branin as branin
-from ProcessOptimizer.benchmarks import hart6 as hart6_
-from ProcessOptimizer.plots import plot_objective
-from ProcessOptimizer import gp_minimize, forest_minimize, dummy_minimize
-from ProcessOptimizer import plots
-from ProcessOptimizer import bokeh_plot
-# For reproducibility
 import numpy as np
+import matplotlib.pyplot as plt
+from ProcessOptimizer import gp_minimize
+from ProcessOptimizer import bokeh_plot
+
+# For reproducibility
 np.random.seed(123)
+
 plt.set_cmap("viridis")
+
+
 # Here we define a function that we evaluate.
-
-
 def funny_func(x):
     s = 0
     for i in range(len(x)):
