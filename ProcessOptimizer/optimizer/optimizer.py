@@ -328,7 +328,7 @@ class Optimizer(object):
 
         return optimizer
 
-    def ask(self, n_points=None, strategy="stbr", space_fill=None):
+    def ask(self, n_points=None, strategy="stbr_fill"):
         """Query point or multiple points at which objective should be evaluated.
 
         * `n_points` [int or None, default=None]:
@@ -339,14 +339,20 @@ class Optimizer(object):
             parallel, and thus obtain more objective function evaluations per
             unit of time.
 
-        * `strategy` [string, default=`"cl_min"`]:
+        * `strategy` [string, default=`stbr_fill`]:
             Method to use to sample multiple points (see also `n_points`
             description). This parameter is ignored if n_points = None.
             Supported options are `"cl_min"`, `"cl_mean"` or `"cl_max"`.
             
-            -if set to `"stbr"` then steinerberger sampling is used
+            -if set to `"stbr_fill"` then Steinerberger sampling is used
               after first point.
-            - If set to `"cl_min"`, then constant liar strtategy is used
+            -if set to `"stbr_full"` then Steinerberger sampling is used
+              from first point.   
+              
+             For details on the Steinerberger method see:
+             https://arxiv.org/abs/1902.03269
+             
+            - If set to `"cl_min"`, then constant liar strategy is used
                with lie objective value being minimum of observed objective
                values. `"cl_mean"` and `"cl_max"` means mean and max of values
                respectively. For details on this strategy see:
@@ -360,79 +366,39 @@ class Optimizer(object):
                objective and so on. The type of lie defines different
                flavours of `cl_x` strategies.
 
-
-         * space_fill [string or None, default="None"]
-           Method used for space filling after initialization. This parameter is ignored if Space_fill = None.
-           Supported options are `"rand"`, `"lhs"` or `"stbr"`.
-         
-           - If set to "rand", then random points from the parameter space is returned
-           
-           - If set to "lhs", then points sampled by latin hypercube from the parameter space is returned
-           
-           - If set to "stbr", then the Steinerberger sampling medthod is used. For details on this method see:
-
-             https://arxiv.org/abs/1902.03269
         """
 
         if not ((isinstance(n_points, int) and n_points > 0)  or n_points is None) :
             raise ValueError(
                 "n_points should be int > 0, got " + str(n_points)
             )
-
         # These are the only filling strategies which are supported
-        
-        supported_fill_strategies = ["rand", "lhs", "stbr",None]
-
-        if space_fill not in supported_fill_strategies:
-            raise ValueError(
-                "Expected space filling to be one of " +
-                str(supported_fill_strategies) + ", " + "got %s" % space_fill
-            )
-
-        
-        if space_fill=="rand":
-
-            return self.space.rvs(n_samples=n_points)
-        
-        elif space_fill=="lhs": 
-            
-            return self.space.lhs(n_points)
-        
-        elif space_fill=="stbr":
-            
-            # Steienerberger sampling can not be used from an empty Xi set
-            if self.Xi == []:
-                raise ValueError(
-                    "Steinerberger sampling requires initial points but got [] " 
-                    )
-
-    
-            
-            if n_points is None:
-                # Returns a single Steinerberger point
-                X=self.stbr_scipy()
-            else:
-                # Returns 'n_points' Steinerberger points
-                X=self.stbr_scipy(n_points=n_points)
-        
-            return X
-                
-                
-        if n_points is None or n_points==1:
-            return self._ask()
-
-        supported_strategies = ["cl_min", "cl_mean", "cl_max", "stbr"]
-
-        if not (isinstance(n_points, int) and n_points > 0):
-            raise ValueError(
-                "n_points should be int > 0, got " + str(n_points)
-            )
+        supported_strategies = ["cl_min", "cl_mean", "cl_max", "stbr_fill", "stbr_full"]
 
         if strategy not in supported_strategies:
             raise ValueError(
                 "Expected parallel_strategy to be one of " +
                 str(supported_strategies) + ", " + "got %s" % strategy
             )
+    
+        if strategy =="stbr_full":
+
+                    # Steienerberger sampling can not be used from an empty Xi set
+                    if self.Xi == []:
+                        raise ValueError(
+                            "Steinerberger sampling requires initial points but got [] " 
+                            )
+
+                    if n_points is None:
+                        # Returns a single Steinerberger point
+                        X=self.stbr_scipy()
+                    else:
+                        # Returns 'n_points' Steinerberger points
+                        X=self.stbr_scipy(n_points=n_points)
+                    return X
+    
+        if n_points is None or n_points==1:
+            return self._ask()
 
         # Caching the result with n_points not None. If some new parameters
         # are provided to the ask, the cache_ is not used.
