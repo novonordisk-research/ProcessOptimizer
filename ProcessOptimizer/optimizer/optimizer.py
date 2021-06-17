@@ -502,6 +502,10 @@ class Optimizer(object):
 
             assert not (
                 self._constraints and self._lhs), "Constraints can't be used while latin hypercube sampling is not exhausted"
+            
+            if self._n_initial_points == 0 and self.base_estimator_ is None:
+                #This occurs during runs with dummy minimizer in which base_estimator is None by design
+                return self.space.rvs(random_state=self.rng)[0]
 
             if self._constraints:
                 # We use another sampling method when constraints are added

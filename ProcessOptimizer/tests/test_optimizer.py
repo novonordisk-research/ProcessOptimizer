@@ -246,7 +246,7 @@ def test_exhaust_initial_calls(base_estimator):
     # first call to tell()
     r1 = opt.tell(x1, 3.)
     assert len(r1.models) == 0
-    x2 = opt.ask()  # random point
+    x2 = opt.ask()  # random point (NOT in the case of LHS)
     if opt._lhs == False:
         assert x1 != x2
         # second call to tell()
@@ -278,7 +278,7 @@ def test_exhaust_initial_calls(base_estimator):
             assert len(r2.models) == 0
         else:
             assert len(r2.models) == 1
-        # this is the first non-random point
+        # this is the first non-LHS point
         x3 = opt.ask()
         assert x2 != x3
         x4 = opt.ask()
@@ -337,6 +337,8 @@ def test_parsing_lhs():
     opt = Optimizer([(1, 3)], "GP", lhs=True)
     assert opt._lhs == True
     opt = Optimizer([(1, 3)], "GP")
+    assert opt._lhs == True
+    opt = Optimizer([(1, 3)], "GP", lhs=False)
     assert opt._lhs == False
 
 
