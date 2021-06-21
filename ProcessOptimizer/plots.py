@@ -395,7 +395,7 @@ def dependence(space, model, i, j=None, sample_points=None,
 
 def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
                    zscale='linear', dimensions=None, usepartialdependence=True,
-                   pars='result', expected_minimum_samples=None, title=None):
+                   pars='result', expected_minimum_samples=None, title=None, extplt=False):
     """Pairwise dependence plot of the objective function.
 
     The diagonal shows the dependence for dimension `i` with
@@ -643,10 +643,16 @@ def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
         ylabel = "Partial dependence"
     else:
         ylabel = "Dependence"
-    return _format_scatter_plot_axes(ax,
+        
+    if extplt == True:
+        return ax, space, ylabel, dimensions, plots_data
+    else:
+        return _format_scatter_plot_axes(ax,
                                      space,
                                      ylabel=ylabel,
                                      dim_labels=dimensions)
+    
+
 
 
 def plot_objectives(results, titles=None):
