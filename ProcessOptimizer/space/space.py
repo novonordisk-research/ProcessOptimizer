@@ -862,7 +862,7 @@ class Space(object):
             lhs_perm = []
             # Get evenly distributed samples form one dimension
             lhs_aranged = self.dimensions[i].lhs_arange(n)
-            perm = np.random.permutation(n)
+            perm = np.random.RandomState(seed=42).permutation(n)
             for p in perm:  # Random permutate the order of the samples
                 lhs_perm.append(lhs_aranged[p])
             samples.append(lhs_perm)
