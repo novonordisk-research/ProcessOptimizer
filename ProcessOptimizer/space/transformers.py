@@ -40,10 +40,10 @@ class Log10(Transformer):
     """Base 10 logarithm transform."""
 
     def transform(self, X):
-        return np.log10(np.asarray(X, dtype=np.float))
+        return np.log10(np.asarray(X, dtype=float))
 
     def inverse_transform(self, Xt):
-        return 10.0 ** np.asarray(Xt, dtype=np.float)
+        return 10.0 ** np.asarray(Xt, dtype=float)
 
 
 class CategoricalEncoder(Transformer):
@@ -140,7 +140,7 @@ class Normalize(Transformer):
             raise ValueError("All values should be greater than 0.0")
         X_orig = X * (self.high - self.low) + self.low
         if self.is_int:
-            return np.round(X_orig).astype(np.int)
+            return np.round(X_orig).astype(int)
         return X_orig
 
 

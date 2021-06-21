@@ -1,16 +1,14 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.datasets import load_breast_cancer
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import cross_val_score
 from ProcessOptimizer.space import Integer, Categorical
-from ProcessOptimizer import plots, gp_minimize
-from ProcessOptimizer.plots import plot_objective
-from ProcessOptimizer import bokeh_plot
+from ProcessOptimizer import gp_minimize, bokeh_plot
 
 # For reproducibility
-import numpy as np
 np.random.seed(123)
-import matplotlib.pyplot as plt
+
 plt.set_cmap("viridis")
 
 SPACE = [
@@ -23,9 +21,13 @@ SPACE = [
     Categorical(list('def'), name='dummy'),
 ]
 
+
 def objective(params):
-    clf = DecisionTreeClassifier(**{dim.name: val for dim, val in zip(SPACE, params) if dim.name != 'dummy'})
+    clf = DecisionTreeClassifier(
+        **{dim.name: val for dim,
+           val in zip(SPACE, params) if dim.name != 'dummy'})
     return -np.mean(cross_val_score(clf, *load_breast_cancer(True)))
+
 
 result = gp_minimize(objective, SPACE, n_calls=20)
 

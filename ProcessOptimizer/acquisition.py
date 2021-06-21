@@ -319,10 +319,3 @@ def gaussian_ei(X, model, y_opt=0.0, xi=0.01, return_grad=False):
         return values, grad
 
     return values
-
-
-
-
-
-
-
