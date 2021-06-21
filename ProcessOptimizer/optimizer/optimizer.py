@@ -71,8 +71,10 @@ class Optimizer(object):
         `x0` count as initialization points. If len(x0) < n_initial_points
         additional points are sampled at random.
 
-    * `lhs` [bool, default = False]:
-        If set to true the optimizer will use latin hypercube sampling for the first n_initial_points
+    * `lhs` [bool, default = True]:
+        If set to True, the optimizer will use latin hypercube sampling for the 
+        first n_initial_points. If set to False, the optimizer will return 
+        random points
 
     * `acq_func` [string, default=`"gp_hedge"`]:
         Function to minimize over the posterior distribution. Can be either
