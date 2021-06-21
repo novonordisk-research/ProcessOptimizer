@@ -17,3 +17,5 @@ dist/
 
 # vim users
 .*.swp
+/.project
+/.pydevproject
