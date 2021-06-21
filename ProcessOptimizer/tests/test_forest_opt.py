@@ -53,6 +53,6 @@ def test_tree_based_minimize(name, minimizer):
     check_minimize(minimizer, bench2, -4.7,
                    [(-6.0, 6.0)], 0.1, 20, 10, X0)
     check_minimize(minimizer, bench3, -0.4,
-                   [(-2.0, 2.0)], 0.05, 10, 5)
+                   [(-2.0, 2.0)], 0.05, 10, 6)
     check_minimize(minimizer, bench4, 1.,
                    [("-2", "-1", "0", "1", "2")], 0.05, 5, 1)

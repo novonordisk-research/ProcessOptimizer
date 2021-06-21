@@ -71,8 +71,10 @@ class Optimizer(object):
         `x0` count as initialization points. If len(x0) < n_initial_points
         additional points are sampled at random.
 
-    * `lhs` [bool, default = False]:
-        If set to true the optimizer will use latin hypercube sampling for the first n_initial_points
+    * `lhs` [bool, default = True]:
+        If set to True, the optimizer will use latin hypercube sampling for the 
+        first n_initial_points. If set to False, the optimizer will return 
+        random points
 
     * `acq_func` [string, default=`"gp_hedge"`]:
         Function to minimize over the posterior distribution. Can be either
@@ -152,7 +154,7 @@ class Optimizer(object):
     """
 
     def __init__(self, dimensions, base_estimator="gp",
-                 n_random_starts=None, n_initial_points=10, lhs=False,
+                 n_random_starts=None, n_initial_points=10, lhs=True,
                  acq_func="gp_hedge",
                  acq_optimizer="auto",
                  random_state=None, acq_func_kwargs=None,
@@ -468,6 +470,10 @@ class Optimizer(object):
 
             assert not (
                 self._constraints and self._lhs), "Constraints can't be used while latin hypercube sampling is not exhausted"
+            
+            if self._n_initial_points == 0 and self.base_estimator_ is None:
+                #This occurs during runs with dummy minimizer in which base_estimator is None by design
+                return self.space.rvs(random_state=self.rng)[0]
 
             if self._constraints:
                 # We use another sampling method when constraints are added
