@@ -771,6 +771,8 @@ class Optimizer(object):
        # Check batch tell with multiobjective          
         if is_2Dlistlike(x) and is_2Dlistlike(y) and self.n_objectives > 1:
                 for y_values in y:
+                    if not len(y_values) == self.n_objectives:
+                        raise ValueError("y does not have the correct number of objective scores")    
                     for y_value in y_values:
                         if not isinstance(y_value, Number):
                             raise ValueError("expected y to be a list of lists of scalars")
