@@ -200,7 +200,7 @@ def test_gp_regressor():
     if UseOrdinalEncoder:
         enc = OrdinalEncoder()
         enc.fit(X)
-        
+
     gpr = GaussianProcessRegressor(hm)
     if UseOrdinalEncoder:
         gpr.fit(enc.transform(X), y)
