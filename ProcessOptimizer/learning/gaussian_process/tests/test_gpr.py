@@ -11,7 +11,9 @@ from ProcessOptimizer.learning import GaussianProcessRegressor
 from ProcessOptimizer.learning.gaussian_process.kernels import RBF
 from ProcessOptimizer.learning.gaussian_process.kernels import Matern
 from ProcessOptimizer.learning.gaussian_process.kernels import WhiteKernel
-from ProcessOptimizer.learning.gaussian_process.gpr import _param_for_white_kernel_in_Sum
+from ProcessOptimizer.learning.gaussian_process.gpr import (
+    _param_for_white_kernel_in_Sum
+)
 
 rng = np.random.RandomState(0)
 X = rng.randn(5, 5)
