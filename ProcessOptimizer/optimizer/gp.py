@@ -44,7 +44,7 @@ def gp_minimize(func, dimensions, base_estimator=None,
     * `func` [callable]:
         Function to minimize. Should take a single list of parameters
         and return the objective value.
-    
+
         If you have a search-space where all dimensions have names,
         then you can use `ProcessOptimizer.utils.use_named_args` as a decorator
         on your objective function, in order to call it directly
@@ -89,15 +89,15 @@ def gp_minimize(func, dimensions, base_estimator=None,
         - `"PI"` for negative probability of improvement.
         - `"gp_hedge"` Probabilistically choose one of the above three
           acquisition functions at every iteration. The weightage
-          given to these gains can be set by `\eta` through `acq_func_kwargs`.
+          given to these gains can be set by `eta` through `acq_func_kwargs`.
             - The gains `g_i` are initialized to zero.
             - At every iteration,
                 - Each acquisition function is optimised independently to
                   propose an candidate point `X_i`.
                 - Out of all these candidate points, the next point `X_best` is
-                  chosen by `softmax(\eta g_i)`
+                  chosen by `softmax(eta g_i)`
                 - After fitting the surrogate model with `(X_best, y_best)`,
-                  the gains are updated such that `g_i -= \mu(X_i)`
+                  the gains are updated such that `g_i -= mu(X_i)`
         - `"EIps"` for negated expected improvement per second to take into
           account the function compute time. Then, the objective function is
           assumed to return two values, the first being the objective value and
@@ -215,8 +215,11 @@ def gp_minimize(func, dimensions, base_estimator=None,
 
     if base_estimator is None:
         base_estimator = cook_estimator(
-            "GP", space=space, random_state=rng.randint(0, np.iinfo(np.int32).max),
-            noise=noise)
+            "GP", space=space, random_state=rng.randint(
+              0, np.iinfo(np.int32).max
+              ),
+            noise=noise
+            )
 
     return base_minimize(
         func, space, base_estimator=base_estimator,
