@@ -53,7 +53,7 @@ def create_result(Xi, yi, space=None, rng=None, specs=None, models=None):
     -------
     * `res` [`OptimizeResult`, scipy object]:
         OptimizeResult instance with the required information.
-        
+
        or if the optimizer is multiobjective:
      * `results` [list of `OptimizeResult`, scipy object]:
         OptimizeResult instance with the required information.
@@ -71,11 +71,11 @@ def create_result(Xi, yi, space=None, rng=None, specs=None, models=None):
         res.random_state = rng
         res.specs = specs
         return res
-    models=np.asarray(models)
-    results=[]
+    models = np.asarray(models)
+    results = []
     for i in range(yi.shape[1]):
         res = OptimizeResult()
-        yi_single = np.ravel(yi[:, i])  
+        yi_single = np.ravel(yi[:, i])
         best = np.argmin(yi_single)
         res.x = Xi[best]
         res.fun = yi_single[best]
@@ -84,14 +84,12 @@ def create_result(Xi, yi, space=None, rng=None, specs=None, models=None):
         if models.size == 0:
             res.models = models
         else:
-            res.models = models[:,i]
+            res.models = models[:, i]
         res.space = space
         res.random_state = rng
-        res.specs = specs     
+        res.specs = specs
         results.append(res)
     return results
-
-    
 
 
 def eval_callbacks(callbacks, result):
@@ -147,8 +145,8 @@ def dump(res, filename, store_objective=True, **kwargs):
         Notice that if `store_objective` is set to `False`, a deep copy of the
         optimization result is created, potentially leading to performance
         problems if `res` is very large. If the objective function is not
-        critical, one can delete it before calling `ProcessOptimizer.dump()` and thus
-        avoid deep copying of `res`.
+        critical, one can delete it before calling `ProcessOptimizer.dump()`
+        and thus avoid deep copying of `res`.
 
     * `**kwargs` [other keyword arguments]:
         All other keyword arguments will be passed to `joblib.dump`.
@@ -176,8 +174,8 @@ def load(filename, **kwargs):
     persisted with ProcessOptimizer.dump.
 
     Notice that the loaded optimization result can be missing
-    the objective function (`.specs['args']['func']`) if `ProcessOptimizer.dump`
-    was called with `store_objective=False`.
+    the objective function (`.specs['args']['func']`) if
+    `ProcessOptimizer.dump` was called with `store_objective=False`.
 
     Parameters
     ----------
@@ -217,8 +215,10 @@ def check_x_in_space(x, space):
                              " the space (%s)."
                              % (x, space.bounds))
         if len(x) != len(space.dimensions):
-            raise ValueError("Dimensions of point (%s) and space (%s) do not match"
-                             % (x, space.bounds))
+            raise ValueError(
+                "Dimensions of point (%s) and space (%s) do not match"
+                % (x, space.bounds)
+                )
 
 
 def expected_minimum(res, n_random_starts=20, random_state=None):
@@ -248,8 +248,11 @@ def expected_minimum(res, n_random_starts=20, random_state=None):
     * `fun` [float]: the surrogate function value at the minimum.
     """
     if res.space.is_partly_categorical:
-        return expected_minimum_random_sampling(res, n_random_starts=100000,
-                                            random_state=random_state)
+        return expected_minimum_random_sampling(
+            res,
+            n_random_starts=100000,
+            random_state=random_state
+            )
 
     def func(x):
         reg = res.models[-1]
@@ -273,7 +276,9 @@ def expected_minimum(res, n_random_starts=20, random_state=None):
     return [v for v in best_x], best_fun
 
 
-def expected_minimum_random_sampling(res, n_random_starts=100000, random_state=None):
+def expected_minimum_random_sampling(res,
+                                     n_random_starts=100000,
+                                     random_state=None):
     """Minimum search by doing naive random sampling, Returns the parameters
     that gave the minimum function value. Can be used when the space
     contains any categorical values.
@@ -297,7 +302,6 @@ def expected_minimum_random_sampling(res, n_random_starts=100000, random_state=N
     fun : float
         the surrogate function value at the minimum.
     """
-
 
     # sample points from search space
     random_samples = res.space.rvs(n_random_starts, random_state=random_state)
@@ -342,7 +346,11 @@ def has_gradients(estimator):
     return not categorical_gp
 
 
-def cook_estimator(base_estimator, space=None, length_scale_bounds=None, length_scale=None, **kwargs):
+def cook_estimator(base_estimator,
+                   space=None,
+                   length_scale_bounds=None,
+                   length_scale=None,
+                   **kwargs):
     """
     Cook a default estimator.
 
@@ -672,7 +680,8 @@ def use_named_args(dimensions):
                                    dimensions))
 
             # Error message.
-            msg = "All dimensions must be instances of the Dimension-class, but found: {}"
+            msg = '''All dimensions must be instances of the Dimension-class,
+                  but found: {}'''
             msg = msg.format(err_dims)
             raise ValueError(msg)
 
