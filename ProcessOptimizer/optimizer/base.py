@@ -12,8 +12,6 @@ try:
 except ImportError:
     from collections import Iterable
 
-import numpy as np
-
 from ..callbacks import check_callback
 from ..callbacks import VerboseCallback
 from .optimizer import Optimizer
@@ -32,7 +30,7 @@ def base_minimize(func, dimensions, base_estimator,
     * `func` [callable]:
         Function to minimize. Should take a single list of parameters
         and return the objective value.
-    
+
         If you have a search-space where all dimensions have names,
         then you can use `ProcessOptimizer.utils.use_named_args` as a decorator
         on your objective function, in order to call it directly
