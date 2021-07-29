@@ -384,7 +384,7 @@ def test_normalize():
     X = rng.randint(2, 31)
     # Check inverse transform
     X_orig = a.inverse_transform(a.transform(X))
-    assert isinstance(X_orig, int)
+    assert isinstance(X_orig, np.int64)
 
     a = Integer(2, 30, transform="normalize")
     for i in range(50):
@@ -401,7 +401,7 @@ def test_normalize():
     assert isinstance(X_orig, np.int64)
     assert_array_equal(X_orig, X)
 
-    a = Real(0, 1, transform="normalize", dtype=float)
+    a = Real(0, 1, transform="normalize")
     for i in range(50):
         check_limits(a.rvs(random_state=i), 0, 1)
     assert_array_equal(a.transformed_bounds, (0, 1))
@@ -422,7 +422,7 @@ def test_normalize():
     X_orig = a.inverse_transform(a.transform(X))
     assert isinstance(X_orig, np.float64)
 
-    a = Real(0, 1, transform="normalize", dtype=np.float64)
+    a = Real(0, 1, transform="normalize")
     X = np.float64(rng.rand())
     # Check inverse transform
     X_orig = a.inverse_transform(a.transform(X))
