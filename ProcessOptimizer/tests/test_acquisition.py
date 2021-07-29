@@ -120,52 +120,10 @@ def test_acquisition_gradient():
     for acq_func in ["LCB", "PI", "EI"]:
         check_gradient_correctness(X_new, gpr, acq_func, np.max(y))
 
-'''
-#Tests relating to EIPS/PIPS are commentet out, as we don't use these and the tests breaks after pareto implementation
-@pytest.mark.fast_test
-@pytest.mark.parametrize("acq_func", ["EIps", "PIps"])
-def test_acquisition_per_second(acq_func):
-    X = np.reshape(np.linspace(4.0, 8.0, 10), (-1, 1))
-    y = np.vstack((np.ones(10), np.ravel(np.log(X)))).T
-    cgpr = ConstantGPRSurrogate(Space(((1.0, 9.0),)))
-    cgpr.fit(X, y)
 
-    X_pred = np.reshape(np.linspace(1.0, 11.0, 20), (-1, 1))
-    indices = np.arange(6)
-    vals = _gaussian_acquisition(X_pred, cgpr, y_opt=1.0, acq_func=acq_func)
-    for fast, slow in zip(indices[:-1], indices[1:]):
-        #assert_greater(vals[slow], vals[fast])
-        pass
-        # TODO: I have commented this test out as it broke when implementing different lenght scale bounds.
-        # I'm not sure how this test works and what it actually tests for and therefore i was not able to fix
-        # it. -SC
-
-    acq_wo_time = _gaussian_acquisition(
-        X, cgpr.estimators_[0], y_opt=1.2, acq_func=acq_func[:2])
-    acq_with_time = _gaussian_acquisition(
-        X, cgpr, y_opt=1.2, acq_func=acq_func)
-    assert_array_almost_equal(acq_wo_time / acq_with_time, np.ravel(X), 2)
-'''
 
 def test_gaussian_acquisition_check_inputs():
     model = ConstantGPRSurrogate(Space(((1.0, 9.0),)))
     with pytest.raises(ValueError) as err:
         _gaussian_acquisition(np.arange(1, 5), model)
     assert("it must be 2-dimensional" in err.value.args[0])
-
-'''
-@pytest.mark.fast_test
-@pytest.mark.parametrize("acq_func", ["EIps", "PIps"])
-def test_acquisition_per_second_gradient(acq_func):
-    rng = np.random.RandomState(0)
-    X = rng.randn(20, 10)
-    # Make the second component large, so that mean_grad and std_grad
-    # do not become zero.
-    y = np.vstack((X[:, 0], np.abs(X[:, 0])**3)).T
-
-    for X_new in [rng.randn(10), rng.randn(10)]:
-        gpr = cook_estimator("GP", Space(((-5.0, 5.0),)), random_state=0)
-        mor = MultiOutputRegressor(gpr)
-        mor.fit(X, y)
-        check_gradient_correctness(X_new, mor, acq_func, 1.5)
-'''

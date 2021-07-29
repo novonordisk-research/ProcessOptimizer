@@ -19,7 +19,6 @@ from scipy.optimize import OptimizeResult
 TREE_REGRESSORS = (ExtraTreesRegressor(random_state=2),
                    RandomForestRegressor(random_state=2),
                    GradientBoostingQuantileRegressor(random_state=2))
-ACQ_FUNCS_PS = ["EIps", "PIps"]
 ACQ_FUNCS_MIXED = ["EI"] #, "EIps" removed
 ESTIMATOR_STRINGS = ["GP", "RF", "ET", "GBRT", "DUMMY",
                      "gp", "rf", "et", "gbrt", "dummy"]
@@ -173,31 +172,6 @@ def test_acq_optimizer(base_estimator):
                   n_initial_points=2, acq_optimizer='lbfgs')
     assert "should run with acq_optimizer='sampling'" in str(e.value)
 
-'''
-#Comment out per second acq func
-@pytest.mark.parametrize("base_estimator", TREE_REGRESSORS)
-@pytest.mark.parametrize("acq_func", ACQ_FUNCS_PS)
-def test_acq_optimizer_with_time_api(base_estimator, acq_func):
-    opt = Optimizer([(-2.0, 2.0), ], base_estimator=base_estimator,
-                    acq_func=acq_func,
-                    acq_optimizer="sampling", n_initial_points=2)
-    x1 = opt.ask()
-    opt.tell(x1, (bench1(x1), 1.0))
-    x2 = opt.ask()
-    res = opt.tell(x2, (bench1(x2), 2.0))
-
-    # x1 and x2 are random.
-    assert x1 != x2
-
-    assert len(res.models) == 1
-    assert_array_equal(res.func_vals.shape, (2,))
-    assert_array_equal(res.log_time.shape, (2,))
-
-    # x3 = opt.ask()
-
-    with pytest.raises(TypeError) as e:
-        opt.tell(x2, bench1(x2))
-'''
 
 @pytest.mark.fast_test
 @pytest.mark.parametrize("acq_func", ACQ_FUNCS_MIXED)
