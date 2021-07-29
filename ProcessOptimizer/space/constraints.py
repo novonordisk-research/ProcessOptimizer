@@ -92,10 +92,11 @@ class Constraints:
                     column = np.full(n_samples, self.single[i].value)
                 else:  # Using the default rvs() for the given dimension
                     try:
-                        column = (dim.rvs(n_samples=n_samples))
-                    except:
-                        column = (dim.rvs(n_samples=n_samples,
+                        column = (dim.rvs(n_samples=n_samples, 
                                           random_state=rng))
+                    except Exception as error:
+                        print(f'''Caught an error while making random points in
+                         constrained space, error is: {error}''')
                 columns.append(column)
 
             # Transpose

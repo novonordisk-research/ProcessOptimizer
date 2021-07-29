@@ -116,7 +116,7 @@ def test_single_inclusive_and_exclusive():
         Single('a', 1.0, 'not a proper value')
 
 
-'''
+
 @pytest.mark.fast_test
 def test_Sum():
     # Test that Sym type constraint can be initialized
@@ -139,7 +139,7 @@ def test_Sum():
         Sum([-10,1,2],True)
 
     space = Space([[0.0,10.0],[0,10],['abcdef']])
-    # A dimension value of 4 is out of bounds for a space with only 
+    # A dimension value of 4 is out of bounds for a space with only
     # 3 dimensions
     cons_list = [Sum((4,3),5)]
     with raises(IndexError):
@@ -148,7 +148,7 @@ def test_Sum():
     cons_list = [Sum((1,2),5)]
     with raises(ValueError):
         Constraints(cons_list,space)
-    
+
     # Check that validate_sample validates samples correctly
     cons = Constraints([Sum((0,1),6)],space)
     assert not cons.validate_sample([0.0,7,'a'])
@@ -168,6 +168,7 @@ def test_Sum():
     samples = cons.rvs(n_samples = 1000)
     for sample in samples:
         assert cons.validate_sample(sample)
+
 
 @pytest.mark.fast_test
 def test_Conditional():
@@ -244,6 +245,7 @@ def test_Conditional():
     for sample in samples:
         assert cons.validate_sample(sample)
 
+
 @pytest.mark.fast_test
 def test_check_constraints():
     space = Space([(0.0,5.0),(1.0,5.0)])
@@ -275,6 +277,7 @@ def test_check_constraints():
     with raises(IndexError):
         check_constraints(space,cons_list)
 
+
 @pytest.mark.fast_test
 def test_check_bounds():
     # Check that no error is raised when using valid bounds
@@ -296,6 +299,7 @@ def test_check_bounds():
         check_bounds(space.dimensions[2],('k',-1.0))
     with raises(ValueError):
         check_bounds(space.dimensions[2],('a','b','c',1.2))
+
 
 @pytest.mark.fast_test
 def test_check_value():
@@ -321,26 +325,28 @@ def test_check_value():
     with raises(ValueError):
         check_value(space.dimensions[2],1.2)
 
+
 @pytest.mark.fast_test
 def test_single_validate_constraint():
     # Test categorical
     cons = Single(0,1.0,'categorical')
-    assert_true(cons._validate_constraint(1.0))
-    assert_false(cons._validate_constraint(1.1))
+    assert cons._validate_constraint(1.0)
+    assert not cons._validate_constraint(1.1)
 
     cons = Single(0,'a','categorical')
-    assert_true(cons._validate_constraint('a'))
-    assert_false(cons._validate_constraint('b'))
+    assert cons._validate_constraint('a')
+    assert not cons._validate_constraint('b')
 
     # Test real
     cons = Single(0,1.0,'real')
-    assert_true(cons._validate_constraint(1.0))
-    assert_false(cons._validate_constraint(1.1))
+    assert cons._validate_constraint(1.0)
+    assert not cons._validate_constraint(1.1)
 
     # Test integer
     cons = Single(0,1,'integer')
-    assert_true(cons._validate_constraint(1))
-    assert_false(cons._validate_constraint(2))
+    assert cons._validate_constraint(1)
+    assert not cons._validate_constraint(2)
+
 
 @pytest.mark.fast_test
 def test_Constraints_init():
@@ -380,24 +386,25 @@ def test_Constraints_init():
     assert_equal(len(cons.single),space.n_dims)
     assert_equal(cons.single[1], None)
     assert_equal(cons.single[-1], None)
-    assert_not_equal(cons.single[0], None)
-    assert_not_equal(cons.single[6],None)
+    assert not cons.single[0] == None
+    assert not cons.single[6] == None
 
     # Test that a correct list of inclusive constraints have been made
     assert_equal(len(cons.inclusive),space.n_dims)
     assert_equal(cons.inclusive[0],[])
     assert_equal(cons.inclusive[2],[])
-    assert_not_equal(not cons.inclusive[1],[])
-    assert_not_equal(not cons.inclusive[7],[])
+    assert not cons.inclusive[1] == []
+    assert not cons.inclusive[7] == []
     assert_equal(len(cons.inclusive[4]),2)
 
     # Test that a correct list of exclusive constraints have been made
     assert_equal(len(cons.exclusive),space.n_dims)
     assert_equal(cons.exclusive[3],[])
     assert_equal(cons.exclusive[7],[])
-    assert_not_equal(cons.exclusive[2],[])
-    assert_not_equal(cons.exclusive[5],[])
+    assert not cons.exclusive[2] == []
+    assert not cons.exclusive[5] == []
     assert_equal(len(cons.exclusive[5]),2)
+
 
 @pytest.mark.fast_test
 def test_Constraints_validate_sample():
@@ -418,180 +425,181 @@ def test_Constraints_validate_sample():
     cons = Constraints(cons_list,space)
     sample = [0]*space.n_dims
     sample[0] = 5.0
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[0] = 5.00001
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[0] = 4.99999
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
 
     cons_list = [Single(3,5,'integer')]
     cons = Constraints(cons_list,space)
     sample = [0]*space.n_dims
     sample[3] = 5
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[3] = 6
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[3] = -5
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[3] = 5.000001
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
 
     cons_list = [Single(6,'a','categorical')]
     cons = Constraints(cons_list,space)
     sample = [0]*space.n_dims
     sample[6] = 'a'
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[6] = 'b'
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[6] = -5
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[6] = 5.000001
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
 
     # Test validation of inclusive constraints
     cons_list = [Inclusive(0,(5.0,7.0),'real')]
     cons = Constraints(cons_list,space)
     sample = [0]*space.n_dims
     sample[0] = 5.0
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[0] = 7.0
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[0] = 7.00001
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[0] = 4.99999
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[0] = -10
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
 
     cons_list = [Inclusive(3,(5,7),'integer')]
     cons = Constraints(cons_list,space)
     sample = [0]*space.n_dims
     sample[3] = 5
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[3] = 6
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[3] = 7
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[3] = 8
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[3] = 4
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[3] = -4
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
 
     cons_list = [Inclusive(6,('c','d','e'),'categorical')]
     cons = Constraints(cons_list,space)
     sample = [0]*space.n_dims
     sample[6] = 'c'
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[6] = 'e'
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[6] = 'f'
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[6] = -5
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[6] = 3.3
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[6] = 'a'
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
 
     # Test validation of exclusive constraints
     cons_list = [Exclusive(0,(5.0,7.0),'real')]
     cons = Constraints(cons_list,space)
     sample = [0]*space.n_dims
     sample[0] = 5.0
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[0] = 7.0
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[0] = 7.00001
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[0] = 4.99999
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[0] = -10
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
 
     cons_list = [Exclusive(3,(5,7),'integer')]
     cons = Constraints(cons_list,space)
     sample = [0]*space.n_dims
     sample[3] = 5
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[3] = 6
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[3] = 7
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[3] = 8
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[3] = 4
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[3] = -4
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
 
     cons_list = [Exclusive(3,(5,5),'integer')]
     cons = Constraints(cons_list,space)
     sample = [0]*space.n_dims
     sample[3] = 5
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
 
     cons_list = [Exclusive(6,('c','d','e'),'categorical')]
     cons = Constraints(cons_list,space)
     sample = [0]*space.n_dims
     sample[6] = 'c'
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[6] = 'e'
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[6] = 'f'
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[6] = -5
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[6] = 3.3
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[6] = 'a'
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
 
     # Test more than one constraint per dimension
     cons_list = [Inclusive(0,(1.0,2.0),'real'),Inclusive(0,(3.0,4.0),'real'),Inclusive(0,(5.0,6.0),'real')]
     cons = Constraints(cons_list,space)
     sample = [0]*space.n_dims
     sample[0] = 1.3
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[0] = 6.0
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[0] = 5.0
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[0] = 3.0
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[0] = 4.0
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[0] = 5.5
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[0] = 2.1
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[0] = 4.9
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[0] = 7.0
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
 
     cons_list = [Exclusive(0,(1.0,2.0),'real'),Exclusive(0,(3.0,4.0),'real'),Exclusive(0,(5.0,6.0),'real')]
     cons = Constraints(cons_list,space)
     sample = [0]*space.n_dims
     sample[0] = 1.3
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[0] = 6.0
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[0] = 5.0
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[0] = 3.0
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[0] = 4.0
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[0] = 5.5
-    assert_false(cons.validate_sample(sample))
+    assert not cons.validate_sample(sample)
     sample[0] = 2.1
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[0] = 4.9
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
     sample[0] = 7.0
-    assert_true(cons.validate_sample(sample))
+    assert cons.validate_sample(sample)
+
 
 @pytest.mark.slow_test
 def test_constraints_rvs():
@@ -633,7 +641,7 @@ def test_constraints_rvs():
     samples_b = constraints.rvs(n_samples = 100,random_state = 1)
     samples_c = constraints.rvs(n_samples = 100,random_state = 2)
     assert_equal(samples_a,samples_b)
-    assert_not_equal(samples_a,samples_c)
+    assert not samples_a == samples_c
 
     # Test invalid constraint combinations
     space = Space([Real(0, 1)])
@@ -699,30 +707,30 @@ def test_optimizer_with_constraints(acq_optimizer):
     opt.remove_constraints()
     assert_equal(opt._constraints,None)
     next_x= opt.ask()
-    assert_not_equal(next_x[0],4.0)
-    assert_not_equal(next_x[0],5.0)
+    assert next_x[0] != 4.0
+    assert next_x[0] != 5.0
     f_val = np.random.random()*100
     opt.tell(next_x, f_val)
     assert_equal(opt._constraints,None)
 
     # Test that next_x is changed when adding constraints
     opt = Optimizer(space, base_estimator, acq_optimizer=acq_optimizer,n_initial_points = 3)
-    assert_false(hasattr(opt,'_next_x'))
+    assert not hasattr(opt,'_next_x')
     for _ in range(4): # We exhaust initial points
         next_x= opt.ask()
         f_val = np.random.random()*100
         opt.tell(next_x, f_val)
-    assert_true(hasattr(opt,'_next_x')) # Now next_x should be in optimizer
-    assert_not_equal(next_x[0],4.0)
-    assert_not_equal(next_x[0],5.0)
+    assert hasattr(opt,'_next_x') # Now next_x should be in optimizer
+    assert next_x[0] != 4.0
+    assert next_x[0] != 5.0
     next_x = opt._next_x
     opt.set_constraints(cons)
-    assert_not_equal(opt._next_x,next_x) # Check that next_x has been changed
+    assert opt._next_x != next_x # Check that next_x has been changed
     assert_equal(opt._next_x[0],5.0)
     assert_equal(opt._next_x[3],5)
     next_x = opt._next_x
     opt.set_constraints(cons_2)
-    assert_not_equal(opt._next_x,next_x)
+    assert opt._next_x != next_x
     assert_equal(opt._next_x[0],4.0)
     assert_equal(opt._next_x[3],4)
 
@@ -741,7 +749,7 @@ def test_optimizer_with_constraints(acq_optimizer):
 
     opt = Optimizer(space, base_estimator, acq_optimizer=acq_optimizer,n_initial_points = 2)
     next_x= opt.ask()
-    assert_not_equal(next_x[0],5.0)
+    assert next_x[0] != 5.0
     f_val = np.random.random()*100
     opt.tell(next_x, f_val)
     opt.set_constraints(cons)
@@ -784,5 +792,3 @@ def test_lhs_with_constraints():
     opt = Optimizer(space, "ET",lhs = True,n_initial_points = 2)
     opt.tell([[1],[1]],[0,0]) # Use all of the two initial points
     opt.set_constraints(cons) # Now it should be possible to set constraints
-
-'''
