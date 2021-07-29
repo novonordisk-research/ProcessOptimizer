@@ -373,21 +373,20 @@ def test_normalize():
     X_orig = a.inverse_transform(a.transform(X))
     assert isinstance(X_orig, np.int64) 
     assert_array_equal(X_orig, X)
-'''
-    a = Integer(2, 30, transform="normalize", dtype=int)
-    X = rng.randint(2, 31, dtype=int)
+
+    a = Integer(2, 30, transform="normalize")
+    X = rng.randint(2, 31)
+    # Check inverse transform
+    X_orig = a.inverse_transform(a.transform(X))
+    assert isinstance(X_orig, np.int64)
+    
+    a = Integer(2, 30, transform="normalize")
+    X = rng.randint(2, 31)
     # Check inverse transform
     X_orig = a.inverse_transform(a.transform(X))
     assert isinstance(X_orig, int)
 
-    a = Integer(2, 30, transform="normalize", dtype='int')
-    X = rng.randint(2, 31, dtype=int)
-    # Check inverse transform
-    X_orig = a.inverse_transform(a.transform(X))
-    assert isinstance(X_orig, int)
-
-    a = Integer(2, 30, prior="log-uniform", base=2, transform="normalize",
-                dtype=int)
+    a = Integer(2, 30, transform="normalize")
     for i in range(50):
         check_limits(a.rvs(random_state=i), 2, 30)
     assert_array_equal(a.transformed_bounds, (0, 1))
@@ -399,7 +398,7 @@ def test_normalize():
 
     # Check inverse transform
     X_orig = a.inverse_transform(a.transform(X))
-    assert isinstance(X_orig, int)
+    assert isinstance(X_orig, np.int64)
     assert_array_equal(X_orig, X)
 
     a = Real(0, 1, transform="normalize", dtype=float)
@@ -417,7 +416,7 @@ def test_normalize():
     assert isinstance(X_orig, float)
     assert_array_equal(X_orig, X)
 
-    a = Real(0, 1, transform="normalize", dtype='float64')
+    a = Real(0, 1, transform="normalize")
     X = np.float64(rng.rand())
     # Check inverse transform
     X_orig = a.inverse_transform(a.transform(X))
@@ -429,13 +428,12 @@ def test_normalize():
     X_orig = a.inverse_transform(a.transform(X))
     assert isinstance(X_orig, np.float64)
 
-    a = Real(0, 1, transform="normalize", dtype='float64')
+    a = Real(0, 1, transform="normalize")
     X = np.float64(rng.rand())
     # Check inverse transform
     X_orig = a.inverse_transform(a.transform(X))
     assert isinstance(X_orig, np.float64)
 
-'''
 def check_valid_transformation(klass):
     assert klass(2, 30, transform="normalize")
     assert klass(2, 30, transform="identity")
