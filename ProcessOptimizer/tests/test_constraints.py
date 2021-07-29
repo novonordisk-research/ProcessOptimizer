@@ -6,114 +6,120 @@ from ProcessOptimizer.space.constraints import Constraints, Single, Exclusive, I
 from ProcessOptimizer import Optimizer
 from ProcessOptimizer.space import Real, Integer, Categorical, Space
 
-#from sklearn.utils.testing import assert_not_equal, assert_true, assert_false
+# from sklearn.utils.testing import assert_not_equal, assert_true, assert_false
 
 from numpy.testing import assert_almost_equal
 from numpy.testing import assert_array_almost_equal
 from numpy.testing import assert_array_equal
 from numpy.testing import assert_equal
 
+
 # Combination of base estimators and acquisition optimizers
-ACQ_OPTIMIZERS= ['sampling','lbfgs']
+ACQ_OPTIMIZERS = ['sampling', 'lbfgs']
+
 
 @pytest.mark.fast_test
 def test_constraints_equality():
     # Same constraints should be equal
-    space_a = Space([(0.0,5.0),(1.0,5.0)])
-    space_b = Space([(0.0,5.0),(1.0,5.0)])
-    cons_list_a = [Single(0,4.0,'real'),Single(1,4.0,'real')]
-    cons_list_b = [Single(0,4.0,'real'),Single(1,4.0,'real')]
-    cons_a = Constraints(cons_list_a,space_a)
-    cons_b = Constraints(cons_list_b,space_b)
+    space_a = Space([(0.0, 5.0), (1.0, 5.0)])
+    space_b = Space([(0.0, 5.0), (1.0, 5.0)])
+    cons_list_a = [Single(0, 4.0, 'real'), Single(1, 4.0, 'real')]
+    cons_list_b = [Single(0, 4.0, 'real'), Single(1, 4.0, 'real')]
+    cons_a = Constraints(cons_list_a, space_a)
+    cons_b = Constraints(cons_list_b, space_b)
     assert_equal(cons_a, cons_b)
 
     # Different lengths of constraints_list should not be equal
-    space_a = Space([(0.0,5.0)])
-    space_b = Space([(0.0,5.0),(1.0,5.0)])
-    cons_list_a = [Single(0,4.0,'real')]
-    cons_list_b = [Single(0,4.0,'real'),Single(1,4.0,'real')]
-    cons_a = Constraints(cons_list_a,space_a)
-    cons_b = Constraints(cons_list_b,space_b)
+    space_a = Space([(0.0, 5.0)])
+    space_b = Space([(0.0, 5.0), (1.0, 5.0)])
+    cons_list_a = [Single(0, 4.0, 'real')]
+    cons_list_b = [Single(0, 4.0, 'real'), Single(1, 4.0, 'real')]
+    cons_a = Constraints(cons_list_a, space_a)
+    cons_b = Constraints(cons_list_b, space_b)
     assert cons_a != cons_b
 
     # Different dimension types in constraints_list should not be equal
-    space_a = Space([(0.0,5.0)])
-    space_b = Space([(0,5)])
-    cons_list_a = [Single(0,4.0,'real')]
-    cons_list_b = [Single(0,4,'integer')]
-    cons_a = Constraints(cons_list_a,space_a)
-    cons_b = Constraints(cons_list_b,space_b)
+    space_a = Space([(0.0, 5.0)])
+    space_b = Space([(0, 5)])
+    cons_list_a = [Single(0, 4.0, 'real')]
+    cons_list_b = [Single(0, 4, 'integer')]
+    cons_a = Constraints(cons_list_a, space_a)
+    cons_b = Constraints(cons_list_b, space_b)
     assert cons_a != cons_b
 
     # Different values in constraints should not be equal
-    space_a = Space([(0.0,5.0)])
-    space_b = Space([(0.0,5.0)])
-    cons_list_a = [Single(0,4.0,'real')]
-    cons_list_b = [Single(0,4.1,'real')]
-    cons_a = Constraints(cons_list_a,space_a)
-    cons_b = Constraints(cons_list_b,space_b)
+    space_a = Space([(0.0, 5.0)])
+    space_b = Space([(0.0, 5.0)])
+    cons_list_a = [Single(0, 4.0, 'real')]
+    cons_list_b = [Single(0, 4.1, 'real')]
+    cons_a = Constraints(cons_list_a, space_a)
+    cons_b = Constraints(cons_list_b, space_b)
     assert cons_a != cons_b
+
 
 @pytest.mark.fast_test
 def test_single_inclusive_and_exclusive():
     # Test that valid constraints can be initialized
-    Single(0,1.0,'real')
-    Single(0,-1,'integer')
-    Single(0,'a','categorical')
-    Inclusive(0,(1.0,2.0),'real')
-    Inclusive(0,[1.0,2.0],'real')
-    Inclusive(0,(-1,2),'integer')
-    Inclusive(0,('a','b','c',1,0.1),'categorical')
-    Exclusive(0,(1.0,2.0),'real')
-    Exclusive(0,[1.0,2.0],'real')
-    Exclusive(0,(-1,1),'integer')
-    Exclusive(0,('a','b','c',1,0.1),'categorical')
+    Single(0, 1.0, 'real')
+    Single(0, -1, 'integer')
+    Single(0, 'a', 'categorical')
+    Inclusive(0, (1.0, 2.0), 'real')
+    Inclusive(0, [1.0, 2.0], 'real')
+    Inclusive(0, (-1, 2), 'integer')
+    Inclusive(0, ('a', 'b', 'c', 1, 0.1), 'categorical')
+    Exclusive(0, (1.0, 2.0), 'real')
+    Exclusive(0, [1.0, 2.0], 'real')
+    Exclusive(0, (-1, 1), 'integer')
+    Exclusive(0, ('a', 'b', 'c', 1, 0.1), 'categorical')
 
     # A tuple or list should be passed
     with raises(TypeError):
-        Inclusive(0,'a','real')
+        Inclusive(0, 'a', 'real')
     with raises(TypeError):
-        Exclusive(0,dict(),'real')
-    
+        Exclusive(0, dict(), 'real')
+
     # Length of bounds should be 2
     with raises(ValueError):
-        Inclusive(0,[0],'integer')
+        Inclusive(0, [0], 'integer')
     with raises(ValueError):
-        Inclusive(0,(0,1,2),'integer')
+        Inclusive(0, (0, 1, 2), 'integer')
 
-    # Dimenion type and bounds should be of the same type i.e 'real' -> float, 'integer' -> int
+    # Dimenion type and bounds should be of the same type i.e 'real' -> float,
+    # 'integer' -> int
     with raises(TypeError):
-        Single(0,1,'real')
+        Single(0, 1, 'real')
     with raises(TypeError):
-        Single(0,1.0,'integer')
+        Single(0, 1.0, 'integer')
     with raises(TypeError):
-        Inclusive(0,(1,2.0),'real')
+        Inclusive(0, (1, 2.0), 'real')
     with raises(TypeError):
-        Inclusive(0,(1.0,2),'integer')
-    
+        Inclusive(0, (1.0, 2), 'integer')
+
     # Dimension should be int
     with raises(TypeError):
-        Single('a',1.0,'real')
+        Single('a', 1.0, 'real')
     with raises(TypeError):
-        Inclusive(0.1,(1.0,2.0),'real')
+        Inclusive(0.1, (1.0, 2.0), 'real')
     with raises(TypeError):
-        Exclusive('b',(1.0,2.0),'real')
+        Exclusive('b', (1.0, 2.0), 'real')
 
     # Dimension should not be negative
     with raises(ValueError):
-        Single(-1,1.0,'real')
+        Single(-1, 1.0, 'real')
     with raises(ValueError):
-        Inclusive(-1,(1.0,2.0),'real')
+        Inclusive(-1, (1.0, 2.0), 'real')
     with raises(ValueError):
-        Exclusive(-1,(1.0,2.0),'real')
+        Exclusive(-1, (1.0, 2.0), 'real')
 
     # Dimension_type should be valid
     with raises(ValueError):
-        Single('a',1.0,'not a proper value')
+        Single('a', 1.0, 'not a proper value')
+
+
 '''
 @pytest.mark.fast_test
 def test_Sum():
-    # Test that Sym type constraintcan be initialized
+    # Test that Sym type constraint can be initialized
     Sum((1,2,3),5,less_than = False)
     Sum([3,2,1],-10.0,less_than = True)
 
@@ -133,7 +139,8 @@ def test_Sum():
         Sum([-10,1,2],True)
 
     space = Space([[0.0,10.0],[0,10],['abcdef']])
-    # A dimension value of 4 is out of bounds for a space with only 3 dimensions
+    # A dimension value of 4 is out of bounds for a space with only 
+    # 3 dimensions
     cons_list = [Sum((4,3),5)]
     with raises(IndexError):
         Constraints(cons_list,space)
@@ -149,7 +156,8 @@ def test_Sum():
     assert not cons.validate_sample([3.00001,3,'a'])
     assert cons.validate_sample([2.99999,3,'a'])
 
-    # Check that validate_sample validates samples correctly for less_than = False
+    # Check that validate_sample validates samples correctly 
+    # for less_than = False
     cons = Constraints([Sum((0,1),6,less_than = False)],space)
     assert cons.validate_sample([0.0,7,'a'])
     assert cons.validate_sample([7.0,0,'a'])
@@ -172,7 +180,10 @@ def test_Conditional():
     # Test init of constriants
     Conditional(condition, if_true, if_false)
     Conditional(condition, if_true = if_true, if_false = if_false)
-    cons_list = [Conditional(condition, if_true = if_true, if_false = if_false)]
+    cons_list = [Conditional(
+        condition, 
+        if_true = if_true, 
+        if_false = if_false)]
     cons = Constraints(cons_list,space)
     
     # Check that only valid samples are being drawn
