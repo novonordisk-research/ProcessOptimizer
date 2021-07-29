@@ -893,3 +893,175 @@ def plot_expected_minimum_convergence(result,
 
     plt.xlabel("Number of calls $n$")
     return fig
+
+
+def plot_Pareto(optimizer, figsize=(15,15), objective_names=None, dimensions=None, return_data=False):
+    """Interactive plot of the Pareto front implemented in 2 and 3 dimensions
+
+    The plot shows all observations and the estimated Pareto front in the
+    objective space. By hovering over each point it is possible to see the
+    corresponding values of the point in the input space.
+
+    Parameters
+    ----------
+    * `optimizer` [`Optimizer`]
+        The optimizer containing data and the model
+
+    * `figsize` ['tuple', default=(15,15)]
+        Size of figure
+
+    * `objective_names` [list, default=None]
+        List of objective names. Used for plots. If None the objectives
+        will be named "Objective 1", "Objective 2"...
+
+    * `dimensions` [list, default=None]
+        List of dimension names. Used for plots. If None the dimensions
+        will be named "1_1", "x_2"...
+        
+    * `return_data` [bool, default=False]
+        Whether to return data or not. If True the function will return
+        all data for observation and estimated Pareto front, dimensions
+        and objectives_names
+
+
+    if return_data is true Returns
+    -------
+    * `np.array(optimizer.Xi)`: [numpy.ndarray]:
+        Observations
+    * `np.array(optimizer.yi)`: [numpy.ndarray]:
+        Observed objective scores
+    * `pop`: [numpy.ndarray]:
+        Pareto front
+    * `front`: [numpy.ndarray]:
+        Pareto front objective scores
+    * `dimensions`: [list]:
+        Names of dimensions
+    * `objective_names`: [list]:
+        Objective names
+    """
+
+    
+    def update_annot(ind, vals, sc):
+
+        pos = sc.get_offsets()[ind["ind"][0]]
+        annot.xy = pos
+    
+        exp_params=vals[ind["ind"][0]]
+        values = ["%.3f" % number for number in exp_params]
+        strings= []
+        for dim, value in zip(dimensions,values): strings.append(dim + ": " + value + str("\n"))
+        strings[-1] = strings[-1].replace("\n", "")
+        string=''.join(map(str, strings))
+        
+        annot.set_text(string)
+        annot.get_bbox_patch().set_alpha(0.4)
+
+
+    def hover(event, vals=None, sc=None):
+        vis = annot.get_visible()
+        if event.inaxes == ax:
+            cont, ind = sc.contains(event)
+            if cont:
+                update_annot(ind, vals, sc)
+                annot.set_visible(True)
+                fig.canvas.draw_idle()
+            else:
+                if vis:
+                    annot.set_visible(False)
+                    fig.canvas.draw_idle()
+
+    if optimizer.models == []:
+        raise ValueError("No models have been fitted yet")
+    
+    if optimizer.n_objectives == 1:
+        raise ValueError("Pareto_plot is not possible with single objective optimization")
+    
+    if optimizer.n_objectives > 3:
+        raise ValueError("Pareto_plot is not possible with >3 objectives")
+        
+    if dimensions == None:
+        dimensions= ["$X_{%i}$" % i if d.name is None else d.name
+                      for i, d in enumerate(optimizer.space.dimensions)]
+    
+    if len(dimensions) != len(optimizer.space.dimensions):
+         raise ValueError("Number of dimensions specified does not match the number of"
+                          "dimensions in the optimizers space")
+
+    pop, logbook, front = optimizer.NSGAII(MU=40)
+    
+    
+    pop=np.asarray(pop)
+    pop = np.asarray(optimizer.space.inverse_transform(pop.reshape(len(pop),optimizer.space.transformed_n_dims)))
+    
+    if optimizer.n_objectives == 2:
+
+        fig,ax = plt.subplots(figsize=figsize)
+        plt.title('Pareto Front in Objective Space')
+
+        if objective_names == None:
+            objective_names= ["Objective 1", "Objective 2"]
+        
+        if len(objective_names) != 2:
+            raise ValueError("Number of objective_names is not equal to number of objectives")
+  
+        
+        plt.xlabel(objective_names[0])
+        plt.ylabel(objective_names[1])
+        
+        all_points= np.concatenate([np.array(optimizer.yi),front])
+        colors= ["black"]*len(optimizer.yi) + ["red"]*len(front)
+        sc=plt.scatter(all_points[:,0], all_points[:,1], s=8, c=colors)
+
+        annot = ax.annotate("", xy=(0,0), xytext=(20,20),textcoords="offset points",
+                            bbox=dict(boxstyle="round", fc="w"),
+                            arrowprops=dict(arrowstyle="->"))
+        annot.set_visible(False)
+        fig.canvas.mpl_connect("motion_notify_event", lambda event: hover(event, vals=np.concatenate([np.array(optimizer.Xi),pop]), sc=sc))
+        
+        
+        colors = ["black", "red"]
+        texts = ["Observations", "Estimated Pareto Front"]
+        patches = [ plt.plot([],[], marker="o", ms=6, ls="", mec=None, color=colors[i],
+            label="{:s}".format(texts[i]) )[0]  for i in range(len(texts)) ]
+        plt.legend(handles=patches, bbox_to_anchor=(0.5, 0.5),
+           loc='best', ncol=1, numpoints=1 )
+        
+
+    if optimizer.n_objectives == 3:
+        
+        fig = plt.figure(figsize=figsize)
+        ax = fig.add_subplot(projection='3d')
+        plt.title('Pareto Front in Objective Space')
+
+        if objective_names == None:
+            objective_names= ["Objective 1", "Objective 2", "Objective 3"]
+            
+        if len(objective_names) != 3:
+            raise ValueError("Number of objective_names is not equal to number of objectives")
+
+        ax.set_xlabel(objective_names[0])
+        ax.set_ylabel(objective_names[1])
+        ax.set_zlabel(objective_names[2])
+        ax.view_init(30, 240)
+        
+        all_points= np.concatenate([np.array(optimizer.yi),front])
+        colors= ["black"]*len(optimizer.yi) + ["red"]*len(front)
+        sc=ax.scatter(all_points[:,0], all_points[:,1], all_points[:,2], s=8, c=colors)
+        
+        annot = ax.annotate("", xy=(0,0), xytext=(20,20),textcoords="offset points",
+                            bbox=dict(boxstyle="round", fc="w"),
+                            arrowprops=dict(arrowstyle="->"))
+        annot.set_visible(False)
+
+        fig.canvas.mpl_connect("motion_notify_event", lambda event: hover(event, vals=np.concatenate([np.array(optimizer.Xi),pop]), sc=sc))
+        
+        colors = ["black", "red"]
+        texts = ["Observations", "Estimated Pareto Front"]
+        patches = [ plt.plot([],[], marker="o", ms=6, ls="", mec=None, color=colors[i],
+            label="{:s}".format(texts[i]) )[0]  for i in range(len(texts)) ]
+        plt.legend(handles=patches, bbox_to_anchor=(0.5, 0.5),
+           loc='best', ncol=1, numpoints=1 )
+    plt.show()
+    
+    if return_data is True:
+        return np.array(optimizer.Xi), np.array(optimizer.yi), pop, front, dimensions, objective_names
