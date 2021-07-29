@@ -687,7 +687,7 @@ def test_optimizer_with_constraints(acq_optimizer):
     assert_equal(opt._constraints,None)
 
     # Test behavior when adding constraints in an optimization setting
-    opt = Optimizer(space, base_estimator, acq_optimizer=acq_optimizer,n_initial_points = 3)
+    opt = Optimizer(space, base_estimator, acq_optimizer=acq_optimizer,n_initial_points = 3, lhs=False)
     opt.set_constraints(cons)
     assert_equal(opt._constraints,cons)
     next_x= opt.ask()
@@ -735,19 +735,19 @@ def test_optimizer_with_constraints(acq_optimizer):
     assert_equal(opt._next_x[3],4)
 
     # Test that adding a Constraint or constraint_list gives the same
-    opt = Optimizer(space, base_estimator, acq_optimizer=acq_optimizer,n_initial_points = 3)
+    opt = Optimizer(space, base_estimator, acq_optimizer=acq_optimizer,n_initial_points = 3, lhs=False)
     opt.set_constraints(cons_list)
-    opt2 = Optimizer(space, base_estimator, acq_optimizer=acq_optimizer,n_initial_points = 3)
+    opt2 = Optimizer(space, base_estimator, acq_optimizer=acq_optimizer,n_initial_points = 3, lhs=False)
     opt2.set_constraints(cons)
     assert_equal(opt._constraints,opt2._constraints)
 
     # Test that constraints are satisfied
-    opt = Optimizer(space, base_estimator, acq_optimizer=acq_optimizer,n_initial_points = 2)
+    opt = Optimizer(space, base_estimator, acq_optimizer=acq_optimizer,n_initial_points = 2, lhs=False)
     opt.set_constraints(cons)
     next_x= opt.ask()
     assert_equal(next_x[0],5.0)
 
-    opt = Optimizer(space, base_estimator, acq_optimizer=acq_optimizer,n_initial_points = 2)
+    opt = Optimizer(space, base_estimator, acq_optimizer=acq_optimizer,n_initial_points = 2, lhs=False)
     next_x= opt.ask()
     assert next_x[0] != 5.0
     f_val = np.random.random()*100
@@ -775,7 +775,7 @@ def test_get_constraints():
     space = Space([Real(1, 10)])
     cons_list = [Single(0,5.0,'real')]
     cons = Constraints(cons_list,space)
-    opt = Optimizer(space, "ET")
+    opt = Optimizer(space, "ET", lhs=False)
     opt.set_constraints(cons)
     assert_equal(cons,opt.get_constraints())
 
