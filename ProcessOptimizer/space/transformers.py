@@ -29,7 +29,6 @@ class Identity(Transformer):
             return X
         return [str(x) for x in X]
 
-
     def inverse_transform(self, Xt):
         if self.dtype is None:
             return Xt

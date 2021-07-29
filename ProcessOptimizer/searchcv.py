@@ -7,8 +7,6 @@ except ImportError:
 from collections import defaultdict
 from functools import partial
 
-import logging
-
 import numpy as np
 from scipy.stats import rankdata
 
@@ -17,11 +15,6 @@ from sklearn.base import is_classifier, clone
 from sklearn.model_selection._search import BaseSearchCV
 from sklearn.utils import check_random_state
 from sklearn.utils.validation import indexable, check_is_fitted
-
-try:
-    from sklearn.utils.fixes import MaskedArray
-except ImportError:
-    from numpy.ma import MaskedArray
 
 try:
     from sklearn.metrics import check_scoring
@@ -52,7 +45,8 @@ class BayesSearchCV(BaseSearchCV):
     distributions. The number of parameter settings that are tried is
     given by n_iter.
 
-    Parameters are presented as a list of ProcessOptimizer.space.Dimension objects.
+    Parameters are presented as a list of ProcessOptimizer.space.Dimension
+    objects.
 
     Parameters
     ----------
@@ -66,10 +60,10 @@ class BayesSearchCV(BaseSearchCV):
         (dict, int).
         One of these cases:
         1. dictionary, where keys are parameter names (strings)
-        and values are ProcessOptimizer.space.Dimension instances (Real, Integer
-        or Categorical) or any other valid value that defines ProcessOptimizer
-        dimension (see ProcessOptimizer.Optimizer docs). Represents search space
-        over parameters of the provided estimator.
+        and values are ProcessOptimizer.space.Dimension instances (Real,
+        Integer or Categorical) or any other valid value that defines
+        ProcessOptimizer dimension (see ProcessOptimizer.Optimizer docs).
+        Represents search space over parameters of the provided estimator.
         2. list of dictionaries: a list of dictionaries, where every
         dictionary fits the description given in case 1 above.
         If a list of dictionary objects is given, then the search is
@@ -306,7 +300,7 @@ class BayesSearchCV(BaseSearchCV):
         # To be consistent with sklearn 0.21+, fit_params should be deprecated
         # in the constructor and be passed in ``fit``.
         self.fit_params = fit_params
-        
+
         if iid != "deprecated":
             warnings.warn("The `iid` parameter has been deprecated "
                           "and will be ignored.")
@@ -401,9 +395,12 @@ class BayesSearchCV(BaseSearchCV):
         n_splits = cv.get_n_splits(X, y, groups)
         if self.verbose > 0 and isinstance(parameter_iterable, Sized):
             n_candidates = len(parameter_iterable)
-            print("Fitting {0} folds for each of {1} candidates, totalling"
-                         " {2} fits".format(n_splits, n_candidates,
-                                            n_candidates * n_splits))
+            print(
+                "Fitting {0} folds for each of {1} candidates, totalling"
+                " {2} fits".format(
+                    n_splits, n_candidates, n_candidates * n_splits
+                    )
+                    )
 
         base_estimator = clone(self.estimator)
         pre_dispatch = self.pre_dispatch
@@ -535,8 +532,8 @@ class BayesSearchCV(BaseSearchCV):
         ----------
         params_space : dict
             Represents parameter search space. The keys are parameter
-            names (strings) and values are ProcessOptimizer.space.Dimension instances,
-            one of Real, Integer or Categorical.
+            names (strings) and values are ProcessOptimizer.space.Dimension
+            instances, one of Real, Integer or Categorical.
 
         Returns
         -------

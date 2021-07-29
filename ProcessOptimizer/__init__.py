@@ -1,15 +1,13 @@
 """
-Scikit-Optimize, or `ProcessOptimizer`, is a simple and efficient library to
-minimize (very) expensive and noisy black-box functions. It implements
-several methods for sequential model-based optimization. `ProcessOptimizer` is reusable
-in many contexts and accessible.
-
-[![Build Status](https://travis-ci.org/scikit-optimize/scikit-optimize.svg?branch=master)](https://travis-ci.org/scikit-optimize/scikit-optimize)
+`ProcessOptimizer`, is a simple and efficient library to minimize (very)
+expensive and noisy black-box functions. It implements several methods for
+sequential model-based optimization. `ProcessOptimizer` is reusable in many
+contexts and accessible.
 
 ## Install
 
 ```
-pip install scikit-optimize / pip install ProcessOptimizer
+pip install ProcessOptimizer
 ```
 
 ## Getting started
@@ -28,22 +26,10 @@ def f(x):
 res = gp_minimize(f, [(-2.0, 2.0)])
 ```
 
-For more read our [introduction to bayesian optimization](https://scikit-optimize.github.io/notebooks/bayesian-optimization.html)
-and the other [examples](https://github.com/scikit-optimize/scikit-optimize/tree/master/examples).
-
-
 ## Development
 
 The library is still experimental and under heavy development.
 
-The development version can be installed through:
-
-    git clone https://github.com/scikit-optimize/scikit-optimize.git
-    cd scikit-optimize
-    pip install -r requirements.txt
-    python setup.py develop
-
-Run the tests by executing `pytest` in the top level directory.
 """
 
 from . import acquisition
@@ -84,6 +70,7 @@ __all__ = (
     "dump",
     "load",
     "expected_minimum",
+    "expected_minimum_random_sampling",
     "BayesSearchCV",
     "Space"
 )

@@ -5,7 +5,10 @@ from scipy.linalg import cho_solve
 from scipy.linalg import solve_triangular
 
 import sklearn
-from sklearn.gaussian_process import GaussianProcessRegressor as sk_GaussianProcessRegressor
+from sklearn.gaussian_process import (
+    GaussianProcessRegressor
+    as sk_GaussianProcessRegressor
+)
 from sklearn.utils import check_array
 
 from .kernels import ConstantKernel
@@ -316,7 +319,7 @@ class GaussianProcessRegressor(sk_GaussianProcessRegressor):
             y_mean = K_trans.dot(self.alpha_)    # Line 4 (y_mean = f_star)
             # undo normalisation
             y_mean = self.y_train_std_ * y_mean + self.y_train_mean_
-            
+
             if return_cov:
                 v = cho_solve((self.L_, True), K_trans.T)  # Line 5
                 y_cov = self.kernel_(X) - K_trans.dot(v)   # Line 6
@@ -347,7 +350,7 @@ class GaussianProcessRegressor(sk_GaussianProcessRegressor):
                 grad_mean = np.dot(grad.T, self.alpha_)
                 # undo normalisation
                 grad_mean = grad_mean * self.y_train_std_
-                
+
                 if return_std_grad:
                     grad_std = np.zeros(X.shape[1])
                     if not np.allclose(y_std, grad_std):

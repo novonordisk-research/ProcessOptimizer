@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-# The following has been copied from MOBOpt (https://github.com/ppgaluzio/MOBOpt)
+# The following has been copied from MOBOpt
+# (https://github.com/ppgaluzio/MOBOpt)
 
 import numpy as np
 

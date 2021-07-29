@@ -16,6 +16,7 @@ from ProcessOptimizer.callbacks import CheckpointSaver
 
 from ProcessOptimizer.utils import load
 
+
 @pytest.mark.fast_test
 def test_timer_callback():
     callback = TimerCallback()
@@ -38,12 +39,22 @@ def test_deltay_stopper():
 @pytest.mark.fast_test
 def test_deadline_stopper():
     deadline = DeadlineStopper(0.0001)
-    gp_minimize(bench3, [(-1.0, 1.0)], n_random_starts=1, callback=deadline, n_calls=10, random_state=1)
+    gp_minimize(bench3,
+                [(-1.0, 1.0)],
+                n_random_starts=1,
+                callback=deadline,
+                n_calls=10,
+                random_state=1)
     assert len(deadline.iter_time) == 1
     assert np.sum(deadline.iter_time) > deadline.total_time
 
     deadline = DeadlineStopper(60)
-    gp_minimize(bench3, [(-1.0, 1.0)], n_random_starts=1, callback=deadline, n_calls=10, random_state=1)
+    gp_minimize(bench3,
+                [(-1.0, 1.0)],
+                n_random_starts=1,
+                callback=deadline,
+                n_calls=10,
+                random_state=1)
     assert len(deadline.iter_time) == 10
     assert np.sum(deadline.iter_time) < deadline.total_time
 
@@ -57,9 +68,9 @@ def test_checkpoint_saver():
 
     checkpoint_saver = CheckpointSaver(checkpoint_path, compress=9)
     result = dummy_minimize(bench1,
-        [(-1.0, 1.0)],
-        callback=checkpoint_saver,
-        n_calls=10)
+                            [(-1.0, 1.0)],
+                            callback=checkpoint_saver,
+                            n_calls=10)
 
     assert os.path.exists(checkpoint_path)
     assert load(checkpoint_path).x == result.x
