@@ -57,7 +57,7 @@ def Booth(x0, x1):
 Below is an image of the Booth function on the square <img src="https://render.githubusercontent.com/render/math?math=x_i \in \left[ 0,5 \right]"> for i=0,1.
 
 
-![BayesianOptimization in action](https://github.com/novonordisk-research/ProcessOptimizer/blob/a6a59e5aee58d2737feabe7c3fba86c58112e43a/examples/Booth_function.png)
+![BayesianOptimization in action](https://raw.githubusercontent.com/novonordisk-research/ProcessOptimizer/a6a59e5aee58d2737feabe7c3fba86c58112e43a/examples/Booth_function.png)
 
 Suppose you are given the task of minimizing the function on the domain only using empirical observations and without any analytical function. <br/>
 Working with the ProcessOptimizer package you simply define the `Space` and create an `Optimizer` object.<br/>
@@ -84,14 +84,14 @@ res = opt.tell([3.75, 3.75], 59.313996676981354)
 ```
 The `res` object returned by tell contains a model of the Gaussian Process predicted mean. This model can be plotted using `plot_objective(res)`. Below is a gif of how the Gaussian Process predicted mean evolves after the first 6 initial points and until 20 points have been sampled in total. The orange dots visualise each evaluation of the function and the red dot shows the position of the expected minimum. In the diagonal of the figure dependence plots are shown. These show how the function depend on each input variable with other input variables kept constant at the expected minimum.
 
-<img src="https://github.com/novonordisk-research/ProcessOptimizer/blob/a6a59e5aee58d2737feabe7c3fba86c58112e43a/examples/BO_GIF.gif" width="500">
+<img src="https://raw.githubusercontent.com/novonordisk-research/ProcessOptimizer/a6a59e5aee58d2737feabe7c3fba86c58112e43a/examples/BO_GIF.gif" width="500">
 
  
 Notice that this is an optimization tool and not a modelling tool. This means that the optimizer finds an approximate solution for the global minimum quickly however it does not guarantee that the Gaussian Process predicted mean is an accurate model on the entire domain.<br/>
 
 The best observation against the number of observations can be plotted with `plot_convergence(res)`:
  
-![BayesianOptimization in action](https://github.com/novonordisk-research/ProcessOptimizer/blob/a6a59e5aee58d2737feabe7c3fba86c58112e43a/examples/Convergence_plot.png)
+![BayesianOptimization in action](https://raw.githubusercontent.com/novonordisk-research/ProcessOptimizer/a6a59e5aee58d2737feabe7c3fba86c58112e43a/examples/Convergence_plot.png)
 
 ## Contributions
 
