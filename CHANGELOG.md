@@ -1,6 +1,22 @@
 # Release history
 
-## Version 0.6.5 [unpublished]
+## Version 0.7.0 [unpublished]
+
+### Changes
+
+- Added plot_expected_minimum_convergence
+- Numerous format changes to satisfy Flake8
+- Fixed deprecation warning from Numpy
+- Merge keywords for batch-optimization
+- Set LHS=True as default
+- Extensive changes in test-suite
+
+### Bugfixes
+
+- expected_minimum_sampling refactored
+- Fix URL to present images on pypi
+- Fixed Bokeh-plot to optional dependency
+- Dependencies set (Bokeh optional, pyYAML added)
 
 ## Version 0.6.4
 
