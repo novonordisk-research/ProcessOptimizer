@@ -569,6 +569,7 @@ def test_real_distance():
 )
 def test_dimension_bounds(dimension, bounds):
     with pytest.raises(ValueError) as exc:
+        dim = dimension(*bounds)
         assert "has to be less than the upper bound " in exc.value.args[0]
 
 
