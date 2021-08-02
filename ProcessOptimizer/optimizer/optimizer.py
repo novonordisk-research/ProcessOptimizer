@@ -1023,16 +1023,11 @@ class Optimizer(object):
         return DistMin
     
     # This function calls NSGAII to estimate the Pareto Front
-    def NSGAII(self, plot=False, MU=40):
-
+    def NSGAII(self, MU=40):
         from ._NSGA2 import NSGAII
         pop, logbook, front = NSGAII(self.n_objectives,
                 self.__ObjectiveGP,
                 np.array(self.space.transformed_bounds),
                 MU=MU)
-        
-        if plot==True and self.n_objectives == 2:
-            print("plotting not yet implemented directly")
-            
         return pop, logbook, front
 
