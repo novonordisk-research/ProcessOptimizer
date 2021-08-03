@@ -17,6 +17,7 @@
 <a href="https://scikit-optimize.github.io/stable/"><img src="https://img.shields.io/badge/BuildOn-Scikit--Optimize-brightgreen" alt="Scikit-Optimize" /></a>
 
 [![Downloads](https://static.pepy.tech/personalized-badge/processoptimizer?period=total&units=international_system&left_color=brightgreen&right_color=orange&left_text=Downloads)](https://pepy.tech/project/processoptimizer)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5155296.svg)](https://doi.org/10.5281/zenodo.5155296)
 </div>
 
 ----------
@@ -26,6 +27,7 @@ This readme.md is work in progress
  * [ProcessOptimizer](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#processoptimizer)
  * [Installation](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#installation)
  * [How does it work?](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#how-does-it-work?)
+ * [Citation](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#Citation)
  * [Contributions](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#contributions)
  * [Related work](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#related-work)
  * [PyPi](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#pypi)
@@ -92,6 +94,11 @@ Notice that this is an optimization tool and not a modelling tool. This means th
 The best observation against the number of observations can be plotted with `plot_convergence(res)`:
  
 ![BayesianOptimization in action](https://raw.githubusercontent.com/novonordisk-research/ProcessOptimizer/a6a59e5aee58d2737feabe7c3fba86c58112e43a/examples/Convergence_plot.png)
+
+## Citation
+
+If you use the package in relation to a citation, please cite: https://doi.org/10.5281/zenodo.5155295.<br>
+Please also cite the underlaying package (scikit-optimize).
 
 ## Contributions
 
