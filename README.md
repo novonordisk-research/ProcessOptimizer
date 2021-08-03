@@ -110,7 +110,7 @@ issues that could arise here.
 
 ## Related work
 
-We are currently building a GUI to offer the power of Bayesian Process Optimization to non-coders. Stay tuned. (Sneak-peak at https://browniebee.dk/)
+We are currently building a GUI to offer the power of Bayesian Process Optimization to non-coders. Stay tuned. (Sneak-peak at https://www.browniebee.dk/uk/)
 
 ## PyPi
 
