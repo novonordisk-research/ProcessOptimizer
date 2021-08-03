@@ -1,6 +1,8 @@
 # Release history
 
-## Version 0.7.0 [unpublished]
+## Version 0.7.1 [unpublished]
+
+## Version 0.7.0
 
 ### Changes
 
