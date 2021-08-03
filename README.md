@@ -101,14 +101,16 @@ To help solve the issues, please: <br>
 
 - Provide minimal amount of code to reproduce the error
 - State versions of ProcesOptimizer, sklearn, numpy, ...
-- Describe the expected nehavior of the code <br>
+- Describe the expected behavior of the code <br>
 
 If you would like to contribute by making anything from documentation to feature-additions, THANK YOU. Please open a pull request 
-marked as *WIP* as early as possible and describe the issue you seek to solve and outline your planned solution.
+marked as *WIP* as early as possible and describe the issue you seek to solve and outline your planned solution. <br>
+Pull requests to the develop branch will be automatically tested using pytest and flake8. We'll be happy to help solving potential
+issues that could arise here.
 
 ## Related work
 
-We are currently building a GUI to offer the power of Bayesian Process Optimization to non-coders. Stay tuned.
+We are currently building a GUI to offer the power of Bayesian Process Optimization to non-coders. Stay tuned. (Sneak-peak at https://browniebee.dk/)
 
 ## PyPi
 
