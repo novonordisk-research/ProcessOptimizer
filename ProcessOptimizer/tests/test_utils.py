@@ -181,8 +181,9 @@ def test_normalize_dimensions(dimensions, normalizations):
 @pytest.mark.parametrize("dimension, name",
                          [(Real(1, 2, name="learning rate"), "learning rate"),
                           (Integer(1, 100, name="no of trees"), "no of trees"),
-                          (Categorical(["red, blue"], name="colors"), "colors")])
-def test_normalize_dimensions(dimension, name):
+                          (Categorical(["red, blue"], name="colors"), "colors")
+                          ])
+def test_normalize_dimensions_name(dimension, name):
     space = normalize_dimensions([dimension])
     assert space.dimensions[0].name == name
 

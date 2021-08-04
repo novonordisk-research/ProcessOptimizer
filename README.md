@@ -17,6 +17,7 @@
 <a href="https://scikit-optimize.github.io/stable/"><img src="https://img.shields.io/badge/BuildOn-Scikit--Optimize-brightgreen" alt="Scikit-Optimize" /></a>
 
 [![Downloads](https://static.pepy.tech/personalized-badge/processoptimizer?period=total&units=international_system&left_color=brightgreen&right_color=orange&left_text=Downloads)](https://pepy.tech/project/processoptimizer)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5155296.svg)](https://doi.org/10.5281/zenodo.5155296)
 </div>
 
 ----------
@@ -26,6 +27,7 @@ This readme.md is work in progress
  * [ProcessOptimizer](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#processoptimizer)
  * [Installation](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#installation)
  * [How does it work?](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#how-does-it-work?)
+ * [Citation](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#Citation)
  * [Contributions](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#contributions)
  * [Related work](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#related-work)
  * [PyPi](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#pypi)
@@ -57,7 +59,7 @@ def Booth(x0, x1):
 Below is an image of the Booth function on the square <img src="https://render.githubusercontent.com/render/math?math=x_i \in \left[ 0,5 \right]"> for i=0,1.
 
 
-![BayesianOptimization in action](https://github.com/novonordisk-research/ProcessOptimizer/blob/a6a59e5aee58d2737feabe7c3fba86c58112e43a/examples/Booth_function.png)
+![BayesianOptimization in action](https://raw.githubusercontent.com/novonordisk-research/ProcessOptimizer/a6a59e5aee58d2737feabe7c3fba86c58112e43a/examples/Booth_function.png)
 
 Suppose you are given the task of minimizing the function on the domain only using empirical observations and without any analytical function. <br/>
 Working with the ProcessOptimizer package you simply define the `Space` and create an `Optimizer` object.<br/>
@@ -84,14 +86,19 @@ res = opt.tell([3.75, 3.75], 59.313996676981354)
 ```
 The `res` object returned by tell contains a model of the Gaussian Process predicted mean. This model can be plotted using `plot_objective(res)`. Below is a gif of how the Gaussian Process predicted mean evolves after the first 6 initial points and until 20 points have been sampled in total. The orange dots visualise each evaluation of the function and the red dot shows the position of the expected minimum. In the diagonal of the figure dependence plots are shown. These show how the function depend on each input variable with other input variables kept constant at the expected minimum.
 
-<img src="https://github.com/novonordisk-research/ProcessOptimizer/blob/a6a59e5aee58d2737feabe7c3fba86c58112e43a/examples/BO_GIF.gif" width="500">
+<img src="https://raw.githubusercontent.com/novonordisk-research/ProcessOptimizer/a6a59e5aee58d2737feabe7c3fba86c58112e43a/examples/BO_GIF.gif" width="500">
 
  
 Notice that this is an optimization tool and not a modelling tool. This means that the optimizer finds an approximate solution for the global minimum quickly however it does not guarantee that the Gaussian Process predicted mean is an accurate model on the entire domain.<br/>
 
 The best observation against the number of observations can be plotted with `plot_convergence(res)`:
  
-![BayesianOptimization in action](https://github.com/novonordisk-research/ProcessOptimizer/blob/a6a59e5aee58d2737feabe7c3fba86c58112e43a/examples/Convergence_plot.png)
+![BayesianOptimization in action](https://raw.githubusercontent.com/novonordisk-research/ProcessOptimizer/a6a59e5aee58d2737feabe7c3fba86c58112e43a/examples/Convergence_plot.png)
+
+## Citation
+
+If you use the package in relation to a citation, please cite: https://doi.org/10.5281/zenodo.5155295.<br>
+Please also cite the underlaying package (scikit-optimize).
 
 ## Contributions
 
@@ -101,14 +108,16 @@ To help solve the issues, please: <br>
 
 - Provide minimal amount of code to reproduce the error
 - State versions of ProcesOptimizer, sklearn, numpy, ...
-- Describe the expected nehavior of the code <br>
+- Describe the expected behavior of the code <br>
 
 If you would like to contribute by making anything from documentation to feature-additions, THANK YOU. Please open a pull request 
-marked as *WIP* as early as possible and describe the issue you seek to solve and outline your planned solution.
+marked as *WIP* as early as possible and describe the issue you seek to solve and outline your planned solution. <br>
+Pull requests to the develop branch will be automatically tested using pytest and flake8. We'll be happy to help solving potential
+issues that could arise here.
 
 ## Related work
 
-We are currently building a GUI to offer the power of Bayesian Process Optimization to non-coders. Stay tuned.
+We are currently building a GUI to offer the power of Bayesian Process Optimization to non-coders. Stay tuned. (Sneak-peak at https://www.browniebee.dk/uk/)
 
 ## PyPi
 
