@@ -397,6 +397,12 @@ class Optimizer(object):
                objective and so on. The type of lie defines different
                flavours of `cl_x` strategies.
 
+            - If set to `"KB"`, then Kriging believer is used. Kriging believer
+                is returning the expected value of the next_x before asking for
+                the next_next_x. Implementation is still experimental.
+                For use of KB, see:
+                https://www.nature.com/articles/s41586-021-03213-y
+
         """
 
         if not (
@@ -412,6 +418,7 @@ class Optimizer(object):
             "cl_max",
             "stbr_fill",
             "stbr_full",
+            "KB"
         ]
 
         if strategy not in supported_strategies:
@@ -468,7 +475,17 @@ class Optimizer(object):
             ti_available = "ps" in self.acq_func and len(opt.yi) > 0
             ti = [t for (_, t) in opt.yi] if ti_available else None
 
-            if strategy == "cl_min":
+            if strategy == "KB":
+                reshaped_x = np.asarray(x).reshape(1, -1)
+                transformed_x = opt.space.transform(reshaped_x.tolist())
+                if opt.n_objectives == 1:
+                    y_lie = opt.models[-1].predict(transformed_x)[0]
+                else:
+                    y_lie = []
+                for model in opt.models[-1]:
+                    y_lie.append(model.predict(transformed_x)[0])
+
+            elif strategy == "cl_min":
                 y_lie = (
                     np.min(opt.yi, axis=0).tolist()
                     if opt.yi
