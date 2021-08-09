@@ -2,6 +2,13 @@
 
 ## Version 0.7.1 [unpublished]
 
+### Changes
+
+- Kriging Believer added for batch-mode optimization
+
+### Bugfixes
+- LHS fixed to ensure randomization of dimensions 
+
 ## Version 0.7.0
 
 ### Changes
