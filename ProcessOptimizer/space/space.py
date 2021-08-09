@@ -860,14 +860,15 @@ class Space(object):
         samples = []
         for i in range(self.n_dims):
             lhs_perm = []
-            # Get evenly distributed samples form one dimension
+            # Get evenly distributed samples from one dimension
             lhs_aranged = self.dimensions[i].lhs_arange(n)
-            perm = np.random.RandomState(seed=42).permutation(n)
+            perm = np.random.RandomState(seed=42 + i).permutation(n)
             for p in perm:  # Random permutate the order of the samples
                 lhs_perm.append(lhs_aranged[p])
             samples.append(lhs_perm)
         # Now we have a list of lists with samples for each dimension.
-        # We need to transpose this so thatwe get a list of lists with samples for all the dimensions
+        # We need to transpose this so that we get a list of lists with
+        # samples for all the dimensions
         transposed_samples = []
         for i in range(n):
             row = []
