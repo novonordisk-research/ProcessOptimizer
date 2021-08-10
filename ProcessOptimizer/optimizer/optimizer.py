@@ -455,7 +455,7 @@ class Optimizer(object):
 
         # Copy of the optimizer is made in order to manage the
         # deletion of points with "lie" objective (the copy of
-        # oiptimizer is simply discarded)
+        # optimizer is simply discarded)
         opt = self.copy(
             random_state=self.rng.randint(0, np.iinfo(np.int32).max)
         )
@@ -482,8 +482,8 @@ class Optimizer(object):
                     y_lie = opt.models[-1].predict(transformed_x)[0]
                 else:
                     y_lie = []
-                for model in opt.models[-1]:
-                    y_lie.append(model.predict(transformed_x)[0])
+                    for model in opt.models[-1]:
+                        y_lie.append(model.predict(transformed_x)[0])
 
             elif strategy == "cl_min":
                 y_lie = (
