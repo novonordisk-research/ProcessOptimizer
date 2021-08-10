@@ -1,13 +1,18 @@
 # Release history
 
-## Version 0.7.1 [unpublished]
+## Version 0.7.2 [unpublished]
+
+## Version 0.7.1
 
 ### Changes
 
 - Kriging Believer added for batch-mode optimization
+- Added Interactive Pareto plotting
 
 ### Bugfixes
-- LHS fixed to ensure randomization of dimensions 
+
+- LHS fixed to ensure randomization of dimensions
+- More linting
 
 ## Version 0.7.0
 
@@ -93,7 +98,6 @@
 - Removed check for numpy version in constraints.py
 - Updated example/constraints.ipynb
 
-
 ## Version 0.5.0
 
 ### Changes
@@ -104,7 +108,7 @@
 - Remove dependency on tornado==5.1.1 *
 - *from setup.py
 - ^from requirements.txt
-- Change gpr (as in skopt #943) to reflect changes in sklearn gpr-module 
+- Change gpr (as in skopt #943) to reflect changes in sklearn gpr-module
      (relates to normalilzation)
 - Change searchCV to reflect skopt #939 and #904 (relates to np.mask and imports)
 - Changes in tests (skopt#939 and #808). Extensive changes in tests!

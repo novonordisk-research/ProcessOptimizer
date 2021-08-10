@@ -51,7 +51,7 @@ from .utils import expected_minimum
 from .utils import expected_minimum_random_sampling
 from .utils import load
 
-__version__ = "0.7.0"
+__version__ = "0.7.1"
 
 
 __all__ = (
