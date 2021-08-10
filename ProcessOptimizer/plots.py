@@ -70,27 +70,43 @@ def plot_convergence(*args, **kwargs):
 
         if isinstance(results, OptimizeResult):
             n_calls = len(results.x_iters)
-            mins = [np.min(results.func_vals[:i])
-                    for i in range(1, n_calls + 1)]
-            ax.plot(range(1, n_calls + 1), mins, c=color,
-                    marker=".", markersize=12, lw=2, label=name)
+            mins = [
+                np.min(results.func_vals[:i]) for i in range(1, n_calls + 1)
+            ]
+            ax.plot(
+                range(1, n_calls + 1),
+                mins,
+                c=color,
+                marker=".",
+                markersize=12,
+                lw=2,
+                label=name,
+            )
 
         elif isinstance(results, list):
             n_calls = len(results[0].x_iters)
             iterations = range(1, n_calls + 1)
-            mins = [[np.min(r.func_vals[:i]) for i in iterations]
-                    for r in results]
+            mins = [
+                [np.min(r.func_vals[:i]) for i in iterations] for r in results
+            ]
 
             for m in mins:
                 ax.plot(iterations, m, c=color, alpha=0.2)
 
-            ax.plot(iterations, np.mean(mins, axis=0), c=color,
-                    marker=".", markersize=12, lw=2, label=name)
+            ax.plot(
+                iterations,
+                np.mean(mins, axis=0),
+                c=color,
+                marker=".",
+                markersize=12,
+                lw=2,
+                label=name,
+            )
 
     if true_minimum:
-        ax.axhline(true_minimum, linestyle="--",
-                   color="r", lw=1,
-                   label="True minimum")
+        ax.axhline(
+            true_minimum, linestyle="--", color="r", lw=1, label="True minimum"
+        )
 
     if true_minimum or name:
         ax.legend(loc="best")
@@ -166,22 +182,40 @@ def plot_regret(*args, **kwargs):
 
         if isinstance(results, OptimizeResult):
             n_calls = len(results.x_iters)
-            regrets = [np.sum(results.func_vals[:i] - true_minimum)
-                       for i in range(1, n_calls + 1)]
-            ax.plot(range(1, n_calls + 1), regrets, c=color,
-                    marker=".", markersize=12, lw=2, label=name)
+            regrets = [
+                np.sum(results.func_vals[:i] - true_minimum)
+                for i in range(1, n_calls + 1)
+            ]
+            ax.plot(
+                range(1, n_calls + 1),
+                regrets,
+                c=color,
+                marker=".",
+                markersize=12,
+                lw=2,
+                label=name,
+            )
 
         elif isinstance(results, list):
             n_calls = len(results[0].x_iters)
             iterations = range(1, n_calls + 1)
-            regrets = [[np.sum(r.func_vals[:i] - true_minimum) for i in
-                        iterations] for r in results]
+            regrets = [
+                [np.sum(r.func_vals[:i] - true_minimum) for i in iterations]
+                for r in results
+            ]
 
             for cr in regrets:
                 ax.plot(iterations, cr, c=color, alpha=0.2)
 
-            ax.plot(iterations, np.mean(regrets, axis=0), c=color,
-                    marker=".", markersize=12, lw=2, label=name)
+            ax.plot(
+                iterations,
+                np.mean(regrets, axis=0),
+                c=color,
+                marker=".",
+                markersize=12,
+                lw=2,
+                label=name,
+            )
 
     if name:
         ax.legend(loc="best")
@@ -192,14 +226,16 @@ def plot_regret(*args, **kwargs):
 def _format_scatter_plot_axes(ax, space, ylabel, dim_labels=None):
     # Work out min, max of y axis for the diagonal so we can adjust
     # them all to the same value
-    diagonal_ylim = (np.min([ax[i, i].get_ylim()[0]
-                             for i in range(space.n_dims)]),
-                     np.max([ax[i, i].get_ylim()[1]
-                             for i in range(space.n_dims)]))
+    diagonal_ylim = (
+        np.min([ax[i, i].get_ylim()[0] for i in range(space.n_dims)]),
+        np.max([ax[i, i].get_ylim()[1] for i in range(space.n_dims)]),
+    )
 
     if dim_labels is None:
-        dim_labels = ["$X_{%i}$" % i if d.name is None else d.name
-                      for i, d in enumerate(space.dimensions)]
+        dim_labels = [
+            "$X_{%i}$" % i if d.name is None else d.name
+            for i, d in enumerate(space.dimensions)
+        ]
     # Axes for categorical dimensions are really integers; we have to
     # label them with the category names
     iscat = [isinstance(dim, Categorical) for dim in space.dimensions]
@@ -211,22 +247,28 @@ def _format_scatter_plot_axes(ax, space, ylabel, dim_labels=None):
 
             if j > i:
                 ax_.axis("off")
-            elif i > j:        # off-diagonal plots
+            elif i > j:  # off-diagonal plots
                 # plots on the diagonal are special, like Texas. They have
                 # their own range so do not mess with them.
                 if not iscat[i]:  # bounds not meaningful for categoricals
                     ax_.set_ylim(*space.dimensions[i].bounds)
                 if iscat[j]:
                     # partial() avoids creating closures in a loop
-                    ax_.xaxis.set_major_formatter(FuncFormatter(
-                            partial(_cat_format, space.dimensions[j])))
+                    ax_.xaxis.set_major_formatter(
+                        FuncFormatter(
+                            partial(_cat_format, space.dimensions[j])
+                        )
+                    )
                 else:
                     ax_.set_xlim(*space.dimensions[j].bounds)
-                if j == 0:      # only leftmost column (0) gets y labels
+                if j == 0:  # only leftmost column (0) gets y labels
                     ax_.set_ylabel(dim_labels[i])
-                    if iscat[i]:    # Set category labels for left column
-                        ax_.yaxis.set_major_formatter(FuncFormatter(
-                            partial(_cat_format, space.dimensions[i])))
+                    if iscat[i]:  # Set category labels for left column
+                        ax_.yaxis.set_major_formatter(
+                            FuncFormatter(
+                                partial(_cat_format, space.dimensions[i])
+                            )
+                        )
                 else:
                     ax_.set_yticklabels([])
 
@@ -239,43 +281,57 @@ def _format_scatter_plot_axes(ax, space, ylabel, dim_labels=None):
                     ax_.set_xlabel(dim_labels[j])
 
                 # configure plot for linear vs log-scale
-                if space.dimensions[j].prior == 'log-uniform':
-                    ax_.set_xscale('log')
+                if space.dimensions[j].prior == "log-uniform":
+                    ax_.set_xscale("log")
                 else:
-                    ax_.xaxis.set_major_locator(MaxNLocator(6, prune='both',
-                                                            integer=iscat[j]))
+                    ax_.xaxis.set_major_locator(
+                        MaxNLocator(6, prune="both", integer=iscat[j])
+                    )
 
-                if space.dimensions[i].prior == 'log-uniform':
-                    ax_.set_yscale('log')
+                if space.dimensions[i].prior == "log-uniform":
+                    ax_.set_yscale("log")
                 else:
-                    ax_.yaxis.set_major_locator(MaxNLocator(6, prune='both',
-                                                            integer=iscat[i]))
+                    ax_.yaxis.set_major_locator(
+                        MaxNLocator(6, prune="both", integer=iscat[i])
+                    )
 
-            else:       # diagonal plots
+            else:  # diagonal plots
                 ax_.set_ylim(*diagonal_ylim)
                 ax_.yaxis.tick_right()
-                ax_.yaxis.set_label_position('right')
-                ax_.yaxis.set_ticks_position('both')
+                ax_.yaxis.set_label_position("right")
+                ax_.yaxis.set_ticks_position("both")
                 ax_.set_ylabel(ylabel)
 
                 ax_.xaxis.tick_top()
-                ax_.xaxis.set_label_position('top')
+                ax_.xaxis.set_label_position("top")
                 ax_.set_xlabel(dim_labels[j])
 
-                if space.dimensions[i].prior == 'log-uniform':
-                    ax_.set_xscale('log')
+                if space.dimensions[i].prior == "log-uniform":
+                    ax_.set_xscale("log")
                 else:
-                    ax_.xaxis.set_major_locator(MaxNLocator(6, prune='both',
-                                                            integer=iscat[i]))
+                    ax_.xaxis.set_major_locator(
+                        MaxNLocator(6, prune="both", integer=iscat[i])
+                    )
                     if iscat[i]:
-                        ax_.xaxis.set_major_formatter(FuncFormatter(
-                            partial(_cat_format, space.dimensions[i])))
+                        ax_.xaxis.set_major_formatter(
+                            FuncFormatter(
+                                partial(_cat_format, space.dimensions[i])
+                            )
+                        )
 
     return ax
 
 
-def dependence(space, model, i, j=None, sample_points=None,
-               n_samples=250, n_points=40, x_eval=None):
+def dependence(
+    space,
+    model,
+    i,
+    j=None,
+    sample_points=None,
+    n_samples=250,
+    n_points=40,
+    x_eval=None,
+):
     """
     Calculate the dependence for dimensions `i` and `j` with
     respect to the objective value, as approximated by `model`.
@@ -366,9 +422,9 @@ def dependence(space, model, i, j=None, sample_points=None,
         xi, xi_transformed = _evenly_sample(space.dimensions[i], n_points)
         yi = []
         for x_ in xi_transformed:
-            rvs_ = np.array(sample_points)      # copy
+            rvs_ = np.array(sample_points)  # copy
             # We replace the values in the dimension that we want to keep fixed
-            rvs_[:, dim_locs[i]:dim_locs[i + 1]] = x_
+            rvs_[:, dim_locs[i] : dim_locs[i + 1]] = x_
             # In case of `x_eval=None` rvs conists of random samples.
             # Calculating the mean of these samples is how partial dependence
             # is implemented.
@@ -384,18 +440,28 @@ def dependence(space, model, i, j=None, sample_points=None,
         for x_ in xi_transformed:
             row = []
             for y_ in yi_transformed:
-                rvs_ = np.array(sample_points)      # copy
-                rvs_[:, dim_locs[j]:dim_locs[j + 1]] = x_
-                rvs_[:, dim_locs[i]:dim_locs[i + 1]] = y_
+                rvs_ = np.array(sample_points)  # copy
+                rvs_[:, dim_locs[j] : dim_locs[j + 1]] = x_
+                rvs_[:, dim_locs[i] : dim_locs[i + 1]] = y_
                 row.append(np.mean(model.predict(rvs_)))
             zi.append(row)
 
         return xi, yi, np.array(zi).T
 
 
-def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
-                   zscale='linear', dimensions=None, usepartialdependence=True,
-                   pars='result', expected_minimum_samples=None, title=None):
+def plot_objective(
+    result,
+    levels=10,
+    n_points=40,
+    n_samples=250,
+    size=2,
+    zscale="linear",
+    dimensions=None,
+    usepartialdependence=True,
+    pars="result",
+    expected_minimum_samples=None,
+    title=None,
+):
     """Pairwise dependence plot of the objective function.
 
     The diagonal shows the dependence for dimension `i` with
@@ -473,26 +539,29 @@ def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
     # dependence is to be used instead).
     space = result.space
     if isinstance(pars, str):
-        if pars == 'result':
+        if pars == "result":
             # Using the best observed result
             x_vals = result.x
-        elif pars == 'expected_minimum':
+        elif pars == "expected_minimum":
             if result.space.is_partly_categorical:
                 # space is also categorical
-                raise ValueError(text='expected_minimum does not support any \
-                categorical values')
+                raise ValueError(
+                    text="expected_minimum does not support any \
+                categorical values"
+                )
             # Do a gradient based minimum search using scipys own minimizer
             if expected_minimum_samples:
                 # If a value for expected_minimum_samples has been parsed
                 x_vals, _ = expected_minimum(
                     result,
                     n_random_starts=expected_minimum_samples,
-                    random_state=None)
+                    random_state=None,
+                )
             else:  # Use standard of 20 random starting points
-                x_vals, _ = expected_minimum(result,
-                                             n_random_starts=20,
-                                             random_state=None)
-        elif pars == 'expected_minimum_random':
+                x_vals, _ = expected_minimum(
+                    result, n_random_starts=20, random_state=None
+                )
+        elif pars == "expected_minimum_random":
             # Do a minimum search by evaluating the function with n_samples
             # sample values
             if expected_minimum_samples:
@@ -500,24 +569,28 @@ def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
                 x_vals, _ = expected_minimum_random_sampling(
                     result,
                     n_random_starts=expected_minimum_samples,
-                    random_state=None)
+                    random_state=None,
+                )
             else:
                 # Use standard of 10^n_parameters. Note this becomes very slow
                 # for many parameters
                 x_vals, _ = expected_minimum_random_sampling(
-                    result,
-                    n_random_starts=100000,
-                    random_state=None)
+                    result, n_random_starts=100000, random_state=None
+                )
         else:
-            raise ValueError('Argument ´pars´ must be a valid string \
-            (´result´)')
+            raise ValueError(
+                "Argument ´pars´ must be a valid string \
+            (´result´)"
+            )
     elif isinstance(pars, list):
-        assert len(pars) == len(result.x), 'Argument ´pars´ of type list \
-        must have same length as number of features'
+        assert len(pars) == len(
+            result.x
+        ), "Argument ´pars´ of type list \
+        must have same length as number of features"
         # Using defined x_values
         x_vals = pars
     else:
-        raise ValueError('Argument ´pars´ must be a string or a list')
+        raise ValueError("Argument ´pars´ must be a string or a list")
 
     if usepartialdependence:
         x_eval = None
@@ -526,19 +599,25 @@ def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
     rvs_transformed = space.transform(space.rvs(n_samples=n_samples))
     samples, minimum, _ = _map_categories(space, result.x_iters, x_vals)
 
-    if zscale == 'log':
+    if zscale == "log":
         locator = LogLocator()
-    elif zscale == 'linear':
+    elif zscale == "linear":
         locator = None
     else:
-        raise ValueError("Valid values for zscale are 'linear' and 'log',"
-                         " not '%s'." % zscale)
+        raise ValueError(
+            "Valid values for zscale are 'linear' and 'log',"
+            " not '%s'." % zscale
+        )
 
-    fig, ax = plt.subplots(space.n_dims, space.n_dims,
-                           figsize=(size * space.n_dims, size * space.n_dims))
+    fig, ax = plt.subplots(
+        space.n_dims,
+        space.n_dims,
+        figsize=(size * space.n_dims, size * space.n_dims),
+    )
 
-    fig.subplots_adjust(left=0.05, right=0.95, bottom=0.05, top=0.95,
-                        hspace=0.1, wspace=0.1)
+    fig.subplots_adjust(
+        left=0.05, right=0.95, bottom=0.05, top=0.95, hspace=0.1, wspace=0.1
+    )
 
     if title is not None:
         fig.suptitle(title)
@@ -560,13 +639,15 @@ def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
                 break
 
             elif i == j:
-                xi, yi = dependence(space,
-                                    result.models[-1],
-                                    i,
-                                    j=None,
-                                    sample_points=rvs_transformed,
-                                    n_points=n_points,
-                                    x_eval=x_eval)
+                xi, yi = dependence(
+                    space,
+                    result.models[-1],
+                    i,
+                    j=None,
+                    sample_points=rvs_transformed,
+                    n_points=n_points,
+                    x_eval=x_eval,
+                )
                 row.append({"xi": xi, "yi": yi})
 
                 if np.min(yi) < val_min_1d:
@@ -576,12 +657,15 @@ def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
 
             # lower triangle
             else:
-                xi, yi, zi = dependence(space,
-                                        result.models[-1],
-                                        i,
-                                        j,
-                                        rvs_transformed,
-                                        n_points, x_eval=x_eval)
+                xi, yi, zi = dependence(
+                    space,
+                    result.models[-1],
+                    i,
+                    j,
+                    rvs_transformed,
+                    n_points,
+                    x_eval=x_eval,
+                )
                 # print('filling with i, j = ' + str(i) + str(j))
                 row.append({"xi": xi, "yi": yi, "zi": zi})
 
@@ -616,37 +700,40 @@ def plot_objective(result, levels=10, n_points=40, n_samples=250, size=2,
                 yi = plots_data[i][j]["yi"]
                 zi = plots_data[i][j]["zi"]
 
-                ax[i, j].contourf(xi,
-                                  yi,
-                                  zi,
-                                  levels,
-                                  locator=locator,
-                                  cmap='viridis_r',
-                                  vmin=val_min_2d,
-                                  vmax=val_max_2d)
-                ax[i, j].scatter(samples[:, j], samples[:, i],
-                                 c='darkorange', s=10, lw=0.)
-                ax[i, j].scatter(minimum[j], minimum[i],
-                                 c=['r'], s=20, lw=0.)
+                ax[i, j].contourf(
+                    xi,
+                    yi,
+                    zi,
+                    levels,
+                    locator=locator,
+                    cmap="viridis_r",
+                    vmin=val_min_2d,
+                    vmax=val_max_2d,
+                )
+                ax[i, j].scatter(
+                    samples[:, j], samples[:, i], c="darkorange", s=10, lw=0.0
+                )
+                ax[i, j].scatter(minimum[j], minimum[i], c=["r"], s=20, lw=0.0)
 
                 if [i, j] == [1, 0]:
                     import matplotlib as mpl
-                    norm = mpl.colors.Normalize(vmin=val_min_2d,
-                                                vmax=val_max_2d)
+
+                    norm = mpl.colors.Normalize(
+                        vmin=val_min_2d, vmax=val_max_2d
+                    )
                     cb = ax[0][-1].figure.colorbar(
-                        mpl.cm.ScalarMappable(norm=norm,
-                                              cmap='viridis_r'),
-                        ax=ax[0][-1])
+                        mpl.cm.ScalarMappable(norm=norm, cmap="viridis_r"),
+                        ax=ax[0][-1],
+                    )
                     cb.ax.locator_params(nbins=8)
 
     if usepartialdependence:
         ylabel = "Partial dependence"
     else:
         ylabel = "Dependence"
-    return _format_scatter_plot_axes(ax,
-                                     space,
-                                     ylabel=ylabel,
-                                     dim_labels=dimensions)
+    return _format_scatter_plot_axes(
+        ax, space, ylabel=ylabel, dim_labels=dimensions
+    )
 
 
 def plot_objectives(results, titles=None):
@@ -710,34 +797,47 @@ def plot_evaluations(result, bins=20, dimensions=None):
     # and may order categoricals differently in different plots anyway.
     samples, minimum, iscat = _map_categories(space, result.x_iters, result.x)
     order = range(samples.shape[0])
-    fig, ax = plt.subplots(space.n_dims, space.n_dims,
-                           figsize=(2 * space.n_dims, 2 * space.n_dims))
+    fig, ax = plt.subplots(
+        space.n_dims,
+        space.n_dims,
+        figsize=(2 * space.n_dims, 2 * space.n_dims),
+    )
 
-    fig.subplots_adjust(left=0.05, right=0.95, bottom=0.05, top=0.95,
-                        hspace=0.1, wspace=0.1)
+    fig.subplots_adjust(
+        left=0.05, right=0.95, bottom=0.05, top=0.95, hspace=0.1, wspace=0.1
+    )
 
     for i in range(space.n_dims):
         for j in range(space.n_dims):
             if i == j:
                 if iscat[j]:
                     bins_ = len(space.dimensions[j].categories)
-                elif space.dimensions[j].prior == 'log-uniform':
+                elif space.dimensions[j].prior == "log-uniform":
                     low, high = space.bounds[j]
                     bins_ = np.logspace(np.log10(low), np.log10(high), bins)
                 else:
                     bins_ = bins
-                ax[i, i].hist(samples[:, j], bins=bins_, range=None if iscat[j]
-                              else space.dimensions[j].bounds)
+                ax[i, i].hist(
+                    samples[:, j],
+                    bins=bins_,
+                    range=None if iscat[j] else space.dimensions[j].bounds,
+                )
 
             # lower triangle
             elif i > j:
-                ax[i, j].scatter(samples[:, j], samples[:, i],
-                                 c=order, s=40, lw=0., cmap='viridis')
-                ax[i, j].scatter(minimum[j], minimum[i],
-                                 c=['r'], s=20, lw=0.)
+                ax[i, j].scatter(
+                    samples[:, j],
+                    samples[:, i],
+                    c=order,
+                    s=40,
+                    lw=0.0,
+                    cmap="viridis",
+                )
+                ax[i, j].scatter(minimum[j], minimum[i], c=["r"], s=20, lw=0.0)
 
-    return _format_scatter_plot_axes(ax, space, ylabel="Number of samples",
-                                     dim_labels=dimensions)
+    return _format_scatter_plot_axes(
+        ax, space, ylabel="Number of samples", dim_labels=dimensions
+    )
 
 
 def _map_categories(space, points, minimum):
@@ -797,8 +897,8 @@ def _evenly_sample(dim, n_points):
     * `xi_transformed`: [np.array]:
         The transformed values of `xi`, for feeding to a model.
     """
-    cats = np.array(getattr(dim, 'categories', []), dtype=object)
-    if len(cats):   # Sample categoricals while maintaining order
+    cats = np.array(getattr(dim, "categories", []), dtype=object)
+    if len(cats):  # Sample categoricals while maintaining order
         xi = np.linspace(0, len(cats) - 1, min(len(cats), n_points), dtype=int)
         xi_transformed = dim.transform(cats[xi])
     else:
@@ -814,10 +914,9 @@ def _cat_format(dimension, x, _):
     return str(dimension.categories[int(x)])
 
 
-def plot_expected_minimum_convergence(result,
-                                      figsize=(15, 15),
-                                      random_state=None,
-                                      sigma=0.5):
+def plot_expected_minimum_convergence(
+    result, figsize=(15, 15), random_state=None, sigma=0.5
+):
     """
     A function to perform a retrospective analysis of all the data points by
     building successive models and predicting the mean of the functional value
@@ -836,16 +935,18 @@ def plot_expected_minimum_convergence(result,
     for i in range(len(result.x_iters)):
         # Build an optimizer with as close to those used during the data
         # generating as possible. TODO: add more details on the optimizer build
-        _opt = Optimizer(result.space.bounds,
-                         n_initial_points=1,
-                         random_state=random_state)
+        _opt = Optimizer(
+            result.space.bounds, n_initial_points=1, random_state=random_state
+        )
         # Tell the available data
         if i == 0:
-            _result_internal = _opt.tell(result.x_iters[:i+1][0],
-                                         result.func_vals[:i+1].item())
+            _result_internal = _opt.tell(
+                result.x_iters[: i + 1][0], result.func_vals[: i + 1].item()
+            )
         else:
-            _result_internal = _opt.tell(result.x_iters[:i+1],
-                                         result.func_vals[:i+1].tolist())
+            _result_internal = _opt.tell(
+                result.x_iters[: i + 1], result.func_vals[: i + 1].tolist()
+            )
         # Ask for the expected minimum in the result
         _exp = expected_minimum(_result_internal, random_state=random_state)
         # Append expected minimum to list. To plot it later
@@ -853,49 +954,60 @@ def plot_expected_minimum_convergence(result,
         estimated_mins_y.append(_exp[1])
         # Transform x-value into transformed space and sample n times
         # Make 95% quantiles of samples
-        transformed_point = _opt.space.transform([_exp[0], ])
+        transformed_point = _opt.space.transform([_exp[0],])
         samples_of_y = _result_internal.models[-1].sample_y(
-            transformed_point,
-            n_samples=10000,
-            random_state=random_state)
+            transformed_point, n_samples=10000, random_state=random_state
+        )
         quants = mquantiles(samples_of_y.flatten(), [0.025, 0.975])
         quants_list.append(quants)
 
         # Calculate distance in x-space from last "believed" expected_min
         if i == 0:
-            distancefromlast = _opt.space.distance(estimated_mins_x[-1],
-                                                   result.x)  # opt.Xi[0]
+            distancefromlast = _opt.space.distance(
+                estimated_mins_x[-1], result.x
+            )  # opt.Xi[0]
             distances.append(distancefromlast)
         else:
-            distancefromlast = _opt.space.distance(estimated_mins_x[-1],
-                                                   estimated_mins_x[-2])
+            distancefromlast = _opt.space.distance(
+                estimated_mins_x[-1], estimated_mins_x[-2]
+            )
             distances.append(distancefromlast)
 
         # Smoothing quantiles for graphically pleasing plot
-        quant_max_smooth = gaussian_filter1d([i[1] for i in quants_list],
-                                             sigma=sigma)
-        quant_min_smooth = gaussian_filter1d([i[0] for i in quants_list],
-                                             sigma=sigma)
+        quant_max_smooth = gaussian_filter1d(
+            [i[1] for i in quants_list], sigma=sigma
+        )
+        quant_min_smooth = gaussian_filter1d(
+            [i[0] for i in quants_list], sigma=sigma
+        )
 
     # Do the actual plotting
     fig, (ax1, ax2) = plt.subplots(nrows=2, sharex=True, figsize=figsize)
-    ax1.fill_between(list(range(1, len(result.x_iters) + 1)),
-                     y1=quant_min_smooth,
-                     y2=quant_max_smooth,
-                     alpha=0.5,
-                     color='grey')
+    ax1.fill_between(
+        list(range(1, len(result.x_iters) + 1)),
+        y1=quant_min_smooth,
+        y2=quant_max_smooth,
+        alpha=0.5,
+        color="grey",
+    )
     ax1.plot(list(range(1, len(result.x_iters) + 1)), estimated_mins_y)
     ax1.set_ylabel('expected "y"-value @ expected min')
 
     ax2.plot(list(range(1, len(result.x_iters) + 1)), distances)
-    ax2.set_ylabel('euclidian distance in x space from previous expected min')
+    ax2.set_ylabel("euclidian distance in x space from previous expected min")
     ax2.set_xticks(list(range(1, len(result.x_iters) + 1)))
 
     plt.xlabel("Number of calls $n$")
     return fig
 
 
-def plot_Pareto(optimizer, figsize=(15,15), objective_names=None, dimensions=None, return_data=False):
+def plot_Pareto(
+    optimizer,
+    figsize=(15, 15),
+    objective_names=None,
+    dimensions=None,
+    return_data=False,
+):
     """Interactive plot of the Pareto front implemented in 2 and 3 dimensions
 
     The plot shows all observations and the estimated Pareto front in the
@@ -940,22 +1052,21 @@ def plot_Pareto(optimizer, figsize=(15,15), objective_names=None, dimensions=Non
         Objective names
     """
 
-    
     def update_annot(ind, vals, sc):
 
         pos = sc.get_offsets()[ind["ind"][0]]
         annot.xy = pos
-    
-        exp_params=vals[ind["ind"][0]]
+
+        exp_params = vals[ind["ind"][0]]
         values = ["%.3f" % number for number in exp_params]
-        strings= []
-        for dim, value in zip(dimensions,values): strings.append(dim + ": " + value + str("\n"))
+        strings = []
+        for dim, value in zip(dimensions, values):
+            strings.append(dim + ": " + value + str("\n"))
         strings[-1] = strings[-1].replace("\n", "")
-        string=''.join(map(str, strings))
-        
+        string = "".join(map(str, strings))
+
         annot.set_text(string)
         annot.get_bbox_patch().set_alpha(0.4)
-
 
     def hover(event, vals=None, sc=None):
         vis = annot.get_visible()
@@ -972,96 +1083,171 @@ def plot_Pareto(optimizer, figsize=(15,15), objective_names=None, dimensions=Non
 
     if optimizer.models == []:
         raise ValueError("No models have been fitted yet")
-    
+
     if optimizer.n_objectives == 1:
-        raise ValueError("Pareto_plot is not possible with single objective optimization")
-    
+        raise ValueError(
+            "Pareto_plot is not possible with single objective optimization"
+        )
+
     if optimizer.n_objectives > 3:
         raise ValueError("Pareto_plot is not possible with >3 objectives")
-        
+
     if dimensions == None:
-        dimensions= ["$X_{%i}$" % i if d.name is None else d.name
-                      for i, d in enumerate(optimizer.space.dimensions)]
-    
+        dimensions = [
+            "$X_{%i}$" % i if d.name is None else d.name
+            for i, d in enumerate(optimizer.space.dimensions)
+        ]
+
     if len(dimensions) != len(optimizer.space.dimensions):
-         raise ValueError("Number of dimensions specified does not match the number of"
-                          "dimensions in the optimizers space")
+        raise ValueError(
+            "Number of dimensions specified does not match the number of"
+            "dimensions in the optimizers space"
+        )
 
     pop, logbook, front = optimizer.NSGAII(MU=40)
-    
-    
-    pop=np.asarray(pop)
-    pop = np.asarray(optimizer.space.inverse_transform(pop.reshape(len(pop),optimizer.space.transformed_n_dims)))
-    
+
+    pop = np.asarray(pop)
+    pop = np.asarray(
+        optimizer.space.inverse_transform(
+            pop.reshape(len(pop), optimizer.space.transformed_n_dims)
+        )
+    )
+
     if optimizer.n_objectives == 2:
 
-        fig,ax = plt.subplots(figsize=figsize)
-        plt.title('Pareto Front in Objective Space')
+        fig, ax = plt.subplots(figsize=figsize)
+        plt.title("Pareto Front in Objective Space")
 
         if objective_names == None:
-            objective_names= ["Objective 1", "Objective 2"]
-        
+            objective_names = ["Objective 1", "Objective 2"]
+
         if len(objective_names) != 2:
-            raise ValueError("Number of objective_names is not equal to number of objectives")
-  
-        
+            raise ValueError(
+                "Number of objective_names is not equal to number of objectives"
+            )
+
         plt.xlabel(objective_names[0])
         plt.ylabel(objective_names[1])
-        
-        all_points= np.concatenate([np.array(optimizer.yi),front])
-        colors= ["black"]*len(optimizer.yi) + ["red"]*len(front)
-        sc=plt.scatter(all_points[:,0], all_points[:,1], s=8, c=colors)
 
-        annot = ax.annotate("", xy=(0,0), xytext=(20,20),textcoords="offset points",
-                            bbox=dict(boxstyle="round", fc="w"),
-                            arrowprops=dict(arrowstyle="->"))
+        all_points = np.concatenate([np.array(optimizer.yi), front])
+        colors = ["black"] * len(optimizer.yi) + ["red"] * len(front)
+        sc = plt.scatter(all_points[:, 0], all_points[:, 1], s=8, c=colors)
+
+        annot = ax.annotate(
+            "",
+            xy=(0, 0),
+            xytext=(20, 20),
+            textcoords="offset points",
+            bbox=dict(boxstyle="round", fc="w"),
+            arrowprops=dict(arrowstyle="->"),
+        )
         annot.set_visible(False)
-        fig.canvas.mpl_connect("motion_notify_event", lambda event: hover(event, vals=np.concatenate([np.array(optimizer.Xi),pop]), sc=sc))
-        
-        
+        fig.canvas.mpl_connect(
+            "motion_notify_event",
+            lambda event: hover(
+                event,
+                vals=np.concatenate([np.array(optimizer.Xi), pop]),
+                sc=sc,
+            ),
+        )
+
         colors = ["black", "red"]
         texts = ["Observations", "Estimated Pareto Front"]
-        patches = [ plt.plot([],[], marker="o", ms=6, ls="", mec=None, color=colors[i],
-            label="{:s}".format(texts[i]) )[0]  for i in range(len(texts)) ]
-        plt.legend(handles=patches, bbox_to_anchor=(0.5, 0.5),
-           loc='best', ncol=1, numpoints=1 )
-        
+        patches = [
+            plt.plot(
+                [],
+                [],
+                marker="o",
+                ms=6,
+                ls="",
+                mec=None,
+                color=colors[i],
+                label="{:s}".format(texts[i]),
+            )[0]
+            for i in range(len(texts))
+        ]
+        plt.legend(
+            handles=patches,
+            bbox_to_anchor=(0.5, 0.5),
+            loc="best",
+            ncol=1,
+            numpoints=1,
+        )
 
     if optimizer.n_objectives == 3:
-        
+
         fig = plt.figure(figsize=figsize)
-        ax = fig.add_subplot(projection='3d')
-        plt.title('Pareto Front in Objective Space')
+        ax = fig.add_subplot(projection="3d")
+        plt.title("Pareto Front in Objective Space")
 
         if objective_names == None:
-            objective_names= ["Objective 1", "Objective 2", "Objective 3"]
-            
+            objective_names = ["Objective 1", "Objective 2", "Objective 3"]
+
         if len(objective_names) != 3:
-            raise ValueError("Number of objective_names is not equal to number of objectives")
+            raise ValueError(
+                "Number of objective_names is not equal to number of objectives"
+            )
 
         ax.set_xlabel(objective_names[0])
         ax.set_ylabel(objective_names[1])
         ax.set_zlabel(objective_names[2])
         ax.view_init(30, 240)
-        
-        all_points= np.concatenate([np.array(optimizer.yi),front])
-        colors= ["black"]*len(optimizer.yi) + ["red"]*len(front)
-        sc=ax.scatter(all_points[:,0], all_points[:,1], all_points[:,2], s=8, c=colors)
-        
-        annot = ax.annotate("", xy=(0,0), xytext=(20,20),textcoords="offset points",
-                            bbox=dict(boxstyle="round", fc="w"),
-                            arrowprops=dict(arrowstyle="->"))
+
+        all_points = np.concatenate([np.array(optimizer.yi), front])
+        colors = ["black"] * len(optimizer.yi) + ["red"] * len(front)
+        sc = ax.scatter(
+            all_points[:, 0], all_points[:, 1], all_points[:, 2], s=8, c=colors
+        )
+
+        annot = ax.annotate(
+            "",
+            xy=(0, 0),
+            xytext=(20, 20),
+            textcoords="offset points",
+            bbox=dict(boxstyle="round", fc="w"),
+            arrowprops=dict(arrowstyle="->"),
+        )
         annot.set_visible(False)
 
-        fig.canvas.mpl_connect("motion_notify_event", lambda event: hover(event, vals=np.concatenate([np.array(optimizer.Xi),pop]), sc=sc))
-        
+        fig.canvas.mpl_connect(
+            "motion_notify_event",
+            lambda event: hover(
+                event,
+                vals=np.concatenate([np.array(optimizer.Xi), pop]),
+                sc=sc,
+            ),
+        )
+
         colors = ["black", "red"]
         texts = ["Observations", "Estimated Pareto Front"]
-        patches = [ plt.plot([],[], marker="o", ms=6, ls="", mec=None, color=colors[i],
-            label="{:s}".format(texts[i]) )[0]  for i in range(len(texts)) ]
-        plt.legend(handles=patches, bbox_to_anchor=(0.5, 0.5),
-           loc='best', ncol=1, numpoints=1 )
+        patches = [
+            plt.plot(
+                [],
+                [],
+                marker="o",
+                ms=6,
+                ls="",
+                mec=None,
+                color=colors[i],
+                label="{:s}".format(texts[i]),
+            )[0]
+            for i in range(len(texts))
+        ]
+        plt.legend(
+            handles=patches,
+            bbox_to_anchor=(0.5, 0.5),
+            loc="best",
+            ncol=1,
+            numpoints=1,
+        )
     plt.show()
-    
+
     if return_data is True:
-        return np.array(optimizer.Xi), np.array(optimizer.yi), pop, front, dimensions, objective_names
+        return (
+            np.array(optimizer.Xi),
+            np.array(optimizer.yi),
+            pop,
+            front,
+            dimensions,
+            objective_names,
+        )
