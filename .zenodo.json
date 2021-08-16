@@ -1,6 +1,6 @@
 {
     "description": "A Research Tool for iterative process optimization using Bayesian optimization", 
-    "license": "BSD-2-Clause", 
+    "license": "bsd-3-clause", 
     "title": "ProcessOptimizer", 
     "upload_type": "software",
     "keywords": [ "Process", "Optimization", "Python" ],
