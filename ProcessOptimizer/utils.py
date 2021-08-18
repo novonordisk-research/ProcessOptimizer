@@ -221,7 +221,12 @@ def check_x_in_space(x, space):
                 )
 
 
-def expected_minimum(res, n_random_starts=20, random_state=None):
+def expected_minimum(
+                     res,
+                     n_random_starts=20,
+                     random_state=None,
+                     minmax='min'
+                     ):
     """
     Compute the minimum over the predictions of the last surrogate model.
 
@@ -241,44 +246,67 @@ def expected_minimum(res, n_random_starts=20, random_state=None):
         Set random state to something other than None for reproducible
         results.
 
+    * `minmax` [str, default='min']:
+        Whether the function should return the expected minimun (intended use)
+        or the expected maximum (edge use case).
+
     Returns
     -------
-    * `x` [list]: location of the minimum.
+    * `x` [list]: location of the minimum (or maximum).
 
-    * `fun` [float]: the surrogate function value at the minimum.
+    * `fun` [float]: the surrogate function value at the minimum (or maximum).
     """
     if res.space.is_partly_categorical:
         return expected_minimum_random_sampling(
             res,
             n_random_starts=100000,
-            random_state=random_state
+            random_state=random_state,
+            minmax=minmax
             )
 
     def func(x):
         reg = res.models[-1]
         x = res.space.transform(x.reshape(1, -1))
-        return reg.predict(x.reshape(1, -1))[0]
+        if minmax == 'min':
+            return reg.predict(x.reshape(1, -1))[0]
+        elif minmax == 'max':
+            return -1 * reg.predict(x.reshape(1, -1))[0]
+        else:
+            raise ValueError(
+                    "expected acq_func to be in ['min','max'], got %s"
+                    % (minmax)
+                )
 
     xs = [res.x]
     if n_random_starts > 0:
         xs.extend(res.space.rvs(n_random_starts, random_state=random_state))
-
+    
     best_x = None
     best_fun = np.inf
 
     for x0 in xs:
         r = sp_minimize(func, x0=x0, bounds=res.space.bounds)
-
         if r.fun < best_fun:
             best_x = r.x
             best_fun = r.fun
 
-    return [v for v in best_x], best_fun
+    if minmax == 'min':
+        return [v for v in best_x], best_fun
+    
+    elif minmax == 'max':
+        return [v for v in best_x], -1 * best_fun
+    
+    else:
+        raise ValueError(
+                "expected acq_func to be in ['min','max'], got %s"
+                % (minmax)
+            )
 
 
 def expected_minimum_random_sampling(res,
                                      n_random_starts=100000,
-                                     random_state=None):
+                                     random_state=None,
+                                     minmax='min'):
     """Minimum search by doing naive random sampling, Returns the parameters
     that gave the minimum function value. Can be used when the space
     contains any categorical values.
@@ -309,10 +337,19 @@ def expected_minimum_random_sampling(res,
     # make estimations with surrogate
     model = res.models[-1]
     y_random = model.predict(res.space.transform(random_samples))
-    index_best_objective = np.argmin(y_random)
-    min_x = random_samples[index_best_objective]
+    if minmax == 'min':
+        index_best_objective = np.argmin(y_random)
+    elif minmax == 'max':
+        index_best_objective = np.argmax(y_random)
+    else:
+        raise ValueError(
+                "expected acq_func to be in ['min','max'], got %s"
+                % (minmax)
+            )
 
-    return min_x, y_random[index_best_objective]
+    extreme_x = random_samples[index_best_objective]
+
+    return extreme_x, y_random[index_best_objective]
 
 
 def has_gradients(estimator):

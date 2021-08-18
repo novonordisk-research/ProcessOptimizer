@@ -1,3 +1,4 @@
+from re import M
 import pytest
 import tempfile
 
@@ -85,7 +86,7 @@ def test_dump_and_load_optimizer():
 
 
 @pytest.mark.fast_test
-def test_expected_minimum():
+def test_expected_minimum_min():
     res = gp_minimize(bench3,
                       [(-2.0, 2.0)],
                       x0=[0.],
@@ -101,6 +102,43 @@ def test_expected_minimum():
     assert x_min == x_min2
     assert f_min == f_min2
 
+@pytest.mark.fast_test
+def test_expected_minimum_max():
+    res = gp_minimize(bench3,
+                      [(-2.0, 2.0)],
+                      x0=[0.],
+                      noise=1e-8,
+                      n_calls=8,
+                      n_random_starts=3,
+                      random_state=1)
+
+    x_max, f_max = expected_minimum(res, random_state=1, minmax='max')
+    x_max2, f_max2 = expected_minimum(res, random_state=1, minmax='max')
+
+    assert f_max >= res.fun  # true since noise ~= 0.0
+    assert x_max == x_max2
+    assert f_max == f_max2
+
+
+@pytest.mark.fast_test
+def test_expected_minimum_minmax_argument():
+    opt = Optimizer(dimensions=[(-2,2),('A','B')],
+                    base_estimator='GP',
+                    n_initial_points=1)
+    X = [[-2,'A'],[-1,'A'],[0,'A'],[1,'A'],[2,'A']]
+    y = [2,1,0,1,2]
+    result = opt.tell(X,y)
+    x_min,f_min = expected_minimum(result,
+                                   n_random_starts=20,
+                                   random_state=1,
+                                   minmax='min')
+    x_max,f_max = expected_minimum(result,
+                                   n_random_starts=20,
+                                   random_state=1,
+                                   minmax='max')
+    assert x_min != x_max
+    assert f_min < f_max
+    
 
 @pytest.mark.fast_test
 def test_dict_list_space_representation():
