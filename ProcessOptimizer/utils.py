@@ -817,8 +817,8 @@ def y_coverage(res, return_plot=False, random_state=None, horizontal=False):
                 bins,
                 label=['expected min', 'expected max'],
                 orientation='horizontal')
-            ax.set_xlabel('Function value')
-            ax.set_ylabel('count')
+            ax.set_xlabel('"Plausibility" of achieving/realizing given function value')
+            ax.set_ylabel('Function Value')
             ax.axhline(y=observed_min, color='green', label='Observed minimum')
             ax.axhline(y=observed_max, color='blue', label='Observed maximum')
             ax.legend(loc='best', shadow=True)
@@ -832,7 +832,7 @@ def y_coverage(res, return_plot=False, random_state=None, horizontal=False):
                 bins,
                 label=['expected min', 'expected max'])
             ax.set_xlabel('Function value')
-            ax.set_ylabel('count')
+            ax.set_ylabel('"Plausibility" of achieving/realizing given function value')
             ax.axvline(x=observed_min, color='green', label='Observed minimum')
             ax.axvline(x=observed_max, color='blue', label='Observed maximum')
             ax.legend(loc='best', shadow=True)
