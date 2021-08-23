@@ -281,7 +281,7 @@ def expected_minimum(
     xs = [res.x]
     if n_random_starts > 0:
         xs.extend(res.space.rvs(n_random_starts, random_state=random_state))
-    
+
     best_x = None
     best_fun = np.inf
 
@@ -293,10 +293,10 @@ def expected_minimum(
 
     if minmax == 'min':
         return [v for v in best_x], best_fun
-    
+
     elif minmax == 'max':
         return [v for v in best_x], -1 * best_fun
-    
+
     else:
         raise ValueError(
                 "expected acq_func to be in ['min','max'], got %s"
@@ -776,53 +776,66 @@ def use_named_args(dimensions):
     return decorator
 
 
-def y_coverage(res, return_plot=False, random_state=None):
+def y_coverage(res, return_plot=False, random_state=None, horizontal=False):
     """
     A function to calculate the expected range of observable function values
     given a result instans. This can be compared with the actual observed range
     of function values.
     """
-    assert not len(res.func_vals) == 0, "train model before using this function"
+    assert len(res.func_vals) != 0, "train model before using this function"
     observed_min = res.func_vals.min()
     observed_max = res.func_vals.max()
     min_x, expected_min = expected_minimum(res,
-                                    n_random_starts=20,
-                                    random_state=None,
-                                    minmax='min')
-    max_x, expected_max, = expected_minimum(res,
-                                    n_random_starts=20,
-                                    random_state=None,
-                                    minmax='max')
-    
+                                           n_random_starts=20,
+                                           random_state=None,
+                                           minmax='min')
+    max_x, expected_max = expected_minimum(res,
+                                           n_random_starts=20,
+                                           random_state=None,
+                                           minmax='max')
+
     if return_plot:
         reg = res.models[-1]
-        min_x = res.space.transform([min_x,])
-        max_x = res.space.transform([max_x,])
+        min_x = res.space.transform([min_x, ])
+        max_x = res.space.transform([max_x, ])
         sampled_mins = reg.sample_y(min_x,
-                                    n_samples=10000,
+                                    n_samples=5000,
                                     random_state=random_state)[0]
         sampled_maxs = reg.sample_y(max_x,
-                                    n_samples=10000,
+                                    n_samples=5000,
                                     random_state=random_state)[0]
         extreme_min = sampled_mins.min()
         extreme_max = sampled_maxs.max()
-        rough_span = expected_max - expected_min
+        #rough_span = expected_max - expected_min
         bins = np.linspace(extreme_min, extreme_max, 30)
 
-        fig, ax = plt.subplots()
-        ax.hist([
-            sampled_mins,
-            sampled_maxs],
-            bins,
-            label=['expected min','expected max'])
-        ax.set_xlabel('Function value')
-        ax.set_ylabel('count')
-        ax.axvline(x=observed_min, color='green', label='Observed minimum')
-        ax.axvline(x=observed_max, color='blue', label='Observed maximum')
-        legend = ax.legend(loc='upper center',
-                        shadow=True,
-                        fontsize='x-large')
-
-        plt.show()
+        if horizontal:
+            fig, ax = plt.subplots()
+            ax.hist([
+                sampled_mins,
+                sampled_maxs],
+                bins,
+                label=['expected min', 'expected max'],
+                orientation='horizontal')
+            ax.set_xlabel('Function value')
+            ax.set_ylabel('count')
+            ax.axhline(y=observed_min, color='green', label='Observed minimum')
+            ax.axhline(y=observed_max, color='blue', label='Observed maximum')
+            ax.legend(loc='best', shadow=True)
+            plt.show()
+        
+        else:
+            fig, ax = plt.subplots()
+            ax.hist([
+                sampled_mins,
+                sampled_maxs],
+                bins,
+                label=['expected min', 'expected max'])
+            ax.set_xlabel('Function value')
+            ax.set_ylabel('count')
+            ax.axvline(x=observed_min, color='green', label='Observed minimum')
+            ax.axvline(x=observed_max, color='blue', label='Observed maximum')
+            ax.legend(loc='best', shadow=True)
+            plt.show()
 
     return (observed_min, observed_max), (expected_min, expected_max)
