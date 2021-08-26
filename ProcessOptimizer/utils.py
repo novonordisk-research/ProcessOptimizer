@@ -3,7 +3,6 @@ from functools import wraps
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import cm
 from scipy.optimize import OptimizeResult
 from scipy.optimize import minimize as sp_minimize
 from sklearn.base import is_regressor
@@ -808,7 +807,7 @@ def y_coverage(res, return_plot=False, random_state=None, horizontal=False):
         extreme_min = sampled_mins.min()
         extreme_max = sampled_maxs.max()
         bins = np.linspace(extreme_min, extreme_max, 30)
-        colors=['#B8DE29FF', '#453781FF']
+        colors = ['#B8DE29FF', '#453781FF']
 
         if horizontal:
             fig, ax = plt.subplots()
