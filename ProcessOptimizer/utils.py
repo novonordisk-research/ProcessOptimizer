@@ -3,6 +3,7 @@ from functools import wraps
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import cm
 from scipy.optimize import OptimizeResult
 from scipy.optimize import minimize as sp_minimize
 from sklearn.base import is_regressor
@@ -779,8 +780,8 @@ def use_named_args(dimensions):
 def y_coverage(res, return_plot=False, random_state=None, horizontal=False):
     """
     A function to calculate the expected range of observable function values
-    given a result instans. This can be compared with the actual observed range
-    of function values.
+    given a result instans. This can be compared with the actual observed
+    range of function values.
     """
     assert len(res.func_vals) != 0, "train model before using this function"
     observed_min = res.func_vals.min()
@@ -806,8 +807,8 @@ def y_coverage(res, return_plot=False, random_state=None, horizontal=False):
                                     random_state=random_state)[0]
         extreme_min = sampled_mins.min()
         extreme_max = sampled_maxs.max()
-        #rough_span = expected_max - expected_min
         bins = np.linspace(extreme_min, extreme_max, 30)
+        colors=['#B8DE29FF', '#453781FF']
 
         if horizontal:
             fig, ax = plt.subplots()
@@ -816,26 +817,58 @@ def y_coverage(res, return_plot=False, random_state=None, horizontal=False):
                 sampled_maxs],
                 bins,
                 label=['expected min', 'expected max'],
-                orientation='horizontal')
-            ax.set_xlabel('"Plausibility" of achieving/realizing given function value')
+                orientation='horizontal',
+                density=True,
+                color=colors)
+            ax.set_xlabel('"Plausibility" of achieving/realizing '
+                          'given function value')
             ax.set_ylabel('Function Value')
-            ax.axhline(y=observed_min, color='green', label='Observed minimum')
-            ax.axhline(y=observed_max, color='blue', label='Observed maximum')
+            for i in range(len(res.func_vals)):
+                if i == 0:
+                    ax.axhline(y=res.func_vals[i],
+                               xmin=0.6,
+                               xmax=1,
+                               color="darkorange",
+                               alpha=0.5,
+                               label='Observed points')
+                else:
+                    ax.axhline(y=res.func_vals[i],
+                               xmin=0.6,
+                               xmax=1,
+                               color="darkorange",
+                               alpha=0.5)
             ax.legend(loc='best', shadow=True)
+            ax.set_xticks([])
             plt.show()
-        
+
         else:
             fig, ax = plt.subplots()
             ax.hist([
                 sampled_mins,
                 sampled_maxs],
                 bins,
-                label=['expected min', 'expected max'])
+                label=['expected min', 'expected max'],
+                density=True,
+                color=colors)
             ax.set_xlabel('Function value')
-            ax.set_ylabel('"Plausibility" of achieving/realizing given function value')
-            ax.axvline(x=observed_min, color='green', label='Observed minimum')
-            ax.axvline(x=observed_max, color='blue', label='Observed maximum')
+            ax.set_ylabel('"Plausibility" of achieving/realizing '
+                          'given function value')
+            for i in range(len(res.func_vals)):
+                if i == 0:
+                    ax.axvline(x=res.func_vals[i],
+                               ymin=0.3,
+                               ymax=0.7,
+                               color="darkorange",
+                               alpha=0.5,
+                               label='Observed points')
+                else:
+                    ax.axvline(x=res.func_vals[i],
+                               ymin=0.3,
+                               ymax=0.7,
+                               color="darkorange",
+                               alpha=0.5)
             ax.legend(loc='best', shadow=True)
+            ax.set_yticks([])
             plt.show()
 
     return (observed_min, observed_max), (expected_min, expected_max)
