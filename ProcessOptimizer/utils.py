@@ -226,6 +226,7 @@ def expected_minimum(
                      res,
                      n_random_starts=20,
                      random_state=None,
+                     return_std=False,
                      minmax='min'
                      ):
     """
@@ -242,6 +243,9 @@ def expected_minimum(
     * `n_random_starts` [int, default=20]:
         The number of random starts for the minimization of the surrogate
         model.
+
+    * 'return_std' [Boolean, default=True]:
+        Whether the function should return the standard deviation or not.
 
     * `random_state` [int, RandomState instance, or None (default)]:
         Set random state to something other than None for reproducible
@@ -262,6 +266,7 @@ def expected_minimum(
             res,
             n_random_starts=100000,
             random_state=random_state,
+	    return_std=return_std,
             minmax=minmax
             )
 
@@ -292,10 +297,17 @@ def expected_minimum(
             best_fun = r.fun
 
     if minmax == 'min':
-        return [v for v in best_x], best_fun
+        if return_std == True:
+            return [v for v in best_x], [best_fun, res.models[-1].predict(np.array(best_x).reshape(1,-1), return_std=True)[1][0]]
+        else:
+            return [v for v in best_x], best_fun
+
 
     elif minmax == 'max':
-        return [v for v in best_x], -1 * best_fun
+        if return_std == True:
+            return [v for v in best_x], [best_fun, res.models[-1].predict(np.array(best_x).reshape(1,-1), return_std=True)[1][0]]
+        else:
+            return [v for v in best_x], best_fun
 
     else:
         raise ValueError(
@@ -307,6 +319,7 @@ def expected_minimum(
 def expected_minimum_random_sampling(res,
                                      n_random_starts=100000,
                                      random_state=None,
+                                     return_std=False,
                                      minmax='min'):
     """Minimum search by doing naive random sampling, Returns the parameters
     that gave the minimum function value. Can be used when the space
@@ -349,8 +362,10 @@ def expected_minimum_random_sampling(res,
             )
 
     extreme_x = random_samples[index_best_objective]
-
-    return extreme_x, y_random[index_best_objective]
+    if return_std == True:
+        return extreme_x, [y_random[index_best_objective], res.models[-1].predict(np.array(extreme_x).reshape(1,-1), return_std=True)[1][0]]
+    else:
+        return extreme_x, y_random[index_best_objective]
 
 
 def has_gradients(estimator):
