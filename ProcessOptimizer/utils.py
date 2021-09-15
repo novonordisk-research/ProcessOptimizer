@@ -266,7 +266,7 @@ def expected_minimum(
             res,
             n_random_starts=100000,
             random_state=random_state,
-	    return_std=return_std,
+	        return_std=return_std,
             minmax=minmax
             )
 
@@ -298,14 +298,16 @@ def expected_minimum(
 
     if minmax == 'min':
         if return_std == True:
-            return [v for v in best_x], [best_fun, res.models[-1].predict(np.array(best_x).reshape(1,-1), return_std=True)[1][0]]
+            std_estimate = res.models[-1].predict(res.space.transform([best_x]).reshape(1,-1), return_std=True)[1][0]
+            return [v for v in best_x], [best_fun, std_estimate]
         else:
             return [v for v in best_x], best_fun
 
 
     elif minmax == 'max':
         if return_std == True:
-            return [v for v in best_x], [best_fun, res.models[-1].predict(np.array(best_x).reshape(1,-1), return_std=True)[1][0]]
+            std_estimate = res.models[-1].predict(res.space.transform([best_x]).reshape(1,-1), return_std=True)[1][0]
+            return [v for v in best_x], [best_fun, std_estimate]
         else:
             return [v for v in best_x], best_fun
 
@@ -363,7 +365,8 @@ def expected_minimum_random_sampling(res,
 
     extreme_x = random_samples[index_best_objective]
     if return_std == True:
-        return extreme_x, [y_random[index_best_objective], res.models[-1].predict(np.array(extreme_x).reshape(1,-1), return_std=True)[1][0]]
+        std_estimate = res.models[-1].predict(res.space.transform([extreme_x]).reshape(1,-1), return_std=True)[1][0]
+        return extreme_x, [y_random[index_best_objective], std_estimate]
     else:
         return extreme_x, y_random[index_best_objective]
 
