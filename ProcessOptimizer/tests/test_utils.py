@@ -151,7 +151,7 @@ def test_expected_minimum_return_std():
     x_min,f_min = expected_minimum(result,
                                    n_random_starts=20,
                                    random_state=1,
-                                   return_std=False
+                                   return_std=False,
                                    minmax='min')
     assert len(x_min) == len(opt.space.dimensions)
     assert isinstance(f_min, float)
@@ -159,7 +159,7 @@ def test_expected_minimum_return_std():
     x_min,f_min = expected_minimum(result,
                                 n_random_starts=20,
                                 random_state=1,
-                                return_std=True
+                                return_std=True,
                                 minmax='min')
     assert len(x_min) == len(opt.space.dimensions)
     assert isinstance(f_min, list)
