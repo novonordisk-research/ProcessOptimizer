@@ -279,7 +279,7 @@ def expected_minimum(
             return -1 * reg.predict(x.reshape(1, -1))[0]
         else:
             raise ValueError(
-                    "expected acq_func to be in ['min','max'], got %s"
+                    "expected minmax to be in ['min','max'], got %s"
                     % (minmax)
                 )
 
@@ -357,7 +357,7 @@ def expected_minimum_random_sampling(res,
         index_best_objective = np.argmax(y_random)
     else:
         raise ValueError(
-                "expected acq_func to be in ['min','max'], got %s"
+                "expected minmax to be in ['min','max'], got %s"
                 % (minmax)
             )
 
