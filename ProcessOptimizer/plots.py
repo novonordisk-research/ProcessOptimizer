@@ -1058,7 +1058,7 @@ def plot_Pareto(
         annot.xy = pos
 
         exp_params = vals[ind["ind"][0]]
-        values = ["%.3f" % number for number in exp_params]
+        values = [str(number) for number in exp_params]
         strings = []
         for dim, value in zip(dimensions, values):
             strings.append(dim + ": " + value + str("\n"))
