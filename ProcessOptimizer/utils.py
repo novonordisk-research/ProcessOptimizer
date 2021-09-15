@@ -2,6 +2,7 @@ from copy import deepcopy
 from functools import wraps
 
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.optimize import OptimizeResult
 from scipy.optimize import minimize as sp_minimize
 from sklearn.base import is_regressor
@@ -221,7 +222,13 @@ def check_x_in_space(x, space):
                 )
 
 
-def expected_minimum(res, n_random_starts=20, random_state=None):
+def expected_minimum(
+                     res,
+                     n_random_starts=20,
+                     random_state=None,
+                     return_std=False,
+                     minmax='min'
+                     ):
     """
     Compute the minimum over the predictions of the last surrogate model.
 
@@ -237,27 +244,44 @@ def expected_minimum(res, n_random_starts=20, random_state=None):
         The number of random starts for the minimization of the surrogate
         model.
 
+    * 'return_std' [Boolean, default=True]:
+        Whether the function should return the standard deviation or not.
+
     * `random_state` [int, RandomState instance, or None (default)]:
         Set random state to something other than None for reproducible
         results.
 
+    * `minmax` [str, default='min']:
+        Whether the function should return the expected minimun (intended use)
+        or the expected maximum (edge use case).
+
     Returns
     -------
-    * `x` [list]: location of the minimum.
+    * `x` [list]: location of the minimum (or maximum).
 
-    * `fun` [float]: the surrogate function value at the minimum.
+    * `fun` [float]: the surrogate function value at the minimum (or maximum).
     """
     if res.space.is_partly_categorical:
         return expected_minimum_random_sampling(
             res,
             n_random_starts=100000,
-            random_state=random_state
+            random_state=random_state,
+	        return_std=return_std,
+            minmax=minmax
             )
 
     def func(x):
         reg = res.models[-1]
         x = res.space.transform(x.reshape(1, -1))
-        return reg.predict(x.reshape(1, -1))[0]
+        if minmax == 'min':
+            return reg.predict(x.reshape(1, -1))[0]
+        elif minmax == 'max':
+            return -1 * reg.predict(x.reshape(1, -1))[0]
+        else:
+            raise ValueError(
+                    "expected minmax to be in ['min','max'], got %s"
+                    % (minmax)
+                )
 
     xs = [res.x]
     if n_random_starts > 0:
@@ -268,17 +292,37 @@ def expected_minimum(res, n_random_starts=20, random_state=None):
 
     for x0 in xs:
         r = sp_minimize(func, x0=x0, bounds=res.space.bounds)
-
         if r.fun < best_fun:
             best_x = r.x
             best_fun = r.fun
 
-    return [v for v in best_x], best_fun
+    if minmax == 'min':
+        if return_std == True:
+            std_estimate = res.models[-1].predict(res.space.transform([best_x]).reshape(1,-1), return_std=True)[1][0]
+            return [v for v in best_x], [best_fun, std_estimate]
+        else:
+            return [v for v in best_x], best_fun
+
+
+    elif minmax == 'max':
+        if return_std == True:
+            std_estimate = res.models[-1].predict(res.space.transform([best_x]).reshape(1,-1), return_std=True)[1][0]
+            return [v for v in best_x], [best_fun, std_estimate]
+        else:
+            return [v for v in best_x], best_fun
+
+    else:
+        raise ValueError(
+                "expected acq_func to be in ['min','max'], got %s"
+                % (minmax)
+            )
 
 
 def expected_minimum_random_sampling(res,
                                      n_random_starts=100000,
-                                     random_state=None):
+                                     random_state=None,
+                                     return_std=False,
+                                     minmax='min'):
     """Minimum search by doing naive random sampling, Returns the parameters
     that gave the minimum function value. Can be used when the space
     contains any categorical values.
@@ -309,10 +353,22 @@ def expected_minimum_random_sampling(res,
     # make estimations with surrogate
     model = res.models[-1]
     y_random = model.predict(res.space.transform(random_samples))
-    index_best_objective = np.argmin(y_random)
-    min_x = random_samples[index_best_objective]
+    if minmax == 'min':
+        index_best_objective = np.argmin(y_random)
+    elif minmax == 'max':
+        index_best_objective = np.argmax(y_random)
+    else:
+        raise ValueError(
+                "expected minmax to be in ['min','max'], got %s"
+                % (minmax)
+            )
 
-    return min_x, y_random[index_best_objective]
+    extreme_x = random_samples[index_best_objective]
+    if return_std == True:
+        std_estimate = res.models[-1].predict(res.space.transform([extreme_x]).reshape(1,-1), return_std=True)[1][0]
+        return extreme_x, [y_random[index_best_objective], std_estimate]
+    else:
+        return extreme_x, y_random[index_best_objective]
 
 
 def has_gradients(estimator):
@@ -736,3 +792,100 @@ def use_named_args(dimensions):
         return wrapper
 
     return decorator
+
+
+def y_coverage(res, return_plot=False, random_state=None, horizontal=False):
+    """
+    A function to calculate the expected range of observable function values
+    given a result instans. This can be compared with the actual observed
+    range of function values.
+    """
+    assert len(res.func_vals) != 0, "train model before using this function"
+    observed_min = res.func_vals.min()
+    observed_max = res.func_vals.max()
+    min_x, expected_min = expected_minimum(res,
+                                           n_random_starts=20,
+                                           random_state=None,
+                                           minmax='min')
+    max_x, expected_max = expected_minimum(res,
+                                           n_random_starts=20,
+                                           random_state=None,
+                                           minmax='max')
+
+    if return_plot:
+        reg = res.models[-1]
+        min_x = res.space.transform([min_x, ])
+        max_x = res.space.transform([max_x, ])
+        sampled_mins = reg.sample_y(min_x,
+                                    n_samples=5000,
+                                    random_state=random_state)[0]
+        sampled_maxs = reg.sample_y(max_x,
+                                    n_samples=5000,
+                                    random_state=random_state)[0]
+        extreme_min = sampled_mins.min()
+        extreme_max = sampled_maxs.max()
+        bins = np.linspace(extreme_min, extreme_max, 30)
+        colors = ['#B8DE29FF', '#453781FF']
+
+        if horizontal:
+            fig, ax = plt.subplots()
+            ax.hist([
+                sampled_mins,
+                sampled_maxs],
+                bins,
+                label=['expected min', 'expected max'],
+                orientation='horizontal',
+                density=True,
+                color=colors)
+            ax.set_xlabel('"Plausibility" of achieving/realizing '
+                          'given function value')
+            ax.set_ylabel('Function Value')
+            for i in range(len(res.func_vals)):
+                if i == 0:
+                    ax.axhline(y=res.func_vals[i],
+                               xmin=0.6,
+                               xmax=1,
+                               color="darkorange",
+                               alpha=0.5,
+                               label='Observed points')
+                else:
+                    ax.axhline(y=res.func_vals[i],
+                               xmin=0.6,
+                               xmax=1,
+                               color="darkorange",
+                               alpha=0.5)
+            ax.legend(loc='best', shadow=True)
+            ax.set_xticks([])
+            plt.show()
+
+        else:
+            fig, ax = plt.subplots()
+            ax.hist([
+                sampled_mins,
+                sampled_maxs],
+                bins,
+                label=['expected min', 'expected max'],
+                density=True,
+                color=colors)
+            ax.set_xlabel('Function value')
+            ax.set_ylabel('"Plausibility" of achieving/realizing '
+                          'given function value')
+            for i in range(len(res.func_vals)):
+                if i == 0:
+                    ax.axvline(x=res.func_vals[i],
+                               ymin=0.3,
+                               ymax=0.7,
+                               color="darkorange",
+                               alpha=0.5,
+                               label='Observed points')
+                else:
+                    ax.axvline(x=res.func_vals[i],
+                               ymin=0.3,
+                               ymax=0.7,
+                               color="darkorange",
+                               alpha=0.5)
+            ax.legend(loc='best', shadow=True)
+            ax.set_yticks([])
+            plt.show()
+
+    return (observed_min, observed_max), (expected_min, expected_max)
