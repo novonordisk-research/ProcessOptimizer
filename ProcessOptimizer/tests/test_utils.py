@@ -138,7 +138,33 @@ def test_expected_minimum_minmax_argument():
                                    minmax='max')
     assert x_min != x_max
     assert f_min < f_max
-    
+
+
+@pytest.mark.fast_test
+def test_expected_minimum_return_std():
+    opt = Optimizer(dimensions=[(-2,2),('A','B')],
+                    base_estimator='GP',
+                    n_initial_points=1)
+    X = [[-2,'A'],[-1,'A'],[0,'A'],[1,'A'],[2,'A']]
+    y = [2,1,0,1,2]
+    result = opt.tell(X,y)
+    x_min,f_min = expected_minimum(result,
+                                   n_random_starts=20,
+                                   random_state=1,
+                                   return_std=False
+                                   minmax='min')
+    assert len(x_min) == len(opt.space.dimensions)
+    assert isinstance(f_min, float)
+
+    x_min,f_min = expected_minimum(result,
+                                n_random_starts=20,
+                                random_state=1,
+                                return_std=True
+                                minmax='min')
+    assert len(x_min) == len(opt.space.dimensions)
+    assert isinstance(f_min, list)
+    assert isinstance(f_min[0], float) and f_min[1] >= 0
+
 
 @pytest.mark.fast_test
 def test_dict_list_space_representation():
