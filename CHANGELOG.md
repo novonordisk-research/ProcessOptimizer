@@ -2,6 +2,18 @@
 
 ## Version 0.7.2 [unpublished]
 
+### Changes
+
+- New plot-type to envision model coverage
+- Kriging Believer now supports multiobjective opt
+- Examples pruned to better reflect the purpose of ProcessOptimizer as a tool
+for optimizing real world physical/chemical processes
+- Expected_minimum can now return both maximum and minimum and can return the
+expected std in the points
+### Bugfixes
+
+- More linting
+
 ## Version 0.7.1
 
 ### Changes
