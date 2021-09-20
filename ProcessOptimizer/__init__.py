@@ -6,25 +6,7 @@ contexts and accessible.
 
 ## Install
 
-```
 pip install ProcessOptimizer
-```
-
-## Getting started
-
-Find the minimum of the noisy function `f(x)` over the range `-2 < x < 2`
-with `ProcessOptimizer`:
-
-```python
-import numpy as np
-from ProcessOptimizer import gp_minimize
-
-def f(x):
-    return (np.sin(5 * x[0]) * (1 - np.tanh(x[0] ** 2)) *
-            np.random.randn() * 0.1)
-
-res = gp_minimize(f, [(-2.0, 2.0)])
-```
 
 ## Development
 
