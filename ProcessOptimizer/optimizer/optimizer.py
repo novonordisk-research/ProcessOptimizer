@@ -929,7 +929,10 @@ class Optimizer(object):
             self._next_x = opt._next_x
 
     def get_result(self):
-        """Returns the same result that would be returned by opt.tell() but without calling tell"""
+        """Returns the same result that would be returned by opt.tell()
+        but without calling tell.
+        In the case of multiobejective optimization, a list of results are
+        returned."""
         return create_result(
             self.Xi, self.yi, self.space, self.rng, models=self.models
         )
