@@ -421,6 +421,7 @@ def dependence(
         # categorical values
         xi, xi_transformed = _evenly_sample(space.dimensions[i], n_points)
         yi = []
+        zi = []
         for x_ in xi_transformed:
             rvs_ = np.array(sample_points)  # copy
             # We replace the values in the dimension that we want to keep fixed
@@ -428,9 +429,11 @@ def dependence(
             # In case of `x_eval=None` rvs conists of random samples.
             # Calculating the mean of these samples is how partial dependence
             # is implemented.
-            yi.append(np.mean(model.predict(rvs_)))
+            funcvalue, stddev = model.predict(rvs_, return_std = True)
+            yi.append(np.mean(funcvalue))
+            zi.append(np.mean(stddev))
 
-        return xi, yi
+        return xi, yi, zi
 
     else:
         xi, xi_transformed = _evenly_sample(space.dimensions[j], n_points)
@@ -461,6 +464,7 @@ def plot_objective(
     pars="result",
     expected_minimum_samples=None,
     title=None,
+    show_confidence=False,
 ):
     """Pairwise dependence plot of the objective function.
 
@@ -639,7 +643,7 @@ def plot_objective(
                 break
 
             elif i == j:
-                xi, yi = dependence(
+                xi, yi, zi = dependence(
                     space,
                     result.models[-1],
                     i,
@@ -648,7 +652,7 @@ def plot_objective(
                     n_points=n_points,
                     x_eval=x_eval,
                 )
-                row.append({"xi": xi, "yi": yi})
+                row.append({"xi": xi, "yi": yi, "zi": zi})
 
                 if np.min(yi) < val_min_1d:
                     val_min_1d = np.min(yi)
@@ -688,10 +692,14 @@ def plot_objective(
 
                 xi = plots_data[i][j]["xi"]
                 yi = plots_data[i][j]["yi"]
+                zi = plots_data[i][j]["zi"]
 
                 ax[i, i].plot(xi, yi)
                 ax[i, i].set_ylim(val_min_1d, val_max_1d)
                 ax[i, i].axvline(minimum[i], linestyle="--", color="r", lw=1)
+                if show_confidence:
+                    ax[i, i].plot(xi, (np.asarray(yi) - 1.96*np.asarray(zi)), color='r', alpha=0.5)
+                    ax[i, i].plot(xi, (np.asarray(yi) + 1.96*np.asarray(zi)), color='r', alpha=0.5)
 
             # lower triangle
             elif i > j:
