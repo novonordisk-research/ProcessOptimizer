@@ -302,9 +302,9 @@ def expected_minimum(
     elif minmax == 'max':
         if return_std == True:
             std_estimate = res.models[-1].predict(res.space.transform([best_x]).reshape(1,-1), return_std=True)[1][0]
-            return [v for v in best_x], [best_fun, std_estimate]
+            return [v for v in best_x], [-best_fun, std_estimate]
         else:
-            return [v for v in best_x], best_fun
+            return [v for v in best_x], -best_fun
 
     else:
         raise ValueError(
