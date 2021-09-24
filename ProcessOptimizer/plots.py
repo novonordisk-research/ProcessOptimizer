@@ -421,7 +421,7 @@ def dependence(
         # categorical values
         xi, xi_transformed = _evenly_sample(space.dimensions[i], n_points)
         yi = []
-        zi = []
+        stddevs = []
         for x_ in xi_transformed:
             rvs_ = np.array(sample_points)  # copy
             # We replace the values in the dimension that we want to keep fixed
@@ -431,9 +431,9 @@ def dependence(
             # is implemented.
             funcvalue, stddev = model.predict(rvs_, return_std = True)
             yi.append(np.mean(funcvalue))
-            zi.append(np.mean(stddev))
+            stddevs.append(np.mean(stddev))
 
-        return xi, yi, zi
+        return xi, yi, stddevs
 
     else:
         xi, xi_transformed = _evenly_sample(space.dimensions[j], n_points)
@@ -643,7 +643,7 @@ def plot_objective(
                 break
 
             elif i == j:
-                xi, yi, zi = dependence(
+                xi, yi, stddevs = dependence(
                     space,
                     result.models[-1],
                     i,
@@ -652,7 +652,7 @@ def plot_objective(
                     n_points=n_points,
                     x_eval=x_eval,
                 )
-                row.append({"xi": xi, "yi": yi, "zi": zi})
+                row.append({"xi": xi, "yi": yi, "std": stddevs})
 
                 if np.min(yi) < val_min_1d:
                     val_min_1d = np.min(yi)
@@ -692,14 +692,19 @@ def plot_objective(
 
                 xi = plots_data[i][j]["xi"]
                 yi = plots_data[i][j]["yi"]
-                zi = plots_data[i][j]["zi"]
+                stddevs = plots_data[i][j]["std"]
 
                 ax[i, i].plot(xi, yi)
                 ax[i, i].set_ylim(val_min_1d, val_max_1d)
                 ax[i, i].axvline(minimum[i], linestyle="--", color="r", lw=1)
                 if show_confidence:
-                    ax[i, i].plot(xi, (np.asarray(yi) - 1.96*np.asarray(zi)), color='r', alpha=0.5)
-                    ax[i, i].plot(xi, (np.asarray(yi) + 1.96*np.asarray(zi)), color='r', alpha=0.5)
+                    ax[i, i].fill_between(xi, 
+                                          y1=(np.asarray(yi) - 1.96*np.asarray(stddevs)),
+                                          y2=(np.asarray(yi) + 1.96*np.asarray(stddevs)),
+                                          alpha=0.5,
+                                          color='red')
+                    #ax[i, i].plot(xi, (np.asarray(yi) - 1.96*np.asarray(zi)), color='r', alpha=0.5)
+                    #ax[i, i].plot(xi, (np.asarray(yi) + 1.96*np.asarray(zi)), color='r', alpha=0.5)
 
             # lower triangle
             elif i > j:
