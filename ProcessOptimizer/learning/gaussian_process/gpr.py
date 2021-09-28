@@ -16,6 +16,7 @@ from .kernels import Sum
 from .kernels import RBF
 from .kernels import WhiteKernel
 
+from sklearn.preprocessing._data import _handle_zeros_in_scale
 
 def _param_for_white_kernel_in_Sum(kernel, kernel_str=""):
     """
@@ -226,16 +227,21 @@ class GaussianProcessRegressor(sk_GaussianProcessRegressor):
         L_inv = solve_triangular(self.L_.T, np.eye(self.L_.shape[0]))
         self.K_inv_ = L_inv.dot(L_inv.T)
 
-        # Fix deprecation warning #462
-        if int(sklearn.__version__[2:4]) >= 23:
+        if int(sklearn.__version__[0]) == 0: # if on 0.24.2
             self.y_train_std_ = self._y_train_std
             self.y_train_mean_ = self._y_train_mean
-        elif int(sklearn.__version__[2:4]) >= 19:
-            self.y_train_mean_ = self._y_train_mean
-            self.y_train_std_ = 1
-        else:
-            self.y_train_mean_ = self.y_train_mean
-            self.y_train_std_ = 1
+        else: # if on scikit-learn 1.0 or newer
+            if self.normalize_y:
+                self.y_train_mean_ = np.mean(y, axis=0)
+                self.y_train_std_ = _handle_zeros_in_scale(np.std(y, axis=0), copy=False)
+
+                # Remove mean and make unit variance
+                y = (y - self.y_train_mean_) / self.y_train_std_
+
+            else:
+                self.y_train_mean_ = np.zeros(1)
+                self.y_train_std_ = 1
+
 
         return self
 
