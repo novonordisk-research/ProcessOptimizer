@@ -261,18 +261,13 @@ def expected_minimum(
 
     * `fun` [float]: the surrogate function value at the minimum (or maximum).
     """
-    if res.space.is_partly_categorical:
-        return expected_minimum_random_sampling(
-            res,
-            n_random_starts=100000,
-            random_state=random_state,
-	        return_std=return_std,
-            minmax=minmax
+    if type(res) == list:
+        raise ValueError(
+                "expected_minimum does not support multiobjective results"
             )
 
     def func(x):
         reg = res.models[-1]
-        x = res.space.transform(x.reshape(1, -1))
         if minmax == 'min':
             return reg.predict(x.reshape(1, -1))[0]
         elif minmax == 'max':
@@ -286,14 +281,14 @@ def expected_minimum(
     xs = [res.x]
     if n_random_starts > 0:
         xs.extend(res.space.rvs(n_random_starts, random_state=random_state))
-
+    xs= res.space.transform(xs)
     best_x = None
     best_fun = np.inf
 
     for x0 in xs:
-        r = sp_minimize(func, x0=x0, bounds=res.space.bounds)
+        r = sp_minimize(func, x0=x0, bounds=res.space.transformed_bounds)
         if r.fun < best_fun:
-            best_x = r.x
+            best_x = res.space.inverse_transform(np.array(r.x).reshape(1,-1))[0]
             best_fun = r.fun
 
     if minmax == 'min':
@@ -307,9 +302,9 @@ def expected_minimum(
     elif minmax == 'max':
         if return_std == True:
             std_estimate = res.models[-1].predict(res.space.transform([best_x]).reshape(1,-1), return_std=True)[1][0]
-            return [v for v in best_x], [best_fun, std_estimate]
+            return [v for v in best_x], [-best_fun, std_estimate]
         else:
-            return [v for v in best_x], best_fun
+            return [v for v in best_x], -best_fun
 
     else:
         raise ValueError(
