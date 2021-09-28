@@ -121,3 +121,18 @@ def test_gpr_handles_similar_points():
     model = GaussianProcessRegressor()
     # this fails if singular matrix is not handled
     model.fit(X, y)
+
+
+@pytest.mark.fast_test
+def test_ytrain_mean_std():
+
+    X = rng.randn(10, 5)
+    y = rng.randn(10)
+
+    gpr = GaussianProcessRegressor(random_state=0, normalize_y= True).fit(X, y)
+    assert_almost_equal(gpr.y_train_mean_, np.mean(y))
+    assert_almost_equal(gpr.y_train_std_, np.std(y))
+
+    gpr = GaussianProcessRegressor(random_state=0, normalize_y= False).fit(X, y)
+    assert_almost_equal(gpr.y_train_mean_, 0)
+    assert_almost_equal(gpr.y_train_std_, 1)
