@@ -719,9 +719,9 @@ def plot_objective(
                     vmax=val_max_2d,
                 )
                 ax[i, j].scatter(
-                    samples[:, j], samples[:, i], c="darkorange", s=10, lw=0.0
+                    samples[:, j], samples[:, i], c="darkorange", s=10, lw=0.0, zorder=10, clip_on=False
                 )
-                ax[i, j].scatter(minimum[j], minimum[i], c=["r"], s=20, lw=0.0)
+                ax[i, j].scatter(minimum[j], minimum[i], c=["r"], s=20, lw=0.0, zorder=10, clip_on=False)
 
                 if [i, j] == [1, 0]:
                     import matplotlib as mpl
@@ -840,8 +840,10 @@ def plot_evaluations(result, bins=20, dimensions=None):
                     s=40,
                     lw=0.0,
                     cmap="viridis",
+                    zorder=10,
+                    clip_on=False
                 )
-                ax[i, j].scatter(minimum[j], minimum[i], c=["r"], s=20, lw=0.0)
+                ax[i, j].scatter(minimum[j], minimum[i], c=["r"], s=20, lw=0.0, zorder=10, clip_on=False)
 
     return _format_scatter_plot_axes(
         ax, space, ylabel="Number of samples", dim_labels=dimensions
