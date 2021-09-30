@@ -1,6 +1,16 @@
 # Release history
 
-## Version 0.7.2 [unpublished]
+## Version 0.7.3 [unpublished]
+
+### Changes
+
+- 
+
+### Bugfixes
+
+- 
+
+## Version 0.7.2
 
 ### Changes
 
@@ -9,10 +19,16 @@
 - Examples pruned to better reflect the purpose of ProcessOptimizer as a tool
 for optimizing real world physical/chemical processes
 - Expected_minimum can now return both maximum and minimum and can return the
-expected std in the points
+expected std in the points. Works for both numerical and categorical dimensions
+- QoL improvements with easy impoart of most used features through \_\_init\_\_
+.py
+- Add possibility to show ~95% credibility_intervals in plot_objective
 ### Bugfixes
 
 - More linting
+- Supports Scikit-Learn 1.0.0
+- plot_pareto works with partially categorical spaces
+- Consolidate tests
 
 ## Version 0.7.1
 
