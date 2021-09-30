@@ -421,6 +421,7 @@ def dependence(
         # categorical values
         xi, xi_transformed = _evenly_sample(space.dimensions[i], n_points)
         yi = []
+        stddevs = []
         for x_ in xi_transformed:
             rvs_ = np.array(sample_points)  # copy
             # We replace the values in the dimension that we want to keep fixed
@@ -428,9 +429,11 @@ def dependence(
             # In case of `x_eval=None` rvs conists of random samples.
             # Calculating the mean of these samples is how partial dependence
             # is implemented.
-            yi.append(np.mean(model.predict(rvs_)))
+            funcvalue, stddev = model.predict(rvs_, return_std = True)
+            yi.append(np.mean(funcvalue))
+            stddevs.append(np.mean(stddev))
 
-        return xi, yi
+        return xi, yi, stddevs
 
     else:
         xi, xi_transformed = _evenly_sample(space.dimensions[j], n_points)
@@ -461,6 +464,7 @@ def plot_objective(
     pars="result",
     expected_minimum_samples=None,
     title=None,
+    show_confidence=False,
 ):
     """Pairwise dependence plot of the objective function.
 
@@ -634,7 +638,7 @@ def plot_objective(
                 break
 
             elif i == j:
-                xi, yi = dependence(
+                xi, yi, stddevs = dependence(
                     space,
                     result.models[-1],
                     i,
@@ -643,7 +647,7 @@ def plot_objective(
                     n_points=n_points,
                     x_eval=x_eval,
                 )
-                row.append({"xi": xi, "yi": yi})
+                row.append({"xi": xi, "yi": yi, "std": stddevs})
 
                 if np.min(yi) < val_min_1d:
                     val_min_1d = np.min(yi)
@@ -683,10 +687,19 @@ def plot_objective(
 
                 xi = plots_data[i][j]["xi"]
                 yi = plots_data[i][j]["yi"]
+                stddevs = plots_data[i][j]["std"]
 
                 ax[i, i].plot(xi, yi)
                 ax[i, i].set_ylim(val_min_1d, val_max_1d)
                 ax[i, i].axvline(minimum[i], linestyle="--", color="r", lw=1)
+                if show_confidence:
+                    ax[i, i].fill_between(xi, 
+                                          y1=(np.asarray(yi) - 1.96*np.asarray(stddevs)),
+                                          y2=(np.asarray(yi) + 1.96*np.asarray(stddevs)),
+                                          alpha=0.5,
+                                          color='red')
+                    #ax[i, i].plot(xi, (np.asarray(yi) - 1.96*np.asarray(zi)), color='r', alpha=0.5)
+                    #ax[i, i].plot(xi, (np.asarray(yi) + 1.96*np.asarray(zi)), color='r', alpha=0.5)
 
             # lower triangle
             elif i > j:
@@ -706,9 +719,9 @@ def plot_objective(
                     vmax=val_max_2d,
                 )
                 ax[i, j].scatter(
-                    samples[:, j], samples[:, i], c="darkorange", s=10, lw=0.0
+                    samples[:, j], samples[:, i], c="darkorange", s=10, lw=0.0, zorder=10, clip_on=False
                 )
-                ax[i, j].scatter(minimum[j], minimum[i], c=["r"], s=20, lw=0.0)
+                ax[i, j].scatter(minimum[j], minimum[i], c=["r"], s=20, lw=0.0, zorder=10, clip_on=False)
 
                 if [i, j] == [1, 0]:
                     import matplotlib as mpl
@@ -827,8 +840,10 @@ def plot_evaluations(result, bins=20, dimensions=None):
                     s=40,
                     lw=0.0,
                     cmap="viridis",
+                    zorder=10,
+                    clip_on=False
                 )
-                ax[i, j].scatter(minimum[j], minimum[i], c=["r"], s=20, lw=0.0)
+                ax[i, j].scatter(minimum[j], minimum[i], c=["r"], s=20, lw=0.0, zorder=10, clip_on=False)
 
     return _format_scatter_plot_axes(
         ax, space, ylabel="Number of samples", dim_labels=dimensions
