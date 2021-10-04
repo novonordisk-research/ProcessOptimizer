@@ -15,9 +15,9 @@
 <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9-blue" alt="Runs on" /></a>
 <a href="https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/LICENSE.md"><img src="https://img.shields.io/pypi/l/ProcessOptimizer" alt="PyPI - License" /></a>
 <a href="https://scikit-optimize.github.io/stable/"><img src="https://img.shields.io/badge/BuildOn-Scikit--Optimize-brightgreen" alt="Scikit-Optimize" /></a>
+<a href="https://doi.org/10.5281/zenodo.5155295"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.5155295.svg" alt="DOI"></a>
 
 [![Downloads](https://static.pepy.tech/personalized-badge/processoptimizer?period=total&units=international_system&left_color=brightgreen&right_color=orange&left_text=Downloads)](https://pepy.tech/project/processoptimizer)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5155296.svg)](https://doi.org/10.5281/zenodo.5155296)
 </div>
 
 ----------
