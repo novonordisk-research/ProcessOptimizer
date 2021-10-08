@@ -382,9 +382,10 @@ def dependence(
 
     * `xi`: [np.array]:
         The points at which the partial dependence was evaluated.
-
     * `yi`: [np.array]:
         The value of the model at each point `xi`.
+    * `stddev`: [np.array]:
+        The value of the standard deviation at each point `xi`.
 
     For 2D partial dependence:
 
@@ -506,7 +507,8 @@ def plot_objective(
     * `dimensions` [list of str, default=None] Labels of the dimension
         variables. `None` defaults to `space.dimensions[i].name`, or
         if also `None` to `['X_0', 'X_1', ..]`.
-    * `usepartialdependence` [bool, default=false] Wether to use partial
+
+    * `usepartialdependence` [bool, default=false] Whether to use partial
         dependence or not when calculating dependence. If false plot_objective
         will parse values to the dependence function,
         defined by the pars argument
@@ -523,6 +525,7 @@ def plot_objective(
                 currently does not work with categorical values.
             'expected_minimum_random' - Parameters that gives the best minimum
                 when using naive random sampling. Works with categorical values
+            '[x[0], x[1], ..., x[n]] - Parameter to show depence from a given x
 
     * `expected_minimum_samples` [float, default = None] Determines how many
     points should be evaluated to find the minimum when using
@@ -531,6 +534,9 @@ def plot_objective(
     * `title` [str, default=None]
         String to use as title of the figure
 
+    * `show_confidence` [bool, default=false] Whether or not to show a credible
+        range around the mean estimate on the 1d-plots in the diagonal. The
+        credible range is given as 1.96 times the std in the point.
 
     Returns
     -------
@@ -744,7 +750,20 @@ def plot_objective(
     )
 
 
-def plot_objectives(results, titles=None):
+def plot_objectives(
+    results,
+    levels=10,
+    n_points=40,
+    n_samples=250,
+    size=2,
+    zscale="linear",
+    dimensions=None,
+    usepartialdependence=True,
+    pars="result",
+    expected_minimum_samples=None,
+    titles=None,
+    show_confidence=False
+    ):
     """Pairwise dependence plots of each of the objective functions.
     Parameters
     ----------
@@ -759,11 +778,33 @@ def plot_objectives(results, titles=None):
 
     if titles is None:
         for result in results:
-            plot_objective(result, title=None)
+            plot_objective(result,
+                           levels=10,
+                           n_points=n_points,
+                           n_samples=n_samples,
+                           size=size,
+                           zscale=zscale,
+                           dimensions=dimensions,
+                           usepartialdependence=usepartialdependence,
+                           pars=pars,
+                           expected_minimum_samples=expected_minimum_samples,
+                           title=None,
+                           show_confidence=show_confidence)
         return
     else:
         for k in range(len(results)):
-            plot_objective(results[k], title=titles[k])
+            plot_objective(results[k], 
+                           levels=10,
+                           n_points=n_points,
+                           n_samples=n_samples,
+                           size=size,
+                           zscale=zscale,
+                           dimensions=dimensions,
+                           usepartialdependence=usepartialdependence,
+                           pars=pars,
+                           expected_minimum_samples=expected_minimum_samples,
+                           title=titles[k],
+                           show_confidence=show_confidence)
         return
 
 
@@ -933,9 +974,24 @@ def plot_expected_minimum_convergence(
     of the surogate model in the expected minimum together with a measure for
     the variability in the suggested mean value. This code "replays" the
     entire optimization, hence it builds quiet many models and can, thus, seem
-    slow. TODO: Consider allowing user to subselect in data, to e.g. perform
+    slow. 
+    TODO: Consider allowing user to subselect in data, to e.g. perform
     the analysis using every n-th datapoint, or only performing the analysis
     for the last n datapoints.
+
+    Args:
+        result ([`OptimizeResult`]): The result returned from a opt.tell
+        command or from using get_result() or create_result()
+        figsize (`tuple`, optional): [Gives the desired size of the resulting
+        chart]. Defaults to (15, 15).
+        random_state ([`Int`], optional): [abbility to pass random state to
+        ensure reproducibility in plotting]. Defaults to None.
+        sigma (`float`, optional): [Sigma gives a slight gaussian smoothing to
+        the depiction of the credible interval around the expected minimum
+        value.]. Defaults to 0.5.
+
+    Returns:
+        [ax]: [description]
     """
 
     estimated_mins_x = []
