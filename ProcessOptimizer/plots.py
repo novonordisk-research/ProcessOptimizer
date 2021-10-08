@@ -779,7 +779,7 @@ def plot_objectives(
     if titles is None:
         for result in results:
             plot_objective(result,
-                           levels=10,
+                           levels=levels,
                            n_points=n_points,
                            n_samples=n_samples,
                            size=size,
@@ -794,7 +794,7 @@ def plot_objectives(
     else:
         for k in range(len(results)):
             plot_objective(results[k], 
-                           levels=10,
+                           levels=levels,
                            n_points=n_points,
                            n_samples=n_samples,
                            size=size,
