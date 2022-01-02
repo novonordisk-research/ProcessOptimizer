@@ -655,8 +655,8 @@ def plot_objective(
                 )
                 row.append({"xi": xi, "yi": yi, "std": stddevs})
 
-                if np.min(yi) < val_min_1d:
-                    val_min_1d = np.min(yi)
+                if np.min(yi - 1.96*stddevs) < val_min_1d:
+                    val_min_1d = np.min(yi - 1.96*stddevs)
                 if np.max(yi) > val_max_1d:
                     val_max_1d = np.max(yi)
 
