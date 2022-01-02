@@ -643,6 +643,7 @@ def plot_objective(
                 # to avoid duplicates.
                 break
 
+            # The diagonal of the plot
             elif i == j:
                 xi, yi, stddevs = dependence(
                     space,
@@ -689,6 +690,7 @@ def plot_objective(
                 # to avoid duplicates.
                 break
 
+            # The diagonal of the plot, showing the 1D (partial) dependence for each of the n parameters
             elif i == j:
 
                 xi = plots_data[i][j]["xi"]
