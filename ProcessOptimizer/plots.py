@@ -385,6 +385,9 @@ def dependence(
 
     * `yi`: [np.array]:
         The value of the model at each point `xi`.
+    
+    * `stddevs`: [np.array]:
+        The standard deviation of the model at each point `xi`.
 
     For 2D partial dependence:
 
