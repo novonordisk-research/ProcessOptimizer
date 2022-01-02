@@ -435,7 +435,10 @@ def dependence(
             funcvalue, stddev = model.predict(rvs_, return_std = True)
             yi.append(np.mean(funcvalue))
             stddevs.append(np.mean(stddev))
-
+        # Convert yi and stddevs from lists to numpy arrays
+        yi = np.array(yi)
+        stddevs = np.array(stddevs)
+        
         return xi, yi, stddevs
 
     else:
