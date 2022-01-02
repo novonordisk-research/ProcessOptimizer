@@ -700,8 +700,8 @@ def plot_objective(
                 ax[i, i].axvline(minimum[i], linestyle="--", color="r", lw=1)
                 if show_confidence:
                     ax[i, i].fill_between(xi, 
-                                          y1=(np.asarray(yi) - 1.96*np.asarray(stddevs)),
-                                          y2=(np.asarray(yi) + 1.96*np.asarray(stddevs)),
+                                          y1=(yi - 1.96*stddevs),
+                                          y2=(yi + 1.96*stddevs),
                                           alpha=0.5,
                                           color='red')
                     #ax[i, i].plot(xi, (np.asarray(yi) - 1.96*np.asarray(zi)), color='r', alpha=0.5)
