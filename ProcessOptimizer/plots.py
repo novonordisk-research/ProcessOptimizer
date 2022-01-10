@@ -648,11 +648,17 @@ def plot_objective(
                     x_eval=x_eval,
                 )
                 row.append({"xi": xi, "yi": yi, "std": stddevs})
-
-                if np.min(yi) < val_min_1d:
-                    val_min_1d = np.min(yi)
-                if np.max(yi) > val_max_1d:
-                    val_max_1d = np.max(yi)
+                
+                if show_confidence:
+                    yi_low_bound=np.asarray(yi) - 1.96*np.asarray(stddevs)
+                    yi_high_bound=np.asarray(yi) + 1.96*np.asarray(stddevs)
+                else:
+                    yi_low_bound=np.asarray(yi)
+                    yi_high_bound=np.asarray(yi)               
+                if np.min(yi_low_bound) < val_min_1d:
+                    val_min_1d = np.min(yi_low_bound)
+                if np.max(yi_high_bound) > val_max_1d:
+                    val_max_1d = np.max(yi_high_bound)
 
             # lower triangle
             else:
@@ -690,14 +696,19 @@ def plot_objective(
                 stddevs = plots_data[i][j]["std"]
 
                 ax[i, i].plot(xi, yi)
-                ax[i, i].set_ylim(val_min_1d, val_max_1d)
+                ax[i, i].set_xlim(np.min(xi), np.max(xi))
+                ax[i, i].set_ylim(val_min_1d-abs(val_min_1d)*.02, val_max_1d+abs(val_max_1d)*.02)
                 ax[i, i].axvline(minimum[i], linestyle="--", color="r", lw=1)
                 if show_confidence:
                     ax[i, i].fill_between(xi, 
                                           y1=(np.asarray(yi) - 1.96*np.asarray(stddevs)),
                                           y2=(np.asarray(yi) + 1.96*np.asarray(stddevs)),
                                           alpha=0.5,
-                                          color='red')
+                                          color='red',
+                                          linewidth=0.0)
+                    yi_low_bound=(np.asarray(yi) - 1.96*np.asarray(stddevs)),
+                    yi_high_bound=(np.asarray(yi) + 1.96*np.asarray(stddevs)),
+
                     #ax[i, i].plot(xi, (np.asarray(yi) - 1.96*np.asarray(zi)), color='r', alpha=0.5)
                     #ax[i, i].plot(xi, (np.asarray(yi) + 1.96*np.asarray(zi)), color='r', alpha=0.5)
 
@@ -739,6 +750,7 @@ def plot_objective(
         ylabel = "Partial dependence"
     else:
         ylabel = "Dependence"
+
     return _format_scatter_plot_axes(
         ax, space, ylabel=ylabel, dim_labels=dimensions
     )
