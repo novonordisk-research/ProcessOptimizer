@@ -14,6 +14,13 @@ from ProcessOptimizer import expected_minimum, expected_minimum_random_sampling
 from .space import Categorical
 from .optimizer import Optimizer
 
+from bokeh.models import ColumnDataSource
+from bokeh.plotting import figure, output_file, save
+from bokeh.models import HoverTool, Range1d
+from bokeh.plotting import reset_output
+from bokeh.io import show
+from bokeh.embed import file_html, components
+from bokeh.resources import CDN
 
 def plot_convergence(*args, **kwargs):
     """Plot one or several convergence traces.
@@ -1261,3 +1268,233 @@ def plot_Pareto(
             dimensions,
             objective_names,
         )
+
+def plot_Pareto_bokeh(
+    optimizer,
+    objective_names=None,
+    dimensions=None,
+    return_data=False,
+    show_browser=False,
+    return_type_bokeh = 'file',
+    filename='ParetoPlot',
+):
+    """Interactive bokeh plot of the Pareto front implemented in 2
+
+    The plot shows all observations and the estimated Pareto front in the
+    objective space. By hovering over each point it is possible to see the
+    corresponding values of the point in the input space.
+    Data and bokeh objects are exclusively returned.
+
+    Parameters
+    ----------
+    * `optimizer` [`Optimizer`]
+        The optimizer containing data and the model
+
+    * `objective_names` [list, default=None]
+        List of objective names. Used for plots. If None the objectives
+        will be named "Objective 1", "Objective 2"...
+
+    * `dimensions` [list, default=None]
+        List of dimension names. Used for plots. If None the dimensions
+        will be named "1_1", "x_2"...
+        
+    * `return_data` [bool, default=False]
+        Whether to return data or not. If True the function will return
+        all data for observation and estimated Pareto front, dimensions
+        and objectives_names
+        
+    * `show_browser` [bool, default=False]
+        Whether to open the new plot in the browser or not. If True new
+        HTML-file is opened in the default browser.
+
+    * `return_type_bokeh` [str, default='file']
+        Determine how the bokeh plot is returned. Either 'file', 'string', or 'embed'.
+        If 'file' a HTML-file will rerturned in the cwd named 'filename'.html
+        If 'string' a string containing the the HTML-code is returned.
+        If 'embed' a <script> and <div> components for embeding. See
+        https://docs.bokeh.org/en/latest/_modules/bokeh/embed/standalone.html#components
+        for more info.
+        
+    * `filename` [str, default='ParetoPlot']
+        Obtion for chanching the default output filename for the generated HTML-file
+
+
+    if return_data is true and return_type_bokeh is 'file' Returns
+    -------
+    * `np.array(optimizer.Xi)`: [numpy.ndarray]:
+        Observations
+    * `np.array(optimizer.yi)`: [numpy.ndarray]:
+        Observed objective scores
+    * `pop`: [numpy.ndarray]:
+        Pareto front
+    * `front`: [numpy.ndarray]:
+        Pareto front objective scores
+    * `dimensions`: [list]:
+        Names of dimensions
+    * `objective_names`: [list]:
+        Objective names
+
+    if return_type_bokeh is 'embed' and return_data is False Returns
+    -------
+    * `script`: [str]:
+        Script part to be embeded acording to 
+        https://docs.bokeh.org/en/latest/docs/user_guide/embed.html#components
+    * `div`: [str]:
+        <div> tag[s] part to be embeded acording to 
+        https://docs.bokeh.org/en/latest/docs/user_guide/embed.html#components
+    """
+    if not optimizer.models:
+        raise ValueError("No models have been fitted yet")
+    
+    if dimensions == None:
+        dimensions = [
+            "X_(%i)" % i if d.name is None else d.name
+            for i, d in enumerate(optimizer.space.dimensions)
+        ]
+
+    if len(dimensions) != len(optimizer.space.dimensions):
+        raise ValueError(
+            "Number of dimensions specified does not match the number of"
+            "dimensions in the optimizers space"
+        )
+
+    if return_type_bokeh not in ['string', 'embed', 'file']:
+        raise NameError(f"'{return_type_bokeh}' is an unsupported return type for bokeh plot.")
+    # Get objective names
+    if objective_names:
+        obj1 = objective_names[0]
+        obj2 = objective_names[1]
+    else:
+        obj1 = 'Objective 1'
+        obj2 = 'Objective 2'
+        objective_names = [obj1, obj2]
+    
+    # Obtain the 'recipe' from the optimizer
+    pop, logbook, front = optimizer.NSGAII(MU=40)
+    pop = np.asarray(pop)
+    pop = np.asarray(
+        optimizer.space.inverse_transform(
+            pop.reshape(len(pop), optimizer.space.transformed_n_dims)
+        )
+    )
+    # Collect data for observed and Pareto-front into dicts
+    data_observed_dict = {obj1: [i[0] for i in optimizer.yi],
+                     obj2: [i[1] for i in optimizer.yi]}
+    
+    for i, dim in enumerate(dimensions):
+        data_observed_dict[dim] =  [x[i] for x in optimizer.Xi]
+
+    data_calculated_dict= {'front_x': np.unique(front, axis=0)[:,0].tolist(),
+                           'front_y': np.unique(front, axis=0)[:,1].tolist(),
+                           'recipe_x': pop[np.unique(front, axis=0, return_index=True)[1],0].tolist(),
+                           'recipe_y': pop[np.unique(front, axis=0, return_index=True)[1],1].tolist(),
+                           }
+    
+    # Create Tooltip str for observed and Pareto-front
+    Tooltips_observed='''
+<div>
+    <font size="2"><b>Settings for this point are:</b></font>
+</div>'''
+    for dim in dimensions:
+        Tooltips_observed+='''
+<div>
+     <font size="2">'''+dim+''' = @{'''+dim+'''}{0.0}</font>
+</div>
+ '''
+    Tooltips_observed+='''
+<div>
+    <font size="2">Found @ [ @{'''+obj1+'''}{0.00} , @{'''+obj2+'''}{0.00} ]</font>
+</div>  
+'''
+    Tooltips_recipe = '''
+<div>
+    <font size="2"><b>Settings for this point are:</b></font>
+</div>'''
+    for dim, rec in zip(dimensions,['recipe_x','recipe_y']):
+        Tooltips_recipe+='''
+        <div>
+             <font size="2">'''+dim+''' = @{'''+rec+'''}{0.0}</font>
+        </div>
+         '''
+    Tooltips_recipe+='''
+<div>
+    <font size="2">Found @ [ @{front_x}{0.00} , @{front_y}{0.00} ]</font>
+</div>  
+'''
+    
+    # Load data into bokeh object
+    source_observed = ColumnDataSource(data_observed_dict)
+    source_calculated = ColumnDataSource(data_calculated_dict)
+
+    # Find bounds for minimum zoom
+    xlimitmax=max(max(data_calculated_dict['front_x']), max(data_observed_dict[obj1]))*1.02
+    ylimitmax=max(max(data_calculated_dict['front_y']), max(data_observed_dict[obj2]))*1.02
+    xlimitmin=min(min(data_calculated_dict['front_x']), min(data_observed_dict[obj1]))*0.98
+    ylimitmin=min(min(data_calculated_dict['front_y']), min(data_observed_dict[obj2]))*0.98
+
+    # Create figure
+    p = figure(plot_width=600 , 
+               plot_height=600, 
+               title="Multiobjective score-score plot", 
+               tools="pan,box_zoom,wheel_zoom,reset",
+               active_scroll="wheel_zoom", 
+               x_axis_label=list(data_observed_dict.keys())[0], 
+               y_axis_label=list(data_observed_dict.keys())[1],
+               x_range=Range1d(xlimitmin,xlimitmax, bounds =(xlimitmin,xlimitmax)),
+               y_range=Range1d(ylimitmin,ylimitmax, bounds=(ylimitmin,ylimitmax)),
+              )
+
+    # Plot observed data and create Tooltip
+    r1 = p.circle(list(data_observed_dict.keys())[0],
+                  list(data_observed_dict.keys())[1],
+                  size=10,
+                  source=source_observed,
+                  legend_label = "Observed datapoints",
+                  fill_alpha=0.4)
+    p.add_tools(HoverTool(renderers=[r1], tooltips=Tooltips_observed, point_policy = 'snap_to_data', line_policy="none"))
+
+    # Plot Pareto-front and create Tooltip
+    r2 = p.circle(list(data_calculated_dict.keys())[0],
+                  list(data_calculated_dict.keys())[1],
+                  size=10,
+                  source=source_calculated,
+                  color="red",
+                  legend_label = "Estimated Pareto front")
+    p.add_tools(HoverTool(renderers=[r2], tooltips=Tooltips_recipe, point_policy = 'snap_to_data', line_policy="none"))
+    
+    # plot settings
+    p.legend.location = "top_right"
+    p.legend.click_policy="hide"
+    p.toolbar.logo = None
+
+    # Save plot as HTML-file
+    reset_output()
+    output_file(filename+".html", title='Multiobjective score-score plot')
+
+    if return_type_bokeh == 'file':
+        save(p)
+    if show_browser and return_type_bokeh != 'file':
+        raise ValueError("Cannot show the plot if 'return_type_bokeh' is not set to 'file'.")
+    elif show_browser:
+        show(p)
+        
+
+    if return_data is True and return_type_bokeh in ['string', 'embed']:
+        raise ValueError("Cannot ruturn data and bokeh object at the same time")
+    elif return_data is True and return_type_bokeh not in ['string', 'embed']:
+        return (
+            np.array(optimizer.Xi),
+            np.array(optimizer.yi),
+            pop,
+            front,
+            dimensions,
+            objective_names,
+        )
+    elif not return_data is True and return_type_bokeh in ['string', 'embed']:
+        if return_type_bokeh == 'string':
+            html = file_html(p, CDN, 'Multiobjective score-score plot')
+            return html
+        elif return_type_bokeh == 'embed':
+            script, div = components(p)
+            return (script, div)
+
