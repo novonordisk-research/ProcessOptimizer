@@ -384,8 +384,9 @@ def dependence(
         The points at which the partial dependence was evaluated.
     * `yi`: [np.array]:
         The value of the model at each point `xi`.
-    * `stddev`: [np.array]:
-        The value of the standard deviation at each point `xi`.
+    * `stddevs`: [np.array]:
+        The standard deviation of the model at each point `xi`.
+
 
     For 2D partial dependence:
 
@@ -433,7 +434,10 @@ def dependence(
             funcvalue, stddev = model.predict(rvs_, return_std = True)
             yi.append(np.mean(funcvalue))
             stddevs.append(np.mean(stddev))
-
+        # Convert yi and stddevs from lists to numpy arrays
+        yi = np.array(yi)
+        stddevs = np.array(stddevs)
+        
         return xi, yi, stddevs
 
     else:
@@ -643,6 +647,7 @@ def plot_objective(
                 # to avoid duplicates.
                 break
 
+            # The diagonal of the plot
             elif i == j:
                 xi, yi, stddevs = dependence(
                     space,
@@ -655,8 +660,8 @@ def plot_objective(
                 )
                 row.append({"xi": xi, "yi": yi, "std": stddevs})
 
-                if np.min(yi) < val_min_1d:
-                    val_min_1d = np.min(yi)
+                if np.min(yi - 1.96*stddevs) < val_min_1d:
+                    val_min_1d = np.min(yi - 1.96*stddevs)
                 if np.max(yi) > val_max_1d:
                     val_max_1d = np.max(yi)
 
@@ -689,6 +694,7 @@ def plot_objective(
                 # to avoid duplicates.
                 break
 
+            # The diagonal of the plot, showing the 1D (partial) dependence for each of the n parameters
             elif i == j:
 
                 xi = plots_data[i][j]["xi"]
@@ -700,8 +706,8 @@ def plot_objective(
                 ax[i, i].axvline(minimum[i], linestyle="--", color="r", lw=1)
                 if show_confidence:
                     ax[i, i].fill_between(xi, 
-                                          y1=(np.asarray(yi) - 1.96*np.asarray(stddevs)),
-                                          y2=(np.asarray(yi) + 1.96*np.asarray(stddevs)),
+                                          y1=(yi - 1.96*stddevs),
+                                          y2=(yi + 1.96*stddevs),
                                           alpha=0.5,
                                           color='red')
                     #ax[i, i].plot(xi, (np.asarray(yi) - 1.96*np.asarray(zi)), color='r', alpha=0.5)
