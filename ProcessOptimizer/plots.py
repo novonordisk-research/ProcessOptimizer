@@ -717,11 +717,6 @@ def plot_objective(
                                           alpha=0.5,
                                           color='red',
                                           linewidth=0.0)
-                    yi_low_bound=(np.asarray(yi) - 1.96*np.asarray(stddevs)),
-                    yi_high_bound=(np.asarray(yi) + 1.96*np.asarray(stddevs)),
-
-                    #ax[i, i].plot(xi, (np.asarray(yi) - 1.96*np.asarray(zi)), color='r', alpha=0.5)
-                    #ax[i, i].plot(xi, (np.asarray(yi) + 1.96*np.asarray(zi)), color='r', alpha=0.5)
 
             # lower triangle
             elif i > j:
