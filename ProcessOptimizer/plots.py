@@ -14,13 +14,12 @@ from ProcessOptimizer import expected_minimum, expected_minimum_random_sampling
 from .space import Categorical
 from .optimizer import Optimizer
 
-from bokeh.models import ColumnDataSource
-from bokeh.plotting import figure, output_file, save
-from bokeh.models import HoverTool, Range1d
-from bokeh.plotting import reset_output
-from bokeh.io import show
-from bokeh.embed import file_html, components
-from bokeh.resources import CDN
+import bokeh.models as bh_models
+import bokeh.plotting as bh_plotting
+import bokeh.models as bh_models
+import bokeh.io as bh_io
+import bokeh.embed as bh_embed
+import bokeh.resources as bh_resources
 
 def plot_convergence(*args, **kwargs):
     """Plot one or several convergence traces.
@@ -1278,7 +1277,7 @@ def plot_Pareto_bokeh(
     return_type_bokeh = 'file',
     filename='ParetoPlot',
 ):
-    """Interactive bokeh plot of the Pareto front implemented in 2
+    """Interactive bokeh plot of the Pareto front implemented in 2 dim
 
     The plot shows all observations and the estimated Pareto front in the
     objective space. By hovering over each point it is possible to see the
@@ -1423,8 +1422,8 @@ def plot_Pareto_bokeh(
 '''
     
     # Load data into bokeh object
-    source_observed = ColumnDataSource(data_observed_dict)
-    source_calculated = ColumnDataSource(data_calculated_dict)
+    source_observed = bh_models.ColumnDataSource(data_observed_dict)
+    source_calculated = bh_models.ColumnDataSource(data_calculated_dict)
 
     # Find bounds for minimum zoom
     xlimitmax=max(max(data_calculated_dict['front_x']), max(data_observed_dict[obj1]))*1.02
@@ -1433,15 +1432,15 @@ def plot_Pareto_bokeh(
     ylimitmin=min(min(data_calculated_dict['front_y']), min(data_observed_dict[obj2]))*0.98
 
     # Create figure
-    p = figure(plot_width=600 , 
+    p = bh_plotting.figure(plot_width=600 , 
                plot_height=600, 
                title="Multiobjective score-score plot", 
                tools="pan,box_zoom,wheel_zoom,reset",
                active_scroll="wheel_zoom", 
                x_axis_label=list(data_observed_dict.keys())[0], 
                y_axis_label=list(data_observed_dict.keys())[1],
-               x_range=Range1d(xlimitmin,xlimitmax, bounds =(xlimitmin,xlimitmax)),
-               y_range=Range1d(ylimitmin,ylimitmax, bounds=(ylimitmin,ylimitmax)),
+               x_range=bh_models.Range1d(xlimitmin,xlimitmax, bounds =(xlimitmin,xlimitmax)),
+               y_range=bh_models.Range1d(ylimitmin,ylimitmax, bounds=(ylimitmin,ylimitmax)),
               )
 
     # Plot observed data and create Tooltip
@@ -1451,7 +1450,7 @@ def plot_Pareto_bokeh(
                   source=source_observed,
                   legend_label = "Observed datapoints",
                   fill_alpha=0.4)
-    p.add_tools(HoverTool(renderers=[r1], tooltips=Tooltips_observed, point_policy = 'snap_to_data', line_policy="none"))
+    p.add_tools(bh_models.HoverTool(renderers=[r1], tooltips=Tooltips_observed, point_policy = 'snap_to_data', line_policy="none"))
 
     # Plot Pareto-front and create Tooltip
     r2 = p.circle(list(data_calculated_dict.keys())[0],
@@ -1460,7 +1459,7 @@ def plot_Pareto_bokeh(
                   source=source_calculated,
                   color="red",
                   legend_label = "Estimated Pareto front")
-    p.add_tools(HoverTool(renderers=[r2], tooltips=Tooltips_recipe, point_policy = 'snap_to_data', line_policy="none"))
+    p.add_tools(bh_models.HoverTool(renderers=[r2], tooltips=Tooltips_recipe, point_policy = 'snap_to_data', line_policy="none"))
     
     # plot settings
     p.legend.location = "top_right"
@@ -1468,15 +1467,15 @@ def plot_Pareto_bokeh(
     p.toolbar.logo = None
 
     # Save plot as HTML-file
-    reset_output()
-    output_file(filename+".html", title='Multiobjective score-score plot')
+    bh_plotting.reset_output()
+    bh_plotting.output_file(filename+".html", title='Multiobjective score-score plot')
 
     if return_type_bokeh == 'file':
-        save(p)
+        bh_plotting.save(p)
     if show_browser and return_type_bokeh != 'file':
         raise ValueError("Cannot show the plot if 'return_type_bokeh' is not set to 'file'.")
     elif show_browser:
-        show(p)
+        bh_io.show(p)
         
 
     if return_data is True and return_type_bokeh in ['string', 'embed']:
@@ -1492,9 +1491,9 @@ def plot_Pareto_bokeh(
         )
     elif not return_data is True and return_type_bokeh in ['string', 'embed']:
         if return_type_bokeh == 'string':
-            html = file_html(p, CDN, 'Multiobjective score-score plot')
+            html = bh_embed.file_html(p, bh_resources.CDN, 'Multiobjective score-score plot')
             return html
         elif return_type_bokeh == 'embed':
-            script, div = components(p)
+            script, div = bh_embed.components(p)
             return (script, div)
 
