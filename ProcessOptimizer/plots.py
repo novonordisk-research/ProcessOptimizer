@@ -16,7 +16,6 @@ from .optimizer import Optimizer
 
 import bokeh.models as bh_models
 import bokeh.plotting as bh_plotting
-import bokeh.models as bh_models
 import bokeh.io as bh_io
 import bokeh.embed as bh_embed
 import bokeh.resources as bh_resources
@@ -1277,17 +1276,17 @@ def plot_Pareto_bokeh(
     return_type_bokeh = 'file',
     filename='ParetoPlot',
 ):
-    """Interactive bokeh plot of the Pareto front implemented in 2 dim
+    """Interactive bokeh plot of the Pareto front implemented in two dimensions
 
     The plot shows all observations and the estimated Pareto front in the
     objective space. By hovering over each point it is possible to see the
     corresponding values of the point in the input space.
-    Data and bokeh objects are exclusively returned.
+    Data and bokeh objects are exclusively returned.<MON: What does this mean?>
 
     Parameters
     ----------
     * `optimizer` [`Optimizer`]
-        The optimizer containing data and the model
+        The optimizer containing data and the model.
 
     * `objective_names` [list, default=None]
         List of objective names. Used for plots. If None the objectives
@@ -1295,43 +1294,45 @@ def plot_Pareto_bokeh(
 
     * `dimensions` [list, default=None]
         List of dimension names. Used for plots. If None the dimensions
-        will be named "1_1", "x_2"...
+        will be named "X_1", "X_2"...
         
     * `return_data` [bool, default=False]
         Whether to return data or not. If True the function will return
         all data for observation and estimated Pareto front, dimensions
-        and objectives_names
+        and objectives_names.
         
     * `show_browser` [bool, default=False]
         Whether to open the new plot in the browser or not. If True new
         HTML-file is opened in the default browser.
 
-    * `return_type_bokeh` [str, default='file']
-        Determine how the bokeh plot is returned. Either 'file', 'string', or 'embed'.
-        If 'file' a HTML-file will rerturned in the cwd named 'filename'.html
-        If 'string' a string containing the the HTML-code is returned.
-        If 'embed' a <script> and <div> components for embeding. See
+    * `return_type_bokeh` ["file", "string" or "embed", default="file"]
+        Determine how the bokeh plot is returned. Can be either
+        
+        - '"file"' for a HTML-file returned to the present working directory
+          with the name 'filename'.html
+        - '"string"' for a string containing the HTML code
+        - '"embed"' for <script> and <div> components for embeding. See
         https://docs.bokeh.org/en/latest/_modules/bokeh/embed/standalone.html#components
-        for more info.
+        for more information.
         
     * `filename` [str, default='ParetoPlot']
-        Obtion for chanching the default output filename for the generated HTML-file
+        The filename to apply to the generated HTML-file.
 
 
-    if return_data is true and return_type_bokeh is 'file' Returns
+    if return_data is True and return_type_bokeh is 'file' Returns
     -------
     * `np.array(optimizer.Xi)`: [numpy.ndarray]:
-        Observations
+        Points at which the objectives have been evaluated.
     * `np.array(optimizer.yi)`: [numpy.ndarray]:
-        Observed objective scores
+        Values of the objectives at corresponding points in 'Xi'.
     * `pop`: [numpy.ndarray]:
-        Pareto front
+        Points on the Pareto front.
     * `front`: [numpy.ndarray]:
-        Pareto front objective scores
+        Objective scores along the Pareto front points in 'pop'.
     * `dimensions`: [list]:
-        Names of dimensions
+        Names of dimensions.
     * `objective_names`: [list]:
-        Objective names
+        Objective names.
 
     if return_type_bokeh is 'embed' and return_data is False Returns
     -------
@@ -1343,7 +1344,7 @@ def plot_Pareto_bokeh(
         https://docs.bokeh.org/en/latest/docs/user_guide/embed.html#components
     """
     if not optimizer.models:
-        raise ValueError("No models have been fitted yet")
+        raise ValueError("No models have been fitted yet.")
     
     if dimensions == None:
         dimensions = [
@@ -1354,11 +1355,12 @@ def plot_Pareto_bokeh(
     if len(dimensions) != len(optimizer.space.dimensions):
         raise ValueError(
             "Number of dimensions specified does not match the number of"
-            "dimensions in the optimizers space"
+            "dimensions in the optimizer space."
         )
 
     if return_type_bokeh not in ['string', 'embed', 'file']:
         raise NameError(f"'{return_type_bokeh}' is an unsupported return type for bokeh plot.")
+    
     # Get objective names
     if objective_names:
         obj1 = objective_names[0]
@@ -1376,6 +1378,7 @@ def plot_Pareto_bokeh(
             pop.reshape(len(pop), optimizer.space.transformed_n_dims)
         )
     )
+    
     # Collect data for observed and Pareto-front into dicts
     data_observed_dict = {obj1: [i[0] for i in optimizer.yi],
                      obj2: [i[1] for i in optimizer.yi]}
@@ -1480,7 +1483,7 @@ def plot_Pareto_bokeh(
 
     if return_data is True and return_type_bokeh in ['string', 'embed']:
         raise ValueError("Cannot ruturn data and bokeh object at the same time")
-    elif return_data is True and return_type_bokeh not in ['string', 'embed']:
+    elif return_data is True and return_type_bokeh == 'file':
         return (
             np.array(optimizer.Xi),
             np.array(optimizer.yi),
