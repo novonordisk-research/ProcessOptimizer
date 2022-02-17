@@ -1386,87 +1386,89 @@ def plot_Pareto_bokeh(
     for i, dim in enumerate(dimensions):
         data_observed_dict[dim] =  [x[i] for x in optimizer.Xi]
 
-    data_calculated_dict= {'front_x': np.unique(front, axis=0)[:,0].tolist(),
-                           'front_y': np.unique(front, axis=0)[:,1].tolist(),
-                           'recipe_x': pop[np.unique(front, axis=0, return_index=True)[1],0].tolist(),
-                           'recipe_y': pop[np.unique(front, axis=0, return_index=True)[1],1].tolist(),
-                           }
+    data_calculated_dict = {
+        'front_x': np.unique(front, axis=0)[:,0].tolist(),
+        'front_y': np.unique(front, axis=0)[:,1].tolist(),
+        'recipe_x': pop[np.unique(front, axis=0, return_index=True)[1],0].tolist(),
+        'recipe_y': pop[np.unique(front, axis=0, return_index=True)[1],1].tolist(),
+    }
     
-    # Create Tooltip str for observed and Pareto-front
-    Tooltips_observed='''
-<div>
-    <font size="2"><b>Settings for this point are:</b></font>
-</div>'''
+    # Create Tooltip strings for the observed data points
+    Tooltips_observed = '''<div><font size="2"><b>Settings for this point are:</b></font></div>'''
     for dim in dimensions:
-        Tooltips_observed+='''
-<div>
-     <font size="2">'''+dim+''' = @{'''+dim+'''}{0.0}</font>
-</div>
- '''
-    Tooltips_observed+='''
-<div>
-    <font size="2">Found @ [ @{'''+obj1+'''}{0.00} , @{'''+obj2+'''}{0.00} ]</font>
-</div>  
-'''
-    Tooltips_recipe = '''
-<div>
-    <font size="2"><b>Settings for this point are:</b></font>
-</div>'''
+        Tooltips_observed += '''<div><font size="2">'''+dim+''' = @{'''+dim+'''}{0.0}</font></div>'''
+    Tooltips_observed += '''<div><font size="2"><b>Scores for this point are:</b></font></div>'''
+    Tooltips_observed += '''<div><font size="2">[ @{'''+obj1+'''}{0.00} , @{'''+obj2+'''}{0.00} ]</font></div>'''
+    
+    # Create Tooltip strings for calculated points on the Pareto-front
+    Tooltips_recipe = '''<div><font size="2"><b>Settings for this point are:</b></font></div>'''
     for dim, rec in zip(dimensions,['recipe_x','recipe_y']):
-        Tooltips_recipe+='''
-        <div>
-             <font size="2">'''+dim+''' = @{'''+rec+'''}{0.0}</font>
-        </div>
-         '''
-    Tooltips_recipe+='''
-<div>
-    <font size="2">Found @ [ @{front_x}{0.00} , @{front_y}{0.00} ]</font>
-</div>  
-'''
+        Tooltips_recipe += '''<div><font size="2">'''+dim+''' = @{'''+rec+'''}{0.0}</font></div>'''
+    Tooltips_recipe += '''<div><font size="2"><b>Predicted scores for this point are:</b></font></div>'''
+    Tooltips_recipe += '''<div><font size="2">[ @{front_x}{0.00} , @{front_y}{0.00} ]</font></div>'''
     
     # Load data into bokeh object
     source_observed = bh_models.ColumnDataSource(data_observed_dict)
     source_calculated = bh_models.ColumnDataSource(data_calculated_dict)
 
-    # Find bounds for minimum zoom
+    # Find bounds for the zoom of the figure
     xlimitmax=max(max(data_calculated_dict['front_x']), max(data_observed_dict[obj1]))*1.02
     ylimitmax=max(max(data_calculated_dict['front_y']), max(data_observed_dict[obj2]))*1.02
     xlimitmin=min(min(data_calculated_dict['front_x']), min(data_observed_dict[obj1]))*0.98
     ylimitmin=min(min(data_calculated_dict['front_y']), min(data_observed_dict[obj2]))*0.98
 
     # Create figure
-    p = bh_plotting.figure(plot_width=600 , 
-               plot_height=600, 
-               title="Multiobjective score-score plot", 
-               tools="pan,box_zoom,wheel_zoom,reset",
-               active_scroll="wheel_zoom", 
-               x_axis_label=list(data_observed_dict.keys())[0], 
-               y_axis_label=list(data_observed_dict.keys())[1],
-               x_range=bh_models.Range1d(xlimitmin,xlimitmax, bounds =(xlimitmin,xlimitmax)),
-               y_range=bh_models.Range1d(ylimitmin,ylimitmax, bounds=(ylimitmin,ylimitmax)),
-              )
+    p = bh_plotting.figure(
+            plot_width=600, 
+            plot_height=600, 
+            title="Multiobjective score-score plot", 
+            tools="pan,box_zoom,wheel_zoom,reset",
+            active_scroll="wheel_zoom", 
+            x_axis_label=list(data_observed_dict.keys())[0], 
+            y_axis_label=list(data_observed_dict.keys())[1],
+            x_range=bh_models.Range1d(xlimitmin,xlimitmax,bounds=(xlimitmin,xlimitmax)),
+            y_range=bh_models.Range1d(ylimitmin,ylimitmax,bounds=(ylimitmin,ylimitmax)),
+            )
 
     # Plot observed data and create Tooltip
-    r1 = p.circle(list(data_observed_dict.keys())[0],
-                  list(data_observed_dict.keys())[1],
-                  size=10,
-                  source=source_observed,
-                  legend_label = "Observed datapoints",
-                  fill_alpha=0.4)
-    p.add_tools(bh_models.HoverTool(renderers=[r1], tooltips=Tooltips_observed, point_policy = 'snap_to_data', line_policy="none"))
+    r1 = p.circle(
+            list(data_observed_dict.keys())[0],
+            list(data_observed_dict.keys())[1],
+            size=10,
+            source=source_observed,
+            legend_labe="Observed datapoints",
+            fill_alpha=0.4,
+            )
+    p.add_tools(
+            bh_models.HoverTool(
+                renderers=[r1],
+                tooltips=Tooltips_observed,
+                point_policy='snap_to_data',
+                line_policy="none",
+                )
+            )
 
     # Plot Pareto-front and create Tooltip
-    r2 = p.circle(list(data_calculated_dict.keys())[0],
-                  list(data_calculated_dict.keys())[1],
-                  size=10,
-                  source=source_calculated,
-                  color="red",
-                  legend_label = "Estimated Pareto front")
-    p.add_tools(bh_models.HoverTool(renderers=[r2], tooltips=Tooltips_recipe, point_policy = 'snap_to_data', line_policy="none"))
+    r2 = p.circle(
+            list(data_calculated_dict.keys())[0],
+            list(data_calculated_dict.keys())[1],
+            size=10,
+            source=source_calculated,
+            color="red",
+            legend_label="Estimated Pareto front",
+            )
+    p.add_tools(
+            bh_models.HoverTool(
+                renderers=[r2],
+                tooltips=Tooltips_recipe,
+                point_policy='snap_to_data',
+                line_policy="none",
+                )
+            )
     
     # plot settings
     p.legend.location = "top_right"
-    p.legend.click_policy="hide"
+    p.legend.click_policy = "hide"
     p.toolbar.logo = None
 
     # Save plot as HTML-file
