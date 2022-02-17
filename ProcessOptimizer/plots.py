@@ -1436,7 +1436,7 @@ def plot_Pareto_bokeh(
             list(data_observed_dict.keys())[1],
             size=10,
             source=source_observed,
-            legend_labe="Observed datapoints",
+            legend_label="Observed datapoints",
             fill_alpha=0.4,
             )
     p.add_tools(
