@@ -12,7 +12,8 @@
 
 ### Changes
 
-- 
+- Dependence modul now consistenty returns arrays instead of lists
+- House-keeping on Github (contribution guidelines etc)
 
 ### Bugfixes
 
