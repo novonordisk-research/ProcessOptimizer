@@ -682,7 +682,8 @@ def test_lhs_arange():
     # rounding, using Numpy's allclose function
     assert np.allclose(lhs_int, lhs_real, atol=0.5)
     # Test that the Integer class returns ints in all locations
-    assert all([isinstance(x,np.int32) for x in lhs_int])
+    # assert all([isinstance(x,np.int32) for x in lhs_int])
+    assert all([np.mod(x,1) == 0 for x in lhs_int])
     # Test that the Real class returns flots in all locations
     assert all([isinstance(x,np.float64) for x in lhs_real])
 
