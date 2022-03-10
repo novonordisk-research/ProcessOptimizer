@@ -1,6 +1,6 @@
 # Release history
 
-## Version 0.7.3 [unpublished]
+## Version 0.7.4 [unpublished]
 
 ### Changes
 
@@ -8,7 +8,18 @@
 
 ### Bugfixes
 
+## Version 0.7.3
+
+### Changes
+
 - 
+
+### Bugfixes
+
+- Bokeh_plot is repaired after we started returning the std to plots
+- LHS is rewritten to ensure consistent returns in between real and integer
+dimensions (integer types are ensure to return values "close" to those of a
+corresponding real dimension)
 
 ## Version 0.7.2
 
