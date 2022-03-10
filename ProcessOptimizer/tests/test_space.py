@@ -671,12 +671,21 @@ def test_purely_categorical_space():
 
 @pytest.mark.fast_test
 def test_lhs_arange():
-    dim = Categorical(["a", "b", "c"])
-    dim.lhs_arange(10)
-    dim = Integer(1, 20)
-    dim.lhs_arange(10)
-    dim = Real(-10, 20)
-    dim.lhs_arange(10)
+    # Test that the latin hypercube sampling functions run normally
+    dim_cat = Categorical(["a", "b", "c"])
+    dim_cat.lhs_arange(10)
+    dim_int = Integer(-10, 20)
+    lhs_int = dim_int.lhs_arange(10)
+    dim_real = Real(-10, 20)
+    lhs_real = dim_real.lhs_arange(10)
+    # Test that the Integer and Real classes return identical points after
+    # rounding, using Numpy's allclose function
+    assert np.allclose(lhs_int, lhs_real, atol=0.5)
+    # Test that the Integer class returns values that are ints for all intents 
+    # and purposes
+    assert all([np.mod(x,1) == 0 for x in lhs_int])
+    # Test that the Real class returns flots in all locations
+    assert all([isinstance(x,np.float64) for x in lhs_real])
 
 
 @pytest.mark.fast_test
@@ -687,3 +696,4 @@ def test_lhs():
     samples = SPACE.lhs(10)
     assert len(samples) == 10
     assert len(samples[0]) == 3
+

@@ -305,10 +305,13 @@ class Real(Dimension):
         * `n` [int]
             Number of samples.
         """
-        a = (np.arange(n)+0.5)/n  # Evenly distributed betweeen 0 and 1
+        # Generate sample points by splitting the space 0 to 1 into n pieces
+        # and picking the middle of each piece. Samples are spaced 1/n apart
+        # inside the interval with a buffer of half a step size to the extremes
+        samples = (np.arange(n)+0.5)/n
 
-        # Transform to the bounds of this dimension
-        return a*(self.high-self.low)+self.low
+        # Transform the samples to the range used for this dimension
+        return samples*(self.high - self.low) + self.low
 
 
 class Integer(Dimension):
@@ -413,9 +416,17 @@ class Integer(Dimension):
         * `n` [int]
             Number of samples.
         """
-        rounded_numbers = np.round(np.linspace(self.low, self.high, n))
-        # convert to a list of integers
-        return [int(a) for a in rounded_numbers]
+        # Generate sample points by splitting the space 0 to 1 into n pieces
+        # and picking the middle of each piece. Samples are spaced 1/n apart
+        # inside the interval with a buffer of half a step size to the extremes
+        samples = (np.arange(n)+0.5)/n
+        # Transform the samples to the range used for this dimension and then 
+        # round them back to integers. If your space is less than n wide, some 
+        # of your samples will be rounded to the same number
+        samples = np.round(samples*(self.high - self.low) + self.low)
+        
+        # Convert samples to a list of integers
+        return samples.astype(int)
 
 
 class Categorical(Dimension):
