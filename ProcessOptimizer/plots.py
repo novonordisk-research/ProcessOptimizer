@@ -571,6 +571,11 @@ def plot_objective(
         * uncertain_color [color, default [0, 0, 0]] The color of the maximally
             uncertain data point.
         * colormap [string, default 'viridis_r'] The colormap to use in the 2D plots.
+        * transform_uncertainty [function, default identity function] A function that is 
+            applied to the normalised standard deviations before plotting. Must convert
+            input between 0 and 1 to outputs in the same range. If not, it raises an 
+            error, but only if any concrete outputs are outside this range. One use is 
+            to visually deemphasize points with medium uncertainty.
 
     Returns
     -------
@@ -587,7 +592,8 @@ def plot_objective(
        "show_uncertainty_2d": False,
        "interpolation": "",
        "uncertain_color": [0, 0, 0],
-       "colormap" : "viridis_r"
+       "colormap" : "viridis_r",
+       "transform_uncertainty": lambda x: x,
     }
     for k,v in default_plot_type.items():
         if k not in plot_options.keys():
@@ -840,6 +846,13 @@ def _2d_dependency_plot(data, axes, samples, highlighted, limits, options = {}):
         if options["show_uncertainty_2d"]:
             stddev = data["std"]
             stddev = (stddev - limits["stddev_min"])/(limits["stddev_max"]-limits["stddev_min"])
+            stddev = options["transform_uncertainty"](stddev)
+            if stddev.max() > 1:
+                raise ValueError(
+                    "Transformation of uncertainty resulted in values above one")
+            if stddev.min() < 0:
+                raise ValueError(
+                    "Transformation of uncertainty resulted in values below zero")
             # Setting the alpha (opacity) to be inversly proportional to uncertainty, so
             # the background color shines thorugh in uncertain areas.
             for i in range(zi.shape[0]):
