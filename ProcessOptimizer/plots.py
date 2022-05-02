@@ -467,7 +467,6 @@ def dependence(
                 stddev_row.append(np.mean(stddev))
             zi.append(value_row)
             stddev_matrix.append(stddev_row)
-
         if return_std:
             return xi, yi, np.array(zi).T, np.array(stddev_matrix).T
         else:
@@ -563,19 +562,25 @@ def plot_objective(
     * `plot_options` [dict or None, default None] A dict of the options for the plot. If,
         none, the defaults are used for all values.
         Possible keys:
-        * show_uncertainty_2d [bool, default = false] Whether to gray out the unceartain
-            parts of the 2D plots
         * interpolation [string, default ""] Which interpolation to use. If empty,
-            contour plot is used. Note that contour plots are not compatible with
+            contour plots are used. Note that contour plots are not compatible with
             showing uncertainty.
         * uncertain_color [color, default [0, 0, 0]] The color of the maximally
             uncertain data point.
         * colormap [string, default 'viridis_r'] The colormap to use in the 2D plots.
-        * transform_uncertainty [function, default identity function] A function that is 
-            applied to the normalised standard deviations before plotting. Must convert
-            input between 0 and 1 to outputs in the same range. If not, it raises an 
-            error, but only if any concrete outputs are outside this range. One use is 
-            to visually deemphasize points with medium uncertainty.
+        * normalize_uncertainty [function with three inputs, default
+            `lambda x, global_min, global_max: (x-global_min)/(global_max-global_min)`]
+            The normalisation function for the uncertainty.
+            x is a numpy array containing the standard deviations, global_min and 
+            global_max are the min and max standard deviations for all 2D plots.
+            Output must be a numpy array of the same dimensions as x with values between 
+            0 and 1. If not, it raises an error, but only if any concrete outputs are
+            outside this range. Output values of 0 shows the color for the expected 
+            value modeled objective function. Output values of 1 corresponds to the 
+            uncertain_color. 
+            To not show any uncertainty, use `lambda x, min, max: 0*x`.
+            Another use is to visually deemphasize points with medium uncertainty by e.g
+            `lambda x, global_min, global_max: ((x-global_min)/(global_max-global_min))**(1/2)`.
 
     Returns
     -------
@@ -589,11 +594,12 @@ def plot_objective(
     if not plot_options:
         plot_options = {}
     default_plot_type = {
-       "show_uncertainty_2d": False,
        "interpolation": "",
        "uncertain_color": [0, 0, 0],
        "colormap" : "viridis_r",
-       "transform_uncertainty": lambda x: x,
+       "normalize_uncertainty": (
+           lambda x, global_min, global_max: (x-global_min)/(global_max-global_min)
+       ),
     }
     for k,v in default_plot_type.items():
         if k not in plot_options.keys():
@@ -824,10 +830,6 @@ def _2d_dependency_plot(data, axes, samples, highlighted, limits, options = {}):
     yi = data["yi"]
     zi = data["zi"]
     if not options["interpolation"]:
-        if options["show_uncertainty_2d"]:
-            raise ValueError(
-                "Can't show uncertainty on contour plots, please select interpolation (e.g. 'bicubic')."
-            )
         axes.contourf(
             xi,
             yi,
@@ -843,23 +845,23 @@ def _2d_dependency_plot(data, axes, samples, highlighted, limits, options = {}):
         zi = (zi-limits["z_min"])/(limits["z_max"]-limits["z_min"])
         #Converting numerical z values to RGBA values to be able to change alpha
         zi = plt.colormaps[options["colormap"]](zi)
-        if options["show_uncertainty_2d"]:
-            stddev = data["std"]
-            stddev = (stddev - limits["stddev_min"])/(limits["stddev_max"]-limits["stddev_min"])
-            stddev = options["transform_uncertainty"](stddev)
-            if stddev.max() > 1:
-                raise ValueError(
-                    "Transformation of uncertainty resulted in values above one")
-            if stddev.min() < 0:
-                raise ValueError(
-                    "Transformation of uncertainty resulted in values below zero")
-            # Setting the alpha (opacity) to be inversly proportional to uncertainty, so
-            # the background color shines thorugh in uncertain areas.
-            for i in range(zi.shape[0]):
-                for j in range(zi.shape[1]):
-                    zi[i,j,3] = 1-stddev[i,j]
-            axes.set_facecolor(options["uncertain_color"])
-        # For other interpolation options, see https://matplotlib.org/3.5.0/gallery/images_contours_and_fields/interpolation_methods.html
+        stddev = data["std"]
+        stddev = options["normalize_uncertainty"](
+            stddev,
+            limits["stddev_min"],
+            limits["stddev_max"])
+        if stddev.max() > 1:
+            raise ValueError(
+                "Normalization of uncertainty resulted in values above one")
+        if stddev.min() < 0:
+            raise ValueError(
+                "Normalizetion of uncertainty resulted in values below zero")
+        # Setting the alpha (opacity) to be inversly proportional to uncertainty, so
+        # the background color shines thorugh in uncertain areas.
+        for i in range(zi.shape[0]):
+            for j in range(zi.shape[1]):
+                zi[i,j,3] = 1-stddev[i,j]
+        axes.set_facecolor(options["uncertain_color"])
         axes.imshow(
             zi,
             interpolation=options["interpolation"],
