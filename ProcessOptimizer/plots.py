@@ -844,7 +844,7 @@ def _2d_dependency_plot(data, axes, samples, highlighted, limits, options = {}):
         # Normalising z and stddev to scale beteween 0 and 1, needed for more manual plot
         zi = (zi-limits["z_min"])/(limits["z_max"]-limits["z_min"])
         #Converting numerical z values to RGBA values to be able to change alpha
-        zi = plt.colormaps[options["colormap"]](zi)
+        zi = plt.get_cmap(options["colormap"])(zi)
         stddev = data["std"]
         stddev = options["normalize_uncertainty"](
             stddev,
