@@ -331,6 +331,7 @@ def dependence(
     n_samples=250,
     n_points=40,
     x_eval=None,
+    return_std=False
 ):
     """
     Calculate the dependence for dimensions `i` and `j` with
@@ -376,6 +377,10 @@ def dependence(
         parsed dependence will be calculated using these values
         instead of using partial dependence.
 
+    * `return_std` [Boolian, default=False]
+        Whether to return the standard deviation matrix for 2D dependence. Note that it
+        is always returned for 1D dependence.
+
     Returns
     -------
     For 1D partial dependence:
@@ -396,6 +401,8 @@ def dependence(
         The points at which the partial dependence was evaluated.
     * `zi`: [np.array, shape=(n_points, n_points)]:
         The value of the model at each point `(xi, yi)`.
+    * `std`: [np.array, shape=(n_points, n_points)]:
+        The standard deviation of `zi` at each point `(xi, yi)`.
 
     For Categorical variables, the `xi` (and `yi` for 2D) returned are
     the indices of the variable in `Dimension.categories`.
@@ -444,17 +451,26 @@ def dependence(
         xi, xi_transformed = _evenly_sample(space.dimensions[j], n_points)
         yi, yi_transformed = _evenly_sample(space.dimensions[i], n_points)
 
+        # stddev structure is made regardless of whether it is returned,
+        # since this is cheap and makes the code simpler.
         zi = []
+        stddev_matrix = []
         for x_ in xi_transformed:
-            row = []
+            value_row = []
+            stddev_row = []
             for y_ in yi_transformed:
                 rvs_ = np.array(sample_points)  # copy
                 rvs_[:, dim_locs[j] : dim_locs[j + 1]] = x_
                 rvs_[:, dim_locs[i] : dim_locs[i + 1]] = y_
-                row.append(np.mean(model.predict(rvs_)))
-            zi.append(row)
-
-        return xi, yi, np.array(zi).T
+                funcvalue, stddev = model.predict(rvs_, return_std = True)
+                value_row.append(np.mean(funcvalue))
+                stddev_row.append(np.mean(stddev))
+            zi.append(value_row)
+            stddev_matrix.append(stddev_row)
+        if return_std:
+            return xi, yi, np.array(zi).T, np.array(stddev_matrix).T
+        else:
+            return xi, yi, np.array(zi).T
 
 
 def plot_objective(
@@ -470,6 +486,7 @@ def plot_objective(
     expected_minimum_samples=None,
     title=None,
     show_confidence=False,
+    plot_options = None
 ):
     """Pairwise dependence plot of the objective function.
 
@@ -542,6 +559,29 @@ def plot_objective(
         range around the mean estimate on the 1d-plots in the diagonal. The
         credible range is given as 1.96 times the std in the point.
 
+    * `plot_options` [dict or None, default None] A dict of the options for the plot. If,
+        none, the defaults are used for all values.
+        Possible keys:
+        * interpolation [string, default ""] Which interpolation to use. If empty,
+            contour plots are used. Note that contour plots are not compatible with
+            showing uncertainty.
+        * uncertain_color [color, default [0, 0, 0]] The color of the maximally
+            uncertain data point.
+        * colormap [string, default 'viridis_r'] The colormap to use in the 2D plots.
+        * normalize_uncertainty [function with three inputs, default
+            `lambda x, global_min, global_max: (x-global_min)/(global_max-global_min)`]
+            The normalisation function for the uncertainty.
+            x is a numpy array containing the standard deviations, global_min and 
+            global_max are the min and max standard deviations for all 2D plots.
+            Output must be a numpy array of the same dimensions as x with values between 
+            0 and 1. If not, it raises an error, but only if any concrete outputs are
+            outside this range. Output values of 0 shows the color for the expected 
+            value modeled objective function. Output values of 1 corresponds to the 
+            uncertain_color. 
+            To not show any uncertainty, use `lambda x, min, max: 0*x`.
+            Another use is to visually deemphasize points with medium uncertainty by e.g
+            `lambda x, global_min, global_max: ((x-global_min)/(global_max-global_min))**(1/2)`.
+
     Returns
     -------
     * `ax`: [`Axes`]:
@@ -551,6 +591,23 @@ def plot_objective(
     # the red dotted line (1d plot). These same values will be used for
     # evaluating the plots when calculating dependence. (Unless partial
     # dependence is to be used instead).
+    if not plot_options:
+        plot_options = {}
+    default_plot_type = {
+       "interpolation": "",
+       "uncertain_color": [0, 0, 0],
+       "colormap" : "viridis_r",
+       "normalize_uncertainty": (
+           lambda x, global_min, global_max: (x-global_min)/(global_max-global_min)
+       ),
+    }
+    for k,v in default_plot_type.items():
+        if k not in plot_options.keys():
+            plot_options[k] = v
+    # zscale and levels really belon in plot_options, but for backwards compatability,
+    # they are given as separate arguments.
+    plot_options["zscale"] = zscale
+    plot_options["levels"] = levels
     space = result.space
     if isinstance(pars, str):
         if pars == "result":
@@ -608,16 +665,6 @@ def plot_objective(
     rvs_transformed = space.transform(space.rvs(n_samples=n_samples))
     samples, minimum, _ = _map_categories(space, result.x_iters, x_vals)
 
-    if zscale == "log":
-        locator = LogLocator()
-    elif zscale == "linear":
-        locator = None
-    else:
-        raise ValueError(
-            "Valid values for zscale are 'linear' and 'log',"
-            " not '%s'." % zscale
-        )
-
     fig, ax = plt.subplots(
         space.n_dims,
         space.n_dims,
@@ -635,6 +682,8 @@ def plot_objective(
     val_max_1d = -float("inf")
     val_min_2d = float("inf")
     val_max_2d = -float("inf")
+    stddev_min_2d = float("inf")
+    stddev_max_2d = -float("inf")
 
     plots_data = []
 
@@ -676,7 +725,7 @@ def plot_objective(
 
             # lower triangle
             else:
-                xi, yi, zi = dependence(
+                xi, yi, zi, stddevs = dependence(
                     space,
                     result.models[-1],
                     i,
@@ -684,14 +733,19 @@ def plot_objective(
                     rvs_transformed,
                     n_points,
                     x_eval=x_eval,
+                    return_std=True,
                 )
                 # print('filling with i, j = ' + str(i) + str(j))
-                row.append({"xi": xi, "yi": yi, "zi": zi})
+                row.append({"xi": xi, "yi": yi, "zi": zi, "std": stddevs})
 
                 if np.min(zi) < val_min_2d:
                     val_min_2d = np.min(zi)
                 if np.max(zi) > val_max_2d:
                     val_max_2d = np.max(zi)
+                if np.min(stddevs) < stddev_min_2d:
+                    stddev_min_2d = np.min(stddevs)
+                if np.max(stddevs) > stddev_max_2d:
+                    stddev_max_2d = np.max(stddevs)
 
         plots_data.append(row)
 
@@ -724,25 +778,19 @@ def plot_objective(
 
             # lower triangle
             elif i > j:
-
-                xi = plots_data[i][j]["xi"]
-                yi = plots_data[i][j]["yi"]
-                zi = plots_data[i][j]["zi"]
-
-                ax[i, j].contourf(
-                    xi,
-                    yi,
-                    zi,
-                    levels,
-                    locator=locator,
-                    cmap="viridis_r",
-                    vmin=val_min_2d,
-                    vmax=val_max_2d,
+                _2d_dependency_plot(
+                    data=plots_data[i][j],
+                    axes=ax[i][j],
+                    samples=(samples[:, j], samples[:, i]),
+                    highlighted=(minimum[j], minimum[i]),
+                    limits={
+                        "z_min" : val_min_2d,
+                        "z_max" : val_max_2d,
+                        "stddev_min": stddev_min_2d,
+                        "stddev_max": stddev_max_2d
+                    },
+                    options = plot_options
                 )
-                ax[i, j].scatter(
-                    samples[:, j], samples[:, i], c="darkorange", s=10, lw=0.0, zorder=10, clip_on=False
-                )
-                ax[i, j].scatter(minimum[j], minimum[i], c=["r"], s=20, lw=0.0, zorder=10, clip_on=False)
 
                 if [i, j] == [1, 0]:
                     import matplotlib as mpl
@@ -751,7 +799,7 @@ def plot_objective(
                         vmin=val_min_2d, vmax=val_max_2d
                     )
                     cb = ax[0][-1].figure.colorbar(
-                        mpl.cm.ScalarMappable(norm=norm, cmap="viridis_r"),
+                        mpl.cm.ScalarMappable(norm=norm, cmap=plot_options["colormap"]),
                         ax=ax[0][-1],
                     )
                     cb.ax.locator_params(nbins=8)
@@ -764,6 +812,69 @@ def plot_objective(
     return _format_scatter_plot_axes(
         ax, space, ylabel=ylabel, dim_labels=dimensions
     )
+
+def _2d_dependency_plot(data, axes, samples, highlighted, limits, options = {}):
+    if "zscale" in options.keys():
+        if options["zscale"] == "log":
+            locator = LogLocator()
+        elif options["zscale"] == "linear":
+            locator = None
+        else:
+            raise ValueError(
+                "Valid values for zscale are 'linear' and 'log',"
+                " not '%s'." % options["zscale"]
+            )
+    else :
+        raise ValueError("No zscale given for 2D dependency plot")
+    xi = data["xi"]
+    yi = data["yi"]
+    zi = data["zi"]
+    if not options["interpolation"]:
+        axes.contourf(
+            xi,
+            yi,
+            zi,
+            options["levels"],
+            locator=locator,
+            cmap=options["colormap"],
+            vmin=limits["z_min"],
+            vmax=limits["z_max"],
+        )
+    else:
+        # Normalising z and stddev to scale beteween 0 and 1, needed for more manual plot
+        zi = (zi-limits["z_min"])/(limits["z_max"]-limits["z_min"])
+        #Converting numerical z values to RGBA values to be able to change alpha
+        zi = plt.get_cmap(options["colormap"])(zi)
+        stddev = data["std"]
+        stddev = options["normalize_uncertainty"](
+            stddev,
+            limits["stddev_min"],
+            limits["stddev_max"])
+        if stddev.max() > 1:
+            raise ValueError(
+                "Normalization of uncertainty resulted in values above one")
+        if stddev.min() < 0:
+            raise ValueError(
+                "Normalizetion of uncertainty resulted in values below zero")
+        # Setting the alpha (opacity) to be inversly proportional to uncertainty, so
+        # the background color shines thorugh in uncertain areas.
+        for i in range(zi.shape[0]):
+            for j in range(zi.shape[1]):
+                zi[i,j,3] = 1-stddev[i,j]
+        axes.set_facecolor(options["uncertain_color"])
+        axes.imshow(
+            zi,
+            interpolation=options["interpolation"],
+            origin="lower",
+            extent=(min(xi),max(xi),min(yi),max(yi))
+        )
+        # imshow assumes square pixels, so it sets aspect to 1. We do not want that.
+        axes.set_aspect('auto')
+    axes.scatter(
+        samples[0], samples[1], c="darkorange", s=10, lw=0.0, zorder=10, clip_on=False
+    )
+    axes.scatter(highlighted[0], highlighted[1], c=["r"], s=20, lw=0.0, zorder=10, clip_on=False)
+
 
 
 def plot_objectives(
