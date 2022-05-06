@@ -1,10 +1,19 @@
 # Release history
 
-## Version 0.7.4 [unpublished]
+## Version 0.7.5 [unpublished]
 
 ### Changes
 
 - 
+
+### Bugfixes
+## Version 0.7.4
+
+### Changes
+
+- Added the option to display uncertainty in 2d plots in plot_objective
+- Initial efforts to streamline the input-structure of plot options
+- Additional options for plots
 
 ### Bugfixes
 
