@@ -132,6 +132,9 @@ class GaussianProcessRegressor(sk_GaussianProcessRegressor):
         If set to "gaussian", then it is assumed that `y` is a noisy
         estimate of `f(x)` where the noise is gaussian.
 
+    * `noise_level_bounds` [tuple[float, float], optional (default: (1e-5,1e5))]:
+        Sets the bounds for the noise level when noise is set to "gaussian". 
+
     Attributes
     ----------
     * `X_train_` [array-like, shape = (n_samples, n_features)]:

@@ -62,6 +62,21 @@ def test_noise_equals_gaussian():
     assert_array_almost_equal(mean1, mean2, 4)
     assert not np.any(std1 == std2)
 
+@pytest.mark.fast_test
+def test_noise_level_bounds():
+    gpr1 = GaussianProcessRegressor(mat, noise="gaussian").fit(X, y)
+    lower1 = 1e-5
+    upper1 = 1e5
+    assert_almost_equal(gpr1.noise_level_bounds, (lower1, upper1), 6)
+    assert gpr1.noise_ >= lower1
+    assert gpr1.noise_ <= upper1
+    lower2 = 0.005
+    upper2 = 1.0
+    gpr2 = GaussianProcessRegressor(mat, noise="gaussian", noise_level_bounds=(lower2, upper2)).fit(X, y)
+    assert_almost_equal(gpr2.noise_level_bounds, (lower2, upper2), 4)
+    assert gpr2.noise_ >= lower2
+    assert gpr2.noise_ <= upper2
+    
 
 @pytest.mark.fast_test
 def test_mean_gradient():
