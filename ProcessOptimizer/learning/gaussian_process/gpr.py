@@ -160,8 +160,9 @@ class GaussianProcessRegressor(sk_GaussianProcessRegressor):
     def __init__(self, kernel=None, alpha=1e-10,
                  optimizer="fmin_l_bfgs_b", n_restarts_optimizer=0,
                  normalize_y=False, copy_X_train=True, random_state=None,
-                 noise=None):
+                 noise=None, noise_level_bounds=(1e-5, 1e5)):
         self.noise = noise
+        self.noise_level_bounds = noise_level_bounds
         super(GaussianProcessRegressor, self).__init__(
             kernel=kernel, alpha=alpha, optimizer=optimizer,
             n_restarts_optimizer=n_restarts_optimizer,
@@ -192,7 +193,7 @@ class GaussianProcessRegressor(sk_GaussianProcessRegressor):
             self.kernel = ConstantKernel(1.0, constant_value_bounds="fixed") \
                           * RBF(1.0, length_scale_bounds="fixed")
         if self.noise == "gaussian":
-            self.kernel = self.kernel + WhiteKernel()
+            self.kernel = self.kernel + WhiteKernel(noise_level_bounds=self.noise_level_bounds)
         elif self.noise:
             self.kernel = self.kernel + WhiteKernel(
                 noise_level=self.noise, noise_level_bounds="fixed"
