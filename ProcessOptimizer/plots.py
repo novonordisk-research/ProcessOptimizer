@@ -322,11 +322,12 @@ def _format_scatter_plot_axes(ax, space, ylabel, dim_labels=None):
     return ax
 
 
-def dependence(space, model, i, j=None, sample_points=None,
-    n_samples=250,
+def dependence(space, model, i, j=None,
+    sample_points=None, #made obsolete by new approach to calculations. Delete in plot_obejctive
+    n_samples=250, #Should likely be deleted together with sample_points
     n_points=40,
     x_eval=None,
-    return_std=False):
+    return_std=False): #Defaults to true in call
     ''' 
     A function to generate content for 1d and 2d plots
     '''
@@ -364,7 +365,10 @@ def dependence(space, model, i, j=None, sample_points=None,
         background_matrix[:,i] = specific_points[:,0]
         #print(f'background_matrix with i changed is {background_matrix}')
         values, stddev = model.predict(space.transform(background_matrix), return_std = True)
-        return gridded_dim_j, gridded_dim_i, values.reshape(twoD_resolution, twoD_resolution).T, stddev.reshape(twoD_resolution,twoD_resolution).T
+        if return_std:
+            return gridded_dim_j, gridded_dim_i, values.reshape(twoD_resolution, twoD_resolution).T, stddev.reshape(twoD_resolution,twoD_resolution).T
+        else:
+            return gridded_dim_j, gridded_dim_i, values.reshape(twoD_resolution, twoD_resolution).T
 
 
 def cartesian_coord(*arrays):
