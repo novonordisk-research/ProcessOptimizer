@@ -17,3 +17,9 @@ dist/
 
 # vim users
 .*.swp
+
+# virtual python environment
+.env
+
+# visual study code
+.vscode
