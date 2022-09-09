@@ -1,12 +1,21 @@
 # Release history
 
-## Version 0.7.5 [unpublished]
+## Version 0.7.6 [unpublished]
 
 ### Changes
 
 - 
 
 ### Bugfixes
+
+## Version 0.7.5 
+
+### Changes
+
+- Allow user defined bounds on noise level of WhiteKernel
+
+### Bugfixes
+
 ## Version 0.7.4
 
 ### Changes
