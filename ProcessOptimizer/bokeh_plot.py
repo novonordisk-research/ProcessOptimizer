@@ -280,7 +280,7 @@ def get_plot_list(layout, result, active_list, n_points, x_eval, confidence):
             elif i == j:  # Diagonal
                 # Passing j = None to dependence
                 # makes it calculate a diagonal plot
-                xi, yi = dependence(
+                xi, yi, _ = dependence(
                     space,
                     model,
                     i,

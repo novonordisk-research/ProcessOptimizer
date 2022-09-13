@@ -1,6 +1,6 @@
 # Release history
 
-## Version 0.7.3 [unpublished]
+## Version 0.7.6 [unpublished]
 
 ### Changes
 
@@ -8,7 +8,37 @@
 
 ### Bugfixes
 
-- 
+## Version 0.7.5 
+
+### Changes
+
+- Allow user defined bounds on noise level of WhiteKernel
+
+### Bugfixes
+
+## Version 0.7.4
+
+### Changes
+
+- Added the option to display uncertainty in 2d plots in plot_objective
+- Initial efforts to streamline the input-structure of plot options
+- Additional options for plots
+
+### Bugfixes
+
+## Version 0.7.3
+
+### Changes
+
+- Dependence modul now consistenty returns arrays instead of lists
+- House-keeping on Github (contribution guidelines etc)
+
+### Bugfixes
+
+- Bokeh_plot is repaired after we started returning the std to plots
+- LHS is rewritten to ensure consistent returns in between real and integer
+dimensions (integer types are ensure to return values "close" to those of a
+corresponding real dimension)
 
 ## Version 0.7.2
 
