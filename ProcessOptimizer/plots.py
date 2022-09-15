@@ -14,6 +14,7 @@ from ProcessOptimizer import expected_minimum, expected_minimum_random_sampling
 from .space import Categorical
 from .optimizer import Optimizer
 
+import json
 import bokeh.models as bh_models
 import bokeh.plotting as bh_plotting
 import bokeh.io as bh_io
@@ -1488,7 +1489,7 @@ def plot_Pareto_bokeh(
         Whether to open the new plot in the browser or not. If True new
         HTML-file is opened in the default browser.
 
-    * `return_type_bokeh` ["file", "string" or "embed", default="file"]
+    * `return_type_bokeh` ["file", "string", "embed", or "json", default="file"]
         Determine how the bokeh plot is returned. Can be either
         
         - '"file"' for a HTML-file returned to the present working directory
@@ -1496,6 +1497,9 @@ def plot_Pareto_bokeh(
         - '"string"' for a string containing the HTML code
         - '"embed"' for <script> and <div> components for embeding. See
         https://docs.bokeh.org/en/latest/_modules/bokeh/embed/standalone.html#components
+        for more information.
+        - '"json"' for a json-item that can be supplied to BokehJS that
+        https://docs.bokeh.org/en/latest/docs/user_guide/embed.html#json-items
         for more information.
         
     * `filename` [str, default='ParetoPlot']
@@ -1541,7 +1545,7 @@ def plot_Pareto_bokeh(
             "dimensions in the optimizer space."
         )
 
-    if return_type_bokeh not in ['string', 'embed', 'file']:
+    if return_type_bokeh not in ['string', 'embed', 'file', 'json']:
         raise NameError(f"'{return_type_bokeh}' is an unsupported return type for bokeh plot.")
     
     # Get objective names
@@ -1611,6 +1615,8 @@ def plot_Pareto_bokeh(
             y_axis_label=list(data_observed_dict.keys())[1],
             x_range=bh_models.Range1d(xlimitmin,xlimitmax,bounds=(xlimitmin,xlimitmax)),
             y_range=bh_models.Range1d(ylimitmin,ylimitmax,bounds=(ylimitmin,ylimitmax)),
+            width_policy = 'max',
+            height_policy = 'max',
             )
 
     # Plot observed data and create Tooltip
@@ -1655,6 +1661,7 @@ def plot_Pareto_bokeh(
     p.toolbar.logo = None
 
     # Save plot as HTML-file
+    
     bh_plotting.reset_output()
     bh_plotting.output_file(filename+".html", title='Multiobjective score-score plot')
 
@@ -1666,7 +1673,7 @@ def plot_Pareto_bokeh(
         bh_io.show(p)
         
 
-    if return_data is True and return_type_bokeh in ['string', 'embed']:
+    if return_data is True and return_type_bokeh in ['string', 'embed', 'json']:
         raise ValueError("Cannot ruturn data and bokeh object at the same time")
     elif return_data is True and return_type_bokeh == 'file':
         return (
@@ -1677,11 +1684,14 @@ def plot_Pareto_bokeh(
             dimensions,
             objective_names,
         )
-    elif not return_data is True and return_type_bokeh in ['string', 'embed']:
+    elif not return_data is True and return_type_bokeh in ['string', 'embed','json']:
         if return_type_bokeh == 'string':
             html = bh_embed.file_html(p, bh_resources.CDN, 'Multiobjective score-score plot')
             return html
         elif return_type_bokeh == 'embed':
             script, div = bh_embed.components(p)
             return (script, div)
+        elif return_type_bokeh == 'json':
+            json_item = json.dumps(bh_embed.json_item(p))
+            return json_item
 
