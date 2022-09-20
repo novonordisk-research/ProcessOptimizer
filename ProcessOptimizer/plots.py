@@ -487,7 +487,7 @@ def _dependence(
     if j is None:
         # We sample evenly instead of randomly. This is necessary when using
         # categorical values
-        xi, xi_transformed = _evenly_sample(space.dimensions[i], n_points)
+        xi, xi_transformed = space.dimensions[i].evenly_sample(n_points)
         yi = []
         stddevs = []
         for x_ in xi_transformed:
@@ -507,8 +507,8 @@ def _dependence(
         return xi, yi, stddevs
 
     else:
-        xi, xi_transformed = _evenly_sample(space.dimensions[j], n_points)
-        yi, yi_transformed = _evenly_sample(space.dimensions[i], n_points)
+        xi, xi_transformed = space.dimensions[j].evenly_sample(n_points)
+        yi, yi_transformed = space.dimensions[i].evenly_sample(n_points)
 
         # stddev structure is made regardless of whether it is returned,
         # since this is cheap and makes the code simpler.
@@ -1109,40 +1109,6 @@ def _map_categories(space, points, minimum):
             pts_[:, i] = points[:, i]
             min_[i] = minimum[i]
     return pts_, min_, iscat
-
-
-def _evenly_sample(dim, n_points):
-    """Return `n_points` evenly spaced points from a Dimension.
-
-    Parameters
-    ----------
-    * `dim` [`Dimension`]
-        The Dimension to sample from.  Can be categorical; evenly-spaced
-        category indices are chosen in order without replacement (result
-        may be smaller than `n_points`).
-
-    * `n_points` [int]
-        The number of points to sample from `dim`.
-
-    Returns
-    -------
-    * `xi`: [np.array]:
-        The sampled points in the Dimension.  For Categorical
-        dimensions, returns the index of the value in
-        `dim.categories`.
-
-    * `xi_transformed`: [np.array]:
-        The transformed values of `xi`, for feeding to a model.
-    """
-    cats = np.array(getattr(dim, "categories", []), dtype=object)
-    if len(cats):  # Sample categoricals while maintaining order
-        xi = np.linspace(0, len(cats) - 1, min(len(cats), n_points), dtype=int)
-        xi_transformed = dim.transform(cats[xi])
-    else:
-        bounds = dim.bounds
-        xi = np.linspace(bounds[0], bounds[1], n_points)
-        xi_transformed = dim.transform(xi)
-    return xi, xi_transformed
 
 
 def _cat_format(dimension, x, _):

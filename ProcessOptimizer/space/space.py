@@ -144,6 +144,12 @@ class Dimension(object):
     def transformed_size(self):
         return 1
 
+
+    # TODO: Make class into abstract base class and implement correctly, SRFU.
+
+    def evenly_sample(self, num_points, return_borders):
+        raise NotImplementedError
+
     @property
     def bounds(self):
         raise NotImplementedError
@@ -314,6 +320,43 @@ class Real(Dimension):
         return samples*(self.high - self.low) + self.low
 
 
+    def evenly_sample(self, num_points, border_width = None):
+        """Return `n_points` evenly spaced points from a Dimension.
+
+        Parameters
+        ----------
+        * `num_points` [int]
+            The number of points to sample.
+
+        * `border_width` [int]
+            How wide to make the borders. If None, no borders are returned.
+
+        Returns
+        -------
+        * `xi`: [np.array]: The sampled points.
+
+        * `xi_transformed`: [np.array]:
+            The transformed values of `xi`, for feeding to a model.
+
+        * `border_list`: [list of tuples]:
+            A list of where 
+        """
+        bounds = self.bounds
+        xi = np.linspace(bounds[0], bounds[1], num_points)
+        xi_transformed = self.transform(xi)
+        if border_width is None:
+            return xi, xi_transformed
+        border_list = []
+        border_distance = (bounds[1]-bounds[0])/(num_points-1)*border_width
+        for i in range(num_points):
+            lower_border = xi[i]-border_distance
+            lower_border = np.max([lower_border, bounds[0]])
+            higher_border = xi[i]+border_distance
+            higher_border = np.min([higher_border, bounds[1]])
+            border_list.append((lower_border,higher_border))
+        return xi, xi_transformed, border_list
+
+
 class Integer(Dimension):
     def __init__(self, low, high, transform=None, name=None):
         """Search space dimension that can take on integer values.
@@ -427,6 +470,40 @@ class Integer(Dimension):
         
         # Convert samples to a list of integers
         return samples.astype(int)
+
+    def evenly_sample(self, num_points, border_width = None):
+        """Return `n_points` evenly spaced points from a Dimension.
+
+        Parameters
+        ----------
+        * `num_points` [int]
+            The number of points to sample from `dim`.
+
+        * `border_width` [int]
+            How wide to make the borders. If None, no borders are returned.
+
+        Returns
+        -------
+        * `xi`: [np.array]:
+            The sampled points in the Dimension.
+
+        * `xi_transformed`: [np.array]:
+            The transformed values of `xi`, for feeding to a model.
+        """
+        bounds = self.bounds
+        xi = np.linspace(bounds[0], bounds[1], num_points)
+        xi_transformed = self.transform(xi)
+        if border_width is None:
+            return xi, xi_transformed
+        border_list = []
+        border_distance = (bounds[1]-bounds[0])/(num_points-1)*border_width
+        for i in range(num_points):
+            lower_border = xi[i]-border_distance
+            lower_border = np.max([lower_border, bounds[0]])
+            higher_border = xi[i]+border_distance
+            higher_border = np.min([higher_border, bounds[1]])
+            border_list.append((lower_border,higher_border))
+        return xi, xi_transformed, border_list
 
 
 class Categorical(Dimension):
@@ -566,6 +643,34 @@ class Categorical(Dimension):
             s.append(self.categories[i % l])
         return s
 
+    def evenly_sample(self, num_points, border_width = None):
+        """Return `n_points` evenly spaced points from a Dimension.
+
+        Parameters
+        ----------
+        * `num_points` [int]
+            The number of points to sample.
+
+        * `border_width` [int]
+            If None, no borders are returned. If not None, borders that only encompas
+            the sampled points are returned.
+
+        Returns
+        -------
+        * `xi`: [np.array]:
+            The index of sampled points.
+
+        * `xi_transformed`: [np.array]:
+            The transformed values of `xi`, for feeding to a model.
+        """
+        cats = np.array(getattr(self, "categories", []), dtype=object)
+        xi = np.linspace(0, len(cats) - 1, min(len(cats), num_points), dtype=int)
+        xi_transformed = self.transform(cats[xi])
+        if border_width is None:
+            return xi, xi_transformed
+        border_list = [(x,x) for x in xi] # For categorial dimensions, it doesn't make
+        # sense to average over neighboring categories.
+        return xi, xi_transformed, border_list
 
 class Space(object):
     """Search space."""
