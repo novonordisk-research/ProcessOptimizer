@@ -322,66 +322,7 @@ def _format_scatter_plot_axes(ax, space, ylabel, dim_labels=None):
     return ax
 
 
-def dependence(space, model, i, j=None,
-    sample_points=None, #made obsolete by new approach to calculations. Delete in plot_obejctive
-    n_samples=250, #Should likely be deleted together with sample_points
-    n_points=40,
-    x_eval=None,
-    return_std=False): #Defaults to true in call
-    ''' 
-    A function to generate content for 1d and 2d plots
-    '''
-    oneD_resolution = n_points*2
-    twoD_resolution = n_points
-    if x_eval is None:
-        background = np.asarray([sum(n)/len(n) for n in space])
-    else:
-        background = np.asarray([float(x) for x in x_eval])
-    # print(f'Background is {background} and i is {i} and j is {j}. The type of background is {type(background)}, x_eval is {x_eval}')
-    
-    if j is None:
-        gridded_dim = np.linspace(np.array(space.dimensions[i].low), np.array(space.dimensions[i].high), oneD_resolution)
-        background_matrix = np.tile(background, (oneD_resolution, 1))
-        # print(f' i is {i}. Background_matrix (before change) is {background_matrix}')
-        background_matrix[:,i] = gridded_dim
-        # print(f'background_matrix with i changed is {background_matrix}')
-        values, stddev = model.predict(space.transform(background_matrix), return_std = True) #opt.space.transform(test_points)
-        return gridded_dim, values, stddev
-    
-    else:
-        gridded_dim_i = np.linspace(np.array(space.dimensions[i].low), np.array(space.dimensions[i].high), twoD_resolution)
-        #print('...')
-        #print(f'gridded_dim_i is {gridded_dim_i}, i is {i}')
-        gridded_dim_j = np.linspace(np.array(space.dimensions[j].low), np.array(space.dimensions[j].high), twoD_resolution)
-        #print(f'gridded_dim_j is {gridded_dim_j}, j is {j}')
-        gridded_dims = np.asarray([gridded_dim_i, gridded_dim_j])
-        #print(f'gridded_dims is {gridded_dims}')
-        background_matrix = np.tile(background, (twoD_resolution**2, 1))
-        #print(f'background_matrix (before change) is {background_matrix}')
-        specific_points = cartesian_coord(*gridded_dims)
-        #print(f'specific_points is {specific_points}')
-        background_matrix[:,j] = specific_points[:,1] # Her skal der arbejdes mere for at sætte data rigtigt ind
-        #print(f'background_matrix with j changed is {background_matrix}')
-        background_matrix[:,i] = specific_points[:,0]
-        #print(f'background_matrix with i changed is {background_matrix}')
-        values, stddev = model.predict(space.transform(background_matrix), return_std = True)
-        if return_std:
-            return gridded_dim_j, gridded_dim_i, values.reshape(twoD_resolution, twoD_resolution).T, stddev.reshape(twoD_resolution,twoD_resolution).T
-        else:
-            return gridded_dim_j, gridded_dim_i, values.reshape(twoD_resolution, twoD_resolution).T
-
-
-def cartesian_coord(*arrays):
-    '''
-    from https://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-    '''
-    grid = np.meshgrid(*arrays)        
-    coord_list = [entry.ravel() for entry in grid]
-    points = np.vstack(coord_list).T
-    return points
-
-
-def _dependence(
+def dependence(
     space,
     model,
     i,
