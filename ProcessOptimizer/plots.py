@@ -1,6 +1,7 @@
 """Plotting functions."""
-from itertools import count
+from itertools import count, compress
 from functools import partial
+import random
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -476,8 +477,8 @@ def dependence(
 def plot_objective(
     result,
     levels=10,
-    n_points=40,
-    n_samples=250,
+    oversampling=10,
+    graph_width=20,
     size=2,
     zscale="linear",
     dimensions=None,
@@ -486,7 +487,7 @@ def plot_objective(
     expected_minimum_samples=None,
     title=None,
     show_confidence=False,
-    plot_options = None
+    plot_options=None,
 ):
     """Pairwise dependence plot of the objective function.
 
@@ -507,84 +508,90 @@ def plot_objective(
         The result for which to create the scatter plot matrix.
 
     * `levels` [int, default=10]
-        Number of levels to draw on the contour plot, passed directly
-        to `plt.contour()`.
+        Number of levels to draw on the contour plot, passed directly to
+        `plt.contour()`.
 
-    * `n_points` [int, default=40]
-        Number of points at which to evaluate the partial dependence
-        along each dimension.
+    * `oversampling` [int, default=10]
+        How many sample to have per 2d pixel on average.
 
-    * `n_samples` [int, default=250]
-        Number of random samples to use for averaging the model function
-        at each of the `n_points`.
+    * `graph_width` [int, default=20]
+        Number of points at which to evaluate the partial dependence along 
+        each dimension.
 
     * `size` [float, default=2]
         Height (in inches) of each facet.
 
-    * `zscale` [str, default='linear']
-        Scale to use for the z axis of the contour plots. Either 'linear'
-        or 'log'.
+    * `zscale` [str, default="linear"]
+        Scale to use for the z axis of the contour plots. Either 'linear' or 'log'.
 
-    * `dimensions` [list of str, default=None] Labels of the dimension
-        variables. `None` defaults to `space.dimensions[i].name`, or
-        if also `None` to `['X_0', 'X_1', ..]`.
+    * `dimensions` [list of str, default=None]
+        Labels of the dimension variables. `None` defaults to
+        `space.dimensions[i].name`, or if also `None` to `['X_0', 'X_1', ..]`.
 
-    * `usepartialdependence` [bool, default=false] Whether to use partial
-        dependence or not when calculating dependence. If false plot_objective
-        will parse values to the dependence function,
-        defined by the pars argument
+    * `usepartialdependence` [bool, default=True]
+        Whether to use partial dependence or not when calculating dependence. If false, 
+        plot_objective will parse values to the dependence function, defined by the pars
+        argument.
 
-    * `pars` [str, default = 'result' or list of floats] Defines the values
-    for the red
-        points in the plots, and if partialdependence is false, this argument
-        also defines values for all other parameters when calculating
-        dependence.
+    * `pars` [str or list of floats, default="result"]
+        Defines the values for the red points in the plots, and if partialdependence is
+        false, this argument also defines values for all other parameters when
+        calculating dependence.
         Valid strings:
-            'result' - Use best observed parameters
-            'expected_minimum' - Parameters that gives the best minimum
-                Calculated using scipy's minimize method. This method
-                currently does not work with categorical values.
-            'expected_minimum_random' - Parameters that gives the best minimum
-                when using naive random sampling. Works with categorical values
-            '[x[0], x[1], ..., x[n]] - Parameter to show depence from a given x
+            "result" - Use best observed parameters
+            "expected_minimum" - Parameters that gives the best minimum. Calculated
+                using scipy's minimize method. This method currently does not work with
+                categorical values.
+            "expected_minimum_random" - Parameters that gives the best minimum when
+            using naive random sampling. Works with categorical values.
+            '[x[0], x[1], ..., x[n]] - Parameter to show depence from a given x.
 
-    * `expected_minimum_samples` [float, default = None] Determines how many
-    points should be evaluated to find the minimum when using
-    'expected_minimum' or 'expected_minimum_random'
+    * `expected_minimum_samples` [float, default = None]
+        Determines how many points should be evaluated to find the minimum when using
+        'expected_minimum' or 'expected_minimum_random'.
 
     * `title` [str, default=None]
-        String to use as title of the figure
+        String to use as title of the figure.
 
-    * `show_confidence` [bool, default=false] Whether or not to show a credible
-        range around the mean estimate on the 1d-plots in the diagonal. The
-        credible range is given as 1.96 times the std in the point.
+    * `show_confidence` [bool, default=False]
+        Whether or not to show a credible range around the mean estimate on the 1d-plots
+        in the diagonal. The credible range is given as 1.96 times the std in the point.
 
-    * `plot_options` [dict or None, default None] A dict of the options for the plot. If,
-        none, the defaults are used for all values.
+    * `plot_options` [dict, default=None]
+        Dictionary with the options to use when plotting. If None, the defaults are used
+        for all values.
         Possible keys:
-        * interpolation [string, default ""] Which interpolation to use. If empty,
-            contour plots are used. Note that contour plots are not compatible with
-            showing uncertainty.
-        * uncertain_color [color, default [0, 0, 0]] The color of the maximally
-            uncertain data point.
-        * colormap [string, default 'viridis_r'] The colormap to use in the 2D plots.
-        * normalize_uncertainty [function with three inputs, default
-            `lambda x, global_min, global_max: (x-global_min)/(global_max-global_min)`]
-            The normalisation function for the uncertainty.
-            x is a numpy array containing the standard deviations, global_min and 
-            global_max are the min and max standard deviations for all 2D plots.
-            Output must be a numpy array of the same dimensions as x with values between 
-            0 and 1. If not, it raises an error, but only if any concrete outputs are
-            outside this range. Output values of 0 shows the color for the expected 
-            value modeled objective function. Output values of 1 corresponds to the 
-            uncertain_color. 
-            To not show any uncertainty, use `lambda x, min, max: 0*x`.
+        * "interpolation" [string, default=""]: The interplotation visaulization to use for the 2D
+            plots. For possible values, see
+            https://matplotlib.org/stable/gallery/images_contours_and_fields/interpolation_methods.html
+            If empty string, a contour pot is shown. Note that contour plots are not
+            compatible with showing uncertainty.
+        * "uncertain_color"  [any matplotlib color, default=[0,0,0]]: The colour to use 
+            for "very" uncertain values in 2D plots.
+        * "colormap" [string, default="viridis_r"]: The colourmap to use. For possible
+            values, see
+            https://matplotlib.org/stable/tutorials/colors/colormaps.html
+        * "normalize_uncertainty" [function with three inputs]: Normalisation function
+            for the uncertainty. First input is a numpy array containing the standard
+            deviations, second and third inputs are the min and max standard deviations'
+            for all 2D plots. Output must be a numpy array of the same dimensions as x
+            with values between 0 and 1. If not, it raises an error, but only if any
+            concrete outputs are outside this range. Output values of 0 shows the color
+            for the expected value modeled objective function. Output values of 1
+            corresponds to the uncertain_color. To not show any uncertainty, use 
+            `lambda x, min, max: 0*x`.
             Another use is to visually deemphasize points with medium uncertainty by e.g
             `lambda x, global_min, global_max: ((x-global_min)/(global_max-global_min))**(1/2)`.
+            Defaults to
+            `lambda x, global_min, global_max: (x-global_min)/(global_max-global_min)`
+    Raises
+    -------
+    * `ValueError`
+            If pars is not of the expected types.
 
     Returns
     -------
-    * `ax`: [`Axes`]:
+    * `Axes`:
         The matplotlib axes.
     """
     # Here we define the values for which to plot the red dot (2d plot) and
@@ -651,26 +658,22 @@ def plot_objective(
     else:
         raise ValueError("Argument ´pars´ must be a string or a list")
 
+    num_random_points = oversampling*graph_width*graph_width
+    sampling_dimensions = [
+        dim.evenly_sample(graph_width*oversampling)[0]
+        for dim in space.dimensions]
+    sample_point_list = [
+        [random.choice(dim) for dim in sampling_dimensions]
+        for _ in range(num_random_points)]
     if usepartialdependence:
-        x_eval = None
-    else:
-        x_eval = x_vals
-    rvs_transformed = space.transform(space.rvs(n_samples=n_samples))
-    samples, minimum, _ = _map_categories(space, result.x_iters, x_vals)
+        restricted_sample_point_list, value_list, stddev_list = generate_random_data(
+                        space,
+                        locked_val_list= [],
+                        sample_point_list = sample_point_list,
+                        model = model)
 
-    fig, ax = plt.subplots(
-        space.n_dims,
-        space.n_dims,
-        figsize=(size * space.n_dims, size * space.n_dims),
-    )
 
-    fig.subplots_adjust(
-        left=0.05, right=0.95, bottom=0.05, top=0.95, hspace=0.1, wspace=0.1
-    )
-
-    if title is not None:
-        fig.suptitle(title)
-
+    # Initialising min and max values to something that is bound to be overwritten.
     val_min_1d = float("inf")
     val_max_1d = -float("inf")
     val_min_2d = float("inf")
@@ -679,57 +682,65 @@ def plot_objective(
     stddev_max_2d = -float("inf")
 
     plots_data = []
-
     for i in range(space.n_dims):
+        xi, _, border_point_list_dim1 = space.dimensions[i].evenly_sample(graph_width, 2)
         row = []
         for j in range(space.n_dims):
-
             if j > i:
                 # We only plot the lower left half of the grid,
                 # to avoid duplicates.
                 break
-
-            # The diagonal of the plot
             elif i == j:
-                xi, yi, stddevs = dependence(
-                    space,
-                    result.models[-1],
-                    i,
-                    j=None,
-                    sample_points=rvs_transformed,
-                    n_points=n_points,
-                    x_eval=x_eval,
-                )
-                row.append({"xi": xi, "yi": yi, "std": stddevs})
-
-                
+                # Diagonal, creating data for 1D plots
+                if not usepartialdependence:
+                    locked_val_list = [(dim_num,x_vals[dim_num]) for dim_num in range(space.n_dims) if dim_num not in (i,)]
+                    restricted_sample_point_list, value_list, stddev_list = generate_random_data(
+                        space,
+                        locked_val_list = locked_val_list,
+                        sample_point_list = sample_point_list,
+                        model = model)
+                zi, stddevs = find_average_1D(
+                    restricted_sample_point_list,
+                    value_list,
+                    stddev_list,
+                    dim = i,
+                    border_list = border_point_list_dim1)
+                row.append({"xi": xi, "zi": zi, "std": stddevs})
+                # Finding the minimum and maximum objective value shown, accounting for
+                # uncertainty (if shown).
                 if show_confidence:
-                    yi_low_bound = yi - 1.96 * stddevs
-                    yi_high_bound = yi + 1.96 * stddevs
+                    zi_low_bound = zi - 1.96 * stddevs
+                    zi_high_bound = zi + 1.96 * stddevs
                 else:
-                    yi_low_bound = yi
-                    yi_high_bound = yi
-                if np.min(yi_low_bound) < val_min_1d:
-                    val_min_1d = np.min(yi_low_bound)
-                if np.max(yi_high_bound) > val_max_1d:
-                    val_max_1d = np.max(yi_high_bound)
+                    zi_low_bound = zi
+                    zi_high_bound = zi
+                if np.min(zi_low_bound) < val_min_1d:
+                    val_min_1d = np.min(zi_low_bound)
+                if np.max(zi_high_bound) > val_max_1d:
+                    val_max_1d = np.max(zi_high_bound)
 
-
-
-            # lower triangle
             else:
-                xi, yi, zi, stddevs = dependence(
-                    space,
-                    result.models[-1],
-                    i,
-                    j,
-                    rvs_transformed,
-                    n_points,
-                    x_eval=x_eval,
-                    return_std=True,
-                )
-                # print('filling with i, j = ' + str(i) + str(j))
-                row.append({"xi": xi, "yi": yi, "zi": zi, "std": stddevs})
+                yi, _, border_point_list_dim2 = space.dimensions[j].evenly_sample(graph_width, 2)
+                # Lower triangle
+                if not usepartialdependence:
+                    locked_val_list = [
+                        (dim_num,x_vals[dim_num])
+                        for dim_num in range(space.n_dims) if dim_num not in (i,j)]                 
+                    restricted_sample_point_list, value_list, stddev_list = generate_random_data(
+                        space,
+                        locked_val_list= locked_val_list,
+                        sample_point_list = sample_point_list,
+                        model = model)
+                zi, stddevs = find_average_2D(
+                    restricted_sample_point_list,
+                    value_list,
+                    stddev_list,
+                    dim1 = i,
+                    dim2 = j,
+                    border_list1 = border_point_list_dim1,
+                    border_list2 = border_point_list_dim2)
+
+                row.append({"xi": yi, "yi": xi, "zi": zi, "std": stddevs})
 
                 if np.min(zi) < val_min_2d:
                     val_min_2d = np.min(zi)
@@ -738,7 +749,7 @@ def plot_objective(
                 if np.min(stddevs) < stddev_min_2d:
                     stddev_min_2d = np.min(stddevs)
                 if np.max(stddevs) > stddev_max_2d:
-                    stddev_max_2d = np.max(stddevs)
+                    stddev_max_2d = np.max(stddevs)     
 
         plots_data.append(row)
 
@@ -785,26 +796,56 @@ def plot_objective(
                     options = plot_options
                 )
 
-                if [i, j] == [1, 0]:
-                    import matplotlib as mpl
+def generate_random_data(space, locked_val_list, sample_point_list, model):
+    # Making sure we do not overwrite the original sample point list, we need it later.
+    output_sample_point_list = [sample.copy() for sample in sample_point_list]
+    for locked_val in locked_val_list:
+        for i in range(len(output_sample_point_list)):
+            output_sample_point_list[i][locked_val[0]]=locked_val[1]
+    sample_point_list_transformed = space.transform(output_sample_point_list)
+    value_list, stddev_list = model.predict(
+        sample_point_list_transformed, return_std = True)
+    return output_sample_point_list, value_list, stddev_list
 
-                    norm = mpl.colors.Normalize(
-                        vmin=val_min_2d, vmax=val_max_2d
-                    )
-                    cb = ax[0][-1].figure.colorbar(
-                        mpl.cm.ScalarMappable(norm=norm, cmap=plot_options["colormap"]),
-                        ax=ax[0][-1],
-                    )
-                    cb.ax.locator_params(nbins=8)
 
-    if usepartialdependence:
-        ylabel = "Partial dependence"
-    else:
-        ylabel = "Dependence"
+def find_average_1D(sample_list, value_list, stddev_list, dim, border_list):
+    average_value_list = []
+    average_stddev_list = []
+    for border_tuple in border_list:
+        included_samples = [
+            sample[dim] >= border_tuple[0] and sample[dim] <= border_tuple[1]
+            for sample in sample_list]
+        average_value_list.append(np.mean(list(compress(value_list,included_samples))))
+        average_stddev_list.append(np.mean(list(compress(stddev_list,included_samples))))
+    return np.array(average_value_list), np.array(average_stddev_list)
 
-    return _format_scatter_plot_axes(
-        ax, space, ylabel=ylabel, dim_labels=dimensions
-    )
+def find_average_2D(sample_list, value_list, stddev_list, dim1, dim2, border_list1, border_list2):
+    average_value_list = []
+    average_stddev_list = []
+    included_samples_1d_list = []
+    included_samples_2d_list = []
+    for border_tuple in border_list1:
+        included_samples_1d_list.append(
+            [sample[dim1] >= border_tuple[0] and sample[dim1] <= border_tuple[1]
+            for sample in sample_list]
+        )
+    for border_tuple in border_list2:
+        included_samples_2d_list.append(
+            [sample[dim2] >= border_tuple[0] and sample[dim2] <= border_tuple[1]
+            for sample in sample_list]
+        )
+    for sample_choice_1d in included_samples_1d_list:
+        value_row = []
+        stddev_row = []
+        value_1d = list(compress(value_list, sample_choice_1d))
+        stddev_1d = list(compress(stddev_list, sample_choice_1d))
+        for sample_choice_2d in included_samples_2d_list:
+            included_2d_given_1d = list(compress(sample_choice_2d,sample_choice_1d))
+            value_row.append(np.mean(list(compress(value_1d,included_2d_given_1d))))
+            stddev_row.append(np.mean(list(compress(stddev_1d,included_2d_given_1d))))
+        average_value_list.append(value_row)
+        average_stddev_list.append(stddev_row)
+    return np.array(average_value_list), np.array(average_stddev_list)
 
 def _2d_dependency_plot(data, axes, samples, highlighted, limits, options = {}):
     if "zscale" in options.keys():
@@ -900,8 +941,8 @@ def plot_objectives(
         for result in results:
             plot_objective(result,
                            levels=levels,
-                           n_points=n_points,
-                           n_samples=n_samples,
+                           oversampling=10,
+                           graph_width=n_points,
                            size=size,
                            zscale=zscale,
                            dimensions=dimensions,
@@ -915,8 +956,8 @@ def plot_objectives(
         for k in range(len(results)):
             plot_objective(results[k], 
                            levels=levels,
-                           n_points=n_points,
-                           n_samples=n_samples,
+                           oversampling=10,
+                           graph_width=n_points,
                            size=size,
                            zscale=zscale,
                            dimensions=dimensions,
