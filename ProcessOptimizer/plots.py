@@ -594,10 +594,7 @@ def plot_objective(
     * `Axes`:
         The matplotlib axes.
     """
-    # Here we define the values for which to plot the red dot (2d plot) and
-    # the red dotted line (1d plot). These same values will be used for
-    # evaluating the plots when calculating dependence. (Unless partial
-    # dependence is to be used instead).
+    # Setting the options
     if not plot_options:
         plot_options = {}
     default_plot_type = {
@@ -611,11 +608,106 @@ def plot_objective(
     for k,v in default_plot_type.items():
         if k not in plot_options.keys():
             plot_options[k] = v
-    # zscale and levels really belon in plot_options, but for backwards compatability,
+    # zscale and levels really belong in plot_options, but for backwards compatability,
     # they are given as separate arguments.
     plot_options["zscale"] = zscale
     plot_options["levels"] = levels
+
+    x_vals = find_x_vals(pars,result,expected_minimum_samples)
+
     space = result.space
+
+    plots_data, limits = create_plot_data(
+        oversampling,
+        graph_width,
+        space,
+        result.models[-1],
+        usepartialdependence,
+        show_confidence,
+        x_vals)
+
+    samples, minimum, _ = _map_categories(space, result.x_iters, x_vals)
+
+    fig, ax = plt.subplots(
+        space.n_dims,
+        space.n_dims,
+        figsize=(size * space.n_dims, size * space.n_dims),
+    )
+
+    fig.subplots_adjust(
+        left=0.05, right=0.95, bottom=0.05, top=0.95, hspace=0.1, wspace=0.1
+    )
+
+    if title is not None:
+        fig.suptitle(title)
+
+    for i in range(space.n_dims):
+        for j in range(space.n_dims):
+
+            if j > i:
+                # We only plot the lower left half of the grid,
+                # to avoid duplicates.
+                break
+
+            # The diagonal of the plot, showing the 1D (partial) dependence for each of the n parameters
+            elif i == j:
+
+                xi = plots_data[i][j]["xi"]
+                zi = plots_data[i][j]["zi"]
+                stddevs = plots_data[i][j]["std"]
+
+                ax[i, i].plot(xi, zi)
+                ax[i, i].set_xlim(np.min(xi), np.max(xi))
+                ymin = limits["val_1d_min"]-abs(limits["val_1d_min"])*.02
+                ymax = limits["val_1d_max"]+abs(limits["val_1d_max"])*.02
+                ax[i, i].set_ylim(ymin, ymax)
+                ax[i, i].axvline(minimum[i], linestyle="--", color="r", lw=1)
+                if show_confidence:
+                    ax[i, i].fill_between(xi, 
+                                          y1=(zi - 1.96*stddevs),
+                                          y2=(zi + 1.96*stddevs),
+                                          alpha=0.5,
+                                          color='red',
+                                          linewidth=0.0)
+
+            # lower triangle
+            elif i > j:
+                _2d_dependency_plot(
+                    data=plots_data[i][j],
+                    axes=ax[i][j],
+                    samples=(samples[:, j], samples[:, i]),
+                    highlighted=(minimum[j], minimum[i]),
+                    limits=limits,
+                    options=plot_options
+                )
+
+                if [i, j] == [1, 0]:
+                    import matplotlib as mpl
+
+                    norm = mpl.colors.Normalize(
+                        vmin=limits["z_min"], vmax=limits["z_max"]
+                    )
+                    cb = ax[0][-1].figure.colorbar(
+                        mpl.cm.ScalarMappable(norm=norm, cmap=plot_options["colormap"]),
+                        ax=ax[0][-1],
+                    )
+                    cb.ax.locator_params(nbins=8)
+
+    if usepartialdependence:
+        ylabel = "Partial dependence"
+    else:
+        ylabel = "Dependence"
+
+    return _format_scatter_plot_axes(
+        ax, space, ylabel=ylabel, dim_labels=dimensions
+    )
+
+
+def find_x_vals(pars, result, expected_minimum_samples):
+    # Here we define the values for which to plot the red dot (2d plot) and
+    # the red dotted line (1d plot). These same values will be used for
+    # evaluating the plots when calculating dependence. (Unless partial
+    # dependence is to be used instead).
     if isinstance(pars, str):
         if pars == "result":
             # Using the best observed result
@@ -657,7 +749,12 @@ def plot_objective(
         x_vals = pars
     else:
         raise ValueError("Argument ´pars´ must be a string or a list")
+    return x_vals
 
+
+def create_plot_data(oversampling, graph_width, space, model, usepartialdependence, show_confidence, x_vals):
+    # Sampling the space and predicting the objective and the uncertainty at the sampling
+    # points
     num_random_points = oversampling*graph_width*graph_width
     sampling_dimensions = [
         dim.evenly_sample(graph_width*oversampling)[0]
@@ -753,48 +850,15 @@ def plot_objective(
 
         plots_data.append(row)
 
-    for i in range(space.n_dims):
-        for j in range(space.n_dims):
+    limits={
+        "val_1d_min": val_min_1d,
+        "val_1d_max": val_max_1d,
+        "z_min" : val_min_2d,
+        "z_max" : val_max_2d,
+        "stddev_min": stddev_min_2d,
+        "stddev_max": stddev_max_2d}
+    return plots_data, limits
 
-            if j > i:
-                # We only plot the lower left half of the grid,
-                # to avoid duplicates.
-                break
-
-            # The diagonal of the plot, showing the 1D (partial) dependence for each of the n parameters
-            elif i == j:
-
-                xi = plots_data[i][j]["xi"]
-                yi = plots_data[i][j]["yi"]
-                stddevs = plots_data[i][j]["std"]
-
-                ax[i, i].plot(xi, yi)
-                ax[i, i].set_xlim(np.min(xi), np.max(xi))
-                ax[i, i].set_ylim(val_min_1d-abs(val_min_1d)*.02, val_max_1d+abs(val_max_1d)*.02)
-                ax[i, i].axvline(minimum[i], linestyle="--", color="r", lw=1)
-                if show_confidence:
-                    ax[i, i].fill_between(xi, 
-                                          y1=(yi - 1.96*stddevs),
-                                          y2=(yi + 1.96*stddevs),
-                                          alpha=0.5,
-                                          color='red',
-                                          linewidth=0.0)
-
-            # lower triangle
-            elif i > j:
-                _2d_dependency_plot(
-                    data=plots_data[i][j],
-                    axes=ax[i][j],
-                    samples=(samples[:, j], samples[:, i]),
-                    highlighted=(minimum[j], minimum[i]),
-                    limits={
-                        "z_min" : val_min_2d,
-                        "z_max" : val_max_2d,
-                        "stddev_min": stddev_min_2d,
-                        "stddev_max": stddev_max_2d
-                    },
-                    options = plot_options
-                )
 
 def generate_random_data(space, locked_val_list, sample_point_list, model):
     # Making sure we do not overwrite the original sample point list, we need it later.
