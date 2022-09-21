@@ -614,35 +614,28 @@ def plot_objective(
             # Using the best observed result
             x_vals = result.x
         elif pars == "expected_minimum":
-
             # Do a gradient based minimum search using scipys own minimizer
             if expected_minimum_samples:
                 # If a value for expected_minimum_samples has been parsed
-                x_vals, _ = expected_minimum(
-                    result,
-                    n_random_starts=expected_minimum_samples,
-                    random_state=None,
-                )
-            else:  # Use standard of 20 random starting points
-                x_vals, _ = expected_minimum(
-                    result, n_random_starts=20, random_state=None
-                )
+                num_random_starts = expected_minimum_samples
+            else:
+                # Use standard of 20 random starting points
+                num_random_starts = 20
+            x_vals, _ = expected_minimum(result, n_random_starts=num_random_starts)
         elif pars == "expected_minimum_random":
             # Do a minimum search by evaluating the function with n_samples
             # sample values
             if expected_minimum_samples:
                 # If a value for expected_minimum_samples has been parsed
-                x_vals, _ = expected_minimum_random_sampling(
-                    result,
-                    n_random_starts=expected_minimum_samples,
-                    random_state=None,
-                )
+                num_random_starts = expected_minimum_samples
             else:
                 # Use standard of 10^n_parameters. Note this becomes very slow
                 # for many parameters
-                x_vals, _ = expected_minimum_random_sampling(
-                    result, n_random_starts=100000, random_state=None
-                )
+                num_random_starts = 100000
+            x_vals, _ = expected_minimum_random_sampling(
+                result,
+                n_random_starts=num_random_starts,
+            )
         else:
             raise ValueError(
                 "Argument ´pars´ must be a valid string \
