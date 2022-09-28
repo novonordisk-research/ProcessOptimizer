@@ -25,7 +25,16 @@ setup(name='ProcessOptimizer',
       install_requires=['numpy', 'matplotlib', 'scipy',
                         'scikit-learn>=0.24.2', 'six', 'deap', 'pyYAML'],
       extras_require={
-          "bokeh": ['bokeh', 'tornado']
+          "bokeh": ['bokeh', 'tornado'],
+          "browniebee": ['numpy==1.23.3',
+                         'matplotlib==3.5.3',
+                         'scipy==1.9.1',
+                         'scikit-learn==1.1.2',
+                         'six==1.16.0',
+                         'deap==1.3.3',
+                         'pyYAML==6.0',
+                         'bokeh==2.4.3',
+                         'tornado==6.2']
           },
       long_description=long_description,
       long_description_content_type='text/markdown'
