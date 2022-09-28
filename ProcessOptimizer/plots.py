@@ -1457,7 +1457,7 @@ def plot_Pareto_bokeh(
     dimensions=None,
     return_data=False,
     show_browser=False,
-    return_type_bokeh = 'file',
+    return_type_bokeh = None,
     filename='ParetoPlot',
 ):
     """Interactive bokeh plot of the Pareto front implemented in two dimensions
@@ -1489,12 +1489,12 @@ def plot_Pareto_bokeh(
         Whether to open the new plot in the browser or not. If True new
         HTML-file is opened in the default browser.
 
-    * `return_type_bokeh` ["file", "string", "embed", or "json", default="file"]
+    * `return_type_bokeh` ["file", "htmlString", "embed", or "json", default="file"]
         Determine how the bokeh plot is returned. Can be either
         
         - '"file"' for a HTML-file returned to the present working directory
           with the name 'filename'.html
-        - '"string"' for a string containing the HTML code
+        - '"htmlString"' for a string containing the HTML code
         - '"embed"' for <script> and <div> components for embeding. See
         https://docs.bokeh.org/en/latest/_modules/bokeh/embed/standalone.html#components
         for more information.
@@ -1545,7 +1545,7 @@ def plot_Pareto_bokeh(
             "dimensions in the optimizer space."
         )
 
-    if return_type_bokeh not in ['string', 'embed', 'file', 'json']:
+    if return_type_bokeh not in ['htmlString', 'embed', 'file', 'json', None]:
         raise NameError(f"'{return_type_bokeh}' is an unsupported return type for bokeh plot.")
     
     # Get objective names
@@ -1673,7 +1673,7 @@ def plot_Pareto_bokeh(
         bh_io.show(p)
         
 
-    if return_data is True and return_type_bokeh in ['string', 'embed', 'json']:
+    if return_data is True and return_type_bokeh in ['htmlString', 'embed', 'json']:
         raise ValueError("Cannot ruturn data and bokeh object at the same time")
     elif return_data is True and return_type_bokeh == 'file':
         return (
@@ -1684,14 +1684,23 @@ def plot_Pareto_bokeh(
             dimensions,
             objective_names,
         )
-    elif not return_data is True and return_type_bokeh in ['string', 'embed','json']:
-        if return_type_bokeh == 'string':
+    elif return_data is True and return_type_bokeh == None:
+        return (
+            np.array(optimizer.Xi),
+            np.array(optimizer.yi),
+            pop,
+            front,
+            dimensions,
+            objective_names,
+        )
+    elif not return_data is True and return_type_bokeh in ['htmlString', 'embed','json']:
+        if return_type_bokeh == 'htmlString':
             html = bh_embed.file_html(p, bh_resources.CDN, 'Multiobjective score-score plot')
             return html
         elif return_type_bokeh == 'embed':
             script, div = bh_embed.components(p)
             return (script, div)
         elif return_type_bokeh == 'json':
-            json_item = json.dumps(bh_embed.json_item(p))
+            json_item = bh_embed.json_item(p)
             return json_item
 
