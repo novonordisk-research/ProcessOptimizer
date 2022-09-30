@@ -22,9 +22,10 @@ setup(name='ProcessOptimizer',
           'ProcessOptimizer.space',
           'ProcessOptimizer.learning.gaussian_process'
           ],
-      install_requires=['numpy', 'matplotlib', 'scipy', 'bokeh',
+      install_requires=['numpy', 'matplotlib', 'scipy',
                         'scikit-learn>=0.24.2', 'six', 'deap', 'pyYAML'],
       extras_require={
+          "bokeh": ['bokeh', 'tornado'],
           "browniebee": ['numpy==1.23.3',
                          'matplotlib==3.5.3',
                          'scipy==1.9.1',
