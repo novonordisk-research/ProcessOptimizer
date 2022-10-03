@@ -10,6 +10,7 @@ from matplotlib.ticker import MaxNLocator, FuncFormatter
 from scipy.optimize import OptimizeResult
 from scipy.stats.mstats import mquantiles
 from scipy.ndimage import gaussian_filter1d
+from scipy.stats import norm
 from ProcessOptimizer import expected_minimum, expected_minimum_random_sampling
 from .space import Categorical
 from .optimizer import Optimizer
@@ -610,11 +611,15 @@ def plot_objective(
     for k,v in default_plot_type.items():
         if k not in plot_options.keys():
             plot_options[k] = v
-    # zscale and levels really belon in plot_options, but for backwards compatability,
-    # they are given as separate arguments.
+    # zscale and levels really belong in plot_options, but for backwards 
+    # compatibility they are given as separate arguments.
     plot_options["zscale"] = zscale
     plot_options["levels"] = levels
     space = result.space
+    # Check if we have any categorical dimensions, as this will influence how 
+    # how we do the 1D plotting
+    is_cat = [isinstance(dim, Categorical) for dim in space.dimensions]
+    
     if isinstance(pars, str):
         if pars == "result":
             # Using the best observed result
@@ -769,18 +774,109 @@ def plot_objective(
                 xi = plots_data[i][j]["xi"]
                 yi = plots_data[i][j]["yi"]
                 stddevs = plots_data[i][j]["std"]
-
-                ax[i, i].plot(xi, yi)
-                ax[i, i].set_xlim(np.min(xi), np.max(xi))
-                ax[i, i].set_ylim(val_min_1d-abs(val_min_1d)*.02, val_max_1d+abs(val_max_1d)*.02)
-                ax[i, i].axvline(minimum[i], linestyle="--", color="r", lw=1)
-                if show_confidence:
-                    ax[i, i].fill_between(xi, 
-                                          y1=(yi - 1.96*stddevs),
-                                          y2=(yi + 1.96*stddevs),
-                                          alpha=0.5,
-                                          color='red',
-                                          linewidth=0.0)
+                
+                # Check if we are about to plot a categoric factor
+                if is_cat[i]:                    
+                    # ax[i, i].scatter(xi, yi, s=60, marker="_", zorder=2)                    
+                    # Expand the x-axis for this factor so we can see the first
+                    # and the last category
+                    ax[i, i].set_xlim(np.min(xi)-0.2, np.max(xi)+0.2)
+                    # Use same y-axis as all other 1D plots
+                    ax[i, i].set_ylim(val_min_1d-abs(val_min_1d)*.02, 
+                                      val_max_1d+abs(val_max_1d)*.02)
+                    # Calculate normal distribution probability density across
+                    # the y-axis for each category
+                    y_samples = np.linspace(val_min_1d,val_max_1d,100)
+                    a = np.zeros((100,len(xi)))
+                    for idx in range(len(xi)):
+                        # Calculate the normal probability density
+                        a[:,idx] = norm.pdf(y_samples, 
+                                            loc=yi[idx],
+                                            scale=stddevs[idx])
+                    # Round probabilities to the third decimal place
+                    a = np.around(a,decimals=3)
+                    # Normalize for the colormap
+                    a = a/np.max(a)
+                    
+                    if show_confidence:
+                        import matplotlib as mpl
+                        colors = ["white", "red"]
+                        cmap = mpl.colors.LinearSegmentedColormap.from_list(
+                            "white_to_red",
+                            colors,
+                        )
+                        # If we wish to revert to one uniformly colored bar for
+                        # each category, we can use the code below
+                        # ax[i, i].bar(xi,
+                        #               2*1.96*stddevs,
+                        #               width=0.2,
+                        #               bottom=yi-1.96*stddevs,
+                        #               alpha=0.5,
+                        #               color='red',
+                        #               zorder=1,)
+                        for idx in range(len(xi)):
+                            ax[i, i].imshow(
+                                np.reshape(a[:,idx],(100,1)),
+                                cmap=cmap,
+                                alpha=0.75,
+                                origin="lower",
+                                extent=[
+                                    xi[idx]-0.1,
+                                    xi[idx]+0.1,
+                                    val_min_1d,
+                                    val_max_1d
+                                    ],
+                                aspect="auto",
+                                zorder=1,
+                            )
+                else:
+                    ax[i, i].plot(xi, yi, zorder=0)
+                    ax[i, i].set_xlim(np.min(xi), np.max(xi))
+                    ax[i, i].set_ylim(val_min_1d-abs(val_min_1d)*.02, 
+                                      val_max_1d+abs(val_max_1d)*.02)
+                    ax[i, i].axvline(minimum[i], linestyle="--", color="k", lw=1)
+                    if show_confidence:
+                        # Calculate normal distribution probability density across
+                        # the y-axis for all x-values
+                        y_samples = np.linspace(val_min_1d, val_max_1d, 100)
+                        a = np.zeros((100, len(xi)))
+                        for idx in range(len(xi)):
+                            # Calculate the normal probability density
+                            a[:,idx] = norm.pdf(
+                                y_samples, 
+                                loc=yi[idx],
+                                scale=stddevs[idx]
+                            )
+                        # Round probabilities to the third decimal place
+                        a = np.around(a, decimals=3)
+                        # Normalize the probabilities for the colormap
+                        a = a/np.max(a)
+                        # Build a linear colormap from white to red
+                        import matplotlib as mpl
+                        colors = ["white", "red"]
+                        cmap = mpl.colors.LinearSegmentedColormap.from_list(
+                            "white_to_red",
+                            colors,
+                        )
+                        # Show the probability distribution of the model in its
+                        # full 1D glory
+                        ax[i, i].imshow(
+                            a,
+                            cmap=cmap,
+                            origin="lower",
+                            extent=[xi[0], xi[-1], val_min_1d, val_max_1d],
+                            aspect="auto",
+                            zorder=1,
+                        )
+                        # Add vague upper/lower bounds at the 2.5 % quantiles
+                        ax[i, i].plot(
+                            xi, 
+                            yi - 1.96*stddevs,
+                            xi,
+                            yi + 1.96*stddevs,
+                            alpha=0.15,
+                            color="red",
+                        )
 
             # lower triangle
             elif i > j:
@@ -801,11 +897,11 @@ def plot_objective(
                 if [i, j] == [1, 0]:
                     import matplotlib as mpl
 
-                    norm = mpl.colors.Normalize(
+                    norm_color = mpl.colors.Normalize(
                         vmin=val_min_2d, vmax=val_max_2d
                     )
                     cb = ax[0][-1].figure.colorbar(
-                        mpl.cm.ScalarMappable(norm=norm, cmap=plot_options["colormap"]),
+                        mpl.cm.ScalarMappable(norm=norm_color, cmap=plot_options["colormap"]),
                         ax=ax[0][-1],
                     )
                     cb.ax.locator_params(nbins=8)
@@ -877,9 +973,24 @@ def _2d_dependency_plot(data, axes, samples, highlighted, limits, options = {}):
         # imshow assumes square pixels, so it sets aspect to 1. We do not want that.
         axes.set_aspect('auto')
     axes.scatter(
-        samples[0], samples[1], c="darkorange", s=10, lw=0.0, zorder=10, clip_on=False
+        samples[0],
+        samples[1],
+        c="darkorange",
+        s=20,
+        lw=0.0,
+        zorder=10,
+        clip_on=False,
     )
-    axes.scatter(highlighted[0], highlighted[1], c=["r"], s=20, lw=0.0, zorder=10, clip_on=False)
+    axes.scatter(
+        highlighted[0],
+        highlighted[1],
+        c="r",
+        s=30,
+        marker="D",
+        lw=0.0,
+        zorder=10,
+        clip_on=False,
+    )
 
 
 
