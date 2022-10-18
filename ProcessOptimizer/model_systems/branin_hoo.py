@@ -1,9 +1,12 @@
+import numpy as np
 from ProcessOptimizer.model_systems import ModelSystem
 from ProcessOptimizer.model_systems.benchmarks import branin
 from ProcessOptimizer.space import Real
 
 # Take the score function from the benchmarks file
-score = branin
+# Add noise
+def score(x, rng=np.random.default_rng(), noise_std=0.02): 
+    return branin(x) + rng.normal(scale=noise_std)
 
 # Define the relevant parameter space
 space = []
