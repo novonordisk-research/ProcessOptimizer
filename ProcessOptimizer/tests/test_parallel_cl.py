@@ -8,7 +8,7 @@ from numpy.testing import assert_raises
 
 from ProcessOptimizer.space import Real
 from ProcessOptimizer import Optimizer
-from ProcessOptimizer.benchmarks import branin
+from ProcessOptimizer.model_systems.benchmarks import branin
 import ProcessOptimizer.learning as sol
 
 from scipy.spatial.distance import pdist

@@ -5,10 +5,10 @@ import pytest
 
 from ProcessOptimizer import gbrt_minimize
 from ProcessOptimizer import forest_minimize
-from ProcessOptimizer.benchmarks import bench1
-from ProcessOptimizer.benchmarks import bench2
-from ProcessOptimizer.benchmarks import bench3
-from ProcessOptimizer.benchmarks import bench4
+from ProcessOptimizer.model_systems.benchmarks import bench1
+from ProcessOptimizer.model_systems.benchmarks import bench2
+from ProcessOptimizer.model_systems.benchmarks import bench3
+from ProcessOptimizer.model_systems.benchmarks import bench4
 
 
 MINIMIZERS = [("ET", partial(forest_minimize, base_estimator='ET')),
