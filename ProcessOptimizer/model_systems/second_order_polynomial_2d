@@ -26,7 +26,9 @@ def score(x, rng=np.random.default_rng(), noise_std=0.02):
     return value
 
 # The location of the minimum in the parameter space:
-true_min_A = [2/3, -0.4833]
+true_min_loc = [2/3, -0.4833]
+# The true minimum value
+true_min = score(true_min_loc, noise_std=0)
 
 # Define a the domain as a Space object
 space = []
@@ -34,4 +36,4 @@ space += [Real(-1, 1, name='x1')]
 space += [Real(-1, 1, name='x2')]
 
 # Create model system
-polynomial_system_2d = ModelSystem(score, true_min_A, space)
+polynomial_system_2d = ModelSystem(score, space, true_min)
