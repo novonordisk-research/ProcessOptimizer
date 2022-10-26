@@ -622,8 +622,8 @@ def plot_objective(
     plot_options["zscale"] = zscale
     plot_options["levels"] = levels
     space = result.space
-    # Check if we have any categorical dimensions, as this will influence how 
-    # how we do the 1D plotting
+    # Check if we have any categorical dimensions, as this influences the plots
+    # on the diagonal (1D dependency)
     is_cat = [isinstance(dim, Categorical) for dim in space.dimensions]
     
     if isinstance(pars, str):
@@ -703,7 +703,7 @@ def plot_objective(
     stddev_max_2d = -float("inf")
 
     plots_data = []
-
+    # Gather all data relevant for plotting
     for i in range(space.n_dims):
         row = []
         for j in range(space.n_dims):
@@ -765,7 +765,8 @@ def plot_objective(
                     stddev_max_2d = np.max(stddevs)
 
         plots_data.append(row)
-
+    
+    # Build all the plots of in the figure
     for i in range(space.n_dims):
         for j in range(space.n_dims):
 
@@ -793,7 +794,7 @@ def plot_objective(
                         # Create one uniformly colored bar for each category.
                         # Edgecolor ensures we can see the bar when plotting 
                         # at best obeservation, as stddev is often tiny there
-                        handle = ax[i, i].bar(
+                        ax[i, i].bar(
                             xi,
                             2*1.96*stddevs,
                             width=0.2,
@@ -803,7 +804,7 @@ def plot_objective(
                             edgecolor="green",
                             zorder=1,
                         )
-                        # Also add highlight the best/expected minimum
+                        # Also add highlight the best point/expected minimum
                         ax[i, i].scatter(
                             minimum[i],
                             yi[int(minimum[i])],
@@ -887,12 +888,15 @@ def plot_objective(
                         label="Score",
                     )
                     cb.ax.locator_params(nbins=8)
+                    
                     # Add a legend for the various figure contents
                     if isinstance(pars, str):
                         if pars == "result":
                             highlight_label = "Best data point"
                         elif pars == "expected_minimum":
                             highlight_label = "Expected minimum"
+                        elif pars == "expected_minimum_random":
+                            highlight_label = "Simulated minimum"
                     # Legend icon for data points
                     legend_data_point = mpl.lines.Line2D(
                         [],
