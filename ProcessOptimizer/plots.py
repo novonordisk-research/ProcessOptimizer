@@ -298,9 +298,15 @@ def _format_scatter_plot_axes(ax, space, ylabel, dim_labels=None):
                 if space.dimensions[i].prior == "log-uniform":
                     ax_.set_yscale("log")
                 else:
-                    ax_.yaxis.set_major_locator(
-                        MaxNLocator(6, prune="both", integer=iscat[i])
-                    )
+                    if iscat[i]:
+                        # Do not remove first/last tick for categoric factors
+                        ax_.yaxis.set_major_locator(
+                            MaxNLocator(6, prune=None, integer=iscat[i])
+                        )
+                    else:
+                        ax_.yaxis.set_major_locator(
+                            MaxNLocator(6, prune="both", integer=iscat[i])
+                        )
 
             else:  # diagonal plots
                 ax_.set_ylim(*diagonal_ylim)
@@ -311,6 +317,7 @@ def _format_scatter_plot_axes(ax, space, ylabel, dim_labels=None):
 
                 ax_.xaxis.tick_top()
                 ax_.xaxis.set_label_position("top")
+                [labl.set_rotation(45) for labl in ax_.get_xticklabels()]
                 ax_.set_xlabel(dim_labels[j])
 
                 if space.dimensions[i].prior == "log-uniform":
@@ -683,7 +690,7 @@ def plot_objective(
     )
 
     fig.subplots_adjust(
-        left=0.05, right=0.95, bottom=0.05, top=0.95, hspace=0.1, wspace=0.1
+        left=0.07, right=0.95, bottom=0.07, top=0.94, hspace=0.1, wspace=0.1
     )
 
     if title is not None:
@@ -777,105 +784,77 @@ def plot_objective(
                 
                 # Check if we are about to plot a categoric factor
                 if is_cat[i]:                    
-                    # ax[i, i].scatter(xi, yi, s=60, marker="_", zorder=2)                    
                     # Expand the x-axis for this factor so we can see the first
                     # and the last category
                     ax[i, i].set_xlim(np.min(xi)-0.2, np.max(xi)+0.2)
                     # Use same y-axis as all other 1D plots
                     ax[i, i].set_ylim(val_min_1d-abs(val_min_1d)*.02, 
                                       val_max_1d+abs(val_max_1d)*.02)
-                    # Calculate normal distribution probability density across
-                    # the y-axis for each category
-                    y_samples = np.linspace(val_min_1d,val_max_1d,100)
-                    a = np.zeros((100,len(xi)))
-                    for idx in range(len(xi)):
-                        # Calculate the normal probability density
-                        a[:,idx] = norm.pdf(y_samples, 
-                                            loc=yi[idx],
-                                            scale=stddevs[idx])
-                    # Round probabilities to the third decimal place
-                    a = np.around(a,decimals=3)
-                    # Normalize for the colormap
-                    a = a/np.max(a)
-                    
                     if show_confidence:
-                        import matplotlib as mpl
-                        colors = ["white", "red"]
-                        cmap = mpl.colors.LinearSegmentedColormap.from_list(
-                            "white_to_red",
-                            colors,
+                        # Create one uniformly colored bar for each category.
+                        # Edgecolor ensures we can see the bar when plotting 
+                        # at best obeservation, as stddev is often tiny there
+                        handle = ax[i, i].bar(
+                            xi,
+                            2*1.96*stddevs,
+                            width=0.2,
+                            bottom=yi-1.96*stddevs,
+                            alpha=0.5,
+                            color="green",
+                            edgecolor="green",
+                            zorder=1,
                         )
-                        # If we wish to revert to one uniformly colored bar for
-                        # each category, we can use the code below
-                        # ax[i, i].bar(xi,
-                        #               2*1.96*stddevs,
-                        #               width=0.2,
-                        #               bottom=yi-1.96*stddevs,
-                        #               alpha=0.5,
-                        #               color='red',
-                        #               zorder=1,)
-                        for idx in range(len(xi)):
-                            ax[i, i].imshow(
-                                np.reshape(a[:,idx],(100,1)),
-                                cmap=cmap,
-                                alpha=0.75,
-                                origin="lower",
-                                extent=[
-                                    xi[idx]-0.1,
-                                    xi[idx]+0.1,
-                                    val_min_1d,
-                                    val_max_1d
-                                    ],
-                                aspect="auto",
-                                zorder=1,
-                            )
+                        # Also add highlight the best/expected minimum
+                        ax[i, i].scatter(
+                            minimum[i],
+                            yi[int(minimum[i])],
+                            c="k",
+                            s=20,
+                            marker="D",
+                            zorder=0,
+                        )
+                    else:
+                        # Simply show the mean value
+                        ax[i, i].scatter(
+                            xi,
+                            yi,
+                            c="red",
+                            s=80,
+                            marker="_",
+                            zorder=1,
+                        )
+                        # Also add highlight the best/expected minimum
+                        ax[i, i].scatter(
+                            minimum[i],
+                            yi[int(minimum[i])],
+                            c="k",
+                            s=20,
+                            marker="D",
+                            zorder=0,
+                        )
+                
+                # For non-categoric factors
                 else:
-                    ax[i, i].plot(xi, yi, zorder=0)
                     ax[i, i].set_xlim(np.min(xi), np.max(xi))
                     ax[i, i].set_ylim(val_min_1d-abs(val_min_1d)*.02, 
                                       val_max_1d+abs(val_max_1d)*.02)
                     ax[i, i].axvline(minimum[i], linestyle="--", color="k", lw=1)
                     if show_confidence:
-                        # Calculate normal distribution probability density across
-                        # the y-axis for all x-values
-                        y_samples = np.linspace(val_min_1d, val_max_1d, 100)
-                        a = np.zeros((100, len(xi)))
-                        for idx in range(len(xi)):
-                            # Calculate the normal probability density
-                            a[:,idx] = norm.pdf(
-                                y_samples, 
-                                loc=yi[idx],
-                                scale=stddevs[idx]
+                        ax[i, i].fill_between(xi,
+                                              y1=(yi - 1.96*stddevs),
+                                              y2=(yi + 1.96*stddevs),
+                                              alpha=0.5,
+                                              color="green",
+                                              edgecolor="green",
+                                              linewidth=0.0,
                             )
-                        # Round probabilities to the third decimal place
-                        a = np.around(a, decimals=3)
-                        # Normalize the probabilities for the colormap
-                        a = a/np.max(a)
-                        # Build a linear colormap from white to red
-                        import matplotlib as mpl
-                        colors = ["white", "red"]
-                        cmap = mpl.colors.LinearSegmentedColormap.from_list(
-                            "white_to_red",
-                            colors,
-                        )
-                        # Show the probability distribution of the model in its
-                        # full 1D glory
-                        ax[i, i].imshow(
-                            a,
-                            cmap=cmap,
-                            origin="lower",
-                            extent=[xi[0], xi[-1], val_min_1d, val_max_1d],
-                            aspect="auto",
-                            zorder=1,
-                        )
-                        # Add vague upper/lower bounds at the 2.5 % quantiles
+                    else:
                         ax[i, i].plot(
-                            xi, 
-                            yi - 1.96*stddevs,
                             xi,
-                            yi + 1.96*stddevs,
-                            alpha=0.15,
+                            yi,
                             color="red",
+                            lw=1,
+                            zorder=0,
                         )
 
             # lower triangle
@@ -895,6 +874,7 @@ def plot_objective(
                 )
 
                 if [i, j] == [1, 0]:
+                    # Add a colorbar for the 2D plot value scale
                     import matplotlib as mpl
 
                     norm_color = mpl.colors.Normalize(
@@ -903,8 +883,73 @@ def plot_objective(
                     cb = ax[0][-1].figure.colorbar(
                         mpl.cm.ScalarMappable(norm=norm_color, cmap=plot_options["colormap"]),
                         ax=ax[0][-1],
+                        location="bottom",
+                        fraction=0.25,
+                        label="Score",
                     )
                     cb.ax.locator_params(nbins=8)
+                    # Add a legend for the various figure contents
+                    if isinstance(pars, str):
+                        if pars == "result":
+                            highlight_label = "Best data point"
+                        elif pars == "expected_minimum":
+                            highlight_label = "Expected minimum"
+                    # Legend icon for data points
+                    legend_data_point = mpl.lines.Line2D(
+                        [],
+                        [],
+                        color="darkorange",
+                        marker=".",
+                        markersize=9,
+                        lw=0.0,
+                    )
+                    # Legend icon for the highlighted point in the 2D plots
+                    legend_hp = mpl.lines.Line2D(
+                        [],
+                        [],
+                        color="k",
+                        marker="D",
+                        markersize=5,
+                        lw=0.0,
+                    )
+                    # Legend icon for the highlighted value in the 1D plots
+                    legend_hl = mpl.lines.Line2D(
+                        [],
+                        [],
+                        linestyle="--",
+                        color="k",
+                        marker="",
+                        lw=1,
+                    )
+                    if show_confidence:
+                        # Legend icon for the 95 % credibility interval
+                        legend_fill = mpl.patches.Patch(
+                            color="green",
+                            alpha=0.5,
+                        )
+                        ax[0][-1].legend(
+                            handles=[legend_data_point, (legend_hp, legend_hl), legend_fill],
+                            labels=["Data points", highlight_label,"95 % credibility interval"],
+                            loc="lower center",
+                            handler_map={tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
+                        )
+                    else:
+                        # Legend icon for the model mean function
+                        legend_mean = mpl.lines.Line2D(
+                            [],
+                            [],
+                            linestyle="-",
+                            color="red",
+                            marker="",
+                            lw=1,
+                        )
+                        ax[0][-1].legend(
+                            handles=[legend_data_point, (legend_hp, legend_hl), legend_mean],
+                            labels=["Data points", highlight_label, "Model mean function"],
+                            loc="lower center",
+                            handler_map={tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
+                        )
+                    
 
     if usepartialdependence:
         ylabel = "Partial dependence"
@@ -984,7 +1029,7 @@ def _2d_dependency_plot(data, axes, samples, highlighted, limits, options = {}):
     axes.scatter(
         highlighted[0],
         highlighted[1],
-        c="r",
+        c="k",
         s=30,
         marker="D",
         lw=0.0,
