@@ -10,7 +10,6 @@ from matplotlib.ticker import MaxNLocator, FuncFormatter
 from scipy.optimize import OptimizeResult
 from scipy.stats.mstats import mquantiles
 from scipy.ndimage import gaussian_filter1d
-from scipy.stats import norm
 from ProcessOptimizer import expected_minimum, expected_minimum_random_sampling
 from .space import Categorical
 from .optimizer import Optimizer
