@@ -55,5 +55,5 @@ class ModelSystem:
         # Get the location of the expected minimum
         model_x,_ = expected_minimum(result)
         # Calculate the difference between the score at model_x and the true minimum value
-        loss = self.score(model_x) - self.true_min
+        loss = self.score(model_x, noise_std=0) - self.true_min
         return loss
