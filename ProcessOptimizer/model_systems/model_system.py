@@ -26,7 +26,7 @@ class ModelSystem:
     * `space` [Space]:
         The parameter space in the form of a Space object. 
 
-    * `true_min` [array with dimensions matching the parameter space]:
+    * `true_min` [float]:
         The true minimum value of the score function within the parameter space. 
     """
     def __init__(self, score, space, true_min=None):
