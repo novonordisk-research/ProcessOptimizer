@@ -13,7 +13,8 @@ class ModelSystem:
 
             def score(x, rng=np.random.default_rng(), noise_std=noise_value):
                 # * x is the point in the parameter space where the score will 
-                #   be evaluated. 
+                #   be evaluated. Note that x is in the original coordinates of
+                #   the parameter space, not normalized coordinates. 
                 # * rng is the random number generator used for adding noise 
                 #   to the system. The user can set a seed through this 
                 #   parameter. There must be a default value for this parameter. 
