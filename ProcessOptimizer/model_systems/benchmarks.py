@@ -97,3 +97,22 @@ def hart6(x,
     More details: <http://www.sfu.ca/~ssurjano/hart6.html>
     """
     return -np.sum(alpha * np.exp(-np.sum(A * (np.array(x) - P)**2, axis=1)))
+
+
+def poly_2d(x):
+    """A 2D polynomial. In the domain x[0] in [-1,1] and x[1] in [-1,1], 
+    this function has its minimum at (0.6667,-0.4833), with a value of 
+    about -2.0512, and the maximum in this domain is located at (-1,-1) 
+    with a value of -1.27
+
+    Parameters:
+    * x [array of length 2 containing floats]:
+        The point in the parameter space at which to evaluate the polynomial. 
+    """
+    return -(
+        2 
+        - 0.2*((x[0] - 0.3)**2 + (x[1] - 0.1)**2) 
+        + 0.05*x[0] 
+        - 0.1*x[1] 
+        - 0.2*x[0]*x[1]
+        )

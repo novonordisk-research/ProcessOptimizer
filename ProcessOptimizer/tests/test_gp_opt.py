@@ -3,11 +3,11 @@ from numpy.testing import assert_array_equal
 import pytest
 
 from ProcessOptimizer import gp_minimize
-from ProcessOptimizer.benchmarks import bench1
-from ProcessOptimizer.benchmarks import bench2
-from ProcessOptimizer.benchmarks import bench3
-from ProcessOptimizer.benchmarks import bench4
-from ProcessOptimizer.benchmarks import branin
+from ProcessOptimizer.model_systems.benchmarks import bench1
+from ProcessOptimizer.model_systems.benchmarks import bench2
+from ProcessOptimizer.model_systems.benchmarks import bench3
+from ProcessOptimizer.model_systems.benchmarks import bench4
+from ProcessOptimizer.model_systems.benchmarks import branin
 from ProcessOptimizer.utils import cook_estimator
 
 

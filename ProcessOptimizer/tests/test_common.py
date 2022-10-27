@@ -17,10 +17,10 @@ from ProcessOptimizer import dummy_minimize
 from ProcessOptimizer import gp_minimize
 from ProcessOptimizer import forest_minimize
 from ProcessOptimizer import gbrt_minimize
-from ProcessOptimizer.benchmarks import branin
-from ProcessOptimizer.benchmarks import bench1
-from ProcessOptimizer.benchmarks import bench4
-from ProcessOptimizer.benchmarks import bench5
+from ProcessOptimizer.model_systems.benchmarks import branin
+from ProcessOptimizer.model_systems.benchmarks import bench1
+from ProcessOptimizer.model_systems.benchmarks import bench4
+from ProcessOptimizer.model_systems.benchmarks import bench5
 from ProcessOptimizer.callbacks import DeltaXStopper
 from ProcessOptimizer.space import Space
 

@@ -15,7 +15,7 @@ The library is still experimental and under heavy development.
 """
 
 from . import acquisition
-from . import benchmarks
+from .model_systems import benchmarks
 from . import callbacks
 from . import learning
 from . import optimizer
