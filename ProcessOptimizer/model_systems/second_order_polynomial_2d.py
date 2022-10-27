@@ -1,5 +1,6 @@
 import numpy as np
 from ProcessOptimizer.model_systems import ModelSystem
+from ProcessOptimizer.model_systems.benchmarks import poly_2d
 from ProcessOptimizer.space import Real
 
 # This system is intended to run in the domain x[0] in [-1,1] and x[1] in [-1,1]. This function
@@ -16,13 +17,7 @@ def score(x, rng=np.random.default_rng(), noise_std=0.02):
     * noise_std [float]: 
         Standard deviation of the noise which is added to the result of the polynomial. 
     """
-    value = -(
-        2 
-        - 0.2*((x[0] - 0.3)**2 + (x[1] - 0.1)**2) 
-        + 0.05*x[0] 
-        - 0.1*x[1] 
-        - 0.2*x[0]*x[1]
-        ) + rng.normal(scale=noise_std)
+    value = poly_2d(x) + rng.normal(scale=noise_std)
     return value
 
 # The location of the minimum in the parameter space:
