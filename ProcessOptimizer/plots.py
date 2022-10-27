@@ -494,7 +494,7 @@ def plot_objective(
     size=2,
     zscale="linear",
     dimensions=None,
-    usepartialdependence=True,
+    usepartialdependence=False,
     pars="result",
     expected_minimum_samples=None,
     title=None,
@@ -544,8 +544,8 @@ def plot_objective(
 
     * `usepartialdependence` [bool, default=false] Whether to use partial
         dependence or not when calculating dependence. If false plot_objective
-        will parse values to the dependence function,
-        defined by the pars argument
+        will parse values to the dependence function, defined by the 
+        pars argument
 
     * `pars` [str, default = 'result' or list of floats] Defines the values
     for the red
