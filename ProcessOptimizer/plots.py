@@ -897,6 +897,9 @@ def plot_objective(
                             highlight_label = "Expected minimum"
                         elif pars == "expected_minimum_random":
                             highlight_label = "Simulated minimum"
+                    elif isinstance(pars, list):
+                        # The case where the user specifies [x[0], x[1], ...]
+                        highlight_label = "Point: " + str(pars)
                     # Legend icon for data points
                     legend_data_point = mpl.lines.Line2D(
                         [],
@@ -930,9 +933,13 @@ def plot_objective(
                             color="green",
                             alpha=0.5,
                         )
+                        if usepartialdependence:
+                            ci_label = "Est. 95 % credibility interval"
+                        else:
+                            ci_label = "95 % credibility interval"
                         ax[0][-1].legend(
                             handles=[legend_data_point, (legend_hp, legend_hl), legend_fill],
-                            labels=["Data points", highlight_label,"95 % credibility interval"],
+                            labels=["Data points", highlight_label, ci_label],
                             loc="lower center",
                             handler_map={tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
                         )
