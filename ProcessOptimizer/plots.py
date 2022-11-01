@@ -4,6 +4,7 @@ from functools import partial
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 from matplotlib.pyplot import cm
 from matplotlib.ticker import LogLocator
 from matplotlib.ticker import MaxNLocator, FuncFormatter
@@ -327,6 +328,89 @@ def _format_scatter_plot_axes(ax, space, ylabel, dim_labels=None):
 
     return ax
 
+def _format_dependency_plot_axes(ax, space, ylabel, dim_labels=None):
+    # Work out min, max of y axis for the plots so we can adjust them all to 
+    # the same value
+    ylim = (np.nan,np.nan)
+    for n in range(space.n_dims):
+        i, j = np.unravel_index(n, ax.shape)
+        ylim = (
+            np.nanmin([ax[i, j].get_ylim()[0], ylim[0]]),
+            np.nanmax([ax[i, j].get_ylim()[1], ylim[1]])
+        )
+
+    if dim_labels is None:
+        dim_labels = [
+            "$X_{%i}$" % i if d.name is None else d.name
+            for i, d in enumerate(space.dimensions)
+        ]
+    # Axes for categorical dimensions are really integers; we have to
+    # label them with the category names
+    iscat = [isinstance(dim, Categorical) for dim in space.dimensions]
+
+    # Deal with formatting of the axes
+    nrows, ncols = ax.shape
+    
+    for i in range(nrows):  # rows
+        for j in range(ncols):  # columns
+            ax_ = ax[i, j]
+            
+            # Figure out what dimension number we are plotting from the indices
+            n = np.ravel_multi_index(
+                np.array([[i],[j]]), 
+                ax.shape
+            )
+            n = n[0]
+            # Turn off axes that do not contain a plot
+            if n >= space.n_dims:
+                ax_.axis("off")
+            else:
+                # Fix formatting of the y-axis
+                ax_.set_ylim(*ylim)
+                ax_.yaxis.set_major_locator(
+                    MaxNLocator(6, prune="both")
+                )
+                ax_.tick_params(axis="y", direction="inout")
+                # Leftmost plot in each row:
+                if j == 0:
+                    ax_.set_ylabel(ylabel)
+                # Rightmost plot in each row:                                      
+                elif j == ncols-1:
+                    ax_.set_ylabel(ylabel)
+                    ax_.yaxis.set_label_position("right")
+                    ax_.yaxis.tick_right()
+                    ax2_ = ax_.secondary_yaxis("left")
+                    ax2_.tick_params(axis="y", direction="inout")
+                    ax2_.set_yticklabels([])
+                    ax2_.yaxis.set_major_locator(ax_.yaxis.get_major_locator())
+                else:
+                    ax_.set_yticklabels([])
+                    ax_.tick_params(axis="y", direction="inout")
+                    ax2_ = ax_.secondary_yaxis("right")
+                    ax2_.tick_params(axis="y", direction="inout")
+                    ax2_.yaxis.set_major_locator(ax_.yaxis.get_major_locator())
+                    if n < space.n_dims-1:
+                        ax2_.set_yticklabels([])
+                    else:
+                        ax2_.set_ylabel(ylabel)
+                
+                # Fix formatting of the x-axis
+                [labl.set_rotation(20) for labl in ax_.get_xticklabels()]
+                ax_.set_xlabel(dim_labels[n])
+                if space.dimensions[n].prior == "log-uniform":
+                    ax_.set_xscale("log")
+                else:
+                    ax_.xaxis.set_major_locator(
+                        MaxNLocator(5, prune="both", integer=iscat[n])
+                    )
+                    if iscat[n]:
+                        ax_.xaxis.set_major_formatter(
+                            FuncFormatter(
+                                partial(_cat_format, space.dimensions[n])
+                            )
+                        )
+    
+    return ax
 
 def dependence(
     space,
@@ -881,7 +965,373 @@ def _2d_dependency_plot(data, axes, samples, highlighted, limits, options = {}):
     )
     axes.scatter(highlighted[0], highlighted[1], c=["r"], s=20, lw=0.0, zorder=10, clip_on=False)
 
+def plot_objective_1d(
+    result,
+    n_points=40,
+    n_samples=250,
+    size=2.5,
+    dimensions=None,
+    usepartialdependence=False,
+    pars="result",
+    expected_minimum_samples=None,
+    title="Dependency plot",
+    show_confidence=True,
+):
+    """Single factor dependence plot of the objective function.
 
+    The plot shows the dependence for each dimension `i` with
+    respect to the objective function. The objective function is
+    approximated by `result.model.` A vertical line indicates per default
+    the best observed data point, but this can be changed via the
+    argument 'pars'.
+
+    Parameters
+    ----------
+    * `result` [`OptimizeResult`]
+        The result for which to create the scatter plot matrix.
+
+    * `n_points` [int, default=40]
+        Number of points at which to evaluate the partial dependence
+        along each dimension.
+
+    * `n_samples` [int, default=250]
+        Number of random samples to use for averaging the model function
+        at each of the `n_points`.
+
+    * `size` [float, default=2.5]
+        Height (in inches) of each facet.
+
+    * `dimensions` [list of str, default=None] 
+        Labels of the dimension variables. `None` defaults to 
+        `space.dimensions[i].name`, or if also `None` to `['X_0', 'X_1', ..]`.
+
+    * `usepartialdependence` [bool, default=false] 
+        Whether to use partial dependence or not when calculating dependence. 
+        If false then the function will parse values to the dependence 
+        function, defined by the pars argument
+
+    * `pars` [str, default = 'result' or list of floats, ints and/or strings] 
+        Defines the nature of the highlighted setting in the points and if 
+        usepartialdependence is false, this argument also defines values for 
+        all other factors when calculating dependence.
+        Valid strings:
+            'result' - Use best observed factor settings in the input data.
+            'expected_minimum' - Use factor settings expected to give the best 
+                minimum calculated using scipy's minimize method.
+            'expected_minimum_random' - Use factor settings that gives the best
+                minimum after carrying out naive random sampling. Works with 
+                categorical values.
+            '[x[0], x[1], ..., x[n]] - Parameter to show depence at the factor
+                settings provided in this list. Depending on the system, this 
+                list can contain a mixture of floats, ints and strings
+
+    * `expected_minimum_samples` [float, default = None] 
+        Determines how many points should be evaluated to find the minimum when
+        using 'expected_minimum' or 'expected_minimum_random'.
+
+    * `title` [str, default='Dependency plot']
+        String to use as title of the figure.
+
+    * `show_confidence` [bool, default=true] 
+        Whether or not to show a 95 % credibility range for the model values
+        for each function (when not using partial dependence). The range is
+        defined by 1.96 times the std in each point when sampling from the
+        model. When using partial dependence the range is not a credibility 
+        range but is defined as 1.96 times the std for random sampling across
+        the parameter space. It is labelled as an estimated credibility range.
+
+    Returns
+    -------
+    * `ax`: [`Axes`]:
+        The matplotlib axes.
+    """
+    # Here we define the value to highlight in each dimension. These 
+    # same values will be used for evaluating the plots when calculating 
+    # dependence. (Unless partial dependence is to be used instead).
+    
+    space = result.space
+    # Check if we have any categorical dimensions, as this influences the plots
+    is_cat = [isinstance(dim, Categorical) for dim in space.dimensions]
+    
+    if isinstance(pars, str):
+        if pars == "result":
+            # Using the best observed result
+            x_vals = result.x
+        elif pars == "expected_minimum":
+            # Do a gradient based minimum search using scipys own minimizer
+            if expected_minimum_samples:
+                # If a value for expected_minimum_samples has been parsed
+                x_vals, _ = expected_minimum(
+                    result,
+                    n_random_starts=expected_minimum_samples,
+                    random_state=None,
+                )
+            else:  # Use standard of 20 random starting points
+                x_vals, _ = expected_minimum(
+                    result,
+                    n_random_starts=20,
+                    random_state=None,
+                )
+        elif pars == "expected_minimum_random":
+            # Do a minimum search by evaluating the function with n_samples
+            # sample values
+            if expected_minimum_samples:
+                # If a value for expected_minimum_samples has been parsed
+                x_vals, _ = expected_minimum_random_sampling(
+                    result,
+                    n_random_starts=expected_minimum_samples,
+                    random_state=None,
+                )
+            else:
+                # Use standard of 10^n_parameters. Note this becomes very slow
+                # for many parameters
+                x_vals, _ = expected_minimum_random_sampling(
+                    result,
+                    n_random_starts=10 ** space.n_dims,
+                    random_state=None,
+                )
+        else:
+            raise ValueError(
+                "Argument ´pars´ must be a valid string \
+            (´result´)"
+            )
+    elif isinstance(pars, list):
+        assert len(pars) == len(
+            result.x
+        ), "Argument ´pars´ of type list \
+        must have same length as number of features"
+        # Using defined x_values
+        x_vals = pars
+    else:
+        raise ValueError("Argument ´pars´ must be a string or a list")
+
+    if usepartialdependence:
+        x_eval = None
+    else:
+        x_eval = x_vals
+    rvs_transformed = space.transform(space.rvs(n_samples=n_samples))
+    samples, minimum, _ = _map_categories(space, result.x_iters, x_vals)
+    
+    # Build a figure using the smallest possible N by N tiling
+    ncols = int(np.ceil(np.sqrt(space.n_dims)))
+    nrows = int(np.ceil(space.n_dims/ncols))
+    fig, ax = plt.subplots(
+        nrows,
+        ncols,
+        figsize=(size * ncols, size * nrows),        
+    )
+    
+    fig.subplots_adjust(
+        left=0.08, right=0.92, bottom=0.12, top=0.88, hspace=0.37, wspace=0.0
+    )
+
+    if title is not None:
+        fig.suptitle(title)
+
+    val_min_1d = float("inf")
+    val_max_1d = -float("inf")
+
+    plots_data = []
+    # Gather all data relevant for plotting
+    for i in range(space.n_dims):
+        row = []
+        xi, yi, stddevs = dependence(
+            space,
+            result.models[-1],
+            i,
+            j=None,
+            sample_points=rvs_transformed,
+            n_points=n_points,
+            x_eval=x_eval,
+        )
+        row.append({"xi": xi, "yi": yi, "std": stddevs})
+        
+        if show_confidence:
+            yi_low_bound = yi - 1.96 * stddevs
+            yi_high_bound = yi + 1.96 * stddevs
+        else:
+            yi_low_bound = yi
+            yi_high_bound = yi
+        if np.min(yi_low_bound) < val_min_1d:
+            val_min_1d = np.min(yi_low_bound)
+        if np.max(yi_high_bound) > val_max_1d:
+            val_max_1d = np.max(yi_high_bound)
+
+        plots_data.append(row)
+    
+    # Build all the plots in the figure
+    for n in range(space.n_dims):
+        # Figure out which subplot to target from the dimension number
+        i, j = np.unravel_index(n, ax.shape)
+        xi = plots_data[n][0]["xi"]
+        yi = plots_data[n][0]["yi"]
+        stddevs = plots_data[n][0]["std"]        
+        
+        # Set y-axis limits
+        ax[i, j].set_ylim(val_min_1d-abs(val_min_1d)*.02, 
+                          val_max_1d+abs(val_max_1d)*.02)
+        
+        # Enter here when we plot a categoric factor
+        if is_cat[n]:                    
+            # Expand the x-axis for this factor so we can see the first
+            # and the last category
+            ax[i, j].set_xlim(np.min(xi)-0.2, np.max(xi)+0.2)
+            
+            if show_confidence:
+                # Create one uniformly colored bar for each category.
+                # Edgecolor ensures we can see the bar when plotting 
+                # at best obeservation, as stddev is often tiny there
+                ax[i, j].bar(
+                    xi,
+                    2*1.96*stddevs,
+                    width=0.2,
+                    bottom=yi-1.96*stddevs,
+                    alpha=0.5,
+                    color="green",
+                    edgecolor="green",
+                    zorder=1,
+                )
+                # Highlight the point defined by 'pars'
+                ax[i, j].scatter(
+                    minimum[n],
+                    yi[int(minimum[n])],
+                    c="k",
+                    s=20,
+                    marker="D",
+                    zorder=0,
+                )
+            else:
+                # Show the mean value
+                ax[i, j].scatter(
+                    xi,
+                    yi,
+                    c="red",
+                    s=80,
+                    marker="_",
+                    zorder=1,
+                )
+                # Highlight the point defined by 'pars'
+                ax[i, j].scatter(
+                    minimum[n],
+                    yi[int(minimum[n])],
+                    c="k",
+                    s=20,
+                    marker="D",
+                    zorder=0,
+                )
+        
+        # For non-categoric factors
+        else:
+            ax[i, j].set_xlim(np.min(xi), np.max(xi))
+            # Highlight the point defined by 'pars'
+            ax[i, j].axvline(minimum[n], linestyle="--", color="k", lw=1)
+            if show_confidence:
+                ax[i, j].fill_between(
+                    xi,
+                    y1=(yi - 1.96*stddevs),
+                    y2=(yi + 1.96*stddevs),
+                    alpha=0.5,
+                    color="green",
+                    edgecolor="green",
+                    linewidth=0.0,
+                )
+            else:
+                ax[i, j].plot(
+                    xi,
+                    yi,
+                    color="red",
+                    lw=1,
+                    zorder=0,
+                )
+        
+        # Add a legend to the figure
+        if n == 0:
+            if isinstance(pars, str):
+                if pars == "result":
+                    highlight_label = "Best data point"
+                elif pars == "expected_minimum":
+                    highlight_label = "Expected minimum"
+                elif pars == "expected_minimum_random":
+                    highlight_label = "Simulated minimum"
+                elif isinstance(pars, list):
+                    # The case where the user specifies [x[0], x[1], ...]
+                    highlight_label = "Point: " + str(pars)
+            # Legend icon(s) for the highlighted value
+            legend_hl = mpl.lines.Line2D(
+                [],
+                [],
+                linestyle="--",
+                color="k",
+                marker="",
+                lw=1,
+            )
+            legend_hp = mpl.lines.Line2D(
+                [],
+                [],
+                color="k",
+                marker="D",
+                markersize=5,
+                lw=0.0,
+            )
+            if show_confidence:
+                # Legend icon for the 95 % credibility interval
+                legend_fill = mpl.patches.Patch(
+                    color="green",
+                    alpha=0.5,
+                )
+                if usepartialdependence:
+                    ci_label = "Est. 95 % credibility interval"
+                else:
+                    ci_label = "95 % credibility interval"
+                # Legend changes if we have categorical factors
+                if np.any(is_cat):
+                    ax[0][0].figure.legend(
+                        handles=[(legend_hp, legend_hl), legend_fill],
+                        labels=[highlight_label, ci_label],
+                        loc="upper right",
+                        handler_map={tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
+                    )
+                else:
+                    ax[0][0].figure.legend(
+                        handles=[legend_hl, legend_fill],
+                        labels=[highlight_label, ci_label],
+                        loc="upper right",
+                        handler_map={tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
+                    )
+            else:
+                # Legend icon for the model mean function
+                legend_mean = mpl.lines.Line2D(
+                    [],
+                    [],
+                    linestyle="-",
+                    color="red",
+                    marker="",
+                    lw=1,
+                )
+                # Legend changes if we have categorical factors
+                if np.any(is_cat):
+                    ax[0][0].figure.legend(
+                        handles=[(legend_hp, legend_hl), legend_mean],
+                        labels=[highlight_label, "Model mean function"],
+                        loc="upper right",
+                        handler_map={tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
+                    )
+                else:
+                    ax[0][0].figure.legend(
+                        handles=[legend_hl, legend_mean],
+                        labels=[highlight_label, "Model mean function"],
+                        loc="upper right",
+                        handler_map={tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
+                    )        
+
+    if usepartialdependence:
+        ylabel = "Partial dependence"
+    else:
+        ylabel = "Dependence"
+
+    return _format_dependency_plot_axes(
+        ax, space, ylabel=ylabel, dim_labels=dimensions
+    )
 
 def plot_objectives(
     results,
