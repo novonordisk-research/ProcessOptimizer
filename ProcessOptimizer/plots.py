@@ -328,7 +328,7 @@ def _format_scatter_plot_axes(ax, space, ylabel, dim_labels=None):
 
     return ax
 
-def _format_dependency_plot_axes(ax, space, ylabel, dim_labels=None):
+def _format_1d_dependency_axes(ax, space, ylabel, dim_labels=None):
     # Work out min, max of y axis for the plots so we can adjust them all to 
     # the same value
     ylim = (np.nan,np.nan)
@@ -1329,7 +1329,7 @@ def plot_objective_1d(
     else:
         ylabel = "Dependence"
 
-    return _format_dependency_plot_axes(
+    return _format_1d_dependency_axes(
         ax, space, ylabel=ylabel, dim_labels=dimensions
     )
 
