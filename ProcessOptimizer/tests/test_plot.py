@@ -114,7 +114,7 @@ def test_plot_objective():
         (70.0, 167.0),
         ["A", "B"],
     ]
-    opt = Optimizer(space,acq_func="EI",n_initial_points=5,)
+    opt = Optimizer.Optimizer(space,acq_func="EI",n_initial_points=5,)
     x = [
         [18,84,0.042,102.8,"A"],
         [24,80,0.09,102.8,"B"],
@@ -171,7 +171,7 @@ def test_plot_objective_1d():
         (70.0, 167.0),
         ["A", "B"],
     ]
-    opt = Optimizer(space,acq_func="EI",n_initial_points=5,)
+    opt = Optimizer.Optimizer(space,acq_func="EI",n_initial_points=5,)
     x = [
         [18,84,0.042,102.8,"A"],
         [24,80,0.09,102.8,"B"],
