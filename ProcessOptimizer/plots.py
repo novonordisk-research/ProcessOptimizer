@@ -329,44 +329,46 @@ def _format_scatter_plot_axes(ax, space, ylabel, dim_labels=None):
     return ax
 
 def _format_1d_dependency_axes(ax, space, ylabel, dim_labels=None):
-    # Work out min, max of y axis for the plots so we can adjust them all to 
-    # the same value
-    ylim = (np.nan,np.nan)
-    for n in range(space.n_dims):
-        i, j = np.unravel_index(n, ax.shape)
-        ylim = (
-            np.nanmin([ax[i, j].get_ylim()[0], ylim[0]]),
-            np.nanmax([ax[i, j].get_ylim()[1], ylim[1]])
-        )
 
     if dim_labels is None:
         dim_labels = [
             "$X_{%i}$" % i if d.name is None else d.name
             for i, d in enumerate(space.dimensions)
         ]
-    # Axes for categorical dimensions are really integers; we have to
-    # label them with the category names
+    # Figure out where we have categorical factors
     iscat = [isinstance(dim, Categorical) for dim in space.dimensions]
 
-    # Deal with formatting of the axes
-    nrows, ncols = ax.shape
+    if space.n_dims < 3:
+        nrows = 1
+        ncols = space.n_dims
+    else:
+        nrows, ncols = ax.shape
     
-    for i in range(nrows):  # rows
-        for j in range(ncols):  # columns
-            ax_ = ax[i, j]
+    for i in range(nrows):
+        for j in range(ncols):
+            # Build a handle to the present subplot
+            if space.n_dims == 1:
+                ax_ = ax
+            elif space.n_dims == 2:
+                ax_ = ax[j]
+            else:
+                ax_ = ax[i, j]
             
             # Figure out what dimension number we are plotting from the indices
-            n = np.ravel_multi_index(
-                np.array([[i],[j]]), 
-                ax.shape
-            )
-            n = n[0]
+            if space.n_dims < 3:
+                n = j
+            else:
+                n = np.ravel_multi_index(
+                    np.array([[i],[j]]), 
+                    ax.shape
+                )
+                n = n[0]
+            
             # Turn off axes that do not contain a plot
             if n >= space.n_dims:
                 ax_.axis("off")
             else:
                 # Fix formatting of the y-axis
-                ax_.set_ylim(*ylim)
                 ax_.yaxis.set_major_locator(
                     MaxNLocator(6, prune="both")
                 )
@@ -404,6 +406,8 @@ def _format_1d_dependency_axes(ax, space, ylabel, dim_labels=None):
                         MaxNLocator(5, prune="both", integer=iscat[n])
                     )
                     if iscat[n]:
+                        # Axes for categorical dimensions are really integers; 
+                        # we have to label them with the category names
                         ax_.xaxis.set_major_formatter(
                             FuncFormatter(
                                 partial(_cat_format, space.dimensions[n])
@@ -974,7 +978,7 @@ def plot_objective_1d(
     usepartialdependence=False,
     pars="result",
     expected_minimum_samples=None,
-    title="Dependency plot",
+    title=None,
     show_confidence=True,
 ):
     """Single factor dependence plot of the objective function.
@@ -1029,8 +1033,10 @@ def plot_objective_1d(
         Determines how many points should be evaluated to find the minimum when
         using 'expected_minimum' or 'expected_minimum_random'.
 
-    * `title` [str, default='Dependency plot']
-        String to use as title of the figure.
+    * `title` [str, default=None]
+        Alternative string to use as the title of the legend. If left as None 
+        the title is dynamically generated based on the number of factors in 
+        the model (N) after the template "Dependency plot across N factors"
 
     * `show_confidence` [bool, default=true] 
         Whether or not to show a 95 % credibility range for the model values
@@ -1115,18 +1121,40 @@ def plot_objective_1d(
     # Build a figure using the smallest possible N by N tiling
     ncols = int(np.ceil(np.sqrt(space.n_dims)))
     nrows = int(np.ceil(space.n_dims/ncols))
+    # Build slightly larger figures when we have few factors
+    if ncols == 1:
+        size = size*1.5
+    elif ncols == 2:
+        size = size*4/3
+    
     fig, ax = plt.subplots(
         nrows,
         ncols,
         figsize=(size * ncols, size * nrows),        
     )
     
-    fig.subplots_adjust(
-        left=0.08, right=0.92, bottom=0.12, top=0.88, hspace=0.37, wspace=0.0
-    )
+    # Generate consistent padding for axis labels and ticks
+    l_pad = 0.5/fig.get_figwidth()
+    r_pad = 1 - l_pad
+    b_pad = 0.6/fig.get_figheight()
+    t_pad = 1 - 0.8/fig.get_figheight()
+    if nrows > 1:
+        h_pad = 1 / (t_pad/(b_pad*nrows) - 1)
+    else:
+        h_pad = 0
 
-    if title is not None:
-        fig.suptitle(title)
+    if ncols == 1:
+        # One factor is a very special edge-case
+        fig.subplots_adjust(
+            left=0.18, right=0.95, bottom=b_pad, top=t_pad, hspace=0.0, wspace=0.0
+        )
+    else:
+        fig.subplots_adjust(
+            left=l_pad, right=r_pad, bottom=b_pad, top=t_pad, hspace=h_pad, wspace=0.0
+        )
+    
+    if title is None:
+        title = "Dependency plot across " + str(space.n_dims) + " factors"
 
     val_min_1d = float("inf")
     val_max_1d = -float("inf")
@@ -1161,27 +1189,36 @@ def plot_objective_1d(
     
     # Build all the plots in the figure
     for n in range(space.n_dims):
-        # Figure out which subplot to target from the dimension number
-        i, j = np.unravel_index(n, ax.shape)
+        # Generate a handle to the subplot we are targeting
+        if space.n_dims == 1:
+            ax_ = ax
+        elif space.n_dims == 2:
+            ax_ = ax[n]
+        else:
+            i, j = np.unravel_index(n, ax.shape)
+            ax_ = ax[i, j]
+        # Get data to plot in this subplot
         xi = plots_data[n][0]["xi"]
         yi = plots_data[n][0]["yi"]
         stddevs = plots_data[n][0]["std"]        
         
         # Set y-axis limits
-        ax[i, j].set_ylim(val_min_1d-abs(val_min_1d)*.02, 
-                          val_max_1d+abs(val_max_1d)*.02)
+        ax_.set_ylim(
+            val_min_1d-abs(val_min_1d)*.02,
+            val_max_1d+abs(val_max_1d)*.02
+        )        
         
         # Enter here when we plot a categoric factor
         if is_cat[n]:                    
             # Expand the x-axis for this factor so we can see the first
             # and the last category
-            ax[i, j].set_xlim(np.min(xi)-0.2, np.max(xi)+0.2)
+            ax_.set_xlim(np.min(xi)-0.2, np.max(xi)+0.2)
             
             if show_confidence:
                 # Create one uniformly colored bar for each category.
                 # Edgecolor ensures we can see the bar when plotting 
                 # at best obeservation, as stddev is often tiny there
-                ax[i, j].bar(
+                ax_.bar(
                     xi,
                     2*1.96*stddevs,
                     width=0.2,
@@ -1192,7 +1229,7 @@ def plot_objective_1d(
                     zorder=1,
                 )
                 # Highlight the point defined by 'pars'
-                ax[i, j].scatter(
+                ax_.scatter(
                     minimum[n],
                     yi[int(minimum[n])],
                     c="k",
@@ -1202,7 +1239,7 @@ def plot_objective_1d(
                 )
             else:
                 # Show the mean value
-                ax[i, j].scatter(
+                ax_.scatter(
                     xi,
                     yi,
                     c="red",
@@ -1211,7 +1248,7 @@ def plot_objective_1d(
                     zorder=1,
                 )
                 # Highlight the point defined by 'pars'
-                ax[i, j].scatter(
+                ax_.scatter(
                     minimum[n],
                     yi[int(minimum[n])],
                     c="k",
@@ -1222,11 +1259,11 @@ def plot_objective_1d(
         
         # For non-categoric factors
         else:
-            ax[i, j].set_xlim(np.min(xi), np.max(xi))
+            ax_.set_xlim(np.min(xi), np.max(xi))
             # Highlight the point defined by 'pars'
-            ax[i, j].axvline(minimum[n], linestyle="--", color="k", lw=1)
+            ax_.axvline(minimum[n], linestyle="--", color="k", lw=1)
             if show_confidence:
-                ax[i, j].fill_between(
+                ax_.fill_between(
                     xi,
                     y1=(yi - 1.96*stddevs),
                     y2=(yi + 1.96*stddevs),
@@ -1236,7 +1273,7 @@ def plot_objective_1d(
                     linewidth=0.0,
                 )
             else:
-                ax[i, j].plot(
+                ax_.plot(
                     xi,
                     yi,
                     color="red",
@@ -1285,17 +1322,21 @@ def plot_objective_1d(
                     ci_label = "95 % credibility interval"
                 # Legend changes if we have categorical factors
                 if np.any(is_cat):
-                    ax[0][0].figure.legend(
+                    ax_.figure.legend(
                         handles=[(legend_hp, legend_hl), legend_fill],
                         labels=[highlight_label, ci_label],
-                        loc="upper right",
+                        title=title,
+                        framealpha=1,
+                        loc="upper center",
                         handler_map={tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
                     )
                 else:
-                    ax[0][0].figure.legend(
+                    ax_.figure.legend(
                         handles=[legend_hl, legend_fill],
                         labels=[highlight_label, ci_label],
-                        loc="upper right",
+                        title=title,
+                        framealpha=1,
+                        loc="upper center",
                         handler_map={tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
                     )
             else:
@@ -1310,17 +1351,21 @@ def plot_objective_1d(
                 )
                 # Legend changes if we have categorical factors
                 if np.any(is_cat):
-                    ax[0][0].figure.legend(
+                    ax_.figure.legend(
                         handles=[(legend_hp, legend_hl), legend_mean],
                         labels=[highlight_label, "Model mean function"],
-                        loc="upper right",
+                        title=title,
+                        framealpha=1,
+                        loc="upper center",
                         handler_map={tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
                     )
                 else:
-                    ax[0][0].figure.legend(
+                    ax_.figure.legend(
                         handles=[legend_hl, legend_mean],
                         labels=[highlight_label, "Model mean function"],
-                        loc="upper right",
+                        title=title,
+                        framealpha=1,
+                        loc="upper center",
                         handler_map={tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
                     )        
 
