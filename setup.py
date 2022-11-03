@@ -9,7 +9,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='ProcessOptimizer',
-      version='0.7.5',
+      version='0.7.6',
       description='Sequential model-based optimization toolbox \
     (forked from scikit-optimize)',
       url='https://github.com/novonordisk-research/ProcessOptimizer',
