@@ -1,12 +1,25 @@
 # Release history
 
-## Version 0.7.6 [unpublished]
+## Version 0.7.7 [unpublished]
 
 ### Changes
 
 - 
+### Bugfixes
+
+## Version 0.7.6
+
+### Changes
+
+- Add Bokeh version of Pareto plot
+- Make a bleeding edge installable and a stable
+- Add Bokeh to list of requiered packages
+- Change the call of gaussian filter for a helper illustration function
+- Model systems added to help benchmark performance or teach
 
 ### Bugfixes
+
+- Remove call of plot_width and plot_height in bokeh
 
 ## Version 0.7.5 
 
