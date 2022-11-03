@@ -1606,8 +1606,6 @@ def plot_Pareto_bokeh(
 
     # Create figure
     p = bh_plotting.figure(
-            plot_width=600, 
-            plot_height=600, 
             title="Multiobjective score-score plot", 
             tools="pan,box_zoom,wheel_zoom,reset",
             active_scroll="wheel_zoom", 
