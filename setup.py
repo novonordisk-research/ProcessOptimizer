@@ -18,6 +18,7 @@ setup(name='ProcessOptimizer',
       packages=[
           'ProcessOptimizer',
           'ProcessOptimizer.learning',
+          'ProcessOptimizer.model_system'
           'ProcessOptimizer.optimizer',
           'ProcessOptimizer.space',
           'ProcessOptimizer.learning.gaussian_process'
