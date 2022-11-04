@@ -18,6 +18,7 @@ setup(name='ProcessOptimizer',
       packages=[
           'ProcessOptimizer',
           'ProcessOptimizer.learning',
+          'ProcessOptimizer.model_systems',
           'ProcessOptimizer.optimizer',
           'ProcessOptimizer.space',
           'ProcessOptimizer.learning.gaussian_process'
@@ -33,7 +34,8 @@ setup(name='ProcessOptimizer',
                          'deap==1.3.3',
                          'pyYAML==6.0',
                          'bokeh==2.4.3',
-                         'tornado==6.2',]
+                         'tornado==6.2',
+                         ]
           },
       long_description=long_description,
       long_description_content_type='text/markdown'
