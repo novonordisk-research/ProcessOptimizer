@@ -681,16 +681,33 @@ def plot_objective(
         x_eval = x_vals
     rvs_transformed = space.transform(space.rvs(n_samples=n_samples))
     samples, minimum, _ = _map_categories(space, result.x_iters, x_vals)
-
+    
+    # Build slightly larger plots when we have just two dimensions
+    if space.n_dims == 2:
+        size = size*1.75
+        
     fig, ax = plt.subplots(
         space.n_dims,
         space.n_dims,
         figsize=(size * space.n_dims, size * space.n_dims),
     )
-
+    
+    # Generate consistent padding for axis labels and ticks
+    l_pad = 0.7/fig.get_figwidth()
+    r_pad = 1 - l_pad
+    b_pad = 0.7/fig.get_figheight()
+    t_pad = 1 - 0.7/fig.get_figheight()
+    
+    if space.n_dims <= 3:
+        h_pad = 0.2
+        w_pad = 0.2
+    else:
+        h_pad = 0.1
+        w_pad = 0.1
+    
     fig.subplots_adjust(
-        left=0.07, right=0.95, bottom=0.07, top=0.94, hspace=0.1, wspace=0.1
-    )
+        left=l_pad, right=r_pad, bottom=b_pad, top=t_pad, hspace=h_pad, wspace=w_pad
+    )    
 
     if title is not None:
         fig.suptitle(title)
@@ -883,8 +900,8 @@ def plot_objective(
                     cb = ax[0][-1].figure.colorbar(
                         mpl.cm.ScalarMappable(norm=norm_color, cmap=plot_options["colormap"]),
                         ax=ax[0][-1],
-                        location="bottom",
-                        fraction=0.25,
+                        location="top",
+                        fraction=0.1,
                         label="Score",
                     )
                     cb.ax.locator_params(nbins=8)
@@ -940,7 +957,7 @@ def plot_objective(
                         ax[0][-1].legend(
                             handles=[legend_data_point, (legend_hp, legend_hl), legend_fill],
                             labels=["Data points", highlight_label, ci_label],
-                            loc="lower center",
+                            loc="upper center",
                             handler_map={tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
                         )
                     else:
@@ -956,7 +973,7 @@ def plot_objective(
                         ax[0][-1].legend(
                             handles=[legend_data_point, (legend_hp, legend_hl), legend_mean],
                             labels=["Data points", highlight_label, "Model mean function"],
-                            loc="lower center",
+                            loc="upper center",
                             handler_map={tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
                         )
                     
