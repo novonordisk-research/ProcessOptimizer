@@ -18,6 +18,7 @@ from .kernels import Sum
 from .kernels import RBF
 from .kernels import WhiteKernel
 
+GPR_CHOLESKY_LOWER = True
 
 def _param_for_white_kernel_in_Sum(kernel, kernel_str=""):
     """
