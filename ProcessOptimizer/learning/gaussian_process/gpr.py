@@ -396,7 +396,7 @@ class GaussianProcessRegressor(sk_GaussianProcessRegressor):
                     grad_std = np.zeros(X.shape[1])
                     if not np.allclose(y_std, grad_std):
                         grad_std = -np.dot(K_trans,
-                                           np.dot(K_inv, grad))[0] / y_std
+                                           np.dot(self.K_inv_, grad))[0] / y_std
                         # undo normalisation
                         grad_std = grad_std * self.y_train_std_**2
                     return y_mean, y_std, grad_mean, grad_std
