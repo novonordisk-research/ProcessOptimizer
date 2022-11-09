@@ -324,33 +324,65 @@ class GaussianProcessRegressor(sk_GaussianProcessRegressor):
 
         else:  # Predict based on GP posterior
             K_trans = self.kernel_(X, self.X_train_)
-            y_mean = K_trans.dot(self.alpha_)    # Line 4 (y_mean = f_star)
+            y_mean = K_trans @ self.alpha_    # Line 4 (y_mean = f_star)
             # undo normalisation
             y_mean = self.y_train_std_ * y_mean + self.y_train_mean_
+            #self.y_train_mean_ deviates from pure sklearn implementation.
+            #this is kept as this as long we support various version of sklearn
+
+            # if y_mean has shape (n_samples, 1), reshape to (n_samples,)
+            if y_mean.ndim > 1 and y_mean.shape[1] == 1:
+                y_mean = np.squeeze(y_mean, axis=1)
+
+            # Alg 2.1, page 19, line 5 -> v = L \ K(X_test, X_train)^T
+            V = solve_triangular(
+                self.L_,
+                K_trans.T,
+                lower=GPR_CHOLESKY_LOWER,
+                check_finite=False
+            )
 
             if return_cov:
-                v = cho_solve((self.L_, True), K_trans.T)  # Line 5
-                y_cov = self.kernel_(X) - K_trans.dot(v)   # Line 6
+                # Alg 2.1, page 19, line 6 -> K(X_test, X_test) - v^T. v
+                y_cov = self.kernel_(X) - V.T @ V
+
                 # undo normalisation
-                y_cov = y_cov * self.y_train_std_**2
+                y_cov = np.outer(y_cov, self._y_train_std**2).reshape(
+                    *y_cov.shape, -1
+                )
+                # if y_cov has shape (n_samples, n_samples, 1), reshape to
+                # (n_samples, n_samples)
+                if y_cov.shape[2] == 1:
+                    y_cov = np.squeeze(y_cov, axis=2)
+
                 return y_mean, y_cov
 
             elif return_std:
-                K_inv = self.K_inv_
-
                 # Compute variance of predictive distribution
+                # Use einsum to avoid explicitly forming the large matrix
+                # V^T @ V just to extract its diagonal afterward.
                 y_var = self.kernel_.diag(X)
-                y_var -= np.einsum("ki,kj,ij->k", K_trans, K_trans, K_inv)
+                y_var -= np.einsum("ij,ji->i", V.T, V)
 
                 # Check if any of the variances is negative because of
                 # numerical issues. If yes: set the variance to 0.
                 y_var_negative = y_var < 0
                 if np.any(y_var_negative):
-                    warnings.warn("Predicted variances smaller than 0. "
-                                  "Setting those variances to 0.")
+                    warnings.warn(
+                        "Predicted variances smaller than 0. "
+                        "Setting those variances to 0."
+                    )
                     y_var[y_var_negative] = 0.0
+
                 # undo normalisation
-                y_var = y_var * self.y_train_std_**2
+                y_var = np.outer(y_var, self._y_train_std**2).reshape(
+                    *y_var.shape, -1
+                )
+
+                # if y_var has shape (n_samples, 1), reshape to (n_samples,)
+                if y_var.shape[1] == 1:
+                    y_var = np.squeeze(y_var, axis=1)
+                
                 y_std = np.sqrt(y_var)
 
             if return_mean_grad:
