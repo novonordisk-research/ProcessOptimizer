@@ -241,12 +241,9 @@ class GaussianProcessRegressor(sk_GaussianProcessRegressor):
                 self.y_train_mean_ = np.mean(y, axis=0)
                 self.y_train_std_ = _handle_zeros_in_scale(np.std(y, axis=0), copy=False)
 
-                # Remove mean and make unit variance
-                y = (y- self.y_train_mean_) / self.y_train_std_
             else:
                 self.y_train_mean_ = np.zeros(1)
-                self.y_train_std_ = 1
-
+                self.y_train_std_ = np.ones(1)
 
         return self
 
