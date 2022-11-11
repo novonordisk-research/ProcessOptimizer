@@ -1,6 +1,7 @@
 import pytest
 
 import numpy as np
+import matplotlib as mpl
 from numpy.testing import assert_array_equal
 
 import json
@@ -9,6 +10,8 @@ import ProcessOptimizer as Optimizer
 from ProcessOptimizer.utils import cook_estimator
 from ProcessOptimizer.learning.gaussian_process.kernels import Matern
 from ProcessOptimizer.plots import plot_Pareto_bokeh
+from ProcessOptimizer.plots import plot_objective
+from ProcessOptimizer.plots import plot_objective_1d
 
 
 def build_Pareto_opt():
@@ -93,6 +96,111 @@ def build_Pareto_opt():
         opt.tell(c, v)
 
     return opt, np.array(x), np.array(y)
+
+
+def test_plot_objective():
+    # Integration test of the plot_objective function
+    dimensions = [
+        "Mass added [kg]",
+        "Temperature [C]",
+        "Conc. [M]",
+        "Viscosity",
+        "Categoric choice",
+    ]
+    space = [
+        (15.0, 25.0),
+        (70.0, 90.0),
+        (0.03, 0.15),
+        (70.0, 167.0),
+        ["A", "B"],
+    ]
+    opt = Optimizer.Optimizer(space,acq_func="EI",n_initial_points=5,)
+    x = [
+        [18,84,0.042,102.8,"A"],
+        [24,80,0.09,102.8,"B"],
+        [20,76,0.066,102.8,"A"],
+        [16,72,0.111,102.8,"A"],
+        [22,88,0.138,102.8,"B"],
+        [24.5,70,0.145,102.8,"A"],
+        [19,79,0.124,102.8,"B"],
+        [15.5,80,0.100,106,"B"],
+        [24,86,0.111,106,"B"],
+        [18,79,0.124,109,"A"],
+        [16,75,0.145,109,"B"],
+        [17.9,74,0.150,122.9,"A"],
+        [22.6,89,0.075,122.9,"B"],
+        [23,70,0.145,118.6,"A"],
+        [23,84,0.042,118.6,"B"],
+    ]
+    y = [54,53,38,30,65,42,60,77,66,75,61,57,87,47,67]
+    res = opt.tell(x,y)
+    plot_options = {
+       "interpolation": "bicubic",
+       "uncertain_color": [1, 1, 1],
+       "colormap" : "viridis_r",
+       "normalize_uncertainty": (
+           lambda x, global_min, global_max: (x-global_min)/(global_max-global_min)
+       ),
+    }
+    axes = plot_objective(
+        res,
+        pars="expected_minimum",
+        show_confidence=True,
+        usepartialdependence=False,
+        dimensions=dimensions,
+        plot_options=plot_options,
+    )
+    fig = axes[0][0].figure
+    assert axes.shape == (5,5)
+    assert isinstance(fig, mpl.figure.Figure)
+
+
+def test_plot_objective_1d():
+    # Integration test of the plot_objective_1d function
+    dimensions = [
+        "Mass added [kg]",
+        "Temperature [C]",
+        "Conc. [M]",
+        "Viscosity",
+        "Categoric choice",
+    ]
+    space = [
+        (15.0, 25.0),
+        (70.0, 90.0),
+        (0.03, 0.15),
+        (70.0, 167.0),
+        ["A", "B"],
+    ]
+    opt = Optimizer.Optimizer(space,acq_func="EI",n_initial_points=5,)
+    x = [
+        [18,84,0.042,102.8,"A"],
+        [24,80,0.09,102.8,"B"],
+        [20,76,0.066,102.8,"A"],
+        [16,72,0.111,102.8,"A"],
+        [22,88,0.138,102.8,"B"],
+        [24.5,70,0.145,102.8,"A"],
+        [19,79,0.124,102.8,"B"],
+        [15.5,80,0.100,106,"B"],
+        [24,86,0.111,106,"B"],
+        [18,79,0.124,109,"A"],
+        [16,75,0.145,109,"B"],
+        [17.9,74,0.150,122.9,"A"],
+        [22.6,89,0.075,122.9,"B"],
+        [23,70,0.145,118.6,"A"],
+        [23,84,0.042,118.6,"B"],
+    ]
+    y = [54,53,38,30,65,42,60,77,66,75,61,57,87,47,67]
+    res = opt.tell(x,y)
+    axes = plot_objective_1d(
+        res,
+        pars="expected_minimum",
+        show_confidence=True,
+        usepartialdependence=False,
+        dimensions=dimensions,
+    )
+    fig = axes[0][0].figure
+    assert axes.shape == (2,3)
+    assert isinstance(fig, mpl.figure.Figure)
 
 
 def test_plot_Pareto_bokeh_return_data():
