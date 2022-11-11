@@ -297,9 +297,15 @@ def _format_scatter_plot_axes(ax, space, ylabel, dim_labels=None):
                 if space.dimensions[i].prior == "log-uniform":
                     ax_.set_yscale("log")
                 else:
-                    ax_.yaxis.set_major_locator(
-                        MaxNLocator(6, prune="both", integer=iscat[i])
-                    )
+                    if iscat[i]:
+                        # Do not remove first/last tick for categoric factors
+                        ax_.yaxis.set_major_locator(
+                            MaxNLocator(6, prune=None, integer=iscat[i])
+                        )
+                    else:
+                        ax_.yaxis.set_major_locator(
+                            MaxNLocator(6, prune="both", integer=iscat[i])
+                        )
 
             else:  # diagonal plots
                 ax_.set_ylim(*diagonal_ylim)
@@ -310,6 +316,7 @@ def _format_scatter_plot_axes(ax, space, ylabel, dim_labels=None):
 
                 ax_.xaxis.tick_top()
                 ax_.xaxis.set_label_position("top")
+                [labl.set_rotation(45) for labl in ax_.get_xticklabels()]
                 ax_.set_xlabel(dim_labels[j])
 
                 if space.dimensions[i].prior == "log-uniform":
@@ -487,7 +494,7 @@ def plot_objective(
     size=2,
     zscale="linear",
     dimensions=None,
-    usepartialdependence=True,
+    usepartialdependence=False,
     pars="result",
     expected_minimum_samples=None,
     title=None,
@@ -537,8 +544,8 @@ def plot_objective(
 
     * `usepartialdependence` [bool, default=false] Whether to use partial
         dependence or not when calculating dependence. If false plot_objective
-        will parse values to the dependence function,
-        defined by the pars argument
+        will parse values to the dependence function, defined by the 
+        pars argument
 
     * `pars` [str, default = 'result' or list of floats] Defines the values
     for the red
@@ -610,11 +617,15 @@ def plot_objective(
     for k,v in default_plot_type.items():
         if k not in plot_options.keys():
             plot_options[k] = v
-    # zscale and levels really belon in plot_options, but for backwards compatability,
-    # they are given as separate arguments.
+    # zscale and levels really belong in plot_options, but for backwards 
+    # compatibility they are given as separate arguments.
     plot_options["zscale"] = zscale
     plot_options["levels"] = levels
     space = result.space
+    # Check if we have any categorical dimensions, as this influences the plots
+    # on the diagonal (1D dependency)
+    is_cat = [isinstance(dim, Categorical) for dim in space.dimensions]
+    
     if isinstance(pars, str):
         if pars == "result":
             # Using the best observed result
@@ -670,16 +681,33 @@ def plot_objective(
         x_eval = x_vals
     rvs_transformed = space.transform(space.rvs(n_samples=n_samples))
     samples, minimum, _ = _map_categories(space, result.x_iters, x_vals)
-
+    
+    # Build slightly larger plots when we have just two dimensions
+    if space.n_dims == 2:
+        size = size*1.75
+        
     fig, ax = plt.subplots(
         space.n_dims,
         space.n_dims,
         figsize=(size * space.n_dims, size * space.n_dims),
     )
-
+    
+    # Generate consistent padding for axis labels and ticks
+    l_pad = 0.7/fig.get_figwidth()
+    r_pad = 1 - l_pad
+    b_pad = 0.7/fig.get_figheight()
+    t_pad = 1 - 0.7/fig.get_figheight()
+    
+    if space.n_dims <= 3:
+        h_pad = 0.2
+        w_pad = 0.2
+    else:
+        h_pad = 0.1
+        w_pad = 0.1
+    
     fig.subplots_adjust(
-        left=0.05, right=0.95, bottom=0.05, top=0.95, hspace=0.1, wspace=0.1
-    )
+        left=l_pad, right=r_pad, bottom=b_pad, top=t_pad, hspace=h_pad, wspace=w_pad
+    )    
 
     if title is not None:
         fig.suptitle(title)
@@ -692,7 +720,7 @@ def plot_objective(
     stddev_max_2d = -float("inf")
 
     plots_data = []
-
+    # Gather all data relevant for plotting
     for i in range(space.n_dims):
         row = []
         for j in range(space.n_dims):
@@ -754,7 +782,8 @@ def plot_objective(
                     stddev_max_2d = np.max(stddevs)
 
         plots_data.append(row)
-
+    
+    # Build all the plots of in the figure
     for i in range(space.n_dims):
         for j in range(space.n_dims):
 
@@ -769,18 +798,81 @@ def plot_objective(
                 xi = plots_data[i][j]["xi"]
                 yi = plots_data[i][j]["yi"]
                 stddevs = plots_data[i][j]["std"]
-
-                ax[i, i].plot(xi, yi)
-                ax[i, i].set_xlim(np.min(xi), np.max(xi))
-                ax[i, i].set_ylim(val_min_1d-abs(val_min_1d)*.02, val_max_1d+abs(val_max_1d)*.02)
-                ax[i, i].axvline(minimum[i], linestyle="--", color="r", lw=1)
-                if show_confidence:
-                    ax[i, i].fill_between(xi, 
-                                          y1=(yi - 1.96*stddevs),
-                                          y2=(yi + 1.96*stddevs),
-                                          alpha=0.5,
-                                          color='red',
-                                          linewidth=0.0)
+                
+                # Check if we are about to plot a categoric factor
+                if is_cat[i]:                    
+                    # Expand the x-axis for this factor so we can see the first
+                    # and the last category
+                    ax[i, i].set_xlim(np.min(xi)-0.2, np.max(xi)+0.2)
+                    # Use same y-axis as all other 1D plots
+                    ax[i, i].set_ylim(val_min_1d-abs(val_min_1d)*.02, 
+                                      val_max_1d+abs(val_max_1d)*.02)
+                    if show_confidence:
+                        # Create one uniformly colored bar for each category.
+                        # Edgecolor ensures we can see the bar when plotting 
+                        # at best obeservation, as stddev is often tiny there
+                        ax[i, i].bar(
+                            xi,
+                            2*1.96*stddevs,
+                            width=0.2,
+                            bottom=yi-1.96*stddevs,
+                            alpha=0.5,
+                            color="green",
+                            edgecolor="green",
+                            zorder=1,
+                        )
+                        # Also add highlight the best point/expected minimum
+                        ax[i, i].scatter(
+                            minimum[i],
+                            yi[int(minimum[i])],
+                            c="k",
+                            s=20,
+                            marker="D",
+                            zorder=0,
+                        )
+                    else:
+                        # Simply show the mean value
+                        ax[i, i].scatter(
+                            xi,
+                            yi,
+                            c="red",
+                            s=80,
+                            marker="_",
+                            zorder=1,
+                        )
+                        # Also add highlight the best/expected minimum
+                        ax[i, i].scatter(
+                            minimum[i],
+                            yi[int(minimum[i])],
+                            c="k",
+                            s=20,
+                            marker="D",
+                            zorder=0,
+                        )
+                
+                # For non-categoric factors
+                else:
+                    ax[i, i].set_xlim(np.min(xi), np.max(xi))
+                    ax[i, i].set_ylim(val_min_1d-abs(val_min_1d)*.02, 
+                                      val_max_1d+abs(val_max_1d)*.02)
+                    ax[i, i].axvline(minimum[i], linestyle="--", color="k", lw=1)
+                    if show_confidence:
+                        ax[i, i].fill_between(xi,
+                                              y1=(yi - 1.96*stddevs),
+                                              y2=(yi + 1.96*stddevs),
+                                              alpha=0.5,
+                                              color="green",
+                                              edgecolor="green",
+                                              linewidth=0.0,
+                            )
+                    else:
+                        ax[i, i].plot(
+                            xi,
+                            yi,
+                            color="red",
+                            lw=1,
+                            zorder=0,
+                        )
 
             # lower triangle
             elif i > j:
@@ -799,16 +891,92 @@ def plot_objective(
                 )
 
                 if [i, j] == [1, 0]:
+                    # Add a colorbar for the 2D plot value scale
                     import matplotlib as mpl
 
-                    norm = mpl.colors.Normalize(
+                    norm_color = mpl.colors.Normalize(
                         vmin=val_min_2d, vmax=val_max_2d
                     )
                     cb = ax[0][-1].figure.colorbar(
-                        mpl.cm.ScalarMappable(norm=norm, cmap=plot_options["colormap"]),
+                        mpl.cm.ScalarMappable(norm=norm_color, cmap=plot_options["colormap"]),
                         ax=ax[0][-1],
+                        location="top",
+                        fraction=0.1,
+                        label="Score",
                     )
                     cb.ax.locator_params(nbins=8)
+                    
+                    # Add a legend for the various figure contents
+                    if isinstance(pars, str):
+                        if pars == "result":
+                            highlight_label = "Best data point"
+                        elif pars == "expected_minimum":
+                            highlight_label = "Expected minimum"
+                        elif pars == "expected_minimum_random":
+                            highlight_label = "Simulated minimum"
+                    elif isinstance(pars, list):
+                        # The case where the user specifies [x[0], x[1], ...]
+                        highlight_label = "Point: " + str(pars)
+                    # Legend icon for data points
+                    legend_data_point = mpl.lines.Line2D(
+                        [],
+                        [],
+                        color="darkorange",
+                        marker=".",
+                        markersize=9,
+                        lw=0.0,
+                    )
+                    # Legend icon for the highlighted point in the 2D plots
+                    legend_hp = mpl.lines.Line2D(
+                        [],
+                        [],
+                        color="k",
+                        marker="D",
+                        markersize=5,
+                        lw=0.0,
+                    )
+                    # Legend icon for the highlighted value in the 1D plots
+                    legend_hl = mpl.lines.Line2D(
+                        [],
+                        [],
+                        linestyle="--",
+                        color="k",
+                        marker="",
+                        lw=1,
+                    )
+                    if show_confidence:
+                        # Legend icon for the 95 % credibility interval
+                        legend_fill = mpl.patches.Patch(
+                            color="green",
+                            alpha=0.5,
+                        )
+                        if usepartialdependence:
+                            ci_label = "Est. 95 % credibility interval"
+                        else:
+                            ci_label = "95 % credibility interval"
+                        ax[0][-1].legend(
+                            handles=[legend_data_point, (legend_hp, legend_hl), legend_fill],
+                            labels=["Data points", highlight_label, ci_label],
+                            loc="upper center",
+                            handler_map={tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
+                        )
+                    else:
+                        # Legend icon for the model mean function
+                        legend_mean = mpl.lines.Line2D(
+                            [],
+                            [],
+                            linestyle="-",
+                            color="red",
+                            marker="",
+                            lw=1,
+                        )
+                        ax[0][-1].legend(
+                            handles=[legend_data_point, (legend_hp, legend_hl), legend_mean],
+                            labels=["Data points", highlight_label, "Model mean function"],
+                            loc="upper center",
+                            handler_map={tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
+                        )
+                    
 
     if usepartialdependence:
         ylabel = "Partial dependence"
@@ -877,9 +1045,24 @@ def _2d_dependency_plot(data, axes, samples, highlighted, limits, options = {}):
         # imshow assumes square pixels, so it sets aspect to 1. We do not want that.
         axes.set_aspect('auto')
     axes.scatter(
-        samples[0], samples[1], c="darkorange", s=10, lw=0.0, zorder=10, clip_on=False
+        samples[0],
+        samples[1],
+        c="darkorange",
+        s=20,
+        lw=0.0,
+        zorder=10,
+        clip_on=False,
     )
-    axes.scatter(highlighted[0], highlighted[1], c=["r"], s=20, lw=0.0, zorder=10, clip_on=False)
+    axes.scatter(
+        highlighted[0],
+        highlighted[1],
+        c="k",
+        s=30,
+        marker="D",
+        lw=0.0,
+        zorder=10,
+        clip_on=False,
+    )
 
 
 
