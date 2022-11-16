@@ -237,7 +237,7 @@ class GaussianProcessRegressor(sk_GaussianProcessRegressor):
             self.y_train_mean_ = self._y_train_mean
             self.y_train_std_ = self._y_train_std
 
-        else: # If on 1.0 or newer
+        else: # If on 1.0 or newer. 
             if self.normalize_y:
                 self.y_train_mean_ = np.mean(y, axis=0)
                 self.y_train_std_ = _handle_zeros_in_scale(np.std(y, axis=0), copy=False)
@@ -348,7 +348,7 @@ class GaussianProcessRegressor(sk_GaussianProcessRegressor):
                 y_cov = self.kernel_(X) - V.T @ V
 
                 # undo normalisation
-                y_cov = np.outer(y_cov, self._y_train_std**2).reshape(
+                y_cov = np.outer(y_cov, self.y_train_std_**2).reshape(
                     *y_cov.shape, -1
                 )
                 # if y_cov has shape (n_samples, n_samples, 1), reshape to
@@ -376,7 +376,7 @@ class GaussianProcessRegressor(sk_GaussianProcessRegressor):
                     y_var[y_var_negative] = 0.0
 
                 # undo normalisation
-                y_var = np.outer(y_var, self._y_train_std**2).reshape(
+                y_var = np.outer(y_var, self.y_train_std_**2).reshape(
                     *y_var.shape, -1
                 )
 
