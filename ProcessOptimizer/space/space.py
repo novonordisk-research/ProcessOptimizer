@@ -347,12 +347,12 @@ class Real(Dimension):
         if border_width is None:
             return xi, xi_transformed
         border_list = []
-        border_distance = (bounds[1]-bounds[0])/(num_points-1)*border_width
+        border_distance = 1/(num_points-1)*border_width
         for i in range(num_points):
-            lower_border = xi[i]-border_distance
-            lower_border = np.max([lower_border, bounds[0]])
-            higher_border = xi[i]+border_distance
-            higher_border = np.min([higher_border, bounds[1]])
+            lower_border = xi_transformed[i]-border_distance
+            lower_border = np.max([lower_border, 0])
+            higher_border = xi_transformed[i]+border_distance
+            higher_border = np.min([higher_border, 1])
             border_list.append((lower_border,higher_border))
         return xi, xi_transformed, border_list
 
@@ -496,12 +496,12 @@ class Integer(Dimension):
         if border_width is None:
             return xi, xi_transformed
         border_list = []
-        border_distance = (bounds[1]-bounds[0])/(num_points-1)*border_width
+        border_distance = 1/(num_points-1)*border_width
         for i in range(num_points):
-            lower_border = xi[i]-border_distance
-            lower_border = np.max([lower_border, bounds[0]])
-            higher_border = xi[i]+border_distance
-            higher_border = np.min([higher_border, bounds[1]])
+            lower_border = xi_transformed[i]-border_distance
+            lower_border = np.max([lower_border, 0])
+            higher_border = xi_transformed[i]+border_distance
+            higher_border = np.min([higher_border, 1])
             border_list.append((lower_border,higher_border))
         return xi, xi_transformed, border_list
 
@@ -668,7 +668,7 @@ class Categorical(Dimension):
         xi_transformed = self.transform(cats[xi])
         if border_width is None:
             return xi, xi_transformed
-        border_list = [(x,x) for x in xi] # For categorial dimensions, it doesn't make
+        border_list = [(x,x) for x in xi_transformed] # For categorial dimensions, it doesn't make
         # sense to average over neighboring categories.
         return xi, xi_transformed, border_list
 

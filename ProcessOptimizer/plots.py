@@ -435,17 +435,17 @@ def dependence(
         for x_ in xi_transformed:
             rvs_ = np.array(sample_points)  # copy
             # We replace the values in the dimension that we want to keep fixed
-            rvs_[:, dim_locs[i] : dim_locs[i + 1]] = x_
+            rvs_[:, dim_locs[i]: dim_locs[i + 1]] = x_
             # In case of `x_eval=None` rvs conists of random samples.
             # Calculating the mean of these samples is how partial dependence
             # is implemented.
-            funcvalue, stddev = model.predict(rvs_, return_std = True)
+            funcvalue, stddev = model.predict(rvs_, return_std=True)
             yi.append(np.mean(funcvalue))
             stddevs.append(np.mean(stddev))
         # Convert yi and stddevs from lists to numpy arrays
         yi = np.array(yi)
         stddevs = np.array(stddevs)
-        
+
         return xi, yi, stddevs
 
     else:
@@ -461,9 +461,9 @@ def dependence(
             stddev_row = []
             for y_ in yi_transformed:
                 rvs_ = np.array(sample_points)  # copy
-                rvs_[:, dim_locs[j] : dim_locs[j + 1]] = x_
-                rvs_[:, dim_locs[i] : dim_locs[i + 1]] = y_
-                funcvalue, stddev = model.predict(rvs_, return_std = True)
+                rvs_[:, dim_locs[j]: dim_locs[j + 1]] = x_
+                rvs_[:, dim_locs[i]: dim_locs[i + 1]] = y_
+                funcvalue, stddev = model.predict(rvs_, return_std=True)
                 value_row.append(np.mean(funcvalue))
                 stddev_row.append(np.mean(stddev))
             zi.append(value_row)
@@ -477,7 +477,7 @@ def dependence(
 def plot_objective(
     result,
     levels=10,
-    oversampling=10,
+    oversampling=None,
     graph_width=20,
     size=2,
     zscale="linear",
@@ -595,17 +595,25 @@ def plot_objective(
         The matplotlib axes.
     """
     # Setting the options
+    if not oversampling:
+        # Much less oversampling is needed for plotting absolute dependence than for
+        # partial dependence.
+        if usepartialdependence:
+            oversampling = 10
+        else:
+            oversampling = 2
     if not plot_options:
         plot_options = {}
     default_plot_type = {
-       "interpolation": "",
-       "uncertain_color": [0, 0, 0],
-       "colormap" : "viridis_r",
-       "normalize_uncertainty": (
-           lambda x, global_min, global_max: (x-global_min)/(global_max-global_min)
-       ),
+        "interpolation": "",
+        "uncertain_color": [0, 0, 0],
+        "colormap": "viridis_r",
+        "normalize_uncertainty": (
+            lambda x, global_min, global_max: (
+                x-global_min)/(global_max-global_min)
+        ),
     }
-    for k,v in default_plot_type.items():
+    for k, v in default_plot_type.items():
         if k not in plot_options.keys():
             plot_options[k] = v
     # zscale and levels really belong in plot_options, but for backwards compatability,
@@ -613,7 +621,7 @@ def plot_objective(
     plot_options["zscale"] = zscale
     plot_options["levels"] = levels
 
-    x_vals = find_x_vals(pars,result,expected_minimum_samples)
+    x_vals = find_x_vals(pars, result, expected_minimum_samples)
 
     space = result.space
 
@@ -663,7 +671,7 @@ def plot_objective(
                 ax[i, i].set_ylim(ymin, ymax)
                 ax[i, i].axvline(minimum[i], linestyle="--", color="r", lw=1)
                 if show_confidence:
-                    ax[i, i].fill_between(xi, 
+                    ax[i, i].fill_between(xi,
                                           y1=(zi - 1.96*stddevs),
                                           y2=(zi + 1.96*stddevs),
                                           alpha=0.5,
@@ -688,7 +696,8 @@ def plot_objective(
                         vmin=limits["z_min"], vmax=limits["z_max"]
                     )
                     cb = ax[0][-1].figure.colorbar(
-                        mpl.cm.ScalarMappable(norm=norm, cmap=plot_options["colormap"]),
+                        mpl.cm.ScalarMappable(
+                            norm=norm, cmap=plot_options["colormap"]),
                         ax=ax[0][-1],
                     )
                     cb.ax.locator_params(nbins=8)
@@ -720,7 +729,8 @@ def find_x_vals(pars, result, expected_minimum_samples):
             else:
                 # Use standard of 20 random starting points
                 num_random_starts = 20
-            x_vals, _ = expected_minimum(result, n_random_starts=num_random_starts)
+            x_vals, _ = expected_minimum(
+                result, n_random_starts=num_random_starts)
         elif pars == "expected_minimum_random":
             # Do a minimum search by evaluating the function with n_samples
             # sample values
@@ -753,22 +763,15 @@ def find_x_vals(pars, result, expected_minimum_samples):
 
 
 def create_plot_data(oversampling, graph_width, space, model, usepartialdependence, show_confidence, x_vals):
-    # Sampling the space and predicting the objective and the uncertainty at the sampling
-    # points
-    num_random_points = oversampling*graph_width*graph_width
-    sampling_dimensions = [
-        dim.evenly_sample(graph_width*oversampling)[0]
-        for dim in space.dimensions]
-    sample_point_list = [
-        [random.choice(dim) for dim in sampling_dimensions]
-        for _ in range(num_random_points)]
-    if usepartialdependence:
-        restricted_sample_point_list, value_list, stddev_list = generate_random_data(
-                        space,
-                        locked_val_list= [],
-                        sample_point_list = sample_point_list,
-                        model = model)
 
+    sample_list, xi_list, included_list = create_sample_list(
+        space, graph_width, oversampling)
+
+    if usepartialdependence:
+        value_list, stddev_list = generate_random_data(
+            locked_val_list=[],
+            sample_list=sample_list,
+            model=model)
 
     # Initialising min and max values to something that is bound to be overwritten.
     val_min_1d = float("inf")
@@ -780,7 +783,6 @@ def create_plot_data(oversampling, graph_width, space, model, usepartialdependen
 
     plots_data = []
     for i in range(space.n_dims):
-        xi, _, border_point_list_dim1 = space.dimensions[i].evenly_sample(graph_width, 2)
         row = []
         for j in range(space.n_dims):
             if j > i:
@@ -790,19 +792,19 @@ def create_plot_data(oversampling, graph_width, space, model, usepartialdependen
             elif i == j:
                 # Diagonal, creating data for 1D plots
                 if not usepartialdependence:
-                    locked_val_list = [(dim_num,x_vals[dim_num]) for dim_num in range(space.n_dims) if dim_num not in (i,)]
-                    restricted_sample_point_list, value_list, stddev_list = generate_random_data(
-                        space,
-                        locked_val_list = locked_val_list,
-                        sample_point_list = sample_point_list,
-                        model = model)
+                    locked_val_list = [
+                        (dim_num, np.array(space.dimensions[dim_num].transform(
+                            [x_vals[dim_num]]), ndmin=2))
+                        for dim_num in range(space.n_dims) if dim_num not in (i,)]
+                    value_list, stddev_list = generate_random_data(
+                        locked_val_list=locked_val_list,
+                        sample_list=sample_list,
+                        model=model)
                 zi, stddevs = find_average_1D(
-                    restricted_sample_point_list,
                     value_list,
                     stddev_list,
-                    dim = i,
-                    border_list = border_point_list_dim1)
-                row.append({"xi": xi, "zi": zi, "std": stddevs})
+                    included_list[i])
+                row.append({"xi": xi_list[i], "zi": zi, "std": stddevs})
                 # Finding the minimum and maximum objective value shown, accounting for
                 # uncertainty (if shown).
                 if show_confidence:
@@ -817,27 +819,24 @@ def create_plot_data(oversampling, graph_width, space, model, usepartialdependen
                     val_max_1d = np.max(zi_high_bound)
 
             else:
-                yi, _, border_point_list_dim2 = space.dimensions[j].evenly_sample(graph_width, 2)
                 # Lower triangle
                 if not usepartialdependence:
                     locked_val_list = [
-                        (dim_num,x_vals[dim_num])
-                        for dim_num in range(space.n_dims) if dim_num not in (i,j)]                 
-                    restricted_sample_point_list, value_list, stddev_list = generate_random_data(
-                        space,
-                        locked_val_list= locked_val_list,
-                        sample_point_list = sample_point_list,
-                        model = model)
+                        (dim_num, np.array(space.dimensions[dim_num].transform(
+                            [x_vals[dim_num]]), ndmin=2))
+                        for dim_num in range(space.n_dims) if dim_num not in (i, j)]
+                    value_list, stddev_list = generate_random_data(
+                        locked_val_list=locked_val_list,
+                        sample_list=sample_list,
+                        model=model)
                 zi, stddevs = find_average_2D(
-                    restricted_sample_point_list,
                     value_list,
                     stddev_list,
-                    dim1 = i,
-                    dim2 = j,
-                    border_list1 = border_point_list_dim1,
-                    border_list2 = border_point_list_dim2)
+                    included_samples_1d_list=included_list[i],
+                    included_samples_2d_list=included_list[j])
 
-                row.append({"xi": yi, "yi": xi, "zi": zi, "std": stddevs})
+                row.append(
+                    {"xi": xi_list[j], "yi": xi_list[i], "zi": zi, "std": stddevs})
 
                 if np.min(zi) < val_min_2d:
                     val_min_2d = np.min(zi)
@@ -846,72 +845,99 @@ def create_plot_data(oversampling, graph_width, space, model, usepartialdependen
                 if np.min(stddevs) < stddev_min_2d:
                     stddev_min_2d = np.min(stddevs)
                 if np.max(stddevs) > stddev_max_2d:
-                    stddev_max_2d = np.max(stddevs)     
+                    stddev_max_2d = np.max(stddevs)
 
         plots_data.append(row)
 
-    limits={
+    limits = {
         "val_1d_min": val_min_1d,
         "val_1d_max": val_max_1d,
-        "z_min" : val_min_2d,
-        "z_max" : val_max_2d,
+        "z_min": val_min_2d,
+        "z_max": val_max_2d,
         "stddev_min": stddev_min_2d,
         "stddev_max": stddev_max_2d}
     return plots_data, limits
 
 
-def generate_random_data(space, locked_val_list, sample_point_list, model):
+def create_sample_list(space, graph_width, oversampling):
+    # Sampling the space and predicting the objective and the uncertainty at the sampling
+    # points
+    num_random_points = oversampling*graph_width*graph_width
+    sampling_dimensions = [
+        dim.evenly_sample(graph_width*oversampling)[1]
+        for dim in space.dimensions]
+    sample_list = [
+        [np.array(random.choice(dim), ndmin=2) for dim in sampling_dimensions]
+        for _ in range(num_random_points)]
+    xi_list = []
+    included_list_list = []
+    for dim in range(space.n_dims):
+        xi, _, border_list = space.dimensions[dim].evenly_sample(
+            graph_width, 2)
+        xi_list.append(xi)
+        included_sample_list = []
+        if len(sample_list[0][dim][0]) == 1:
+            for border_tuple in border_list:
+                included_sample_list.append([
+                    sample[dim] >= border_tuple[0] and
+                    sample[dim] <= border_tuple[1]
+                    for sample in sample_list])
+        else:
+            # For categorical variables, the sample value is an 1xN numpy array, so the
+            # usual >= approach doesn't work as inteded.
+            for border_tuple in border_list:
+                included_sample_list.append(
+                    [np.array_equal(sample[dim][0], border_tuple[0])
+                        for sample in sample_list])
+        included_list_list.append(included_sample_list)
+    return sample_list, xi_list, included_list_list
+
+
+def generate_random_data(locked_val_list, sample_list, model):
     # Making sure we do not overwrite the original sample point list, we need it later.
-    output_sample_point_list = [sample.copy() for sample in sample_point_list]
+    output_sample_point_list = [sample.copy() for sample in sample_list]
     for locked_val in locked_val_list:
         for i in range(len(output_sample_point_list)):
-            output_sample_point_list[i][locked_val[0]]=locked_val[1]
-    sample_point_list_transformed = space.transform(output_sample_point_list)
+            output_sample_point_list[i][locked_val[0]] = locked_val[1]
+    output_sample_point_list = [np.block(i)[0]
+                                for i in output_sample_point_list]
     value_list, stddev_list = model.predict(
-        sample_point_list_transformed, return_std = True)
-    return output_sample_point_list, value_list, stddev_list
+        output_sample_point_list, return_std=True)
+    return value_list, stddev_list
 
 
-def find_average_1D(sample_list, value_list, stddev_list, dim, border_list):
+def find_average_1D(value_list, stddev_list, included_list_list):
     average_value_list = []
     average_stddev_list = []
-    for border_tuple in border_list:
-        included_samples = [
-            sample[dim] >= border_tuple[0] and sample[dim] <= border_tuple[1]
-            for sample in sample_list]
-        average_value_list.append(np.mean(list(compress(value_list,included_samples))))
-        average_stddev_list.append(np.mean(list(compress(stddev_list,included_samples))))
+    for included_samples in included_list_list:
+        average_value_list.append(
+            np.mean(list(compress(value_list, included_samples))))
+        average_stddev_list.append(
+            np.mean(list(compress(stddev_list, included_samples))))
     return np.array(average_value_list), np.array(average_stddev_list)
 
-def find_average_2D(sample_list, value_list, stddev_list, dim1, dim2, border_list1, border_list2):
+
+def find_average_2D(value_list, stddev_list, included_samples_1d_list, included_samples_2d_list):
     average_value_list = []
     average_stddev_list = []
-    included_samples_1d_list = []
-    included_samples_2d_list = []
-    for border_tuple in border_list1:
-        included_samples_1d_list.append(
-            [sample[dim1] >= border_tuple[0] and sample[dim1] <= border_tuple[1]
-            for sample in sample_list]
-        )
-    for border_tuple in border_list2:
-        included_samples_2d_list.append(
-            [sample[dim2] >= border_tuple[0] and sample[dim2] <= border_tuple[1]
-            for sample in sample_list]
-        )
     for sample_choice_1d in included_samples_1d_list:
         value_row = []
         stddev_row = []
         value_1d = list(compress(value_list, sample_choice_1d))
         stddev_1d = list(compress(stddev_list, sample_choice_1d))
         for sample_choice_2d in included_samples_2d_list:
-            included_2d_given_1d = list(compress(sample_choice_2d,sample_choice_1d))
-            value_row.append(np.mean(list(compress(value_1d,included_2d_given_1d))))
-            stddev_row.append(np.mean(list(compress(stddev_1d,included_2d_given_1d))))
+            included_2d_given_1d = list(
+                compress(sample_choice_2d, sample_choice_1d))
+            value_row.append(
+                np.mean(list(compress(value_1d, included_2d_given_1d))))
+            stddev_row.append(
+                np.mean(list(compress(stddev_1d, included_2d_given_1d))))
         average_value_list.append(value_row)
         average_stddev_list.append(stddev_row)
     return np.array(average_value_list), np.array(average_stddev_list)
 
-def _2d_dependency_plot(data, axes, samples, highlighted, limits, options = {}):
+
+def _2d_dependency_plot(data, axes, samples, highlighted, limits, options={}):
     if "zscale" in options.keys():
         if options["zscale"] == "log":
             locator = LogLocator()
@@ -922,7 +948,7 @@ def _2d_dependency_plot(data, axes, samples, highlighted, limits, options = {}):
                 "Valid values for zscale are 'linear' and 'log',"
                 " not '%s'." % options["zscale"]
             )
-    else :
+    else:
         raise ValueError("No zscale given for 2D dependency plot")
     xi = data["xi"]
     yi = data["yi"]
@@ -941,7 +967,7 @@ def _2d_dependency_plot(data, axes, samples, highlighted, limits, options = {}):
     else:
         # Normalising z and stddev to scale beteween 0 and 1, needed for more manual plot
         zi = (zi-limits["z_min"])/(limits["z_max"]-limits["z_min"])
-        #Converting numerical z values to RGBA values to be able to change alpha
+        # Converting numerical z values to RGBA values to be able to change alpha
         zi = plt.get_cmap(options["colormap"])(zi)
         stddev = data["std"]
         stddev = options["normalize_uncertainty"](
@@ -958,21 +984,21 @@ def _2d_dependency_plot(data, axes, samples, highlighted, limits, options = {}):
         # the background color shines thorugh in uncertain areas.
         for i in range(zi.shape[0]):
             for j in range(zi.shape[1]):
-                zi[i,j,3] = 1-stddev[i,j]
+                zi[i, j, 3] = 1-stddev[i, j]
         axes.set_facecolor(options["uncertain_color"])
         axes.imshow(
             zi,
             interpolation=options["interpolation"],
             origin="lower",
-            extent=(min(xi),max(xi),min(yi),max(yi))
+            extent=(min(xi), max(xi), min(yi), max(yi))
         )
         # imshow assumes square pixels, so it sets aspect to 1. We do not want that.
         axes.set_aspect('auto')
     axes.scatter(
         samples[0], samples[1], c="darkorange", s=10, lw=0.0, zorder=10, clip_on=False
     )
-    axes.scatter(highlighted[0], highlighted[1], c=["r"], s=20, lw=0.0, zorder=10, clip_on=False)
-
+    axes.scatter(highlighted[0], highlighted[1], c=[
+                 "r"], s=20, lw=0.0, zorder=10, clip_on=False)
 
 
 def plot_objectives(
@@ -988,7 +1014,7 @@ def plot_objectives(
     expected_minimum_samples=None,
     titles=None,
     show_confidence=False
-    ):
+):
     """Pairwise dependence plots of each of the objective functions.
     Parameters
     ----------
@@ -1018,7 +1044,7 @@ def plot_objectives(
         return
     else:
         for k in range(len(results)):
-            plot_objective(results[k], 
+            plot_objective(results[k],
                            levels=levels,
                            oversampling=10,
                            graph_width=n_points,
@@ -1109,7 +1135,8 @@ def plot_evaluations(result, bins=20, dimensions=None):
                     zorder=10,
                     clip_on=False
                 )
-                ax[i, j].scatter(minimum[j], minimum[i], c=["r"], s=20, lw=0.0, zorder=10, clip_on=False)
+                ax[i, j].scatter(minimum[j], minimum[i], c=[
+                                 "r"], s=20, lw=0.0, zorder=10, clip_on=False)
 
     return _format_scatter_plot_axes(
         ax, space, ylabel="Number of samples", dim_labels=dimensions
@@ -1286,7 +1313,7 @@ def plot_Pareto(
     * `dimensions` [list, default=None]
         List of dimension names. Used for plots. If None the dimensions
         will be named "1_1", "x_2"...
-        
+
     * `return_data` [bool, default=False]
         Whether to return data or not. If True the function will return
         all data for observation and estimated Pareto front, dimensions
