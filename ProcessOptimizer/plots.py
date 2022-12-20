@@ -871,19 +871,98 @@ def plot_objective(
                     limits=limits,
                     options=plot_options
                 )
-
                 if [i, j] == [1, 0]:
+                    # Add a colorbar for the 2D plot value scale
                     import matplotlib as mpl
 
-                    norm = mpl.colors.Normalize(
+                    norm_color = mpl.colors.Normalize(
                         vmin=limits["z_min"], vmax=limits["z_max"]
                     )
                     cb = ax[0][-1].figure.colorbar(
                         mpl.cm.ScalarMappable(
-                            norm=norm, cmap=plot_options["colormap"]),
+                            norm=norm_color, cmap=plot_options["colormap"]),
                         ax=ax[0][-1],
+                        location="top",
+                        fraction=0.1,
+                        label="Score",
                     )
                     cb.ax.locator_params(nbins=8)
+
+                    # Add a legend for the various figure contents
+                    if isinstance(pars, str):
+                        if pars == "result":
+                            highlight_label = "Best data point"
+                        elif pars == "expected_minimum":
+                            highlight_label = "Expected minimum"
+                        elif pars == "expected_minimum_random":
+                            highlight_label = "Simulated minimum"
+                    elif isinstance(pars, list):
+                        # The case where the user specifies [x[0], x[1], ...]
+                        highlight_label = "Point: " + str(pars)
+                    # Legend icon for data points
+                    legend_data_point = mpl.lines.Line2D(
+                        [],
+                        [],
+                        color="darkorange",
+                        marker=".",
+                        markersize=9,
+                        lw=0.0,
+                    )
+                    # Legend icon for the highlighted point in the 2D plots
+                    legend_hp = mpl.lines.Line2D(
+                        [],
+                        [],
+                        color="k",
+                        marker="D",
+                        markersize=5,
+                        lw=0.0,
+                    )
+                    # Legend icon for the highlighted value in the 1D plots
+                    legend_hl = mpl.lines.Line2D(
+                        [],
+                        [],
+                        linestyle="--",
+                        color="k",
+                        marker="",
+                        lw=1,
+                    )
+                    if show_confidence:
+                        # Legend icon for the 95 % credibility interval
+                        legend_fill = mpl.patches.Patch(
+                            color="green",
+                            alpha=0.5,
+                        )
+                        if usepartialdependence:
+                            ci_label = "Est. 95 % credibility interval"
+                        else:
+                            ci_label = "95 % credibility interval"
+                        ax[0][-1].legend(
+                            handles=[legend_data_point,
+                                     (legend_hp, legend_hl), legend_fill],
+                            labels=["Data points", highlight_label, ci_label],
+                            loc="upper center",
+                            handler_map={
+                                tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
+                        )
+                    else:
+                        # Legend icon for the model mean function
+                        legend_mean = mpl.lines.Line2D(
+                            [],
+                            [],
+                            linestyle="-",
+                            color="red",
+                            marker="",
+                            lw=1,
+                        )
+                        ax[0][-1].legend(
+                            handles=[legend_data_point,
+                                     (legend_hp, legend_hl), legend_mean],
+                            labels=["Data points", highlight_label,
+                                    "Model mean function"],
+                            loc="upper center",
+                            handler_map={
+                                tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
+                        )
 
     if usepartialdependence:
         ylabel = "Partial dependence"
@@ -1088,6 +1167,7 @@ def find_average_1D(value_list, stddev_list, included_list_list):
             np.mean(list(compress(stddev_list, included_samples))))
     return np.array(average_value_list), np.array(average_stddev_list)
 
+
 def find_average_2D(value_list, stddev_list, included_samples_1d_list, included_samples_2d_list):
     average_value_list = []
     average_stddev_list = []
@@ -1106,6 +1186,7 @@ def find_average_2D(value_list, stddev_list, included_samples_1d_list, included_
         average_value_list.append(value_row)
         average_stddev_list.append(stddev_row)
     return np.array(average_value_list), np.array(average_stddev_list)
+
 
 def generate_random_data(locked_val_list, sample_list, model):
     # Making sure we do not overwrite the original sample point list, we need it later.
