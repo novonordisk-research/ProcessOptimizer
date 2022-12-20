@@ -144,7 +144,6 @@ class Dimension(object):
     def transformed_size(self):
         return 1
 
-
     # TODO: Make class into abstract base class and implement correctly, SRFU.
 
     def evenly_sample(self, num_points, return_borders):
@@ -287,7 +286,6 @@ class Real(Dimension):
                 return np.log10(self.low), np.log10(self.high)
 
     def distance(self, a, b):
-
         """Compute distance between point `a` and `b`.
 
         Parameters
@@ -319,8 +317,7 @@ class Real(Dimension):
         # Transform the samples to the range used for this dimension
         return samples*(self.high - self.low) + self.low
 
-
-    def evenly_sample(self, num_points, border_width = None):
+    def evenly_sample(self, num_points, border_width=None):
         """Return `n_points` evenly spaced points from a Dimension.
 
         Parameters
@@ -347,13 +344,15 @@ class Real(Dimension):
         if border_width is None:
             return xi, xi_transformed
         border_list = []
-        border_distance = 1/(num_points-1)*border_width
+        transformed_bounds = self.transform(self.bounds)
+        border_distance = float(
+            np.diff(transformed_bounds)/(num_points-1)*border_width)
         for i in range(num_points):
             lower_border = xi_transformed[i]-border_distance
-            lower_border = np.max([lower_border, 0])
+            lower_border = np.max([lower_border, transformed_bounds[0]])
             higher_border = xi_transformed[i]+border_distance
-            higher_border = np.min([higher_border, 1])
-            border_list.append((lower_border,higher_border))
+            higher_border = np.min([higher_border, transformed_bounds[1]])
+            border_list.append((lower_border, higher_border))
         return xi, xi_transformed, border_list
 
 
@@ -463,15 +462,15 @@ class Integer(Dimension):
         # and picking the middle of each piece. Samples are spaced 1/n apart
         # inside the interval with a buffer of half a step size to the extremes
         samples = (np.arange(n)+0.5)/n
-        # Transform the samples to the range used for this dimension and then 
-        # round them back to integers. If your space is less than n wide, some 
+        # Transform the samples to the range used for this dimension and then
+        # round them back to integers. If your space is less than n wide, some
         # of your samples will be rounded to the same number
         samples = np.round(samples*(self.high - self.low) + self.low)
-        
+
         # Convert samples to a list of integers
         return samples.astype(int)
 
-    def evenly_sample(self, num_points, border_width = None):
+    def evenly_sample(self, num_points, border_width=None):
         """Return `n_points` evenly spaced points from a Dimension.
 
         Parameters
@@ -496,13 +495,15 @@ class Integer(Dimension):
         if border_width is None:
             return xi, xi_transformed
         border_list = []
-        border_distance = 1/(num_points-1)*border_width
+        transformed_bounds = self.transform(self.bounds)
+        border_distance = float(
+            np.diff(transformed_bounds)/(num_points-1)*border_width)
         for i in range(num_points):
             lower_border = xi_transformed[i]-border_distance
-            lower_border = np.max([lower_border, 0])
+            lower_border = np.max([lower_border, transformed_bounds[0]])
             higher_border = xi_transformed[i]+border_distance
-            higher_border = np.min([higher_border, 1])
-            border_list.append((lower_border,higher_border))
+            higher_border = np.min([higher_border, transformed_bounds[1]])
+            border_list.append((lower_border, higher_border))
         return xi, xi_transformed, border_list
 
 
@@ -643,7 +644,7 @@ class Categorical(Dimension):
             s.append(self.categories[i % l])
         return s
 
-    def evenly_sample(self, num_points, border_width = None):
+    def evenly_sample(self, num_points, border_width=None):
         """Return `n_points` evenly spaced points from a Dimension.
 
         Parameters
@@ -664,13 +665,16 @@ class Categorical(Dimension):
             The transformed values of `xi`, for feeding to a model.
         """
         cats = np.array(getattr(self, "categories", []), dtype=object)
-        xi = np.linspace(0, len(cats) - 1, min(len(cats), num_points), dtype=int)
+        xi = np.linspace(0, len(cats) - 1,
+                         min(len(cats), num_points), dtype=int)
         xi_transformed = self.transform(cats[xi])
         if border_width is None:
             return xi, xi_transformed
-        border_list = [(x,x) for x in xi_transformed] # For categorial dimensions, it doesn't make
+        # For categorial dimensions, it doesn't make
+        border_list = [(x, x) for x in xi_transformed]
         # sense to average over neighboring categories.
         return xi, xi_transformed, border_list
+
 
 class Space(object):
     """Search space."""
@@ -963,9 +967,9 @@ class Space(object):
         if len(self.dimensions) > 1:
             for a, b, dim in zip(point_a, point_b, self.dimensions):
                 distance += dim.distance(a, b)
-                
+
         if len(self.dimensions) == 1:
-             distance +=  self.dimensions[0].distance(point_a[0], point_b[0])
+            distance += self.dimensions[0].distance(point_a[0], point_b[0])
 
         return distance
 
