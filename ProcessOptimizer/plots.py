@@ -5,15 +5,23 @@ import random
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 from matplotlib.pyplot import cm
 from matplotlib.ticker import LogLocator
 from matplotlib.ticker import MaxNLocator, FuncFormatter
 from scipy.optimize import OptimizeResult
 from scipy.stats.mstats import mquantiles
-from scipy.ndimage.filters import gaussian_filter1d
+from scipy.ndimage import gaussian_filter1d
 from ProcessOptimizer import expected_minimum, expected_minimum_random_sampling
 from .space import Categorical
 from .optimizer import Optimizer
+
+import json
+import bokeh.models as bh_models
+import bokeh.plotting as bh_plotting
+import bokeh.io as bh_io
+import bokeh.embed as bh_embed
+import bokeh.resources as bh_resources
 
 
 def plot_convergence(*args, **kwargs):
@@ -292,9 +300,15 @@ def _format_scatter_plot_axes(ax, space, ylabel, dim_labels=None):
                 if space.dimensions[i].prior == "log-uniform":
                     ax_.set_yscale("log")
                 else:
-                    ax_.yaxis.set_major_locator(
-                        MaxNLocator(6, prune="both", integer=iscat[i])
-                    )
+                    if iscat[i]:
+                        # Do not remove first/last tick for categoric factors
+                        ax_.yaxis.set_major_locator(
+                            MaxNLocator(6, prune=None, integer=iscat[i])
+                        )
+                    else:
+                        ax_.yaxis.set_major_locator(
+                            MaxNLocator(6, prune="both", integer=iscat[i])
+                        )
 
             else:  # diagonal plots
                 ax_.set_ylim(*diagonal_ylim)
@@ -305,6 +319,7 @@ def _format_scatter_plot_axes(ax, space, ylabel, dim_labels=None):
 
                 ax_.xaxis.tick_top()
                 ax_.xaxis.set_label_position("top")
+                [labl.set_rotation(45) for labl in ax_.get_xticklabels()]
                 ax_.set_xlabel(dim_labels[j])
 
                 if space.dimensions[i].prior == "log-uniform":
@@ -317,6 +332,95 @@ def _format_scatter_plot_axes(ax, space, ylabel, dim_labels=None):
                         ax_.xaxis.set_major_formatter(
                             FuncFormatter(
                                 partial(_cat_format, space.dimensions[i])
+                            )
+                        )
+
+    return ax
+
+
+def _format_1d_dependency_axes(ax, space, ylabel, dim_labels=None):
+
+    if dim_labels is None:
+        dim_labels = [
+            "$X_{%i}$" % i if d.name is None else d.name
+            for i, d in enumerate(space.dimensions)
+        ]
+    # Figure out where we have categorical factors
+    iscat = [isinstance(dim, Categorical) for dim in space.dimensions]
+
+    if space.n_dims < 3:
+        nrows = 1
+        ncols = space.n_dims
+    else:
+        nrows, ncols = ax.shape
+
+    for i in range(nrows):
+        for j in range(ncols):
+            # Build a handle to the present subplot
+            if space.n_dims == 1:
+                ax_ = ax
+            elif space.n_dims == 2:
+                ax_ = ax[j]
+            else:
+                ax_ = ax[i, j]
+
+            # Figure out what dimension number we are plotting from the indices
+            if space.n_dims < 3:
+                n = j
+            else:
+                n = np.ravel_multi_index(
+                    np.array([[i], [j]]),
+                    ax.shape
+                )
+                n = n[0]
+
+            # Turn off axes that do not contain a plot
+            if n >= space.n_dims:
+                ax_.axis("off")
+            else:
+                # Fix formatting of the y-axis
+                ax_.yaxis.set_major_locator(
+                    MaxNLocator(6, prune="both")
+                )
+                ax_.tick_params(axis="y", direction="inout")
+                # Leftmost plot in each row:
+                if j == 0:
+                    ax_.set_ylabel(ylabel)
+                # Rightmost plot in each row:
+                elif j == ncols-1:
+                    ax_.set_ylabel(ylabel)
+                    ax_.yaxis.set_label_position("right")
+                    ax_.yaxis.tick_right()
+                    ax2_ = ax_.secondary_yaxis("left")
+                    ax2_.tick_params(axis="y", direction="inout")
+                    ax2_.set_yticklabels([])
+                    ax2_.yaxis.set_major_locator(ax_.yaxis.get_major_locator())
+                else:
+                    ax_.set_yticklabels([])
+                    ax_.tick_params(axis="y", direction="inout")
+                    ax2_ = ax_.secondary_yaxis("right")
+                    ax2_.tick_params(axis="y", direction="inout")
+                    ax2_.yaxis.set_major_locator(ax_.yaxis.get_major_locator())
+                    if n < space.n_dims-1:
+                        ax2_.set_yticklabels([])
+                    else:
+                        ax2_.set_ylabel(ylabel)
+
+                # Fix formatting of the x-axis
+                [labl.set_rotation(20) for labl in ax_.get_xticklabels()]
+                ax_.set_xlabel(dim_labels[n])
+                if space.dimensions[n].prior == "log-uniform":
+                    ax_.set_xscale("log")
+                else:
+                    ax_.xaxis.set_major_locator(
+                        MaxNLocator(5, prune="both", integer=iscat[n])
+                    )
+                    if iscat[n]:
+                        # Axes for categorical dimensions are really integers;
+                        # we have to label them with the category names
+                        ax_.xaxis.set_major_formatter(
+                            FuncFormatter(
+                                partial(_cat_format, space.dimensions[n])
                             )
                         )
 
@@ -482,7 +586,7 @@ def plot_objective(
     size=2,
     zscale="linear",
     dimensions=None,
-    usepartialdependence=True,
+    usepartialdependence=False,
     pars="result",
     expected_minimum_samples=None,
     title=None,
@@ -515,7 +619,7 @@ def plot_objective(
         How many sample to have per 2d pixel on average.
 
     * `graph_width` [int, default=20]
-        Number of points at which to evaluate the partial dependence along 
+        Number of points at which to evaluate the partial dependence along
         each dimension.
 
     * `size` [float, default=2]
@@ -529,7 +633,7 @@ def plot_objective(
         `space.dimensions[i].name`, or if also `None` to `['X_0', 'X_1', ..]`.
 
     * `usepartialdependence` [bool, default=True]
-        Whether to use partial dependence or not when calculating dependence. If false, 
+        Whether to use partial dependence or not when calculating dependence. If false,
         plot_objective will parse values to the dependence function, defined by the pars
         argument.
 
@@ -566,7 +670,7 @@ def plot_objective(
             https://matplotlib.org/stable/gallery/images_contours_and_fields/interpolation_methods.html
             If empty string, a contour pot is shown. Note that contour plots are not
             compatible with showing uncertainty.
-        * "uncertain_color"  [any matplotlib color, default=[0,0,0]]: The colour to use 
+        * "uncertain_color"  [any matplotlib color, default=[0,0,0]]: The colour to use
             for "very" uncertain values in 2D plots.
         * "colormap" [string, default="viridis_r"]: The colourmap to use. For possible
             values, see
@@ -578,7 +682,7 @@ def plot_objective(
             with values between 0 and 1. If not, it raises an error, but only if any
             concrete outputs are outside this range. Output values of 0 shows the color
             for the expected value modeled objective function. Output values of 1
-            corresponds to the uncertain_color. To not show any uncertainty, use 
+            corresponds to the uncertain_color. To not show any uncertainty, use
             `lambda x, min, max: 0*x`.
             Another use is to visually deemphasize points with medium uncertainty by e.g
             `lambda x, global_min, global_max: ((x-global_min)/(global_max-global_min))**(1/2)`.
@@ -616,14 +720,17 @@ def plot_objective(
     for k, v in default_plot_type.items():
         if k not in plot_options.keys():
             plot_options[k] = v
-    # zscale and levels really belong in plot_options, but for backwards compatability,
-    # they are given as separate arguments.
+    # zscale and levels really belongg in plot_options, but for backwards
+    # compatibility they are given as separate arguments.
     plot_options["zscale"] = zscale
     plot_options["levels"] = levels
 
     x_vals = find_x_vals(pars, result, expected_minimum_samples)
 
     space = result.space
+    # Check if we have any categorical dimensions, as this influences the plots
+    # on the diagonal (1D dependency)
+    is_cat = [isinstance(dim, Categorical) for dim in space.dimensions]
 
     plots_data, limits = create_plot_data(
         oversampling,
@@ -636,14 +743,31 @@ def plot_objective(
 
     samples, minimum, _ = _map_categories(space, result.x_iters, x_vals)
 
+    # Build slightly larger plots when we have just two dimensions
+    if space.n_dims == 2:
+        size = size*1.75
+
     fig, ax = plt.subplots(
         space.n_dims,
         space.n_dims,
         figsize=(size * space.n_dims, size * space.n_dims),
     )
 
+    # Generate consistent padding for axis labels and ticks
+    l_pad = 0.7/fig.get_figwidth()
+    r_pad = 1 - l_pad
+    b_pad = 0.7/fig.get_figheight()
+    t_pad = 1 - 0.7/fig.get_figheight()
+
+    if space.n_dims <= 3:
+        h_pad = 0.2
+        w_pad = 0.2
+    else:
+        h_pad = 0.1
+        w_pad = 0.1
+
     fig.subplots_adjust(
-        left=0.05, right=0.95, bottom=0.05, top=0.95, hspace=0.1, wspace=0.1
+        left=l_pad, right=r_pad, bottom=b_pad, top=t_pad, hspace=h_pad, wspace=w_pad
     )
 
     if title is not None:
@@ -659,24 +783,83 @@ def plot_objective(
 
             # The diagonal of the plot, showing the 1D (partial) dependence for each of the n parameters
             elif i == j:
-
                 xi = plots_data[i][j]["xi"]
                 zi = plots_data[i][j]["zi"]
                 stddevs = plots_data[i][j]["std"]
+                if is_cat[i]:
+                    # Expand the x-axis for this factor so we can see the first
+                    # and the last category
+                    ax[i, i].set_xlim(np.min(xi)-0.2, np.max(xi)+0.2)
 
-                ax[i, i].plot(xi, zi)
-                ax[i, i].set_xlim(np.min(xi), np.max(xi))
+                    if show_confidence:
+                        # Create one uniformly colored bar for each category.
+                        # Edgecolor ensures we can see the bar when plotting
+                        # at best obeservation, as stddev is often tiny there
+                        ax[i, i].bar(
+                            xi,
+                            2*1.96*stddevs,
+                            width=0.2,
+                            bottom=zi-1.96*stddevs,
+                            alpha=0.5,
+                            color="green",
+                            edgecolor="green",
+                            zorder=1,
+                        )
+                        # Also add highlight the best point/expected minimum
+                        ax[i, i].scatter(
+                            minimum[i],
+                            zi[int(minimum[i])],
+                            c="k",
+                            s=20,
+                            marker="D",
+                            zorder=0,
+                        )
+                    else:
+                        # Simply show the mean value
+                        ax[i, i].scatter(
+                            xi,
+                            zi,
+                            c="red",
+                            s=80,
+                            marker="_",
+                            zorder=1,
+                        )
+                        # Also add highlight the best/expected minimum
+                        ax[i, i].scatter(
+                            minimum[i],
+                            zi[int(minimum[i])],
+                            c="k",
+                            s=20,
+                            marker="D",
+                            zorder=0,
+                        )
+
+                # For non-categoric factors
+                else:
+                    ax[i, i].set_xlim(np.min(xi), np.max(xi))
+                    ax[i, i].axvline(
+                        minimum[i], linestyle="--", color="k", lw=1)
+                    if show_confidence:
+                        ax[i, i].fill_between(xi,
+                                              y1=(zi - 1.96*stddevs),
+                                              y2=(zi + 1.96*stddevs),
+                                              alpha=0.5,
+                                              color="green",
+                                              edgecolor="green",
+                                              linewidth=0.0,
+                                              )
+                    else:
+                        ax[i, i].plot(
+                            xi,
+                            zi,
+                            color="red",
+                            lw=1,
+                            zorder=0,
+                        )
+
                 ymin = limits["val_1d_min"]-abs(limits["val_1d_min"])*.02
                 ymax = limits["val_1d_max"]+abs(limits["val_1d_max"])*.02
                 ax[i, i].set_ylim(ymin, ymax)
-                ax[i, i].axvline(minimum[i], linestyle="--", color="r", lw=1)
-                if show_confidence:
-                    ax[i, i].fill_between(xi,
-                                          y1=(zi - 1.96*stddevs),
-                                          y2=(zi + 1.96*stddevs),
-                                          alpha=0.5,
-                                          color='red',
-                                          linewidth=0.0)
 
             # lower triangle
             elif i > j:
@@ -766,7 +949,6 @@ def create_plot_data(oversampling, graph_width, space, model, usepartialdependen
 
     sample_list, xi_list, included_list = create_sample_list(
         space, graph_width, oversampling)
-
     if usepartialdependence:
         value_list, stddev_list = generate_random_data(
             locked_val_list=[],
@@ -782,6 +964,7 @@ def create_plot_data(oversampling, graph_width, space, model, usepartialdependen
     stddev_max_2d = -float("inf")
 
     plots_data = []
+    # Gather all data relevant for plotting
     for i in range(space.n_dims):
         row = []
         for j in range(space.n_dims):
@@ -850,6 +1033,7 @@ def create_plot_data(oversampling, graph_width, space, model, usepartialdependen
         plots_data.append(row)
 
     limits = {
+        # Build all the plots of in the figure
         "val_1d_min": val_min_1d,
         "val_1d_max": val_max_1d,
         "z_min": val_min_2d,
@@ -893,29 +1077,16 @@ def create_sample_list(space, graph_width, oversampling):
     return sample_list, xi_list, included_list_list
 
 
-def generate_random_data(locked_val_list, sample_list, model):
-    # Making sure we do not overwrite the original sample point list, we need it later.
-    output_sample_point_list = [sample.copy() for sample in sample_list]
-    for locked_val in locked_val_list:
-        for i in range(len(output_sample_point_list)):
-            output_sample_point_list[i][locked_val[0]] = locked_val[1]
-    output_sample_point_list = [np.block(i)[0]
-                                for i in output_sample_point_list]
-    value_list, stddev_list = model.predict(
-        output_sample_point_list, return_std=True)
-    return value_list, stddev_list
-
-
 def find_average_1D(value_list, stddev_list, included_list_list):
     average_value_list = []
     average_stddev_list = []
     for included_samples in included_list_list:
+        # Add a colorbar for the 2D plot value scale
         average_value_list.append(
             np.mean(list(compress(value_list, included_samples))))
         average_stddev_list.append(
             np.mean(list(compress(stddev_list, included_samples))))
     return np.array(average_value_list), np.array(average_stddev_list)
-
 
 def find_average_2D(value_list, stddev_list, included_samples_1d_list, included_samples_2d_list):
     average_value_list = []
@@ -935,6 +1106,18 @@ def find_average_2D(value_list, stddev_list, included_samples_1d_list, included_
         average_value_list.append(value_row)
         average_stddev_list.append(stddev_row)
     return np.array(average_value_list), np.array(average_stddev_list)
+
+def generate_random_data(locked_val_list, sample_list, model):
+    # Making sure we do not overwrite the original sample point list, we need it later.
+    output_sample_point_list = [sample.copy() for sample in sample_list]
+    for locked_val in locked_val_list:
+        for i in range(len(output_sample_point_list)):
+            output_sample_point_list[i][locked_val[0]] = locked_val[1]
+    output_sample_point_list = [np.block(i)[0]
+                                for i in output_sample_point_list]
+    value_list, stddev_list = model.predict(
+        output_sample_point_list, return_std=True)
+    return value_list, stddev_list
 
 
 def _2d_dependency_plot(data, axes, samples, highlighted, limits, options={}):
@@ -995,10 +1178,437 @@ def _2d_dependency_plot(data, axes, samples, highlighted, limits, options={}):
         # imshow assumes square pixels, so it sets aspect to 1. We do not want that.
         axes.set_aspect('auto')
     axes.scatter(
-        samples[0], samples[1], c="darkorange", s=10, lw=0.0, zorder=10, clip_on=False
+        samples[0],
+        samples[1],
+        c="darkorange",
+        s=20,
+        lw=0.0,
+        zorder=10,
+        clip_on=False,
     )
-    axes.scatter(highlighted[0], highlighted[1], c=[
-                 "r"], s=20, lw=0.0, zorder=10, clip_on=False)
+    axes.scatter(
+        highlighted[0],
+        highlighted[1],
+        c="k",
+        s=30,
+        marker="D",
+        lw=0.0,
+        zorder=10,
+        clip_on=False,
+    )
+
+
+def plot_objective_1d(
+    result,
+    n_points=40,
+    n_samples=250,
+    size=2.5,
+    dimensions=None,
+    usepartialdependence=False,
+    pars="result",
+    expected_minimum_samples=None,
+    title=None,
+    show_confidence=True,
+):
+    """Single factor dependence plot of the objective function.
+    The plot shows the dependence for each dimension `i` with
+    respect to the objective function. The objective function is
+    approximated by `result.model.` A vertical line indicates per default
+    the best observed data point, but this can be changed via the
+    argument 'pars'.
+
+    Parameters
+    ----------
+    * `result` [`OptimizeResult`]
+        The result for which to create the scatter plot matrix.
+
+    * `n_points` [int, default=40]
+        Number of points at which to evaluate the partial dependence
+        along each dimension.
+
+    * `n_samples` [int, default=250]
+        Number of random samples to use for averaging the model function
+        at each of the `n_points`.
+
+    * `size` [float, default=2.5]
+        Height (in inches) of each facet.
+
+    * `dimensions` [list of str, default=None] 
+        Labels of the dimension variables. `None` defaults to 
+        `space.dimensions[i].name`, or if also `None` to `['X_0', 'X_1', ..]`.
+
+    * `usepartialdependence` [bool, default=false] 
+        Whether to use partial dependence or not when calculating dependence. 
+        If false then the function will parse values to the dependence 
+        function, defined by the pars argument
+
+    * `pars` [str, default = 'result' or list of floats, ints and/or strings] 
+        Defines the nature of the highlighted setting in the points and if 
+        usepartialdependence is false, this argument also defines values for 
+        all other factors when calculating dependence.
+        Valid strings:
+            'result' - Use best observed factor settings in the input data.
+            'expected_minimum' - Use factor settings expected to give the best 
+                minimum calculated using scipy's minimize method.
+            'expected_minimum_random' - Use factor settings that gives the best
+                minimum after carrying out naive random sampling. Works with 
+                categorical values.
+            '[x[0], x[1], ..., x[n]] - Parameter to show depence at the factor
+                settings provided in this list. Depending on the system, this 
+                list can contain a mixture of floats, ints and strings
+
+    * `expected_minimum_samples` [float, default = None] 
+        Determines how many points should be evaluated to find the minimum when
+        using 'expected_minimum' or 'expected_minimum_random'.
+
+    * `title` [str, default=None]
+        Alternative string to use as the title of the legend. If left as None 
+        the title is dynamically generated based on the number of factors in 
+        the model (N) after the template "Dependency plot across N factors"
+
+    * `show_confidence` [bool, default=true] 
+        Whether or not to show a 95 % credibility range for the model values
+        for each function (when not using partial dependence). The range is
+        defined by 1.96 times the std in each point when sampling from the
+        model. When using partial dependence the range is not a credibility 
+        range but is defined as 1.96 times the std for random sampling across
+        the parameter space. It is labelled as an estimated credibility range.
+
+    Returns
+    -------
+    * `ax`: [`Axes`]:
+        The matplotlib axes.
+    """
+    # Here we define the value to highlight in each dimension. These
+    # same values will be used for evaluating the plots when calculating
+    # dependence. (Unless partial dependence is to be used instead).
+
+    space = result.space
+    # Check if we have any categorical dimensions, as this influences the plots
+    is_cat = [isinstance(dim, Categorical) for dim in space.dimensions]
+
+    if isinstance(pars, str):
+        if pars == "result":
+            # Using the best observed result
+            x_vals = result.x
+        elif pars == "expected_minimum":
+            # Do a gradient based minimum search using scipys own minimizer
+            if expected_minimum_samples:
+                # If a value for expected_minimum_samples has been parsed
+                x_vals, _ = expected_minimum(
+                    result,
+                    n_random_starts=expected_minimum_samples,
+                    random_state=None,
+                )
+            else:  # Use standard of 20 random starting points
+                x_vals, _ = expected_minimum(
+                    result,
+                    n_random_starts=20,
+                    random_state=None,
+                )
+        elif pars == "expected_minimum_random":
+            # Do a minimum search by evaluating the function with n_samples
+            # sample values
+            if expected_minimum_samples:
+                # If a value for expected_minimum_samples has been parsed
+                x_vals, _ = expected_minimum_random_sampling(
+                    result,
+                    n_random_starts=expected_minimum_samples,
+                    random_state=None,
+                )
+            else:
+                # Use standard of 10^n_parameters. Note this becomes very slow
+                # for many parameters
+                x_vals, _ = expected_minimum_random_sampling(
+                    result,
+                    n_random_starts=10 ** space.n_dims,
+                    random_state=None,
+                )
+        else:
+            raise ValueError(
+                "Argument ´pars´ must be a valid string \
+            (´result´)"
+            )
+    elif isinstance(pars, list):
+        assert len(pars) == len(
+            result.x
+        ), "Argument ´pars´ of type list \
+        must have same length as number of features"
+        # Using defined x_values
+        x_vals = pars
+    else:
+        raise ValueError("Argument ´pars´ must be a string or a list")
+
+    if usepartialdependence:
+        x_eval = None
+    else:
+        x_eval = x_vals
+    rvs_transformed = space.transform(space.rvs(n_samples=n_samples))
+    samples, minimum, _ = _map_categories(space, result.x_iters, x_vals)
+
+    # Build a figure using the smallest possible N by N tiling
+    ncols = int(np.ceil(np.sqrt(space.n_dims)))
+    nrows = int(np.ceil(space.n_dims/ncols))
+    # Build slightly larger figures when we have few factors
+    if ncols == 1:
+        size = size*1.5
+    elif ncols == 2:
+        size = size*4/3
+
+    fig, ax = plt.subplots(
+        nrows,
+        ncols,
+        figsize=(size * ncols, size * nrows),
+    )
+
+    # Generate consistent padding for axis labels and ticks
+    l_pad = 0.5/fig.get_figwidth()
+    r_pad = 1 - l_pad
+    b_pad = 0.6/fig.get_figheight()
+    t_pad = 1 - 0.8/fig.get_figheight()
+    if nrows > 1:
+        h_pad = 1 / (t_pad/(b_pad*nrows) - 1)
+    else:
+        h_pad = 0
+
+    if ncols == 1:
+        # One factor is a very special edge-case
+        fig.subplots_adjust(
+            left=0.18, right=0.95, bottom=b_pad, top=t_pad, hspace=0.0, wspace=0.0
+        )
+    else:
+        fig.subplots_adjust(
+            left=l_pad, right=r_pad, bottom=b_pad, top=t_pad, hspace=h_pad, wspace=0.0
+        )
+
+    if title is None:
+        title = "Dependency plot across " + str(space.n_dims) + " factors"
+
+    val_min_1d = float("inf")
+    val_max_1d = -float("inf")
+
+    plots_data = []
+    # Gather all data relevant for plotting
+    for i in range(space.n_dims):
+        row = []
+        xi, yi, stddevs = dependence(
+            space,
+            result.models[-1],
+            i,
+            j=None,
+            sample_points=rvs_transformed,
+            n_points=n_points,
+            x_eval=x_eval,
+        )
+        row.append({"xi": xi, "yi": yi, "std": stddevs})
+
+        if show_confidence:
+            yi_low_bound = yi - 1.96 * stddevs
+            yi_high_bound = yi + 1.96 * stddevs
+        else:
+            yi_low_bound = yi
+            yi_high_bound = yi
+        if np.min(yi_low_bound) < val_min_1d:
+            val_min_1d = np.min(yi_low_bound)
+        if np.max(yi_high_bound) > val_max_1d:
+            val_max_1d = np.max(yi_high_bound)
+
+        plots_data.append(row)
+
+    # Build all the plots in the figure
+    for n in range(space.n_dims):
+        # Generate a handle to the subplot we are targeting
+        if space.n_dims == 1:
+            ax_ = ax
+        elif space.n_dims == 2:
+            ax_ = ax[n]
+        else:
+            i, j = np.unravel_index(n, ax.shape)
+            ax_ = ax[i, j]
+        # Get data to plot in this subplot
+        xi = plots_data[n][0]["xi"]
+        yi = plots_data[n][0]["yi"]
+        stddevs = plots_data[n][0]["std"]
+
+        # Set y-axis limits
+        ax_.set_ylim(
+            val_min_1d-abs(val_min_1d)*.02,
+            val_max_1d+abs(val_max_1d)*.02
+        )
+
+        # Enter here when we plot a categoric factor
+        if is_cat[n]:
+            # Expand the x-axis for this factor so we can see the first
+            # and the last category
+            ax_.set_xlim(np.min(xi)-0.2, np.max(xi)+0.2)
+
+            if show_confidence:
+                # Create one uniformly colored bar for each category.
+                # Edgecolor ensures we can see the bar when plotting
+                # at best obeservation, as stddev is often tiny there
+                ax_.bar(
+                    xi,
+                    2*1.96*stddevs,
+                    width=0.2,
+                    bottom=yi-1.96*stddevs,
+                    alpha=0.5,
+                    color="green",
+                    edgecolor="green",
+                    zorder=1,
+                )
+                # Highlight the point defined by 'pars'
+                ax_.scatter(
+                    minimum[n],
+                    yi[int(minimum[n])],
+                    c="k",
+                    s=20,
+                    marker="D",
+                    zorder=0,
+                )
+            else:
+                # Show the mean value
+                ax_.scatter(
+                    xi,
+                    yi,
+                    c="red",
+                    s=80,
+                    marker="_",
+                    zorder=1,
+                )
+                # Highlight the point defined by 'pars'
+                ax_.scatter(
+                    minimum[n],
+                    yi[int(minimum[n])],
+                    c="k",
+                    s=20,
+                    marker="D",
+                    zorder=0,
+                )
+
+        # For non-categoric factors
+        else:
+            ax_.set_xlim(np.min(xi), np.max(xi))
+            # Highlight the point defined by 'pars'
+            ax_.axvline(minimum[n], linestyle="--", color="k", lw=1)
+            if show_confidence:
+                ax_.fill_between(
+                    xi,
+                    y1=(yi - 1.96*stddevs),
+                    y2=(yi + 1.96*stddevs),
+                    alpha=0.5,
+                    color="green",
+                    edgecolor="green",
+                    linewidth=0.0,
+                )
+            else:
+                ax_.plot(
+                    xi,
+                    yi,
+                    color="red",
+                    lw=1,
+                    zorder=0,
+                )
+
+        # Add a legend to the figure
+        if n == 0:
+            if isinstance(pars, str):
+                if pars == "result":
+                    highlight_label = "Best data point"
+                elif pars == "expected_minimum":
+                    highlight_label = "Expected minimum"
+                elif pars == "expected_minimum_random":
+                    highlight_label = "Simulated minimum"
+                elif isinstance(pars, list):
+                    # The case where the user specifies [x[0], x[1], ...]
+                    highlight_label = "Point: " + str(pars)
+            # Legend icon(s) for the highlighted value
+            legend_hl = mpl.lines.Line2D(
+                [],
+                [],
+                linestyle="--",
+                color="k",
+                marker="",
+                lw=1,
+            )
+            legend_hp = mpl.lines.Line2D(
+                [],
+                [],
+                color="k",
+                marker="D",
+                markersize=5,
+                lw=0.0,
+            )
+            if show_confidence:
+                # Legend icon for the 95 % credibility interval
+                legend_fill = mpl.patches.Patch(
+                    color="green",
+                    alpha=0.5,
+                )
+                if usepartialdependence:
+                    ci_label = "Est. 95 % credibility interval"
+                else:
+                    ci_label = "95 % credibility interval"
+                # Legend changes if we have categorical factors
+                if np.any(is_cat):
+                    ax_.figure.legend(
+                        handles=[(legend_hp, legend_hl), legend_fill],
+                        labels=[highlight_label, ci_label],
+                        title=title,
+                        framealpha=1,
+                        loc="upper center",
+                        handler_map={
+                            tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
+                    )
+                else:
+                    ax_.figure.legend(
+                        handles=[legend_hl, legend_fill],
+                        labels=[highlight_label, ci_label],
+                        title=title,
+                        framealpha=1,
+                        loc="upper center",
+                        handler_map={
+                            tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
+                    )
+            else:
+                # Legend icon for the model mean function
+                legend_mean = mpl.lines.Line2D(
+                    [],
+                    [],
+                    linestyle="-",
+                    color="red",
+                    marker="",
+                    lw=1,
+                )
+                # Legend changes if we have categorical factors
+                if np.any(is_cat):
+                    ax_.figure.legend(
+                        handles=[(legend_hp, legend_hl), legend_mean],
+                        labels=[highlight_label, "Model mean function"],
+                        title=title,
+                        framealpha=1,
+                        loc="upper center",
+                        handler_map={
+                            tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
+                    )
+                else:
+                    ax_.figure.legend(
+                        handles=[legend_hl, legend_mean],
+                        labels=[highlight_label, "Model mean function"],
+                        title=title,
+                        framealpha=1,
+                        loc="upper center",
+                        handler_map={
+                            tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
+                    )
+
+    if usepartialdependence:
+        ylabel = "Partial dependence"
+    else:
+        ylabel = "Dependence"
+
+    return _format_1d_dependency_axes(
+        ax, space, ylabel=ylabel, dim_labels=dimensions
+    )
 
 
 def plot_objectives(
@@ -1535,3 +2145,268 @@ def plot_Pareto(
             dimensions,
             objective_names,
         )
+
+
+def plot_Pareto_bokeh(
+    optimizer,
+    objective_names=None,
+    dimensions=None,
+    return_data=False,
+    show_browser=False,
+    return_type_bokeh=None,
+    filename='ParetoPlot',
+):
+    """Interactive bokeh plot of the Pareto front implemented in two dimensions
+
+    The plot shows all observations and the estimated Pareto front in the
+    objective space. By hovering over each point it is possible to see the
+    corresponding values of the point in the input space.
+    Data and bokeh objects are exclusively returned.<MON: What does this mean?>
+
+    Parameters
+    ----------
+    * `optimizer` [`Optimizer`]
+        The optimizer containing data and the model.
+
+    * `objective_names` [list, default=None]
+        List of objective names. Used for plots. If None the objectives
+        will be named "Objective 1", "Objective 2"...
+
+    * `dimensions` [list, default=None]
+        List of dimension names. Used for plots. If None the dimensions
+        will be named "X_1", "X_2"...
+
+    * `return_data` [bool, default=False]
+        Whether to return data or not. If True the function will return
+        all data for observation and estimated Pareto front, dimensions
+        and objectives_names.
+
+    * `show_browser` [bool, default=False]
+        Whether to open the new plot in the browser or not. If True new
+        HTML-file is opened in the default browser.
+
+    * `return_type_bokeh` ["file", "htmlString", "embed", or "json", default="file"]
+        Determine how the bokeh plot is returned. Can be either
+
+        - '"file"' for a HTML-file returned to the present working directory
+          with the name 'filename'.html
+        - '"htmlString"' for a string containing the HTML code
+        - '"embed"' for <script> and <div> components for embeding. See
+        https://docs.bokeh.org/en/latest/_modules/bokeh/embed/standalone.html#components
+        for more information.
+        - '"json"' for a json-item that can be supplied to BokehJS that
+        https://docs.bokeh.org/en/latest/docs/user_guide/embed.html#json-items
+        for more information.
+
+    * `filename` [str, default='ParetoPlot']
+        The filename to apply to the generated HTML-file.
+
+
+    if return_data is True and return_type_bokeh is 'file' Returns
+    -------
+    * `np.array(optimizer.Xi)`: [numpy.ndarray]:
+        Points at which the objectives have been evaluated.
+    * `np.array(optimizer.yi)`: [numpy.ndarray]:
+        Values of the objectives at corresponding points in 'Xi'.
+    * `pop`: [numpy.ndarray]:
+        Points on the Pareto front.
+    * `front`: [numpy.ndarray]:
+        Objective scores along the Pareto front points in 'pop'.
+    * `dimensions`: [list]:
+        Names of dimensions.
+    * `objective_names`: [list]:
+        Objective names.
+
+    if return_type_bokeh is 'embed' and return_data is False Returns
+    -------
+    * `script`: [str]:
+        Script part to be embeded acording to 
+        https://docs.bokeh.org/en/latest/docs/user_guide/embed.html#components
+    * `div`: [str]:
+        <div> tag[s] part to be embeded acording to 
+        https://docs.bokeh.org/en/latest/docs/user_guide/embed.html#components
+    """
+    if not optimizer.models:
+        raise ValueError("No models have been fitted yet.")
+
+    if dimensions == None:
+        dimensions = [
+            "X_(%i)" % i if d.name is None else d.name
+            for i, d in enumerate(optimizer.space.dimensions)
+        ]
+
+    if len(dimensions) != len(optimizer.space.dimensions):
+        raise ValueError(
+            "Number of dimensions specified does not match the number of"
+            "dimensions in the optimizer space."
+        )
+
+    if return_type_bokeh not in ['htmlString', 'embed', 'file', 'json', None]:
+        raise NameError(
+            f"'{return_type_bokeh}' is an unsupported return type for bokeh plot.")
+
+    # Get objective names
+    if objective_names:
+        obj1 = objective_names[0]
+        obj2 = objective_names[1]
+    else:
+        obj1 = 'Objective 1'
+        obj2 = 'Objective 2'
+        objective_names = [obj1, obj2]
+
+    # Obtain the 'recipe' from the optimizer
+    pop, logbook, front = optimizer.NSGAII(MU=40)
+    pop = np.asarray(pop)
+    pop = np.asarray(
+        optimizer.space.inverse_transform(
+            pop.reshape(len(pop), optimizer.space.transformed_n_dims)
+        )
+    )
+
+    # Collect data for observed and Pareto-front into dicts
+    data_observed_dict = {obj1: [i[0] for i in optimizer.yi],
+                          obj2: [i[1] for i in optimizer.yi]}
+
+    for i, dim in enumerate(dimensions):
+        data_observed_dict[dim] = [x[i] for x in optimizer.Xi]
+
+    data_calculated_dict = {
+        'front_x': np.unique(front, axis=0)[:, 0].tolist(),
+        'front_y': np.unique(front, axis=0)[:, 1].tolist(),
+        'recipe_x': pop[np.unique(front, axis=0, return_index=True)[1], 0].tolist(),
+        'recipe_y': pop[np.unique(front, axis=0, return_index=True)[1], 1].tolist(),
+    }
+
+    # Create Tooltip strings for the observed data points
+    Tooltips_observed = '''<div><font size="2"><b>Settings for this point are:</b></font></div>'''
+    for dim in dimensions:
+        Tooltips_observed += '''<div><font size="2">''' + \
+            dim+''' = @{'''+dim+'''}{0.0}</font></div>'''
+    Tooltips_observed += '''<div><font size="2"><b>Scores for this point are:</b></font></div>'''
+    Tooltips_observed += '''<div><font size="2">[ @{''' + \
+        obj1+'''}{0.00} , @{'''+obj2+'''}{0.00} ]</font></div>'''
+
+    # Create Tooltip strings for calculated points on the Pareto-front
+    Tooltips_recipe = '''<div><font size="2"><b>Settings for this point are:</b></font></div>'''
+    for dim, rec in zip(dimensions, ['recipe_x', 'recipe_y']):
+        Tooltips_recipe += '''<div><font size="2">''' + \
+            dim+''' = @{'''+rec+'''}{0.0}</font></div>'''
+    Tooltips_recipe += '''<div><font size="2"><b>Predicted scores for this point are:</b></font></div>'''
+    Tooltips_recipe += '''<div><font size="2">[ @{front_x}{0.00} , @{front_y}{0.00} ]</font></div>'''
+
+    # Load data into bokeh object
+    source_observed = bh_models.ColumnDataSource(data_observed_dict)
+    source_calculated = bh_models.ColumnDataSource(data_calculated_dict)
+
+    # Find bounds for the zoom of the figure
+    xlimitmax = max(max(data_calculated_dict['front_x']), max(
+        data_observed_dict[obj1]))*1.02
+    ylimitmax = max(max(data_calculated_dict['front_y']), max(
+        data_observed_dict[obj2]))*1.02
+    xlimitmin = min(min(data_calculated_dict['front_x']), min(
+        data_observed_dict[obj1]))*0.98
+    ylimitmin = min(min(data_calculated_dict['front_y']), min(
+        data_observed_dict[obj2]))*0.98
+
+    # Create figure
+    p = bh_plotting.figure(
+        title="Multiobjective score-score plot",
+        tools="pan,box_zoom,wheel_zoom,reset",
+        active_scroll="wheel_zoom",
+        x_axis_label=list(data_observed_dict.keys())[0],
+        y_axis_label=list(data_observed_dict.keys())[1],
+        x_range=bh_models.Range1d(
+            xlimitmin, xlimitmax, bounds=(xlimitmin, xlimitmax)),
+        y_range=bh_models.Range1d(
+            ylimitmin, ylimitmax, bounds=(ylimitmin, ylimitmax)),
+        width_policy='max',
+        height_policy='max',
+    )
+
+    # Plot observed data and create Tooltip
+    r1 = p.circle(
+        list(data_observed_dict.keys())[0],
+        list(data_observed_dict.keys())[1],
+        size=10,
+        source=source_observed,
+        legend_label="Observed datapoints",
+        fill_alpha=0.4,
+    )
+    p.add_tools(
+        bh_models.HoverTool(
+            renderers=[r1],
+            tooltips=Tooltips_observed,
+            point_policy='snap_to_data',
+            line_policy="none",
+        )
+    )
+
+    # Plot Pareto-front and create Tooltip
+    r2 = p.circle(
+        list(data_calculated_dict.keys())[0],
+        list(data_calculated_dict.keys())[1],
+        size=10,
+        source=source_calculated,
+        color="red",
+        legend_label="Estimated Pareto front",
+    )
+    p.add_tools(
+        bh_models.HoverTool(
+            renderers=[r2],
+            tooltips=Tooltips_recipe,
+            point_policy='snap_to_data',
+            line_policy="none",
+        )
+    )
+
+    # plot settings
+    p.legend.location = "top_right"
+    p.legend.click_policy = "hide"
+    p.toolbar.logo = None
+
+    # Save plot as HTML-file
+
+    bh_plotting.reset_output()
+    bh_plotting.output_file(
+        filename+".html", title='Multiobjective score-score plot')
+
+    if return_type_bokeh == 'file':
+        bh_plotting.save(p)
+    if show_browser and return_type_bokeh != 'file':
+        raise ValueError(
+            "Cannot show the plot if 'return_type_bokeh' is not set to 'file'.")
+    elif show_browser:
+        bh_io.show(p)
+
+    if return_data is True and return_type_bokeh in ['htmlString', 'embed', 'json']:
+        raise ValueError(
+            "Cannot ruturn data and bokeh object at the same time")
+    elif return_data is True and return_type_bokeh == 'file':
+        return (
+            np.array(optimizer.Xi),
+            np.array(optimizer.yi),
+            pop,
+            front,
+            dimensions,
+            objective_names,
+        )
+    elif return_data is True and return_type_bokeh == None:
+        return (
+            np.array(optimizer.Xi),
+            np.array(optimizer.yi),
+            pop,
+            front,
+            dimensions,
+            objective_names,
+        )
+    elif not return_data is True and return_type_bokeh in ['htmlString', 'embed', 'json']:
+        if return_type_bokeh == 'htmlString':
+            html = bh_embed.file_html(
+                p, bh_resources.CDN, 'Multiobjective score-score plot')
+            return html
+        elif return_type_bokeh == 'embed':
+            script, div = bh_embed.components(p)
+            return (script, div)
+        elif return_type_bokeh == 'json':
+            json_item = bh_embed.json_item(p)
+            return json_item

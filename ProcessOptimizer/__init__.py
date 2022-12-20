@@ -15,7 +15,7 @@ The library is still experimental and under heavy development.
 """
 
 from . import acquisition
-from . import benchmarks
+from .model_systems import benchmarks
 from . import callbacks
 from . import learning
 from . import optimizer
@@ -37,7 +37,7 @@ from .plots import plot_objective, plot_objectives
 from .plots import plot_evaluations, plot_convergence
 from .plots import plot_Pareto, plot_expected_minimum_convergence
 
-__version__ = "0.7.4"
+__version__ = "0.7.7"
 
 
 __all__ = (

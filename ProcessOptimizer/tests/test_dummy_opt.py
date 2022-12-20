@@ -1,9 +1,9 @@
 import pytest
 
 from ProcessOptimizer import dummy_minimize
-from ProcessOptimizer.benchmarks import bench1
-from ProcessOptimizer.benchmarks import bench2
-from ProcessOptimizer.benchmarks import bench3
+from ProcessOptimizer.model_systems.benchmarks import bench1
+from ProcessOptimizer.model_systems.benchmarks import bench2
+from ProcessOptimizer.model_systems.benchmarks import bench3
 
 
 def check_minimize(func, y_opt, dimensions, margin, n_calls):

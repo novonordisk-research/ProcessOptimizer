@@ -10,8 +10,8 @@ from ProcessOptimizer import gp_minimize
 from ProcessOptimizer import load
 from ProcessOptimizer import dump
 from ProcessOptimizer import expected_minimum
-from ProcessOptimizer.benchmarks import bench1
-from ProcessOptimizer.benchmarks import bench3
+from ProcessOptimizer.model_systems.benchmarks import bench1
+from ProcessOptimizer.model_systems.benchmarks import bench3
 from ProcessOptimizer.learning import ExtraTreesRegressor
 from ProcessOptimizer import Optimizer
 from ProcessOptimizer import Space

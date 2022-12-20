@@ -18,6 +18,7 @@ from .kernels import Sum
 from .kernels import RBF
 from .kernels import WhiteKernel
 
+GPR_CHOLESKY_LOWER = True
 
 def _param_for_white_kernel_in_Sum(kernel, kernel_str=""):
     """
@@ -132,6 +133,9 @@ class GaussianProcessRegressor(sk_GaussianProcessRegressor):
         If set to "gaussian", then it is assumed that `y` is a noisy
         estimate of `f(x)` where the noise is gaussian.
 
+    * `noise_level_bounds` [tuple[float, float], optional (default: (1e-5,1e5))]:
+        Sets the bounds for the noise level when noise is set to "gaussian". 
+
     Attributes
     ----------
     * `X_train_` [array-like, shape = (n_samples, n_features)]:
@@ -160,8 +164,9 @@ class GaussianProcessRegressor(sk_GaussianProcessRegressor):
     def __init__(self, kernel=None, alpha=1e-10,
                  optimizer="fmin_l_bfgs_b", n_restarts_optimizer=0,
                  normalize_y=False, copy_X_train=True, random_state=None,
-                 noise=None):
+                 noise=None, noise_level_bounds=(1e-5, 1e5)):
         self.noise = noise
+        self.noise_level_bounds = noise_level_bounds
         super(GaussianProcessRegressor, self).__init__(
             kernel=kernel, alpha=alpha, optimizer=optimizer,
             n_restarts_optimizer=n_restarts_optimizer,
@@ -192,7 +197,7 @@ class GaussianProcessRegressor(sk_GaussianProcessRegressor):
             self.kernel = ConstantKernel(1.0, constant_value_bounds="fixed") \
                           * RBF(1.0, length_scale_bounds="fixed")
         if self.noise == "gaussian":
-            self.kernel = self.kernel + WhiteKernel()
+            self.kernel = self.kernel + WhiteKernel(noise_level_bounds=self.noise_level_bounds)
         elif self.noise:
             self.kernel = self.kernel + WhiteKernel(
                 noise_level=self.noise, noise_level_bounds="fixed"
@@ -232,17 +237,14 @@ class GaussianProcessRegressor(sk_GaussianProcessRegressor):
             self.y_train_mean_ = self._y_train_mean
             self.y_train_std_ = self._y_train_std
 
-        else: # If on 1.0 or newer
+        else: # If on 1.0 or newer. 
             if self.normalize_y:
                 self.y_train_mean_ = np.mean(y, axis=0)
                 self.y_train_std_ = _handle_zeros_in_scale(np.std(y, axis=0), copy=False)
 
-                # Remove mean and make unit variance
-                y = (y- self.y_train_mean_) / self.y_train_std_
             else:
                 self.y_train_mean_ = np.zeros(1)
-                self.y_train_std_ = 1
-
+                self.y_train_std_ = np.ones(1)
 
         return self
 
@@ -323,33 +325,65 @@ class GaussianProcessRegressor(sk_GaussianProcessRegressor):
 
         else:  # Predict based on GP posterior
             K_trans = self.kernel_(X, self.X_train_)
-            y_mean = K_trans.dot(self.alpha_)    # Line 4 (y_mean = f_star)
+            y_mean = K_trans @ self.alpha_    # Line 4 (y_mean = f_star)
             # undo normalisation
             y_mean = self.y_train_std_ * y_mean + self.y_train_mean_
+            #self.y_train_mean_ deviates from pure sklearn implementation.
+            #this is kept as this as long we support various version of sklearn
+
+            # if y_mean has shape (n_samples, 1), reshape to (n_samples,)
+            if y_mean.ndim > 1 and y_mean.shape[1] == 1:
+                y_mean = np.squeeze(y_mean, axis=1)
+
+            # Alg 2.1, page 19, line 5 -> v = L \ K(X_test, X_train)^T
+            V = solve_triangular(
+                self.L_,
+                K_trans.T,
+                lower=GPR_CHOLESKY_LOWER,
+                check_finite=False
+            )
 
             if return_cov:
-                v = cho_solve((self.L_, True), K_trans.T)  # Line 5
-                y_cov = self.kernel_(X) - K_trans.dot(v)   # Line 6
+                # Alg 2.1, page 19, line 6 -> K(X_test, X_test) - v^T. v
+                y_cov = self.kernel_(X) - V.T @ V
+
                 # undo normalisation
-                y_cov = y_cov * self.y_train_std_**2
+                y_cov = np.outer(y_cov, self.y_train_std_**2).reshape(
+                    *y_cov.shape, -1
+                )
+                # if y_cov has shape (n_samples, n_samples, 1), reshape to
+                # (n_samples, n_samples)
+                if y_cov.shape[2] == 1:
+                    y_cov = np.squeeze(y_cov, axis=2)
+
                 return y_mean, y_cov
 
             elif return_std:
-                K_inv = self.K_inv_
-
                 # Compute variance of predictive distribution
+                # Use einsum to avoid explicitly forming the large matrix
+                # V^T @ V just to extract its diagonal afterward.
                 y_var = self.kernel_.diag(X)
-                y_var -= np.einsum("ki,kj,ij->k", K_trans, K_trans, K_inv)
+                y_var -= np.einsum("ij,ji->i", V.T, V)
 
                 # Check if any of the variances is negative because of
                 # numerical issues. If yes: set the variance to 0.
                 y_var_negative = y_var < 0
                 if np.any(y_var_negative):
-                    warnings.warn("Predicted variances smaller than 0. "
-                                  "Setting those variances to 0.")
+                    warnings.warn(
+                        "Predicted variances smaller than 0. "
+                        "Setting those variances to 0."
+                    )
                     y_var[y_var_negative] = 0.0
+
                 # undo normalisation
-                y_var = y_var * self.y_train_std_**2
+                y_var = np.outer(y_var, self.y_train_std_**2).reshape(
+                    *y_var.shape, -1
+                )
+
+                # if y_var has shape (n_samples, 1), reshape to (n_samples,)
+                if y_var.shape[1] == 1:
+                    y_var = np.squeeze(y_var, axis=1)
+                
                 y_std = np.sqrt(y_var)
 
             if return_mean_grad:
@@ -362,7 +396,7 @@ class GaussianProcessRegressor(sk_GaussianProcessRegressor):
                     grad_std = np.zeros(X.shape[1])
                     if not np.allclose(y_std, grad_std):
                         grad_std = -np.dot(K_trans,
-                                           np.dot(K_inv, grad))[0] / y_std
+                                           np.dot(self.K_inv_, grad))[0] / y_std
                         # undo normalisation
                         grad_std = grad_std * self.y_train_std_**2
                     return y_mean, y_std, grad_mean, grad_std
