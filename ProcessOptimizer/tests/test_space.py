@@ -681,11 +681,11 @@ def test_lhs_arange():
     # Test that the Integer and Real classes return identical points after
     # rounding, using Numpy's allclose function
     assert np.allclose(lhs_int, lhs_real, atol=0.5)
-    # Test that the Integer class returns values that are ints for all intents 
+    # Test that the Integer class returns values that are ints for all intents
     # and purposes
-    assert all([np.mod(x,1) == 0 for x in lhs_int])
+    assert all([np.mod(x, 1) == 0 for x in lhs_int])
     # Test that the Real class returns flots in all locations
-    assert all([isinstance(x,np.float64) for x in lhs_real])
+    assert all([isinstance(x, np.float64) for x in lhs_real])
 
 
 @pytest.mark.fast_test
@@ -697,11 +697,13 @@ def test_lhs():
     assert len(samples) == 10
     assert len(samples[0]) == 3
 
-@pytest.mark.parametrize("border_width",(2,3,5))
-@pytest.mark.parametrize("num_points",(10,40,100))
-@pytest.mark.parametrize("dimension_type",(Real,Integer))
-def test_number_evenly_sample(border_width,num_points, dimension_type):
-    dim = dimension_type(-10,10)
+
+@pytest.mark.parametrize("border_width", (2, 3, 5))
+@pytest.mark.parametrize("num_points", (10, 40, 100))
+@pytest.mark.parametrize("dimension_type", (Real, Integer))
+@pytest.mark.parametrize("transform", ("normalize", "identity", None))
+def test_number_evenly_sample(border_width, num_points, dimension_type, transform):
+    dim = dimension_type(-10, 10, transform=transform)
     xi, xi_transformed, border_list = dim.evenly_sample(
         num_points=num_points,
         border_width=border_width)
@@ -710,30 +712,33 @@ def test_number_evenly_sample(border_width,num_points, dimension_type):
     assert len(xi) == num_points
     step_array = np.diff(xi)
     assert np.allclose(step_array, np.mean(step_array))
-    assert all(xi == xi_transformed)
     lower_bound_borders = [border_list[i][0] for i in range(border_width+1)]
-    assert np.allclose(lower_bound_borders,xi[0])
-    upper_bound_borders= [border_list[-i-1][1] for i in range(border_width+1)]
-    assert np.allclose(upper_bound_borders, xi[-1])
+    assert np.allclose(lower_bound_borders, xi_transformed[0])
+    upper_bound_borders = [border_list[-i-1][1] for i in range(border_width+1)]
+    assert np.allclose(upper_bound_borders, xi_transformed[-1])
     # Testing that lower borders are coincide with the correct xi
     lower_borders = [
         border_list[i+border_width][0]for i in range(num_points-border_width)
     ]
-    assert np.allclose(lower_borders,xi[0:num_points-border_width])
+    assert np.allclose(
+        lower_borders, xi_transformed[0:num_points-border_width])
     # Testing that upper borders are coincide with the correct xi
     upper_borders = [
         border_list[i][1]for i in range(num_points-border_width)
     ]
-    assert np.allclose(upper_borders[0:-1],xi[border_width:-1])
+    assert np.allclose(upper_borders[0:-1], xi_transformed[border_width:-1])
 
-@pytest.mark.parametrize("num_points",(2,5))
-@pytest.mark.parametrize("border_width",(2,5))
-def test_categorial_evenly_sample(num_points,border_width):
-    dim = Categorical(["cat","mouse","dog"])
-    xi, _, border_list = dim.evenly_sample(
+
+@pytest.mark.parametrize("num_points", (2, 5))
+@pytest.mark.parametrize("border_width", (2, 5))
+def test_categorial_evenly_sample(num_points, border_width):
+    dim = Categorical(["cat", "mouse", "dog"])
+    xi, xi_transformed, border_list = dim.evenly_sample(
         num_points=num_points,
         border_width=border_width)
-    assert len(xi) == min(3,num_points)
+    assert len(xi) == min(3, num_points)
     # Testing that borders are always identical to the middle point
-    assert np.all([xi[i] == border_list[i][0] for i in range(len(xi))])
-    assert np.all([xi[i] == border_list[i][1] for i in range(len(xi))])
+    assert np.all([xi_transformed[i] == border_list[i][0]
+                  for i in range(len(xi))])
+    assert np.all([xi_transformed[i] == border_list[i][1]
+                  for i in range(len(xi))])
