@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.ensemble import RandomForestRegressor as _sk_RandomForestRegressorParameters
+from sklearn.ensemble import RandomForestRegressor as _sk_RandomForestRegressor
 from sklearn.ensemble import ExtraTreesRegressor as _sk_ExtraTreesRegressor
 
 
