@@ -84,7 +84,7 @@ def test_real():
     assert_array_equal(random_values.shape, (10))
     transformed_vals = log_uniform.transform(random_values)
     assert_array_equal(transformed_vals, np.log10(random_values))
-    assert_array_equal(
+    assert_array_almost_equal(
         log_uniform.inverse_transform(transformed_vals), random_values
     )
 
