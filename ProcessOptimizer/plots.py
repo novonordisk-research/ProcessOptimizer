@@ -2253,10 +2253,9 @@ def plot_Pareto_bokeh(
 
     data_calculated_dict = {
         'front_x': np.unique(front, axis=0)[:,0].tolist(),
-        'front_y': np.unique(front, axis=0)[:,1].tolist(),
-        'recipe_x': pop[np.unique(front, axis=0, return_index=True)[1],0].tolist(),
-        'recipe_y': pop[np.unique(front, axis=0, return_index=True)[1],1].tolist(),
-    }
+        'front_y': np.unique(front, axis=0)[:,1].tolist()}
+    for i, dim in enumerate(dimensions):
+        data_calculated_dict[dim] = pop[np.unique(front, axis=0, return_index=True)[1],i].tolist()
     
     # Create Tooltip strings for the observed data points
     Tooltips_observed = '''<div><font size="2"><b>Settings for this point are:</b></font></div>'''
@@ -2267,8 +2266,8 @@ def plot_Pareto_bokeh(
     
     # Create Tooltip strings for calculated points on the Pareto-front
     Tooltips_recipe = '''<div><font size="2"><b>Settings for this point are:</b></font></div>'''
-    for dim, rec in zip(dimensions,['recipe_x','recipe_y']):
-        Tooltips_recipe += '''<div><font size="2">'''+dim+''' = @{'''+rec+'''}{0.0}</font></div>'''
+    for dim in dimensions:
+        Tooltips_recipe += '''<div><font size="2">'''+dim+''' = @{'''+dim+'''}{0.0}</font></div>'''
     Tooltips_recipe += '''<div><font size="2"><b>Predicted scores for this point are:</b></font></div>'''
     Tooltips_recipe += '''<div><font size="2">[ @{front_x}{0.00} , @{front_y}{0.00} ]</font></div>'''
     
