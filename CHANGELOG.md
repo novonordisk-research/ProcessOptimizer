@@ -7,6 +7,9 @@
 - 
 ### Bugfixes
 
+- ParetoFront did not show full recipe for model points
+- Replaced friedman_mse with squared_error
+
 ## Version 0.7.7
 
 ### Changes
