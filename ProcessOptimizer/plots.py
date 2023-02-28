@@ -1586,6 +1586,9 @@ def plot_objectives(
         the figures
 
     """
+    assert type(results) is list, (
+        'I expected a list of results from a multiobjective optimization. '
+        'You might have wanted plot_objective() (singular)')
 
     if titles is None:
         for result in results:
