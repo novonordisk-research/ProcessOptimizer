@@ -4,7 +4,7 @@
 
 ### Changes
 
-- 
+- Minor addition of guidance in plot_objectives()
 ### Bugfixes
 
 - 
