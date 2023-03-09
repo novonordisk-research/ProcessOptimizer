@@ -1,5 +1,8 @@
+from typing import Callable
+
 import numpy as np
 from ProcessOptimizer import expected_minimum
+from ProcessOptimizer.model_systems.noise_models import NoiseModel, ZeroNoise, noise_model_factory
 
 class ModelSystem:
     """
@@ -8,29 +11,20 @@ class ModelSystem:
 
     Parameters:
     * `score` [callable]:
-        Function for calculating the score of the system at a given point in 
-        the parameter space. It is expected to have the following signature:
-
-            def score(x, rng=np.random.default_rng(), noise_std=noise_value):
-                # * x is the point in the parameter space where the score will 
-                #   be evaluated. Note that x is in the original coordinates of
-                #   the parameter space, not normalized coordinates. 
-                # * rng is the random number generator used for adding noise 
-                #   to the system. The user can set a seed through this 
-                #   parameter. There must be a default value for this parameter. 
-                # * noise_std is the standard deviation of the noise. There
-                #   must be a default value for this parameter. 
-                ....
-                # The score of the system is returned
-                return score
+        Function for calculating the noiseless score of the system at a given point in 
+        the parameter space. It is expected to have the following signature.
 
     * `space` [Space]:
         The parameter space in the form of a Space object. 
 
     * `true_min` [float]:
-        The true minimum value of the score function within the parameter space. 
+        The true minimum value of the score function within the parameter space.
+
+    * `noise_model` [NoiseModel]:
+        Noise model to apply to the score.
+
     """
-    def __init__(self, score, space, true_min=None):
+    def __init__(self, score: Callable[..., float], space, true_min=None, noise_model: NoiseModel = ZeroNoise):
         self.space = space
         self.score = score
         if true_min is None:
@@ -39,6 +33,7 @@ class ModelSystem:
             scores = [score(point) for point in points]
             true_min = np.min(scores)
         self.true_min = true_min
+        self.noise_model = noise_model
         
     def result_loss(self, result):
         """Calculate the loss of the optimization result. 
@@ -56,5 +51,29 @@ class ModelSystem:
         # Get the location of the expected minimum
         model_x,_ = expected_minimum(result)
         # Calculate the difference between the score at model_x and the true minimum value
-        loss = self.score(model_x, noise_std=0) - self.true_min
+        loss = self.score(model_x) - self.true_min
         return loss
+    
+    def get_score(self,X) -> float:
+        """Returns the noisy score of the system.
+
+        Parameters:
+        * `X`: The point in space to evaluate the score at.
+
+        Returns:
+        * Noisy score [float].
+        """
+        Y = self.score(X)
+        return self.noise_model.apply(X,Y)
+    
+    def set_noise_model(self, type, **kwargs):
+        """Sets the noise model for the model system
+
+        Args:
+        * `type` [str]: The type of noise model to set:
+            "additive": The noise level is constant.
+            "multiplicative": Tne noise level is proportionate to the score.
+            "zero": No noise is applied.
+        * `size` [float]: The magnitude of the noise.
+        """
+        self.noise_model = noise_model_factory(type, **kwargs)
