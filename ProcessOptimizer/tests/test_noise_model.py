@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 from ProcessOptimizer.model_systems.noise_models import NoiseModel, AdditiveNoise, MultiplicativeNoise, DataDependentNoise, ZeroNoise
 from scipy.stats import norm
@@ -18,7 +20,7 @@ def setup_function():
     np.random.seed(42)
 
 # Function for fitting a distribution and evaulating its mean and standard deviation.
-def evaluate_random_dist(noise_list: list[float],size: float=1):
+def evaluate_random_dist(noise_list: List[float],size: float=1):
     (mean, spread) = norm.fit(noise_list)
     assert np.allclose(mean,0,atol=0.1*size)
     assert np.allclose(spread,size,atol=0.1*size)
