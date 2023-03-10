@@ -1,6 +1,6 @@
 import numpy as np
 from ProcessOptimizer.model_systems.noise_models import NoiseModel, AdditiveNoise, MultiplicativeNoise, DataDependentNoise, ZeroNoise
-from  scipy.stats import norm
+from scipy.stats import norm
 import pytest
 
 
