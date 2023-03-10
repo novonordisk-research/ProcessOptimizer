@@ -13,6 +13,9 @@ def signal_list():
 def long_signal_list():
     return [1]*1000 + [10]*1000
 
+# Setting the seed for the random number generator used so the tests are reproducible.
+def setup_function():
+    np.random.seed(42)
 
 # Function for fitting a distribution and evaulating its mean and standard deviation.
 def evaluate_random_dist(noise_list: list[float],size: float=1):
