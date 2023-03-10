@@ -39,7 +39,19 @@ def test_multiplicative_noise(signal_list, noise_level):
     noise_model = MultiplicativeNoise(noise_dist=lambda: noise_level)
     noisy_list = [noise_model.apply(None,signal) for signal in signal_list]
     noise_list = [noisy/signal-1 for (signal,noisy) in zip(signal_list, noisy_list)]
-    assert np.allclose(noise_list,noise_level/100 )
+    assert np.allclose(noise_list,noise_level)
+
+def test_multiplicative_noise_default(long_signal_list):
+    noise_model = MultiplicativeNoise()
+    noisy_list = [noise_model.apply(None,signal) for signal in long_signal_list]
+    noise_list = [noisy/signal-1 for (signal,noisy) in zip(long_signal_list, noisy_list)]
+    evaluate_random_dist(noise_list,0.01)
+
+def test_multiplicative_noise_given_size(long_signal_list):
+    noise_model = MultiplicativeNoise(noise_size = 0.1)
+    noisy_list = [noise_model.apply(None,signal) for signal in long_signal_list]
+    noise_list = [noisy/signal-1 for (signal,noisy) in zip(long_signal_list, noisy_list)]
+    evaluate_random_dist(noise_list,0.1)
 
 def test_random_noise(long_signal_list):
     noise_model = AdditiveNoise()
@@ -69,7 +81,7 @@ def test_noise_model_composition(a,b,c, signal_list):
             noise_dist=lambda: b),
         noise_dist=lambda: c)
     noisy_list = [noise_model.apply(None,signal) for signal in signal_list]
-    true_list = [(signal + a) * (1+b/100) + c for signal in signal_list]
+    true_list = [(signal + a) * (1 + b) + c for signal in signal_list]
     assert all([noisy == true for (true, noisy) in zip(true_list,noisy_list)])
 
 @pytest.mark.parametrize("input",(1,2,3))
