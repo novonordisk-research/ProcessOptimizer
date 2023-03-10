@@ -4,7 +4,7 @@ from typing import Optional, Callable
 from  scipy.stats import norm
 
 class NoiseModel(ABC):
-    """Abstract class that noise models inherit"""
+    """Abstract class that is the basis for noise models."""
     def __init__(
             self,
             noise_size: float,
@@ -21,9 +21,9 @@ class NoiseModel(ABC):
     def apply(self,X,Y: float) -> float:
         """Applies the noise model
 
-        Args:
-            X : The parameters that created the signal.
-            Y (float): The signal to apply the noise to.
+        Parameters:
+        * `X` : The parameters that created the signal.
+        * `Y` [float]: The signal to apply the noise to.
 
         Returns:
             float: The signal after the noise have been applied.
