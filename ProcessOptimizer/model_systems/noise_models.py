@@ -64,17 +64,21 @@ class MultiplicativeNoise(NoiseModel): # Should this be named ProportionalNoise?
     Noise model for noise proportional to the signal
 
     Parameters:
-    * `noise_dist` [() -> float, default normal distribution]: The distribution of the
-        noise.
-    
-    * `noise_size` [float, default 0.01]: The size of the noise realtive to the signal.
-        The noise added to the signal is noise_dist()*noise_size*signal.
-
     * `underlying_noise_model` [NoiseModel | None, default None]: A noise model applied
         before applying the proportional noise.
+
+    If neither noise_dist nor noise_size is given, noise with a normal distribution with
+    a mean of 0.01 is used.
     """
-    def __init__(self, noise_size : float = 1/100, **kwargs):
-        super().__init__(noise_size=noise_size,**kwargs)
+    def __init__(self, **kwargs):
+        if "noise_size" not in kwargs.keys() and "noise_dist" not in kwargs.keys():
+            super().__init__(noise_size=0.01, noise_dist=norm.rvs,**kwargs)
+        elif "noise_size" in kwargs.keys():
+            super().__init__(**kwargs)
+        else:
+            # If the noise dist is given, but the noise size isn't, the expected
+            # behavior is that the noise follows the noise dist.
+            super().__init__(noise_size=1,**kwargs)
 
     def _apply(self,_,Y: float) -> float:
         return Y * (1+self.noise)
