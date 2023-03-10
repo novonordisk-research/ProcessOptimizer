@@ -13,6 +13,13 @@ def signal_list():
 def long_signal_list():
     return [1]*1000 + [10]*1000
 
+
+# Function for fitting a distribution and evaulating its mean and standard deviation.
+def evaluate_random_dist(noise_list: list[float],size: float=1):
+    (mean, spread) = norm.fit(noise_list)
+    assert np.allclose(mean,0,atol=0.1*size)
+    assert np.allclose(spread,size,atol=0.1*size)
+
 def test_noise_abstract():
     # Tests that the abstract class can not be instantiated.
     with pytest.raises(TypeError):
@@ -31,32 +38,23 @@ def test_multiplicative_noise(signal_list, noise_level):
     noise_list = [noisy/signal-1 for (signal,noisy) in zip(signal_list, noisy_list)]
     assert np.allclose(noise_list,noise_level/100 )
 
-def teat_random_noise(long_signal_list):
-    np.random.seed(42)
+def test_random_noise(long_signal_list):
     noise_model = AdditiveNoise()
     noise_list = [noise_model.apply(None,signal) - signal for signal in long_signal_list]
-    (mean, spread) = norm.fit(noise_list)
-    assert abs(mean)<0.1
-    assert abs(1 - spread)<0.1
+    evaluate_random_dist(noise_list)
 
 @pytest.mark.parametrize("size",(1,2,47))
 def test_noise_size_additive(size, long_signal_list):
-    np.random.seed(42)
     noise_model = AdditiveNoise(noise_size=size)
     noise_list = [noise_model.apply(None,signal) - signal for signal in long_signal_list]
-    (mean, spread) = norm.fit(noise_list)
-    assert abs(mean / spread)<0.1
-    assert abs(size / spread - 1)<0.1
+    evaluate_random_dist(noise_list,size)
 
 @pytest.mark.parametrize("size",(1,2,47))
 def test_noise_size_multiplicative(size, long_signal_list):
-    np.random.seed(42)
     noise_model = MultiplicativeNoise(noise_size=size)
     relative_noise_list = [(noise_model.apply(None,signal)-signal)/signal
                            for signal in long_signal_list]
-    (mean, spread) = norm.fit(relative_noise_list)
-    assert abs(mean / size)<0.1
-    assert abs(size / spread - 1)<0.1
+    evaluate_random_dist(relative_noise_list,size)
 
 
 @pytest.mark.parametrize("a,b,c",[(1,2,3),(4,2,-1),(10,0,-10)])
