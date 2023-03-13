@@ -138,11 +138,11 @@ class SumNoise(NoiseModel):
         return sum(noise_list)
 
 
-def parse_noise_model(model: Union[str,dict,NoiseModel]):
+def parse_noise_model(model: Union[str,dict,NoiseModel], **kwargs):
     if isinstance(model,NoiseModel):
         return model
     elif type(model) == str:
-        return noise_model_factory(model_type=model)
+        return noise_model_factory(model_type=model, **kwargs)
     else:
         return noise_model_factory(**model)
 

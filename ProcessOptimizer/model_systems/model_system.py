@@ -1,8 +1,8 @@
-from typing import Callable
+from typing import Callable, Union
 
 import numpy as np
 from ProcessOptimizer import expected_minimum
-from ProcessOptimizer.model_systems.noise_models import NoiseModel, ZeroNoise, noise_model_factory
+from ProcessOptimizer.model_systems.noise_models import NoiseModel, ZeroNoise, parse_noise_model
 
 class ModelSystem:
     """
@@ -66,14 +66,19 @@ class ModelSystem:
         Y = self.score(X)
         return self.noise_model.get_noise(X,Y) + Y
     
-    def set_noise_model(self, type, **kwargs):
+    def set_noise_model(self, noise_model: Union[str,dict,NoiseModel], **kwargs):
         """Sets the noise model for the model system
 
         Args:
-        * `type` [str]: The type of noise model to set:
+        * `noise_model` [str, dict, or NoiseModel]:
+            If str, it should be the name of the noise model type. In this case, 
+                further arguments can be given (e.g. `noise_size`).
+            If dict, one key should be `model_type`.
+            If NoiseModel, this NoiseModel will be used.
+            
+            Possible model type strings are:
             "additive": The noise level is constant.
             "multiplicative": Tne noise level is proportionate to the score.
             "zero": No noise is applied.
-        * `size` [float]: The magnitude of the noise.
         """
-        self.noise_model = noise_model_factory(type, **kwargs)
+        self.noise_model = parse_noise_model(noise_model, **kwargs)
