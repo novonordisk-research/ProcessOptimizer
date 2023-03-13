@@ -31,13 +31,15 @@ def test_noise_abstract():
         NoiseModel()
 
 def test_additive_noise(signal_list):
-    noise_model = AdditiveNoise(noise_dist=lambda: 2)
+    noise_model = AdditiveNoise()
+    noise_model._noise_distribution = lambda: 2
     noise_list = [noise_model.get_noise(None,signal)for signal in signal_list]
     assert all([noise == 2 for noise in noise_list])
 
 @pytest.mark.parametrize("noise_level",(1,2,3))
 def test_multiplicative_noise(signal_list, noise_level):
-    noise_model = MultiplicativeNoise(noise_dist=lambda: noise_level)
+    noise_model = MultiplicativeNoise(noise_size=1)
+    noise_model._noise_distribution = lambda: noise_level
     noise_list = [noise_model.get_noise(None,signal) for signal in signal_list]    
     rel_noise_list = [noise/signal for (signal,noise) in zip(signal_list,noise_list)]
     assert np.allclose(rel_noise_list,noise_level)
@@ -77,8 +79,11 @@ def test_noise_size_multiplicative(size, long_signal_list):
 
 @pytest.mark.parametrize("input",(1,2,3))
 def test_data_dependent_noise(signal_list, input):
-    # noice_choice returns a noice model that gives the same noise as the input data
-    noise_choice = lambda X: AdditiveNoise(noise_dist = lambda: X)
+    # noise_choice returns a noise model that gives the same noise as the input data.
+    def noise_choice(X):
+        local_noise_model = AdditiveNoise()
+        local_noise_model._noise_distribution = lambda: X
+        return local_noise_model
     noise_model = DataDependentNoise(noise_models=noise_choice)
     noise_list = [noise_model.get_noise(input,signal) for signal in signal_list]  
     assert [noise==signal for (signal,noise) in zip(signal_list,noise_list)]
@@ -136,3 +141,17 @@ def test_data_dependent_raw_noise_error():
     noise_model = DataDependentNoise(noise_models=noise_choise)
     with pytest.raises(TypeError):
         noise_model.raw_noise
+
+
+def test_uniform_noise(long_signal_list):
+    noise_model = AdditiveNoise()
+    noise_model.set_noise_type("uniform")
+    noise_list = [noise_model.get_noise(None, Y) for Y in long_signal_list]
+    (start,width) = uniform.fit(noise_list)
+    assert np.allclose(start,-1,atol=0.1)
+    assert np.allclose(width,2,atol=0.1)
+
+def test_unknown_distribution():
+    noise_model = AdditiveNoise()
+    with pytest.raises(ValueError):
+        noise_model.set_noise_type("not_implemented")    
