@@ -13,7 +13,7 @@ class NoiseModel(ABC):
         self.noise_dist = noise_dist
 
     def _apply(self,X,Y: float):
-        pass
+        return Y + self.get_noise(X,Y)
 
     def apply(self,X,Y: float) -> float:
         """Applies the noise model
@@ -26,6 +26,10 @@ class NoiseModel(ABC):
             float: The signal after the noise have been applied.
         """
         return self._apply(X,Y)
+
+    @abstractmethod
+    def get_noise(self,X,Y: float) -> float:
+        pass
     
     @property
     def noise(self) -> float:
@@ -49,8 +53,9 @@ class AdditiveNoise(NoiseModel): # Should this be named ConstantNoise?
     def __init__(self, noise_size: float = 1, **kwargs):
         super().__init__(noise_size=noise_size, **kwargs)
 
-    def _apply(self,_,Y: float) -> float:
-        return Y + self.noise
+    def get_noise(self,_,Y: float) -> float:
+        return self.noise
+
 
     
 class MultiplicativeNoise(NoiseModel): # Should this be named ProportionalNoise?
@@ -73,9 +78,9 @@ class MultiplicativeNoise(NoiseModel): # Should this be named ProportionalNoise?
             # If the noise dist is given, but the noise size isn't, the expected
             # behavior is that the noise follows the noise dist.
             super().__init__(noise_size=1,**kwargs)
-
-    def _apply(self,_,Y: float) -> float:
-        return Y * (1+self.noise)
+    
+    def get_noise(self,_,Y: float) -> float:
+        return self.noise*Y
     
 class DataDependentNoise(NoiseModel):
     """
@@ -105,9 +110,9 @@ class DataDependentNoise(NoiseModel):
     def __init__(self, noise_models: Callable[...,NoiseModel], **kwargs):
         self.noise_models = noise_models
         super().__init__(noise_size=0, **kwargs)
-
-    def _apply(self,X,Y: float) -> float:
-        return self.noise_models(X).apply(X,Y)
+    
+    def get_noise(self,X,Y: float) -> float:
+        return self.noise_models(X).get_noise(X,Y)           
     
 class ZeroNoise(NoiseModel):
     """Noise model for zero noise. Doesn't take any arguments. Exist for consistency,
@@ -116,8 +121,8 @@ class ZeroNoise(NoiseModel):
     def __init__(self):
         super().__init__(noise_size=0)
 
-    def _apply(self,_,Y: float) -> float:
-        return Y
+    def get_noise(self,_,Y: float) -> float:
+        return 0
 
 
 def noise_model_factory(type: str, **kwargs)-> NoiseModel:

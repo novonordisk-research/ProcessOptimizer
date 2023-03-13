@@ -64,7 +64,7 @@ class ModelSystem:
         * Noisy score [float].
         """
         Y = self.score(X)
-        return self.noise_model.apply(X,Y)
+        return self.noise_model.get_noise(X,Y) + Y
     
     def set_noise_model(self, type, **kwargs):
         """Sets the noise model for the model system
