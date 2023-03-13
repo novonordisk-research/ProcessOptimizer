@@ -162,6 +162,18 @@ def test_factory_size():
     noise_model = noise_model_factory(model_type="additive", noise_size=3)
     assert noise_model.noise_size == 3
 
+def test_parse_model():
+    noise_model = parse_noise_model(AdditiveNoise())
+    assert isinstance(noise_model,AdditiveNoise)
+
+def test_pars_str():
+    noise_model = parse_noise_model("additive")
+    assert isinstance(noise_model,AdditiveNoise)
+
+def test_parse_dict():
+    noise_model = parse_noise_model({"model_type": "additive"})
+    assert isinstance(noise_model,AdditiveNoise)
+
 def test_uniform_noise(long_signal_list):
     noise_model = AdditiveNoise()
     noise_model.set_noise_type("uniform")
