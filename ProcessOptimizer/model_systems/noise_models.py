@@ -91,7 +91,7 @@ class DataDependentNoise(NoiseModel):
     """
     def __init__(self, noise_models: Callable[...,NoiseModel], **kwargs):
         self.noise_models = noise_models
-        super().__init__(noise_size=0, **kwargs)
+        super().__init__(noise_size=None, **kwargs)
     
     def get_noise(self,X,Y: float) -> float:
         return self.noise_models(X).get_noise(X,Y)           
