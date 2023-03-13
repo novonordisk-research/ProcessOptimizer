@@ -106,6 +106,37 @@ class ZeroNoise(NoiseModel):
     def get_noise(self,_,Y: float) -> float:
         return 0
 
+class SumNoise(NoiseModel):
+    """
+    Noise model that returns the sum of two or more noise models. Can be used if the
+    total noise is a sum of constant and relative noise.
+
+    Args:
+    * `noise_model_list` [List[Union[dict,NoiseModel]]]: List of either noise models, or
+        dicts containing at least the type of noise model to create.
+
+    """
+    def __init__(self,noise_model_list: List[Union[str,dict,NoiseModel]], **kwargs):
+        super().__init__(noise_size = None,**kwargs)
+        self.noise_model_list: List[NoiseModel] = []
+        self.set_noise_model_list(noise_model_list=noise_model_list)
+
+    def set_noise_model_list(self,noise_model_list: List[Union[dict,NoiseModel]]):
+        for model_description in noise_model_list:
+            self.noise_model_list.append(parse_noise_model(model_description))
+
+    def get_noise(self,X,Y: float) -> float:
+        noise_list = [model.get_noise(X,Y) for model in self.noise_model_list]
+        return sum(noise_list)
+
+
+def parse_noise_model(model: Union[str,dict,NoiseModel]):
+    if isinstance(model,NoiseModel):
+        return model
+    elif type(model) == str:
+        return noise_model_factory(model_type=model)
+    else:
+        return noise_model_factory(**model)
 
 def noise_model_factory(type: str, **kwargs)-> NoiseModel:
     if type == "additive":

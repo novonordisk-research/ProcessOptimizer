@@ -112,6 +112,16 @@ def test_noise_model_example_2(long_signal_list):
     noise_list = [noise_model.get_noise(X,signal) for signal in long_signal_list]
     evaluate_random_dist(noise_list)
 
+def test_sum_noise(signal_list):
+    noise_model = SumNoise(noise_model_list=[
+        "additive",
+        {"model_type" : "multiplicative", "noise_size" : 1}])
+    noise_model.noise_model_list[0]._noise_distribution = lambda: 2
+    noise_model.noise_model_list[1]._noise_distribution = lambda: 3
+    noise_list = [noise_model.get_noise(None,signal) for signal in signal_list]
+    true_noise_list = [2 + 3 * signal for signal in signal_list]
+    assert noise_list == true_noise_list
+
 # raw_noise of SumNoise should not be accesible, since it is a compound NoiseModel, and
 # should ot have "its own" noise.
 def test_sum_noise_raw_noise_error():
