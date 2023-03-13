@@ -12,21 +12,6 @@ class NoiseModel(ABC):
         self.noise_size = noise_size
         self.noise_dist = noise_dist
 
-    def _apply(self,X,Y: float):
-        return Y + self.get_noise(X,Y)
-
-    def apply(self,X,Y: float) -> float:
-        """Applies the noise model
-
-        Parameters:
-        * `X` : The parameters that created the signal.
-        * `Y` [float]: The signal to apply the noise to.
-
-        Returns:
-            float: The signal after the noise have been applied.
-        """
-        return self._apply(X,Y)
-
     @abstractmethod
     def get_noise(self,X,Y: float) -> float:
         pass
