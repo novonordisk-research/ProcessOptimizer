@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Callable
+from typing import Callable, List, Union, Optional
 
-from  scipy.stats import norm
+from scipy.stats import norm, uniform
 
 class NoiseModel(ABC):
     """
