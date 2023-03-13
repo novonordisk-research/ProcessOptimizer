@@ -15,8 +15,12 @@ class NoiseModel(ABC):
     """
     def __init__(
             self,
-            noise_size: float,
-            noise_dist: Callable[[],float] = norm.rvs):
+            noise_size: Optional[float]):
+        # We could just set noise_dist and let that have a size, but being able to
+        # directly set the size is more intuitive, and that would be complicated if it
+        # was just one variable.
+        # Note that this has the potential for problems if noise_dist does not have
+        # "size" 1, but as long as it is only set by set_noise_type, it should be safe.
         self.noise_size = noise_size
         self._noise_distribution: Callable[[],float]
         self.set_noise_type("normal")
