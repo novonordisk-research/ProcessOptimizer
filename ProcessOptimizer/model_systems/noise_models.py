@@ -53,8 +53,7 @@ class AdditiveNoise(NoiseModel): # Should this be named ConstantNoise?
         super().__init__(noise_size=noise_size, **kwargs)
 
     def get_noise(self,_,Y: float) -> float:
-        return self.noise
-
+        return self.raw_noise
 
     
 class MultiplicativeNoise(NoiseModel): # Should this be named ProportionalNoise?
