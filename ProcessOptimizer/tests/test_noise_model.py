@@ -100,7 +100,8 @@ def test_noise_model_example_1(long_signal_list, magnitude):
     noise_choice = lambda X: AdditiveNoise(noise_size=X)
     noise_model = DataDependentNoise(noise_models=noise_choice)
     data = [magnitude]*len(long_signal_list)
-    noise_list = [noise_model.get_noise(x,signal) for (x,signal) in zip(data,long_signal_list)]    
+    noise_list = [noise_model.get_noise(x,signal) 
+                  for (x,signal) in zip(data,long_signal_list)]    
     evaluate_random_dist(noise_list,magnitude)
 
 def test_noise_model_example_2(long_signal_list):
