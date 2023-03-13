@@ -25,10 +25,12 @@ class NoiseModel(ABC):
         pass
     
     @property
-    def noise(self) -> float:
-        """A raw noise value, to be used in the _apply() function"""
-        return self.noise_dist()*self.noise_size
-    
+    def raw_noise(self) -> float:
+        """A raw noise value, to be used in the get_noise() function."""
+        if self.noise_size is None:
+            raise TypeError("Method \"raw_noise()\" for NoiseModel class "
+                            f"{self.__class__.__name__} is not supposed to be called.")
+        return self._noise_distribution()*self.noise_size
 class AdditiveNoise(NoiseModel): # Should this be named ConstantNoise?
     """
     Noise model for constant noise.
@@ -62,8 +64,9 @@ class MultiplicativeNoise(NoiseModel): # Should this be named ProportionalNoise?
             super().__init__(noise_size=1,**kwargs)
     
     def get_noise(self,_,Y: float) -> float:
-        return self.noise*Y
+        return self.raw_noise*Y
     
+
 class DataDependentNoise(NoiseModel):
     """
     Noise model for noise that depends on the input parameters.
