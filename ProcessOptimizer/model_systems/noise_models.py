@@ -142,12 +142,12 @@ def parse_noise_model(model: Union[str,dict,NoiseModel]):
     else:
         return noise_model_factory(**model)
 
-def noise_model_factory(type: str, **kwargs)-> NoiseModel:
-    if type == "additive":
+def noise_model_factory(model_type: str, **kwargs)-> NoiseModel:
+    if model_type == "additive":
         return AdditiveNoise(**kwargs)
-    elif type == "multiplicative":
+    elif model_type == "multiplicative":
         return MultiplicativeNoise(**kwargs)
-    elif type == "zero":
+    elif model_type == "zero":
         return ZeroNoise()
     else:
-        raise ValueError(f"Noise model of type '{type}' not recognised")
+        raise ValueError(f"Noise model of type '{model_type}' not recognised")

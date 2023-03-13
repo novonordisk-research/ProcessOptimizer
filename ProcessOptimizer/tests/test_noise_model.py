@@ -142,6 +142,25 @@ def test_data_dependent_raw_noise_error():
     with pytest.raises(TypeError):
         noise_model.raw_noise
 
+def test_factory_additive():
+    noise_model = noise_model_factory(model_type="additive")
+    assert isinstance(noise_model,AdditiveNoise)
+
+def test_factory_multiplicative():
+    noise_model = noise_model_factory(model_type="multiplicative")
+    assert isinstance(noise_model,MultiplicativeNoise)
+
+def test_factory_zero():
+    noise_model = noise_model_factory(model_type="zero")
+    assert isinstance(noise_model,ZeroNoise)
+
+def test_factory_other():
+    with pytest.raises(ValueError):
+        noise_model_factory(model_type="not_implemented")
+
+def test_factory_size():
+    noise_model = noise_model_factory(model_type="additive", noise_size=3)
+    assert noise_model.noise_size == 3
 
 def test_uniform_noise(long_signal_list):
     noise_model = AdditiveNoise()
