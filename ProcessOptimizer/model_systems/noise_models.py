@@ -126,10 +126,11 @@ class SumNoise(NoiseModel):
     """
     def __init__(self,noise_model_list: List[Union[str,dict,NoiseModel]], **kwargs):
         super().__init__(noise_size = None,**kwargs)
-        self.noise_model_list: List[NoiseModel] = []
+        self.noise_model_list: List[NoiseModel]
         self.set_noise_model_list(noise_model_list=noise_model_list)
 
     def set_noise_model_list(self,noise_model_list: List[Union[dict,NoiseModel]]):
+        self.noise_model_list = []
         for model_description in noise_model_list:
             self.noise_model_list.append(parse_noise_model(model_description))
 

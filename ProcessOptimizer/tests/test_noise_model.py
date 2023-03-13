@@ -186,4 +186,15 @@ def test_uniform_noise(long_signal_list):
 def test_unknown_distribution():
     noise_model = AdditiveNoise()
     with pytest.raises(ValueError):
-        noise_model.set_noise_type("not_implemented")    
+        noise_model.set_noise_type("not_implemented")
+
+# set_noise_model_list did not reset the list. This test verifies that this bug has been
+# fixed.
+def test_reset_model_list():
+    noise_model = SumNoise(noise_model_list=[AdditiveNoise(noise_size=100)])
+    noise_model.set_noise_model_list([AdditiveNoise()])
+    noise_list = [noise_model.get_noise(None,None) for _ in range(30)]
+    # It is very unlikely that a normally distributed noise with size 1 is above 10. It
+    # is unlikely none of 30 normally distributed noise reading with size 100 is above
+    # 10
+    assert all([noise<10 for noise in noise_list])
