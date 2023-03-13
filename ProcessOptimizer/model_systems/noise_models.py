@@ -4,7 +4,15 @@ from typing import Optional, Callable
 from  scipy.stats import norm
 
 class NoiseModel(ABC):
-    """Abstract class that is the basis for noise models."""
+    """
+    Abstract class that is the basis for noise models.
+    
+    Parameters:
+    * `noise_size` [Option[float]]: The size of the noise. If ´None´, it signifies that
+        the class is compound, and should not have its own noise signal, but refer to
+        its compounding NoiseModels instead. An example is SumNoise, which sums the
+        noise of a list of noise models, but doesn't add any noise by itself.
+    """
     def __init__(
             self,
             noise_size: float,
@@ -26,14 +34,7 @@ class AdditiveNoise(NoiseModel): # Should this be named ConstantNoise?
     Noise model for constant noise.
 
     Parameters:
-    * `noise_dist` [() -> float, default normal distribution]: The distribution of the
-        noise.
-    
-    * `noise_size` [float, default 1]: The size of the noise. The noise added to the
-        signal is noise_dist()*noise_size.
-
-    * `underlying_noise_model` [NoiseModel | None, default None]: A noise model applied
-        before applying the constant noise.
+    * `noise_size` [float, default 1]: The size of the noise. 
     """
     def __init__(self, noise_size: float = 1, **kwargs):
         super().__init__(noise_size=noise_size, **kwargs)
@@ -45,14 +46,10 @@ class AdditiveNoise(NoiseModel): # Should this be named ConstantNoise?
     
 class MultiplicativeNoise(NoiseModel): # Should this be named ProportionalNoise?
     """
-    Noise model for noise proportional to the signal
+    Noise model for noise proportional to the signal.
 
     Parameters:
-    * `underlying_noise_model` [NoiseModel | None, default None]: A noise model applied
-        before applying the proportional noise.
-
-    If neither noise_dist nor noise_size is given, noise with a normal distribution with
-    a mean of 0.01 is used.
+    * `noise_size` [float, default 0.01]: The size of the noise realitve to the signal.
     """
     def __init__(self, **kwargs):
         if "noise_size" not in kwargs.keys() and "noise_dist" not in kwargs.keys():
@@ -74,9 +71,6 @@ class DataDependentNoise(NoiseModel):
     Parameters:
     * `noise_models` [(parameters) -> NoiseModel]: A function that takes a set of
         parameters, and returns a noise model to apply.
-
-    * `underlying_noise_model` [NoiseModel | None, default None]: A noise model applied
-        before applying the additive noise.
 
     Examples:
 
