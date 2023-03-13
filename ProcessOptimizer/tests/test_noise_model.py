@@ -69,22 +69,7 @@ def test_noise_size_additive(size, long_signal_list):
 @pytest.mark.parametrize("size",(1,2,47))
 def test_noise_size_multiplicative(size, long_signal_list):
     noise_model = MultiplicativeNoise(noise_size=size)
-    relative_noise_list = [(noise_model.apply(None,signal)-signal)/signal
-                           for signal in long_signal_list]
-    evaluate_random_dist(relative_noise_list,size)
-
-
-@pytest.mark.parametrize("a,b,c",[(1,2,3),(4,2,-1),(10,0,-10)])
-def test_noise_model_composition(a,b,c, signal_list):
-    noise_model = AdditiveNoise(
-        underlying_noise_model=MultiplicativeNoise(
-            underlying_noise_model=AdditiveNoise(
-                noise_dist=lambda: a),
-            noise_dist=lambda: b),
-        noise_dist=lambda: c)
-    noisy_list = [noise_model.apply(None,signal) for signal in signal_list]
-    true_list = [(signal + a) * (1 + b) + c for signal in signal_list]
-    assert all([noisy == true for (true, noisy) in zip(true_list,noisy_list)])
+    evaluate_random_dist(rel_noise_list,size)
 
 @pytest.mark.parametrize("input",(1,2,3))
 def test_data_dependent_noise(signal_list, input):

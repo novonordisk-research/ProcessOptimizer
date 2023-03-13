@@ -8,13 +8,10 @@ class NoiseModel(ABC):
     def __init__(
             self,
             noise_size: float,
-            underlying_noise_model: Optional["NoiseModel"] = None,
             noise_dist: Callable[[],float] = norm.rvs):
-        self.underlying_noise_model = underlying_noise_model
         self.noise_size = noise_size
         self.noise_dist = noise_dist
 
-    @abstractmethod
     def _apply(self,X,Y: float):
         pass
 
@@ -28,9 +25,6 @@ class NoiseModel(ABC):
         Returns:
             float: The signal after the noise have been applied.
         """
-        if self.underlying_noise_model is not None:
-            # Moidfying the signal with the underlying model
-            Y = self.underlying_noise_model.apply(X,Y)
         return self._apply(X,Y)
     
     @property
