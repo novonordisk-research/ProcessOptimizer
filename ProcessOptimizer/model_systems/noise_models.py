@@ -65,7 +65,7 @@ class MultiplicativeNoise(NoiseModel): # Should this be named ProportionalNoise?
     Noise model for noise proportional to the signal.
 
     Parameters:
-    * `noise_size` [float, default 0.01]: The size of the noise realitve to the signal.
+    * `noise_size` [float, default 0.01]: The size of the noise relative to the signal.
     """
     def __init__(self, noise_size : float = 0.01,**kwargs):
         super().__init__(noise_size=noise_size,**kwargs)
