@@ -111,3 +111,18 @@ def test_noise_model_example_2(long_signal_list):
     X=[1,27,53.4]
     noise_list = [noise_model.get_noise(X,signal) for signal in long_signal_list]
     evaluate_random_dist(noise_list)
+
+# raw_noise of SumNoise should not be accesible, since it is a compound NoiseModel, and
+# should ot have "its own" noise.
+def test_sum_noise_raw_noise_error():
+    noise_model = SumNoise(noise_model_list=[AdditiveNoise()])
+    with pytest.raises(TypeError):
+        noise_model.raw_noise
+
+# raw_noise of AdditiveNoise should not be accesible, since it is a compound NoiseModel,
+# and should ot have "its own" noise.
+def test_data_dependent_raw_noise_error():
+    noise_choise = lambda: AdditiveNoise()
+    noise_model = DataDependentNoise(noise_models=noise_choise)
+    with pytest.raises(TypeError):
+        noise_model.raw_noise
