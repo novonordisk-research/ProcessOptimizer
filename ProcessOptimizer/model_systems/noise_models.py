@@ -104,7 +104,8 @@ class DataDependentNoise(NoiseModel):
         return self.noise_models(X).get_noise(X,Y)           
     
 class ZeroNoise(NoiseModel):
-    """Noise model for zero noise. Doesn't take any arguments. Exist for consistency,
+    """
+    Noise model for zero noise. Doesn't take any arguments. Exist for consistency,
     and to be used in data dependent noise models.
     """
     def __init__(self):
