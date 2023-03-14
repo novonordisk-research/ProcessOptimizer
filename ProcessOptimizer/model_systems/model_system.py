@@ -20,8 +20,17 @@ class ModelSystem:
     * `true_min` [float]:
         The true minimum value of the score function within the parameter space.
 
-    * `noise_model` [NoiseModel]:
+    * `noise_model` [str, dict, or NoiseModel]:
         Noise model to apply to the score.
+        If str, it should be the name of the noise model type. In this case, 
+            further arguments can be given (e.g. `noise_size`).
+        If dict, one key should be `model_type`.
+        If NoiseModel, this NoiseModel will be used.
+            
+        Possible model type strings are:
+            "constant": The noise level is constant.
+            "proportional": Tne noise level is proportional to the score.
+            "zero": No noise is applied.
 
     """
     def __init__(self, score: Callable[..., float], space, true_min=None, noise_model: NoiseModel = ZeroNoise):
@@ -33,7 +42,7 @@ class ModelSystem:
             scores = [score(point) for point in points]
             true_min = np.min(scores)
         self.true_min = true_min
-        self.noise_model = noise_model
+        self.noise_model = self.set_noise_model(noise_model)
         
     def result_loss(self, result):
         """Calculate the loss of the optimization result. 
