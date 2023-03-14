@@ -2,7 +2,7 @@ from typing import Callable, Union
 
 import numpy as np
 from ProcessOptimizer import expected_minimum
-from ProcessOptimizer.model_systems.noise_models import NoiseModel, ZeroNoise, parse_noise_model
+from ProcessOptimizer.model_systems.noise_models import NoiseModel, parse_noise_model
 
 class ModelSystem:
     """
@@ -33,7 +33,7 @@ class ModelSystem:
             "zero": No noise is applied.
 
     """
-    def __init__(self, score: Callable[..., float], space, true_min=None, noise_model: NoiseModel = ZeroNoise):
+    def __init__(self, score: Callable[..., float], space, noise_model: Union[str,dict,NoiseModel], true_min=None):
         self.space = space
         self.score = score
         if true_min is None:
@@ -75,7 +75,7 @@ class ModelSystem:
         Y = self.score(X)
         return self.noise_model.get_noise(X,Y) + Y
     
-    def set_noise_model(self, noise_model: Union[str,dict,NoiseModel], **kwargs):
+    def set_noise_model(self, noise_model: Union[str,dict,NoiseModel], **kwargs)-> NoiseModel:
         """Sets the noise model for the model system
 
         Parameters:

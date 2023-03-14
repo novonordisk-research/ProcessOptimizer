@@ -6,16 +6,16 @@ from scipy.stats import norm, uniform
 class NoiseModel(ABC):
     """
     Abstract class that is the basis for noise models.
-    
-    Parameters:
-    * `noise_size` [Option[float]]: The size of the noise. If ´None´, it signifies that
-        the class is compound, and should not have its own noise signal, but refer to
-        its compounding NoiseModels instead. An example is SumNoise, which sums the
-        noise of a list of noise models, but doesn't add any noise by itself.
     """
     def __init__(
             self,
             noise_size: Optional[float]):
+        """        
+        Parameters:
+        * `noise_size` [Option[float]]: The size of the noise. If ´None´, it signifies that
+            the class is compound, and should not have its own noise signal, but refer to
+            its compounding NoiseModels instead. An example is SumNoise, which sums the
+            noise of a list of noise models, but doesn't add any noise by itself."""
         # We could just set noise_dist and let that have a size, but being able to
         # directly set the size is more intuitive, and that would be complicated if it
         # was just one variable.
@@ -144,7 +144,7 @@ class SumNoise(NoiseModel):
         return sum(noise_list)
 
 
-def parse_noise_model(model: Union[str,dict,NoiseModel], **kwargs):
+def parse_noise_model(model: Union[str,dict,NoiseModel], **kwargs) -> NoiseModel:
     if isinstance(model,NoiseModel):
         return model
     elif type(model) == str:
