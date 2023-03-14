@@ -19,7 +19,7 @@ from ..acquisition import gaussian_acquisition_1D
 from ..learning import GaussianProcessRegressor
 from ..space import Categorical
 from ..space import Space
-from ..space.constraints import Constraints
+from ..space.constraints import Constraints, Sum_equals
 from ..utils import check_x_in_space
 from ..utils import cook_estimator
 from ..utils import create_result
@@ -552,8 +552,12 @@ class Optimizer(object):
                 return self.space.rvs(random_state=self.rng)[0]
 
             if self._constraints:
-                # We use another sampling method when constraints are added
-                return self._constraints.rvs(random_state=self.rng)[0]
+                # Use one sampling strategy for sum_equals constraints
+                if len(self._constraints.sum_equals) > 0:
+                    return self._constraints.sumequal_sampling(random_state=self.rng)[0]
+                else:
+                    # We use random value sampling for other constraint types
+                    return self._constraints.rvs(random_state=self.rng)[0]
             elif self._lhs:
                 # The samples are evaluated starting form lhs_samples[0]
                 return self._lhs_samples[
