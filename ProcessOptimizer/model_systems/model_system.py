@@ -69,7 +69,7 @@ class ModelSystem:
     def set_noise_model(self, noise_model: Union[str,dict,NoiseModel], **kwargs):
         """Sets the noise model for the model system
 
-        Args:
+        Parameters:
         * `noise_model` [str, dict, or NoiseModel]:
             If str, it should be the name of the noise model type. In this case, 
                 further arguments can be given (e.g. `noise_size`).

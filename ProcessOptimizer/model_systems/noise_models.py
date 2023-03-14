@@ -122,7 +122,7 @@ class ZeroNoise(NoiseModel):
 class SumNoise(NoiseModel):
     """
     Noise model that returns the sum of two or more noise models. Can be used if the
-    total noise is a sum of constant and relative noise.
+    total noise is a sum of constant and proportional noise.
 
     Args:
     * `noise_model_list` [List[Union[dict,NoiseModel]]]: List of either noise models, or
