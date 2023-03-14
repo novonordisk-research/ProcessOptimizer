@@ -72,7 +72,7 @@ class ProportionalNoise(NoiseModel):
     Parameters:
     * `noise_size` [float, default 0.01]: The size of the noise relative to the signal.
     """
-    def __init__(self, noise_size : float = 0.01,**kwargs):
+    def __init__(self, noise_size : float = 0.1,**kwargs):
         super().__init__(noise_size=noise_size,**kwargs)
     
     def get_noise(self,_,Y: float) -> float:
