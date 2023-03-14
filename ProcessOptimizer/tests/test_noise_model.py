@@ -1,7 +1,7 @@
 from typing import List
 
 import numpy as np
-from ProcessOptimizer.model_systems.noise_models import NoiseModel, AdditiveNoise, MultiplicativeNoise, DataDependentNoise, ZeroNoise, SumNoise, noise_model_factory, parse_noise_model
+from ProcessOptimizer.model_systems.noise_models import NoiseModel, ConstantNoise, ProportionalNoise, DataDependentNoise, ZeroNoise, SumNoise, noise_model_factory, parse_noise_model
 from scipy.stats import norm, uniform
 import pytest
 
@@ -30,48 +30,48 @@ def test_noise_abstract():
     with pytest.raises(TypeError):
         NoiseModel()
 
-def test_additive_noise(signal_list):
-    noise_model = AdditiveNoise()
+def test_constant_noise(signal_list):
+    noise_model = ConstantNoise()
     noise_model._noise_distribution = lambda: 2
     noise_list = [noise_model.get_noise(None,signal)for signal in signal_list]
     assert all([noise == 2 for noise in noise_list])
 
 @pytest.mark.parametrize("noise_level",(1,2,3))
-def test_multiplicative_noise(signal_list, noise_level):
-    noise_model = MultiplicativeNoise(noise_size=1)
+def test_proportional_noise(signal_list, noise_level):
+    noise_model = ProportionalNoise(noise_size=1)
     noise_model._noise_distribution = lambda: noise_level
     noise_list = [noise_model.get_noise(None,signal) for signal in signal_list]    
     rel_noise_list = [noise/signal for (signal,noise) in zip(signal_list,noise_list)]
     assert np.allclose(rel_noise_list,noise_level)
 
-def test_multiplicative_noise_default(long_signal_list):
-    noise_model = MultiplicativeNoise()
+def test_proportional_noise_default(long_signal_list):
+    noise_model = ProportionalNoise()
     noise_list = [noise_model.get_noise(None,signal) for signal in long_signal_list]    
     rel_noise_list = [noise/signal
                        for (signal,noise) in zip(long_signal_list,noise_list)]    
     evaluate_random_dist(rel_noise_list,size=0.01)
 
-def test_multiplicative_noise_given_size(long_signal_list):
-    noise_model = MultiplicativeNoise(noise_size = 0.1)
+def test_proportional_noise_given_size(long_signal_list):
+    noise_model = ProportionalNoise(noise_size = 0.1)
     noise_list = [noise_model.get_noise(None,signal) for signal in long_signal_list]
     rel_noise_list = [noise/signal 
                       for (signal,noise) in zip(long_signal_list,noise_list)]      
     evaluate_random_dist(rel_noise_list,size=0.1)
 
 def test_random_noise(long_signal_list):
-    noise_model = AdditiveNoise()
+    noise_model = ConstantNoise()
     noise_list = [noise_model.get_noise(None,signal) for signal in long_signal_list]
     evaluate_random_dist(noise_list)
 
 @pytest.mark.parametrize("size",(1,2,47))
-def test_noise_size_additive(size, long_signal_list):
-    noise_model = AdditiveNoise(noise_size=size)
+def test_noise_size_constant(size, long_signal_list):
+    noise_model = ConstantNoise(noise_size=size)
     noise_list = [noise_model.get_noise(None,signal) for signal in long_signal_list]
     evaluate_random_dist(noise_list,size)
 
 @pytest.mark.parametrize("size",(1,2,47))
-def test_noise_size_multiplicative(size, long_signal_list):
-    noise_model = MultiplicativeNoise(noise_size=size)
+def test_noise_size_proportional(size, long_signal_list):
+    noise_model = ProportionalNoise(noise_size=size)
     noise_list = [noise_model.get_noise(None,signal) for signal in long_signal_list]
     rel_noise_list = [noise/signal
                        for (signal,noise) in zip(long_signal_list,noise_list)]
@@ -81,7 +81,7 @@ def test_noise_size_multiplicative(size, long_signal_list):
 def test_data_dependent_noise(signal_list, input):
     # noise_choice returns a noise model that gives the same noise as the input data.
     def noise_choice(X):
-        local_noise_model = AdditiveNoise()
+        local_noise_model = ConstantNoise()
         local_noise_model._noise_distribution = lambda: X
         return local_noise_model
     noise_model = DataDependentNoise(noise_models=noise_choice)
@@ -97,7 +97,7 @@ def test_zero_noice(signal_list):
 @pytest.mark.parametrize("magnitude",(1,2,3))
 def test_noise_model_example_1(long_signal_list, magnitude):
     # the following two lines are taken from the docstring of DataDependentNoise
-    noise_choice = lambda X: AdditiveNoise(noise_size=X)
+    noise_choice = lambda X: ConstantNoise(noise_size=X)
     noise_model = DataDependentNoise(noise_models=noise_choice)
     data = [magnitude]*len(long_signal_list)
     noise_list = [noise_model.get_noise(x,signal) 
@@ -106,7 +106,7 @@ def test_noise_model_example_1(long_signal_list, magnitude):
 
 def test_noise_model_example_2(long_signal_list):
     # the following two lines are taken from the docstring of DataDependentNoise
-    noise_choice = lambda X: ZeroNoise() if X[0]==0 else AdditiveNoise()
+    noise_choice = lambda X: ZeroNoise() if X[0]==0 else ConstantNoise()
     noise_model = DataDependentNoise(noise_models=noise_choice)
     X=[0,10,5]
     noise_list = [noise_model.get_noise(X,signal) for signal in long_signal_list]
@@ -120,8 +120,8 @@ def test_noise_model_example_2(long_signal_list):
 
 def test_sum_noise(signal_list):
     noise_model = SumNoise(noise_model_list=[
-        "additive",
-        {"model_type" : "multiplicative", "noise_size" : 1}])
+        "constant",
+        {"model_type" : "proportional", "noise_size" : 1}])
     noise_model.noise_model_list[0]._noise_distribution = lambda: 2
     noise_model.noise_model_list[1]._noise_distribution = lambda: 3
     noise_list = [noise_model.get_noise(None,signal) for signal in signal_list]
@@ -131,25 +131,25 @@ def test_sum_noise(signal_list):
 # raw_noise of SumNoise should not be accesible, since it is a compound NoiseModel, and
 # should ot have "its own" noise.
 def test_sum_noise_raw_noise_error():
-    noise_model = SumNoise(noise_model_list=[AdditiveNoise()])
+    noise_model = SumNoise(noise_model_list=[ConstantNoise()])
     with pytest.raises(TypeError):
         noise_model.raw_noise
 
-# raw_noise of AdditiveNoise should not be accesible, since it is a compound NoiseModel,
-# and should ot have "its own" noise.
+# raw_noise of DataDependentNoise should not be accesible, since it is a compound
+# NoiseModel, and should ot have "its own" noise.
 def test_data_dependent_raw_noise_error():
-    noise_choise = lambda: AdditiveNoise()
+    noise_choise = lambda: ConstantNoise()
     noise_model = DataDependentNoise(noise_models=noise_choise)
     with pytest.raises(TypeError):
         noise_model.raw_noise
 
-def test_factory_additive():
-    noise_model = noise_model_factory(model_type="additive")
-    assert isinstance(noise_model,AdditiveNoise)
+def test_factory_constant():
+    noise_model = noise_model_factory(model_type="constant")
+    assert isinstance(noise_model,ConstantNoise)
 
-def test_factory_multiplicative():
-    noise_model = noise_model_factory(model_type="multiplicative")
-    assert isinstance(noise_model,MultiplicativeNoise)
+def test_factory_proportional():
+    noise_model = noise_model_factory(model_type="proportional")
+    assert isinstance(noise_model,ProportionalNoise)
 
 def test_factory_zero():
     noise_model = noise_model_factory(model_type="zero")
@@ -160,23 +160,23 @@ def test_factory_other():
         noise_model_factory(model_type="not_implemented")
 
 def test_factory_size():
-    noise_model = noise_model_factory(model_type="additive", noise_size=3)
+    noise_model = noise_model_factory(model_type="constant", noise_size=3)
     assert noise_model.noise_size == 3
 
 def test_parse_model():
-    noise_model = parse_noise_model(AdditiveNoise())
-    assert isinstance(noise_model,AdditiveNoise)
+    noise_model = parse_noise_model(ConstantNoise())
+    assert isinstance(noise_model,ConstantNoise)
 
 def test_pars_str():
-    noise_model = parse_noise_model("additive")
-    assert isinstance(noise_model,AdditiveNoise)
+    noise_model = parse_noise_model("constant")
+    assert isinstance(noise_model,ConstantNoise)
 
 def test_parse_dict():
-    noise_model = parse_noise_model({"model_type": "additive"})
-    assert isinstance(noise_model,AdditiveNoise)
+    noise_model = parse_noise_model({"model_type": "constant"})
+    assert isinstance(noise_model,ConstantNoise)
 
 def test_uniform_noise(long_signal_list):
-    noise_model = AdditiveNoise()
+    noise_model = ConstantNoise()
     noise_model.set_noise_type("uniform")
     noise_list = [noise_model.get_noise(None, Y) for Y in long_signal_list]
     (start,width) = uniform.fit(noise_list)
@@ -184,15 +184,15 @@ def test_uniform_noise(long_signal_list):
     assert np.allclose(width,2,atol=0.1)
 
 def test_unknown_distribution():
-    noise_model = AdditiveNoise()
+    noise_model = ConstantNoise()
     with pytest.raises(ValueError):
         noise_model.set_noise_type("not_implemented")
 
 # set_noise_model_list did not reset the list. This test verifies that this bug has been
 # fixed.
 def test_reset_model_list():
-    noise_model = SumNoise(noise_model_list=[AdditiveNoise(noise_size=100)])
-    noise_model.set_noise_model_list([AdditiveNoise()])
+    noise_model = SumNoise(noise_model_list=[ConstantNoise(noise_size=100)])
+    noise_model.set_noise_model_list([ConstantNoise()])
     noise_list = [noise_model.get_noise(None,None) for _ in range(30)]
     # It is very unlikely that a normally distributed noise with size 1 is above 10. It
     # is unlikely none of 30 normally distributed noise reading with size 100 is above

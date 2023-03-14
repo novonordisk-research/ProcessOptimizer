@@ -77,8 +77,8 @@ class ModelSystem:
             If NoiseModel, this NoiseModel will be used.
             
             Possible model type strings are:
-            "additive": The noise level is constant.
-            "multiplicative": Tne noise level is proportionate to the score.
+            "constant": The noise level is constant.
+            "proportional": Tne noise level is proportional to the score.
             "zero": No noise is applied.
         """
         self.noise_model = parse_noise_model(noise_model, **kwargs)

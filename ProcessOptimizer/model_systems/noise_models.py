@@ -47,9 +47,11 @@ class NoiseModel(ABC):
             raise ValueError(f"Noise distribution \"{noise_type}\" not recognised.")
 
 
-class AdditiveNoise(NoiseModel): # Should this be named ConstantNoise?
+class ConstantNoise(NoiseModel):
     """
-    Noise model for constant noise.
+    Noise model for noise that is independent of both the sampled point and the
+    resulting score; The noise is constant. Another name is "additive noise", as the
+    same noise is added to the score. This is typical for many measurements.
 
     Parameters:
     * `noise_size` [float, default 1]: The size of the noise. 
@@ -61,9 +63,11 @@ class AdditiveNoise(NoiseModel): # Should this be named ConstantNoise?
         return self.raw_noise
 
     
-class MultiplicativeNoise(NoiseModel): # Should this be named ProportionalNoise?
+class ProportionalNoise(NoiseModel):
     """
-    Noise model for noise proportional to the signal.
+    Noise model for noise proportional to the signal, but independent of the sampled
+    point. Another name is "multiplicative noise", as the same noise is multiplied with
+    the score. This is typical of some electronic measurements.
 
     Parameters:
     * `noise_size` [float, default 0.01]: The size of the noise relative to the signal.
@@ -149,10 +153,10 @@ def parse_noise_model(model: Union[str,dict,NoiseModel], **kwargs):
         return noise_model_factory(**model)
 
 def noise_model_factory(model_type: str, **kwargs)-> NoiseModel:
-    if model_type == "additive":
-        return AdditiveNoise(**kwargs)
-    elif model_type == "multiplicative":
-        return MultiplicativeNoise(**kwargs)
+    if model_type == "constant":
+        return ConstantNoise(**kwargs)
+    elif model_type == "proportional":
+        return ProportionalNoise(**kwargs)
     elif model_type == "zero":
         return ZeroNoise()
     else:
