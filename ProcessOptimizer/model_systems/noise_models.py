@@ -31,7 +31,7 @@ class NoiseModel(ABC):
         pass
     
     @property
-    def raw_noise(self) -> float:
+    def _sample_noise(self) -> float:
         """A raw noise value, to be used in the get_noise() function."""
         if self.noise_size is None:
             raise TypeError("Method \"raw_noise()\" for NoiseModel class "
@@ -60,7 +60,7 @@ class ConstantNoise(NoiseModel):
         super().__init__(noise_size=noise_size, **kwargs)
 
     def get_noise(self,_,Y: float) -> float:
-        return self.raw_noise
+        return self._sample_noise
 
     
 class ProportionalNoise(NoiseModel):
@@ -76,7 +76,7 @@ class ProportionalNoise(NoiseModel):
         super().__init__(noise_size=noise_size,**kwargs)
     
     def get_noise(self,_,Y: float) -> float:
-        return self.raw_noise*Y
+        return self._sample_noise*Y
     
 
 class DataDependentNoise(NoiseModel):

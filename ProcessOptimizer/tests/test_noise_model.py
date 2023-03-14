@@ -128,20 +128,21 @@ def test_sum_noise(signal_list):
     true_noise_list = [2 + 3 * signal for signal in signal_list]
     assert noise_list == true_noise_list
 
-# raw_noise of SumNoise should not be accesible, since it is a compound NoiseModel, and
-# should ot have "its own" noise.
+# _sample_noise of SumNoise should not be accesible, since it is a composite NoiseModel,
+# and should ot have "its own" noise; it does not need it to retrun the sum of its
+# underlying noise models.
 def test_sum_noise_raw_noise_error():
     noise_model = SumNoise(noise_model_list=[ConstantNoise()])
     with pytest.raises(TypeError):
-        noise_model.raw_noise
+        noise_model._sample_noise
 
-# raw_noise of DataDependentNoise should not be accesible, since it is a compound
+# _sample_noise of DataDependentNoise should not be accesible, since it is a composite
 # NoiseModel, and should ot have "its own" noise.
 def test_data_dependent_raw_noise_error():
     noise_choise = lambda: ConstantNoise()
     noise_model = DataDependentNoise(noise_models=noise_choise)
     with pytest.raises(TypeError):
-        noise_model.raw_noise
+        noise_model._sample_noise
 
 def test_factory_constant():
     noise_model = noise_model_factory(model_type="constant")
