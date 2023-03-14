@@ -33,7 +33,7 @@ def test_noise_abstract():
 def test_constant_noise(signal_list):
     noise_model = ConstantNoise()
     noise_model._noise_distribution = lambda: 2
-    noise_list = [noise_model.get_noise(None,signal)for signal in signal_list]
+    noise_list = [noise_model.get_noise(None,signal) for signal in signal_list]
     assert all([noise == 2 for noise in noise_list])
 
 @pytest.mark.parametrize("noise_level",(1,2,3))
@@ -88,7 +88,7 @@ def test_data_dependent_noise(signal_list, input):
     noise_list = [noise_model.get_noise(input,signal) for signal in signal_list]  
     assert [noise==signal for (signal,noise) in zip(signal_list,noise_list)]
 
-def test_zero_noice(signal_list):
+def test_zero_noise(signal_list):
     noise_model = ZeroNoise()
     noise_list = [noise_model.get_noise(None,signal) for signal in signal_list]    
     assert [noise==0 for noise in noise_list]
