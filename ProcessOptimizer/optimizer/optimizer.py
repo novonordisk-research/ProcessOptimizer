@@ -739,12 +739,21 @@ class Optimizer(object):
                 # even with BFGS as optimizer we want to sample a large number
                 # of points and then pick the best ones as starting points
                 if self._constraints:
-                    # We use another sampling method if constraints have been added
-                    X = self.space.transform(
-                        self._constraints.rvs(
-                            n_samples=self.n_points, random_state=self.rng
+                    # If the constraint is of the sum_equals type, create samples
+                    # that respect this
+                    if isinstance(self._constraints.constraints_list[0], Sum_equals):
+                        X = self.space.transform(
+                            self._constraints.sumequal_sampling(
+                                n_samples=self.n_points, random_state=self.rng
+                            )
+                        )                    
+                    # For all other constraints we use random sampling
+                    else:
+                        X = self.space.transform(
+                            self._constraints.rvs(
+                                n_samples=self.n_points, random_state=self.rng
+                            )
                         )
-                    )
                 else:
                     X = self.space.transform(
                         self.space.rvs(
