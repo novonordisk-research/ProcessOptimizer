@@ -42,7 +42,7 @@ class ModelSystem:
             scores = [score(point) for point in points]
             true_min = np.min(scores)
         self.true_min = true_min
-        self.noise_model = self.set_noise_model(noise_model)
+        self.set_noise_model(noise_model)
         
     def result_loss(self, result):
         """Calculate the loss of the optimization result. 
