@@ -2,7 +2,7 @@
 
 Overview markdown file with app. 3 lines of description per file. The rest is in Jupyter notebook files.
 
-Each Jupyter notebook shuld not be longer than what can be printed on two standard pages. 
+Each Jupyter notebook shuld not be longer than what can be printed on two standard pages.
 
 Gold mining example is the overarching story.
 
@@ -13,12 +13,13 @@ Can GitHub Actions run the notebooks and check for errors? (Treebeard?)
 ## Main storyline
 
 1. Gold exists, find it starting with an arbitrary point.
-2. Latin Hypercube Sampling
+2. Latin Hypercube Sampling (this is done by default, do we have to mention it?)
 3. "Good enough" found during initialisation
 4. batch vs. single opt.ask()
-6. Noise
-7. Explore vs. exploit (Gold Diggerson vs. Map Drawson)
-8. Plots (more about ALL of the plots)
+5. Noise
+6. Explore vs. exploit (Gold Diggerson vs. Map Drawson)
+7. Plots (more about ALL of the plots)
+8. Uncertainty
 9. When to stop?
 
 ## Categorical
@@ -30,6 +31,8 @@ Can GitHub Actions run the notebooks and check for errors? (Treebeard?)
 1. New train line
 2. Plots
 3. Tradeoffs
+4. Silver vs. gold?
+5. Rocks in the ground making it hard to dig?
 
 ## Constraints
 
