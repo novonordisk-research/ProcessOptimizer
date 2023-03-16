@@ -101,12 +101,12 @@ class DataDependentNoise(NoiseModel):
     noise_model = DataDependentNoise(noise_models=noise_choice)
     ```
     """
-    def __init__(self, noise_models: Callable[...,NoiseModel], **kwargs):
-        self.noise_models = noise_models
+    def __init__(self, noise_function: Callable[...,NoiseModel], **kwargs):
+        self.noise_function = noise_function
         super().__init__(noise_size=None, **kwargs)
     
     def get_noise(self,X,Y: float) -> float:
-        return self.noise_models(X).get_noise(X,Y)           
+        return self.noise_function(X).get_noise(X,Y)           
     
 class ZeroNoise(NoiseModel):
     """
