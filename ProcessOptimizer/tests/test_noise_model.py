@@ -1,7 +1,7 @@
 from typing import List
 
 import numpy as np
-from ProcessOptimizer.model_systems.noise_models import NoiseModel, ConstantNoise, ProportionalNoise, DataDependentNoise, ZeroNoise, SumNoise, noise_model_factory, parse_noise_model
+from ProcessOptimizer.model_systems.noise_function import NoiseModel, ConstantNoise, ProportionalNoise, DataDependentNoise, ZeroNoise, SumNoise, noise_model_factory, parse_noise_model
 from scipy.stats import norm, uniform
 import pytest
 
@@ -84,7 +84,7 @@ def test_data_dependent_noise(signal_list, input):
         local_noise_model = ConstantNoise()
         local_noise_model._noise_distribution = lambda: X
         return local_noise_model
-    noise_model = DataDependentNoise(noise_models=noise_choice)
+    noise_model = DataDependentNoise(noise_function=noise_choice)
     noise_list = [noise_model.get_noise(input,signal) for signal in signal_list]  
     assert [noise==signal for (signal,noise) in zip(signal_list,noise_list)]
 
@@ -98,7 +98,7 @@ def test_zero_noise(signal_list):
 def test_noise_model_example_1(long_signal_list, magnitude):
     # the following two lines are taken from the docstring of DataDependentNoise
     noise_choice = lambda X: ConstantNoise(noise_size=X)
-    noise_model = DataDependentNoise(noise_models=noise_choice)
+    noise_model = DataDependentNoise(noise_function=noise_choice)
     data = [magnitude]*len(long_signal_list)
     noise_list = [noise_model.get_noise(x,signal) 
                   for (x,signal) in zip(data,long_signal_list)]    
@@ -107,7 +107,7 @@ def test_noise_model_example_1(long_signal_list, magnitude):
 def test_noise_model_example_2(long_signal_list):
     # the following two lines are taken from the docstring of DataDependentNoise
     noise_choice = lambda X: ZeroNoise() if X[0]==0 else ConstantNoise()
-    noise_model = DataDependentNoise(noise_models=noise_choice)
+    noise_model = DataDependentNoise(noise_function=noise_choice)
     X=[0,10,5]
     noise_list = [noise_model.get_noise(X,signal) for signal in long_signal_list]
     (mean, spread) = norm.fit(noise_list)
@@ -140,7 +140,7 @@ def test_sum_noise_raw_noise_error():
 # NoiseModel, and should ot have "its own" noise.
 def test_data_dependent_raw_noise_error():
     noise_choise = lambda: ConstantNoise()
-    noise_model = DataDependentNoise(noise_models=noise_choise)
+    noise_model = DataDependentNoise(noise_function=noise_choise)
     with pytest.raises(TypeError):
         noise_model._sample_noise
 

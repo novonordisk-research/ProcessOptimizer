@@ -84,7 +84,7 @@ class DataDependentNoise(NoiseModel):
     Noise model for noise that depends on the input parameters.
 
     Parameters:
-    * `noise_models` [(parameters) -> NoiseModel]: A function that takes a set of
+    * `noise_function` [(parameters) -> NoiseModel]: A function that takes a set of
         parameters, and returns a noise model to apply.
 
     Examples:
@@ -92,21 +92,21 @@ class DataDependentNoise(NoiseModel):
     To make additive noise proportional to the input parameter (not to the score):
     ```
     noise_choice = lambda X: AdditiveNoise(noise_size=X)
-    noise_model = DataDependentNoise(noise_models=noise_choice)
+    noise_model = DataDependentNoise(noise_function=noise_choice)
     ```
 
     To add additive noise except if X[0] is 0:
     ```
     noise_choice = lambda X: ZeroNoise() if X[0]==0 else AdditiveNoise()
-    noise_model = DataDependentNoise(noise_models=noise_choice)
+    noise_model = DataDependentNoise(noise_function=noise_choice)
     ```
     """
-    def __init__(self, noise_models: Callable[...,NoiseModel], **kwargs):
-        self.noise_models = noise_models
+    def __init__(self, noise_function: Callable[...,NoiseModel], **kwargs):
+        self.noise_function = noise_function
         super().__init__(noise_size=None, **kwargs)
     
     def get_noise(self,X,Y: float) -> float:
-        return self.noise_models(X).get_noise(X,Y)           
+        return self.noise_function(X).get_noise(X,Y)           
     
 class ZeroNoise(NoiseModel):
     """
