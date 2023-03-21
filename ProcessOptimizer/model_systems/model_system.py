@@ -1,7 +1,7 @@
-from typing import Callable, Union
+from typing import Callable, List, Union
 
 import numpy as np
-from ProcessOptimizer import expected_minimum
+from ProcessOptimizer import expected_minimum, Space, space_factory
 from ProcessOptimizer.model_systems.noise_models import NoiseModel, parse_noise_model
 
 class ModelSystem:
@@ -14,8 +14,8 @@ class ModelSystem:
         Function for calculating the noiseless score of the system at a given point in 
         the parameter space.
 
-    * `space` [Space]:
-        The parameter space in the form of a Space object. 
+    * `space` [List or Space]:
+        A list of dimension defintions or the parameter space as a Space object.
 
     * `true_min` [float]:
         The true minimum value of the score function within the parameter space.
@@ -33,8 +33,8 @@ class ModelSystem:
             "zero": No noise is applied.
 
     """
-    def __init__(self, score: Callable[..., float], space, noise_model: Union[str,dict,NoiseModel], true_min=None):
-        self.space = space
+    def __init__(self, score: Callable[..., float], space: Union[Space, List], noise_model: Union[str,dict,NoiseModel], true_min=None):
+        self.space = space_factory(space)
         self.score = score
         if true_min is None:
             ndims = space.n_dims()
