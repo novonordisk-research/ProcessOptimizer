@@ -42,7 +42,7 @@ class ModelSystem:
             scores = [score(point) for point in points]
             true_min = np.min(scores)
         self.true_min = true_min
-        self.set_noise_model(noise_model)
+        self.noise_model = parse_noise_model(noise_model)
         
     def result_loss(self, result):
         """Calculate the loss of the optimization result. 
@@ -74,20 +74,3 @@ class ModelSystem:
         """
         Y = self.score(X)
         return self.noise_model.get_noise(X,Y) + Y
-    
-    def set_noise_model(self, noise_model: Union[str,dict,NoiseModel], **kwargs)-> NoiseModel:
-        """Sets the noise model for the model system
-
-        Parameters:
-        * `noise_model` [str, dict, or NoiseModel]:
-            If str, it should be the name of the noise model type. In this case, 
-                further arguments can be given (e.g. `noise_size`).
-            If dict, one key should be `model_type`.
-            If NoiseModel, this NoiseModel will be used.
-            
-            Possible model type strings are:
-            "constant": The noise level is constant.
-            "proportional": Tne noise level is proportional to the score.
-            "zero": No noise is applied.
-        """
-        self.noise_model = parse_noise_model(noise_model, **kwargs)
