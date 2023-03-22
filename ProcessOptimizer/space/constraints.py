@@ -207,16 +207,34 @@ class Constraints:
         # Convert our list of samples to an array
         samples = np.array(samples)
         
+        # TODO: Decide if you want to keep this implementation...
         # Create settings for the dimensions that are not part of the constraint
         if d < self.space.n_dims:
-            for i in range(self.space.n_dims):
-                # Only generate settings for the dimensions that are not part 
-                # of the constraint
-                if i not in self.sum_equals[0].dimensions:
-                    dim = self.space.dimensions[i]
-                    column = dim.rvs(n_samples=n_samples, random_state=rng)
-                    # Insert the settings in the sample array
-                    samples = np.insert(samples, i, column, axis=1)
+            remaining_dimensions = [
+                i for i in range(self.space.n_dims) 
+                if i not in self.sum_equals[0].dimensions
+            ]
+            # Generate random settings across all factors
+            full_column = self.space.rvs(n_samples=n_samples, random_state=rng)
+            # Only insert settings for the dimensions not in the constraint
+            for i in remaining_dimensions:
+                samples = np.insert(
+                    samples,
+                    i, 
+                    np.array(full_column)[:,i], 
+                    axis=1
+                )
+        # TODO: ... or this this implementation
+        # # Create settings for the dimensions that are not part of the constraint
+        # if d < self.space.n_dims:
+        #     for i in range(self.space.n_dims):
+        #         # Only generate settings for the dimensions that are not part 
+        #         # of the constraint
+        #         if i not in self.sum_equals[0].dimensions:
+        #             dim = self.space.dimensions[i]
+        #             column = dim.rvs(n_samples=n_samples, random_state=rng)
+        #             # Insert the settings in the sample array
+        #             samples = np.insert(samples, i, column, axis=1)
         
         # Return the samples as a list of lists
         return samples.tolist()
