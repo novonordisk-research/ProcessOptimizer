@@ -40,7 +40,7 @@ class Constraints:
                 self.exclusive[constraint.dimension].append(constraint)
             elif isinstance(constraint, Sum):
                 self.sum.append(constraint)
-            elif isinstance(constraint, Sum_equals):
+            elif isinstance(constraint, SumEquals):
                 self.sum_equals.append(constraint)
             elif isinstance(constraint, Conditional):
                 self.conditional.append(constraint)
@@ -126,7 +126,7 @@ class Constraints:
         return rows[:n_samples]
     
     def sumequal_sampling(self, n_samples=1, random_state=None):
-        """Draw samples that respect sum_equals constraints.
+        """Draw samples that respect SumEquals constraints.
 
         The samples are in the original space. They need to be transformed
         before being passed to a model or minimizer by `space.transform()`.
@@ -269,6 +269,10 @@ class Constraints:
 
         # We iterate through sum constriants
         for constraint in self.sum:
+            if not constraint.validate_sample(sample):
+                return False
+        # We iterate through sum_equals constriants
+        for constraint in self.sum_equals:
             if not constraint.validate_sample(sample):
                 return False
         # We iterate through Conditional constraints
@@ -573,9 +577,9 @@ class Sum():
         else:
             return False
 
-class Sum_equals():
+class SumEquals():
     def __init__(self, dimensions, value):
-        """Constraint class of type Sum_equals.
+        """Constraint class of type SumEquals.
 
         This constraint enforces that the sum of all values drawn for the
         specified dimensions, is exactly equal to a value. Can only be
@@ -608,15 +612,15 @@ class Sum_equals():
 
         self.validate_sample = self._validate_sample
 
-    def _validate_sample(self, sample):
+    def _validate_sample(self, sample: Sequence[Any]) -> bool:
         # Returns True if sample does not violate the constraints.
         return np.sum([sample[dim] for dim in self.dimensions]) == self.value
 
     def __repr__(self):
-        return "Sum_equals(dimensions={}, value={})".format(self.dimensions, self.value)
+        return "SumEquals(dimensions={}, value={})".format(self.dimensions, self.value)
 
     def __eq__(self, other):
-        if isinstance(other, Sum_equals):
+        if isinstance(other, SumEquals):
             return all([a == b for a, b in zip(self.dimensions, other.dimensions)]) and self.value == other.value
         else:
             return False
@@ -749,17 +753,17 @@ def check_constraints(space, constraints):
             for ind_dim in constraint.dimensions:
                 if isinstance(space.dimensions[ind_dim], Categorical):
                     raise ValueError('Sum constraint can not be applid to categorical dimension: {}'.format(space.dimensions[ind_dim]))
-        elif isinstance(constraint, Sum_equals):
-            # Check that there is only one sum_equals constraint being applied
+        elif isinstance(constraint, SumEquals):
+            # Check that there is only one SumEquals constraint being applied
             if len(constraints) > 1:
-                raise ValueError('Sum_equals constraints can not be applied in combination with other constraints. Found {} constraints.'.format(len(constraints)))
+                raise ValueError('SumEquals constraints can not be applied in combination with other constraints. Found {} constraints.'.format(len(constraints)))
             if not all(dim < n_dims for dim in constraint.dimensions):
                 raise IndexError('Dimension index exceeds number of dimensions')
             for ind_dim in constraint.dimensions:
                 if isinstance(space.dimensions[ind_dim], Categorical):
-                    raise ValueError('Sum_equals constraint can not be applied to categorical dimensions: {}'.format(space.dimensions[ind_dim]))
+                    raise ValueError('SumEquals constraint can not be applied to categorical dimensions: {}'.format(space.dimensions[ind_dim]))
                 if isinstance(space.dimensions[ind_dim], Integer):
-                    raise ValueError('Sum_equals constraint can not be applied to integer dimensions: {}'.format(space.dimensions[ind_dim]))
+                    raise ValueError('SumEquals constraint can not be applied to integer dimensions: {}'.format(space.dimensions[ind_dim]))
             # Check if the sum equals constraint is below the combined lower 
             # bound of the space dimensions in question
             low_limit_sum = np.sum(space.bounds[dim][0] for dim in constraint.dimensions)
@@ -783,7 +787,7 @@ def check_constraints(space, constraints):
                 for constraint_if_false in constraint.if_false:
                     check_constraints(space, [constraint_if_false])
         else:
-            raise TypeError('Constraints must be of type "Single", "Exlusive", "Inclusive", "Sum", "Sum_equals" or "Conditional". Got {}'.format(type(constraint)))
+            raise TypeError('Constraints must be of type "Single", "Exlusive", "Inclusive", "Sum", "SumEquals" or "Conditional". Got {}'.format(type(constraint)))
 
 
 def check_dim_and_space(space, constraint):
