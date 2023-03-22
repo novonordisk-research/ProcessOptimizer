@@ -2,6 +2,7 @@ from sklearn.utils import check_random_state
 from .space import Real, Integer, Categorical, Space
 import numpy as np
 from scipy import matrix, linalg
+from typing import Sequence, Any
 
 class Constraints:
     def __init__(self, constraints_list, space):
@@ -148,15 +149,19 @@ class Constraints:
 
         rng = check_random_state(random_state)
                 
-        # Find a point on the plane defined by the sum_equals constraint where
+        # Find a point on the plane defined by the SumEquals constraint where
         # A + B + ... = value. We do this by asking where the diagonal between
         # the origin and A_max, B_max, ... intersects the plane.
         d = len(self.sum_equals[0].dimensions)
-        origin = np.zeros(d)
-        delta = np.zeros(d)        
-        for i, dim in enumerate(self.sum_equals[0].dimensions):
-            origin[i] = self.space.bounds[dim][0]
-            delta[i] = self.space.bounds[dim][1] - self.space.bounds[dim][0]
+        origin = np.array(
+            [self.space.bounds[dim][0] 
+             for dim in self.sum_equals[0].dimensions]
+        )
+        delta = np.array(
+            [self.space.bounds[dim][1] - self.space.bounds[dim][0] 
+             for dim in self.sum_equals[0].dimensions]
+        )
+        
         A = np.zeros((d,d))
         B = np.zeros(d)
         # Row representing the sum constraint
@@ -165,8 +170,9 @@ class Constraints:
         # Rows that define the linear equation for the diagonal along the 
         # constrained dimensions
         for i in range(1,d):
-            A[i, i-1] = -delta[i]/delta[0]
+            A[i, 0] = -delta[i]/delta[0]
             A[i, i] = 1
+            B[i] = origin[i]
         # Identify the point that lies on the constraint plane and on the diagonal
         point = np.linalg.solve(A, B)
         # Use the fact that the vector [1, 1, ...] (a 1 for each constrained 
