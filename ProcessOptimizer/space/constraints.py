@@ -195,15 +195,11 @@ class Constraints:
             # Generate the correct shape 
             sample_candidate = sample_candidate.T[0]
             # Check that the candidate is inside the original parameter space
-            inspace = []
-            for i in range(d):
-                inspace.append(
-                    np.all(
-                        [(sample_candidate[i] >= self.space.bounds[i][0]),
-                         (sample_candidate[i] <= self.space.bounds[i][1]),],
-                        axis=0,
-                    )
-                )
+            inspace = [
+                (sample_candidate[i] >= self.space.bounds[i][0]) and
+                (sample_candidate[i] <= self.space.bounds[i][1])
+                for i in range(d)
+            ]
             # Only accept the candidate if it is in our space
             if all(inspace):
                 samples.append(sample_candidate)
