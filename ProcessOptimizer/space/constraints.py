@@ -633,8 +633,10 @@ class SumEquals():
         self.validate_sample = self._validate_sample
 
     def _validate_sample(self, sample: Sequence[Any]) -> bool:
-        # Returns True if sample does not violate the constraints.
-        return np.sum([sample[dim] for dim in self.dimensions]) == self.value
+        # Returns True if sample does not violate the constraints aside from 
+        # floating point errors
+        sample_sum = np.sum([sample[dim] for dim in self.dimensions])
+        return np.isclose(sample_sum, self.value)
 
     def __repr__(self):
         return "SumEquals(dimensions={}, value={})".format(self.dimensions, self.value)
