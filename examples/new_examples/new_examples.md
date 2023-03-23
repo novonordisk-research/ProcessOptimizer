@@ -17,8 +17,8 @@ Can GitHub Actions run the notebooks and check for errors? (Treebeard?)
 3. "Good enough" found during initialisation
 4. batch vs. single opt.ask()
 5. Noise
-6. Narrow wells
-7. Explore vs. exploit (Gold Diggerson vs. Map Drawson)
+6. Explore vs. exploit (Gold Diggerson vs. Map Drawson)
+7. Narrow wells
 8. Plots (more about ALL of the plots)
 9. Uncertainty
 10. When to stop?
