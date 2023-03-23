@@ -554,7 +554,13 @@ class Optimizer(object):
             if self._constraints:
                 # Use one sampling strategy for SumEquals constraints
                 if len(self._constraints.sum_equals) > 0:
-                    return self._constraints.sumequal_sampling(random_state=self.rng)[0]
+                    # Create a consistent list of points n_initial_points long
+                    sum_equals_list = self._constraints.sumequal_sampling(
+                        n_samples=self.n_initial_points_,
+                        random_state=self.rng
+                    )
+                    # The samples are returned one at a time from this list
+                    return sum_equals_list[self.n_initial_points_ - self._n_initial_points]
                 else:
                     # We use random value sampling for other constraint types
                     return self._constraints.rvs(random_state=self.rng)[0]

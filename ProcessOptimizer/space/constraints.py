@@ -184,16 +184,46 @@ class Constraints:
         # from the origin to A_max, B_max, etc.
         sim_distance = np.sqrt(np.sum(delta**2)) / 2
         
+        # To avoid "clustering" of points in the constrained plane, we will 
+        # create samples using low discrepancy quasirandom sequences, see:
+        # http://extremelearning.com.au/unreasonable-effectiveness-of-quasirandom-sequences/
+        # for background on this method
+        
+        # Helper function for calculating the generalized golden ratio
+        def phi(d):
+            x = 2.0
+            for i in range(10): 
+                x = pow(1+x,1/(d+1)) 
+            return x
+        # Golden ratio for our present dimensionality (the constrained space)
+        g = phi(d-1)
+        alpha = np.zeros(d-1)
+        for j in range(d-1):
+            alpha[j] = pow(1/g, j+1) %1
+        vec_comp = np.zeros((1, d-1))
+        # Choose seed (starting location) in the normalized space
+        seed = 0.5
+        # for i in range(n_samples):
+        #     vec_comp[i] = (seed + alpha*(i+1)) %1
+        # # Center these components on zero
+        # vec_comp = vec_comp - 0.5
+        # # Simulate lengths of each null_space vector to add to our point
+        # vec_comp = vec_comp * sim_distance * 2
+        
         # Build a list of samples
         samples = []
+        j = 0
         while len(samples) < n_samples:
+            # Generate next step in the sequence
+            vec_comp = (seed + alpha*(j+1)) %1
+            j += 1
+            # Center these components on zero
+            vec_comp = vec_comp - 0.5
             # Simulate lengths of each null_space vector to add to our point
-            vector_components = ((np.random.rand(d-1, 1) - 0.5)*sim_distance*2)
-            # Generate the samples by adding these different lengths of the null 
-            # space basis vectors to the point on the plane we identified earlier
-            sample_candidate = point[:, None] + ns @ vector_components
+            vec_comp = vec_comp * sim_distance * 2
+            sample_candidate = point[:, None].T + ns @ vec_comp.T
             # Generate the correct shape 
-            sample_candidate = sample_candidate.T[0]
+            sample_candidate = sample_candidate[0]
             # Check that the candidate is inside the original parameter space
             inspace = [
                 (sample_candidate[i] >= self.space.bounds[i][0]) and
@@ -203,6 +233,26 @@ class Constraints:
             # Only accept the candidate if it is in our space
             if all(inspace):
                 samples.append(sample_candidate)
+            
+        # # Build a list of samples
+        # samples = []
+        # while len(samples) < n_samples:
+        #     # Simulate lengths of each null_space vector to add to our point
+        #     vector_components = ((np.random.rand(d-1, 1) - 0.5)*sim_distance*2)
+        #     # Generate the samples by adding these different lengths of the null 
+        #     # space basis vectors to the point on the plane we identified earlier
+        #     sample_candidate = point[:, None] + ns @ vector_components
+        #     # Generate the correct shape 
+        #     sample_candidate = sample_candidate.T[0]
+        #     # Check that the candidate is inside the original parameter space
+        #     inspace = [
+        #         (sample_candidate[i] >= self.space.bounds[i][0]) and
+        #         (sample_candidate[i] <= self.space.bounds[i][1])
+        #         for i in range(d)
+        #     ]
+        #     # Only accept the candidate if it is in our space
+        #     if all(inspace):
+        #         samples.append(sample_candidate)
             
         # Convert our list of samples to an array
         samples = np.array(samples)
@@ -215,6 +265,8 @@ class Constraints:
             ]
             # Generate random settings across all factors
             full_column = self.space.rvs(n_samples=n_samples, random_state=rng)
+            # TODO: Determine if the use of QRS actually means it would be 
+            # better to sort the settings in each column!
             # Only insert settings for the dimensions not in the constraint
             for i in remaining_dimensions:
                 samples = np.insert(
