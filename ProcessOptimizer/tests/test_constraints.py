@@ -8,6 +8,7 @@ from ProcessOptimizer.space.constraints import (
     Exclusive,
     Inclusive,
     Sum,
+    SumEquals,
     Conditional,
     check_constraints,
     check_bounds,
@@ -123,7 +124,7 @@ def test_single_inclusive_and_exclusive():
 
 @pytest.mark.fast_test
 def test_Sum():
-    # Test that Sym type constraint can be initialized
+    # Test that Sum type constraint can be initialized
     Sum((1, 2, 3), 5, less_than=False)
     Sum([3, 2, 1], -10.0, less_than=True)
 
@@ -173,6 +174,50 @@ def test_Sum():
     for sample in samples:
         assert cons.validate_sample(sample)
 
+@pytest.mark.fast_test
+def test_SumEquals():
+    # Test that SumEquals type constraint can be initialized
+    SumEquals((1, 2, 3), 5)
+    SumEquals([3, 2, 1], -10.0)
+    
+    # You need to add at least two dimensions together
+    with raises(ValueError):
+        SumEquals([0], 5)
+    # dimensions should be a tuple or list    
+    with raises(TypeError):
+        SumEquals("a", 5)
+    # Indices of dimension should all be int
+    with raises(TypeError):
+        SumEquals(["a", "b"], 5)
+    with raises(TypeError):
+        SumEquals([1, 1.5], 5)
+    # Indices cannot be negative
+    with raises(TypeError):
+        SumEquals([0, -1], 5)
+    
+    space = Space([[0.0, 10.0], [0,0, 10.0], ["A", "B"]])
+    # A dimension value of 4 is out of bounds for a space with only
+    # 3 dimensions
+    cons_list = [SumEquals((4, 3), 5)]
+    with raises(IndexError):
+        Constraints(cons_list, space)
+    # Cannot apply sum constraint to categorical dimensions
+    cons_list = [SumEquals((1, 2), 5)]
+    with raises(ValueError):
+        Constraints(cons_list, space)
+    
+    # Check that validate_sample validates samples correctly
+    cons = Constraints([SumEquals((0, 1), 5)], space)
+    assert not cons.validate_sample([0.0, 6.0, "A"])
+    assert not cons.validate_sample([6.0, 0.0, "A"])
+    assert not cons.validate_sample([3.00001, 2.0, "A"])
+    assert cons.validate_sample([2.99999999999999999, 2, "A"])
+    
+    # Check that only valid samples are drawn
+    samples = cons.sumequal_sampling(n_samples=1000)
+    for sample in samples:
+        factor_sum = np.sum(sample[0] + sample[1])
+        assert factor_sum == cons.value
 
 @pytest.mark.fast_test
 def test_Conditional():
