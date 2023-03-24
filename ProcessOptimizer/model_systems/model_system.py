@@ -1,5 +1,8 @@
+from typing import Callable, List, Union
+
 import numpy as np
-from ProcessOptimizer import expected_minimum
+from ProcessOptimizer import expected_minimum, Space, space_factory
+from ProcessOptimizer.model_systems.noise_models import NoiseModel, parse_noise_model
 
 class ModelSystem:
     """
@@ -8,30 +11,30 @@ class ModelSystem:
 
     Parameters:
     * `score` [callable]:
-        Function for calculating the score of the system at a given point in 
-        the parameter space. It is expected to have the following signature:
+        Function for calculating the noiseless score of the system at a given point in 
+        the parameter space.
 
-            def score(x, rng=np.random.default_rng(), noise_std=noise_value):
-                # * x is the point in the parameter space where the score will 
-                #   be evaluated. Note that x is in the original coordinates of
-                #   the parameter space, not normalized coordinates. 
-                # * rng is the random number generator used for adding noise 
-                #   to the system. The user can set a seed through this 
-                #   parameter. There must be a default value for this parameter. 
-                # * noise_std is the standard deviation of the noise. There
-                #   must be a default value for this parameter. 
-                ....
-                # The score of the system is returned
-                return score
-
-    * `space` [Space]:
-        The parameter space in the form of a Space object. 
+    * `space` [List or Space]:
+        A list of dimension defintions or the parameter space as a Space object.
 
     * `true_min` [float]:
-        The true minimum value of the score function within the parameter space. 
+        The true minimum value of the score function within the parameter space.
+
+    * `noise_model` [str, dict, or NoiseModel]:
+        Noise model to apply to the score.
+        If str, it should be the name of the noise model type. In this case, 
+            further arguments can be given (e.g. `noise_size`).
+        If dict, one key should be `model_type`.
+        If NoiseModel, this NoiseModel will be used.
+            
+        Possible model type strings are:
+            "constant": The noise level is constant.
+            "proportional": Tne noise level is proportional to the score.
+            "zero": No noise is applied.
+
     """
-    def __init__(self, score, space, true_min=None):
-        self.space = space
+    def __init__(self, score: Callable[..., float], space: Union[Space, List], noise_model: Union[str,dict,NoiseModel], true_min=None):
+        self.space = space_factory(space)
         self.score = score
         if true_min is None:
             ndims = space.n_dims()
@@ -39,6 +42,7 @@ class ModelSystem:
             scores = [score(point) for point in points]
             true_min = np.min(scores)
         self.true_min = true_min
+        self.noise_model = parse_noise_model(noise_model)
         
     def result_loss(self, result):
         """Calculate the loss of the optimization result. 
@@ -56,5 +60,17 @@ class ModelSystem:
         # Get the location of the expected minimum
         model_x,_ = expected_minimum(result)
         # Calculate the difference between the score at model_x and the true minimum value
-        loss = self.score(model_x, noise_std=0) - self.true_min
+        loss = self.score(model_x) - self.true_min
         return loss
+    
+    def get_score(self,X) -> float:
+        """Returns the noisy score of the system.
+
+        Parameters:
+        * `X`: The point in space to evaluate the score at.
+
+        Returns:
+        * Noisy score [float].
+        """
+        Y = self.score(X)
+        return self.noise_model.get_noise(X,Y) + Y
