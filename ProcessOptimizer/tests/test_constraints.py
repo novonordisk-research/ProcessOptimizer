@@ -219,7 +219,7 @@ def test_SumEquals():
     samples = cons.sumequal_sampling(n_samples=1000)
     for sample in samples:
         factor_sum = np.sum(sample[0] + sample[1])
-        assert np.isclose(factor_sum, cons.value)
+        assert np.isclose(factor_sum, cons.sum_equals[0].value)
 
 @pytest.mark.fast_test
 def test_Conditional():
