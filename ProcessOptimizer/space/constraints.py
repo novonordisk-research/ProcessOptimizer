@@ -203,12 +203,6 @@ class Constraints:
         vec_comp = np.zeros((1, d-1))
         # Choose seed (starting location) in the normalized space
         seed = 0.5
-        # for i in range(n_samples):
-        #     vec_comp[i] = (seed + alpha*(i+1)) %1
-        # # Center these components on zero
-        # vec_comp = vec_comp - 0.5
-        # # Simulate lengths of each null_space vector to add to our point
-        # vec_comp = vec_comp * sim_distance * 2
         
         # Build a list of samples
         samples = []
@@ -232,30 +226,9 @@ class Constraints:
             ]
             # Only accept the candidate if it is in our space
             if all(inspace):
-                samples.append(sample_candidate)
-            
-        # # Build a list of samples
-        # samples = []
-        # while len(samples) < n_samples:
-        #     # Simulate lengths of each null_space vector to add to our point
-        #     vector_components = ((np.random.rand(d-1, 1) - 0.5)*sim_distance*2)
-        #     # Generate the samples by adding these different lengths of the null 
-        #     # space basis vectors to the point on the plane we identified earlier
-        #     sample_candidate = point[:, None] + ns @ vector_components
-        #     # Generate the correct shape 
-        #     sample_candidate = sample_candidate.T[0]
-        #     # Check that the candidate is inside the original parameter space
-        #     inspace = [
-        #         (sample_candidate[i] >= self.space.bounds[i][0]) and
-        #         (sample_candidate[i] <= self.space.bounds[i][1])
-        #         for i in range(d)
-        #     ]
-        #     # Only accept the candidate if it is in our space
-        #     if all(inspace):
-        #         samples.append(sample_candidate)
-            
-        # Convert our list of samples to an array
-        samples = np.array(samples)
+                samples.append(sample_candidate)      
+        # Convert the list of arrays to a list of lists
+        samples = [arr.tolist() for arr in samples]
         
         # Create settings for the dimensions that are not part of the constraint
         if d < self.space.n_dims:
@@ -263,21 +236,31 @@ class Constraints:
                 i for i in range(self.space.n_dims) 
                 if i not in self.sum_equals[0].dimensions
             ]
-            # Generate random settings across all factors
-            full_column = self.space.rvs(n_samples=n_samples, random_state=rng)
-            # TODO: Determine if the use of QRS actually means it would be 
-            # better to sort the settings in each column!
-            # Only insert settings for the dimensions not in the constraint
+            # Convert our list of samples to an array
+            samples = np.array(samples)
+            # Expand the sample array to make space for settings of the 
+            # unconstrained dimensions
             for i in remaining_dimensions:
                 samples = np.insert(
                     samples,
                     i, 
-                    np.array(full_column)[:,i], 
+                    np.zeros(len(samples)), 
                     axis=1
                 )
-        
-        # Return the samples as a list of lists
-        return samples.tolist()
+            # Convert back to list of lists
+            samples = samples.tolist()
+            
+            # Generate random settings across all factors
+            full_sample = self.space.rvs(n_samples=n_samples, random_state=rng)
+            # TODO: Determine if the use of QRS actually means it would be 
+            # better to sort the settings in each column!
+            
+            # Overwrite the random setting values for the constrained factors
+            for j in remaining_dimensions:
+                for i in range(len(samples)):
+                    samples[i][j] = full_sample[i][j]
+                    
+        return samples
 
     def validate_sample(self, sample):
         """ Validates a sample of parameter values in regards to the

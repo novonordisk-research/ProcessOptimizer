@@ -210,14 +210,16 @@ def test_SumEquals():
     cons = Constraints([SumEquals((0, 1), 5)], space)
     assert not cons.validate_sample([0.0, 6.0, "A"])
     assert not cons.validate_sample([6.0, 0.0, "A"])
-    assert not cons.validate_sample([3.00001, 2.0, "A"])
-    assert cons.validate_sample([2.99999999999999999, 2, "A"])
+    # We tolerate relative deviations of 1E-5 on the total sum
+    assert cons.validate_sample([3.00005, 2, "A"])
+    # Deviations larger than this are not tolerated
+    assert not cons.validate_sample([3.00006, 2.0, "A"])    
     
-    # Check that only valid samples are drawn
+    # Check again that only valid samples are drawn
     samples = cons.sumequal_sampling(n_samples=1000)
     for sample in samples:
         factor_sum = np.sum(sample[0] + sample[1])
-        assert factor_sum == cons.value
+        assert np.isclose(factor_sum, cons.value)
 
 @pytest.mark.fast_test
 def test_Conditional():
