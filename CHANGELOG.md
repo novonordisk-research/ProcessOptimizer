@@ -5,6 +5,8 @@
 ### Changes
 
 - Minor addition of guidance in plot_objectives()
+- Add a module to add noise to model systems
+- QoL opt.space.names added as property
 ### Bugfixes
 
 - 
