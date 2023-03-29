@@ -831,6 +831,13 @@ class Space(object):
                 b.extend(dim.bounds)
 
         return b
+    
+    @property
+    def names(self):
+        '''The names of the dimensions if given. Otherwise [X1, X2, ... Xn]'''
+        labels = ["$X_{%i}$" % i if d.name is None else d.name
+            for i, d in enumerate(self.dimensions)]
+        return labels
 
     def __contains__(self, point):
         """Check that `point` is within the bounds of the space."""
