@@ -195,7 +195,7 @@ def test_SumEquals():
     with raises(ValueError):
         SumEquals([0, -1], 5)
     
-    space = Space([[0.0, 10.0], [0,0, 10.0], ["A", "B"]])
+    space = Space([[0.0, 10.0], [0.0, 10.0], ["A", "B"]])
     # A dimension value of 4 is out of bounds for a space with only
     # 3 dimensions
     cons_list = [SumEquals((4, 3), 5)]
