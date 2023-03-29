@@ -4,7 +4,9 @@
 
 ### Changes
 
-- 
+- Implemented a major new constraint type called SumEquals. This constraint is 
+designed to be used for mixture experiments where a (sub)set of factors must
+sum to a specific number.
 ### Bugfixes
 
 - 
