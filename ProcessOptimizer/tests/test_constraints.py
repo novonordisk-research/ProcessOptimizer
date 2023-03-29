@@ -192,7 +192,7 @@ def test_SumEquals():
     with raises(TypeError):
         SumEquals([1, 1.5], 5)
     # Indices cannot be negative
-    with raises(TypeError):
+    with raises(ValueError):
         SumEquals([0, -1], 5)
     
     space = Space([[0.0, 10.0], [0,0, 10.0], ["A", "B"]])
