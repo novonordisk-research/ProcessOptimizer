@@ -1563,11 +1563,12 @@ def plot_objectives(
     size=2,
     zscale="linear",
     dimensions=None,
-    usepartialdependence=True,
+    usepartialdependence=False,
     pars="result",
     expected_minimum_samples=None,
     titles=None,
-    show_confidence=False
+    show_confidence=False,
+    plot_options = None,
     ):
     """Pairwise dependence plots of each of the objective functions.
     Parameters
@@ -1597,7 +1598,8 @@ def plot_objectives(
                            pars=pars,
                            expected_minimum_samples=expected_minimum_samples,
                            title=None,
-                           show_confidence=show_confidence)
+                           show_confidence=show_confidence,
+                           plot_options = plot_options)
         return
     else:
         for k in range(len(results)):
@@ -1612,7 +1614,8 @@ def plot_objectives(
                            pars=pars,
                            expected_minimum_samples=expected_minimum_samples,
                            title=titles[k],
-                           show_confidence=show_confidence)
+                           show_confidence=show_confidence,
+                           plot_options = plot_options)
         return
 
 
