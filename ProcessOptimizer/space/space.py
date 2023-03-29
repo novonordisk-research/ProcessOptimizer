@@ -1,3 +1,5 @@
+from typing import List, Union
+
 import numbers
 import numpy as np
 import yaml
@@ -22,6 +24,23 @@ class _Ellipsis:
     def __repr__(self):
         return '...'
 
+
+def space_factory(input: Union["Space", List]) -> "Space":
+    """Transforms a list of dimension definitions into a Space
+
+    If the input is already a Space, that is returned.
+
+    Parameters:
+    * `input` (List, Space): The list of Dimension definitions. For more details,
+        see documentation for check_dimensions.
+
+    Returns:
+    * `space`: The resulting Space.
+    """
+    if isinstance(input,Space):
+        return input
+    else:
+        return Space(input)
 
 def check_dimension(dimension, transform=None):
     """Turn a provided dimension description into a dimension object.
