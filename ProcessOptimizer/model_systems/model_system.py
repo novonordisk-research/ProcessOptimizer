@@ -37,8 +37,8 @@ class ModelSystem:
         self.space = space_factory(space)
         self.score = score
         if true_min is None:
-            ndims = space.n_dims()
-            points = space.lhs(ndims*10)
+            ndims = self.space.n_dims
+            points = self.space.lhs(ndims*10)
             scores = [score(point) for point in points]
             true_min = np.min(scores)
         self.true_min = true_min
