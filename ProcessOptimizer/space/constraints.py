@@ -251,14 +251,24 @@ class Constraints:
             samples = samples.tolist()
             
             # Generate random settings across all factors
-            full_sample = self.space.rvs(n_samples=n_samples, random_state=rng)
-            # TODO: Determine if the use of QRS actually means it would be 
-            # better to sort the settings in each column!
+            full_sample = np.array(
+                self.space.rvs(n_samples=n_samples, random_state=rng)
+            )
+            # Sort the settings in each column, which will ensure that the 
+            # unconstrained settings are distributed in a space-filling way too
+            full_sample.sort(axis=0)
+            full_sample = full_sample.tolist()
             
             # Overwrite the random setting values for the constrained factors
             for j in remaining_dimensions:
                 for i in range(len(samples)):
                     samples[i][j] = full_sample[i][j]
+            
+            # Shuffle the order of the samples, otherwise the unconstrained
+            # settings will be returned in a sorted order. Use seeding to 
+            # provide consistent initial samples
+            rng2 = np.random.default_rng(seed=42)
+            rng2.shuffle(samples)
                     
         return samples
 
