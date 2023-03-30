@@ -8,6 +8,8 @@
 - Implemented a major new constraint type called SumEquals. This constraint is 
 designed to be used for mixture experiments where a (sub)set of factors must
 sum to a specific number.
+- Add a module to add noise to model systems
+- QoL opt.space.names added as property
 ### Bugfixes
 
 - 
