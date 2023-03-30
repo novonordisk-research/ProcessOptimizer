@@ -8,8 +8,8 @@ from numpy.testing import assert_raises
 
 from ProcessOptimizer import gp_minimize
 from ProcessOptimizer import forest_minimize
-from ProcessOptimizer.benchmarks import bench1, bench1_with_time
-from ProcessOptimizer.benchmarks import branin
+from ProcessOptimizer.model_systems.benchmarks import bench1, bench1_with_time
+from ProcessOptimizer.model_systems.benchmarks import branin
 from ProcessOptimizer.learning import ExtraTreesRegressor, RandomForestRegressor
 from ProcessOptimizer.learning import GradientBoostingQuantileRegressor
 from ProcessOptimizer.optimizer import Optimizer

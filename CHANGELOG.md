@@ -1,12 +1,52 @@
 # Release history
 
-## Version 0.7.6 [unpublished]
+## Version 0.7.9 [unpublished]
+
+### Changes
+
+- Minor addition of guidance in plot_objectives()
+- Add a module to add noise to model systems
+- QoL opt.space.names added as property
+### Bugfixes
+
+- 
+
+## Version 0.7.8
 
 ### Changes
 
 - 
+### Bugfixes
+
+- ParetoFront did not show full recipe for model points
+- Replaced friedman_mse with squared_error
+
+## Version 0.7.7
+
+### Changes
+
+- Changed look of uncertainty-plots in plot_objective
+- Added plot to only show 1d plots
+- Align code in GPR module to reflect sklearn. While still supporting SKlearn 
+0.24.2, we have some parallel code between our local GPR and the original from
+sklearn.
+### Bugfixes
+
+- Model systems should now be imported as intended.
+
+## Version 0.7.6
+
+### Changes
+
+- Add Bokeh version of Pareto plot
+- Make a bleeding edge installable and a stable
+- Add Bokeh to list of requiered packages
+- Change the call of gaussian filter for a helper illustration function
+- Model systems added to help benchmark performance or teach
 
 ### Bugfixes
+
+- Remove call of plot_width and plot_height in bokeh
 
 ## Version 0.7.5 
 

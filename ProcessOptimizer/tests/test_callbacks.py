@@ -7,8 +7,8 @@ from collections import namedtuple
 
 from ProcessOptimizer import dummy_minimize
 from ProcessOptimizer import gp_minimize
-from ProcessOptimizer.benchmarks import bench1
-from ProcessOptimizer.benchmarks import bench3
+from ProcessOptimizer.model_systems.benchmarks import bench1
+from ProcessOptimizer.model_systems.benchmarks import bench3
 from ProcessOptimizer.callbacks import TimerCallback
 from ProcessOptimizer.callbacks import DeltaYStopper
 from ProcessOptimizer.callbacks import DeadlineStopper

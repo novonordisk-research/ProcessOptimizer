@@ -15,6 +15,7 @@ from ProcessOptimizer.space import Real
 from ProcessOptimizer.space import Integer
 from ProcessOptimizer.space import Categorical
 from ProcessOptimizer.space import check_dimension as space_check_dimension
+from ProcessOptimizer.space import space_factory
 
 
 def check_dimension(Dimension, vals, random_val):
@@ -37,6 +38,13 @@ def check_limits(value, low, high):
     assert low <= value
     assert high >= value
 
+def test_space_factory():
+    dimension_definition = [(1,5),(1.0,5.0),("a","b")]
+    test_space = space_factory(dimension_definition)
+    assert isinstance(test_space, Space)
+    unchanging_space = Space(dimension_definition)
+    unchanged_space = space_factory(unchanging_space)
+    assert unchanging_space == unchanged_space
 
 @pytest.mark.fast_test
 def test_dimensions():
@@ -84,7 +92,7 @@ def test_real():
     assert_array_equal(random_values.shape, (10))
     transformed_vals = log_uniform.transform(random_values)
     assert_array_equal(transformed_vals, np.log10(random_values))
-    assert_array_equal(
+    assert_array_almost_equal(
         log_uniform.inverse_transform(transformed_vals), random_values
     )
 

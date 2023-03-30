@@ -1,6 +1,6 @@
 New BSD License
 
-Copyright (c) 2016 - scikit-optimize developers.
+Copyright (c) 2023 - ProcessOptimizer developers.
 
 All rights reserved.
 

@@ -4,8 +4,8 @@ import pytest
 from numpy.testing import assert_array_almost_equal
 from numpy.testing import assert_almost_equal
 
-from ProcessOptimizer.benchmarks import branin
-from ProcessOptimizer.benchmarks import hart6
+from ProcessOptimizer.model_systems.benchmarks import branin
+from ProcessOptimizer.model_systems.benchmarks import hart6
 
 
 @pytest.mark.fast_test

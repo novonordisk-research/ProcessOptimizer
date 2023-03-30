@@ -9,7 +9,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='ProcessOptimizer',
-      version='0.7.5',
+      version='0.7.8',
       description='Sequential model-based optimization toolbox \
     (forked from scikit-optimize)',
       url='https://github.com/novonordisk-research/ProcessOptimizer',
@@ -18,6 +18,7 @@ setup(name='ProcessOptimizer',
       packages=[
           'ProcessOptimizer',
           'ProcessOptimizer.learning',
+          'ProcessOptimizer.model_systems',
           'ProcessOptimizer.optimizer',
           'ProcessOptimizer.space',
           'ProcessOptimizer.learning.gaussian_process'
@@ -34,7 +35,8 @@ setup(name='ProcessOptimizer',
                          'deap==1.3.3',
                          'pyYAML==6.0',
                          'bokeh==2.4.3',
-                         'tornado==6.2']
+                         'tornado==6.2',
+                         ]
           },
       long_description=long_description,
       long_description_content_type='text/markdown'
