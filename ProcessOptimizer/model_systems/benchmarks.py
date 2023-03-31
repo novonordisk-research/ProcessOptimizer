@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """A collection of benchmark problems."""
 
+from typing import Callable, List, Union
 import numpy as np
 
 
@@ -116,3 +117,31 @@ def poly_2d(x):
         - 0.1*x[1] 
         - 0.2*x[0]*x[1]
         )
+
+def peaks(x):
+    """
+    The peaks function widely used in MATLAB. It is designed to operate on the 
+    space: [(-3.0, 3.0), (-3.0, 3.0), ..., ...] only changing according to the
+    first two dimensions while any other values are ignored. 
+    
+    It has one global minimum f(x*) = -6.551 at x* = (0.228, -1.626), and a 
+    local minimum at f(x**) = -3.050 at x** = (-1.348, 0.205).
+
+    Parameters
+    ----------
+    * 'x' [array of floats of length >=2]:
+        The point to evaluate the function at. Works in higher dimensions by
+        simply ignoring their values.
+
+    Returns
+    -------
+    * 'score' [float]:
+        The score of the system at x.
+
+    """
+    score = (
+        3*(1- x[0])**2 * np.exp(-x[0]**2 - (x[1]+1)**2)
+        - 10*(x[0]/5 - x[0]**3 - x[1]**5) * np.exp(-x[0]**2 - x[1]**2)
+        - 1/3*np.exp(-(x[0]+1)**2 - x[1]**2)
+    )
+    return score
