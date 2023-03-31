@@ -11,8 +11,8 @@ class ModelSystem:
 
     Parameters:
     * `score` [callable]:
-        Function for calculating the noiseless score of the system at a given point in 
-        the parameter space.
+        Function for calculating the noiseless score of the system at a given 
+        point in the parameter space.
 
     * `space` [List or Space]:
         A list of dimension defintions or the parameter space as a Space object.
