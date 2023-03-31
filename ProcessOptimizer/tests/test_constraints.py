@@ -220,6 +220,20 @@ def test_SumEquals():
     for sample in samples:
         factor_sum = np.sum(sample[0] + sample[1])
         assert np.isclose(factor_sum, cons.sum_equals[0].value)
+    
+    # Test on an oblong space with a non-zero origin
+    space = Space([[10.0, 20.0], [1000.0, 2000.0], [1, 5], ["A", "B"]])
+    cons = Constraints([SumEquals((0, 1), 1234)], space)
+    # Check again that only valid samples are drawn
+    samples = cons.sumequal_sampling(n_samples=1000)
+    for sample in samples:
+        factor_sum = np.sum(sample[0] + sample[1])
+        assert np.isclose(factor_sum, cons.sum_equals[0].value)
+    # Check that the samples also have settings for the other dimensions
+    assert len(samples[0]) == 4 and len(samples[1000] == 4)
+    # Check that the other dimensions have correct type
+    assert isinstance(samples[0][3], str)
+    assert not isinstance(samples[0][2], str)
 
 @pytest.mark.fast_test
 def test_Conditional():
