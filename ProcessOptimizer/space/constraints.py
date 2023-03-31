@@ -2,7 +2,7 @@ from sklearn.utils import check_random_state
 from .space import Real, Integer, Categorical, Space
 import numpy as np
 from scipy import matrix, linalg
-from typing import Union, Iterable, TypeVar
+from typing import Union, Iterable
 
 class Constraints:
     def __init__(self, constraints_list, space):
@@ -59,7 +59,7 @@ class Constraints:
     def rvs(
             self, 
             n_samples: int = 1, 
-            random_state: Union[int, TypeVar(RandomState), None] = None,
+            random_state: Union[int, np.random.RandomState, None] = None,
         ) -> list:
         """Draw random samples that all are valid with regards to the constraints.
 
@@ -133,7 +133,7 @@ class Constraints:
     def sumequal_sampling(
             self, 
             n_samples: int = 1,
-            random_state: Union[int, TypeVar(RandomState), None] = None,
+            random_state: Union[int, np.random.RandomState, None] = None,
         ) -> list:
         """Draw samples that respect SumEquals constraints.
 
