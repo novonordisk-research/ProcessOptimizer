@@ -2,7 +2,7 @@ from sklearn.utils import check_random_state
 from .space import Real, Integer, Categorical, Space
 import numpy as np
 from scipy import matrix, linalg
-from typing import Union, Iterable
+from typing import Union, List
 
 class Constraints:
     def __init__(self, constraints_list, space):
@@ -60,7 +60,7 @@ class Constraints:
             self, 
             n_samples: int = 1, 
             random_state: Union[int, np.random.RandomState, None] = None,
-        ) -> list:
+        ) -> List:
         """Draw random samples that all are valid with regards to the constraints.
 
         The samples are in the original space. They need to be transformed
@@ -134,7 +134,7 @@ class Constraints:
             self, 
             n_samples: int = 1,
             random_state: Union[int, np.random.RandomState, None] = None,
-        ) -> list:
+        ) -> List:
         """Draw samples that respect SumEquals constraints.
 
         The samples are in the original space. They need to be transformed
@@ -280,7 +280,7 @@ class Constraints:
                     
         return samples
 
-    def validate_sample(self, sample: list) -> bool:
+    def validate_sample(self, sample: List) -> bool:
         """ Validates a sample of parameter values in regards to the
         constraints.
 
@@ -639,7 +639,7 @@ class Sum():
             return False
 
 class SumEquals():
-    def __init__(self, dimensions: Iterable[int], value: Union[float, int]):
+    def __init__(self, dimensions: List[int], value: Union[float, int]):
         """Constraint class of type SumEquals.
 
         This constraint enforces that the sum of all values drawn for the
@@ -673,7 +673,7 @@ class SumEquals():
 
         self.validate_sample = self._validate_sample
 
-    def _validate_sample(self, sample: Iterable[int]) -> bool:
+    def _validate_sample(self, sample: List[int]) -> bool:
         # Returns True if sample does not violate the constraints aside from 
         # floating point errors
         sample_sum = np.sum([sample[dim] for dim in self.dimensions])
