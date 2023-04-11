@@ -19,7 +19,7 @@ from ..acquisition import gaussian_acquisition_1D
 from ..learning import GaussianProcessRegressor
 from ..space import Categorical
 from ..space import Space
-from ..space.constraints import Constraints
+from ..space.constraints import Constraints, SumEquals
 from ..utils import check_x_in_space
 from ..utils import cook_estimator
 from ..utils import create_result
@@ -552,8 +552,18 @@ class Optimizer(object):
                 return self.space.rvs(random_state=self.rng)[0]
 
             if self._constraints:
-                # We use another sampling method when constraints are added
-                return self._constraints.rvs(random_state=self.rng)[0]
+                # Use one sampling strategy for SumEquals constraints
+                if len(self._constraints.sum_equals) > 0:
+                    # Create a consistent list of points n_initial_points long
+                    sum_equals_list = self._constraints.sumequal_sampling(
+                        n_samples=self.n_initial_points_,
+                        random_state=self.rng
+                    )
+                    # The samples are returned one at a time from this list
+                    return sum_equals_list[self.n_initial_points_ - self._n_initial_points]
+                else:
+                    # We use random value sampling for other constraint types
+                    return self._constraints.rvs(random_state=self.rng)[0]
             elif self._lhs:
                 # The samples are evaluated starting form lhs_samples[0]
                 return self._lhs_samples[
@@ -735,12 +745,21 @@ class Optimizer(object):
                 # even with BFGS as optimizer we want to sample a large number
                 # of points and then pick the best ones as starting points
                 if self._constraints:
-                    # We use another sampling method if constraints have been added
-                    X = self.space.transform(
-                        self._constraints.rvs(
-                            n_samples=self.n_points, random_state=self.rng
+                    # If the constraint is of the SumEquals type, create samples
+                    # that respect this
+                    if isinstance(self._constraints.constraints_list[0], SumEquals):
+                        X = self.space.transform(
+                            self._constraints.sumequal_sampling(
+                                n_samples=self.n_points, random_state=self.rng
+                            )
+                        )                    
+                    # For all other constraints we use random sampling
+                    else:
+                        X = self.space.transform(
+                            self._constraints.rvs(
+                                n_samples=self.n_points, random_state=self.rng
+                            )
                         )
-                    )
                 else:
                     X = self.space.transform(
                         self.space.rvs(
