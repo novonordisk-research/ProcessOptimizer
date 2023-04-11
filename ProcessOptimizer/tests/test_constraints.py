@@ -230,7 +230,7 @@ def test_SumEquals():
         factor_sum = np.sum(sample[0] + sample[1])
         assert np.isclose(factor_sum, cons.sum_equals[0].value)
     # Check that the samples also have settings for the other dimensions
-    assert len(samples[0]) == 4 and len(samples[1000] == 4)
+    assert len(samples[0]) == 4 and len(samples[999]) == 4
     # Check that the other dimensions have correct type
     assert isinstance(samples[0][3], str)
     assert not isinstance(samples[0][2], str)
