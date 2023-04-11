@@ -259,13 +259,13 @@ class Constraints:
             samples = samples.tolist()
             
             # Generate random settings across all factors
-            full_sample = np.array(
-                self.space.rvs(n_samples=n_samples, random_state=rng)
-            )
-            # Sort the settings in each column, which will ensure that the 
+            full_sample = self.space.rvs(n_samples=n_samples, random_state=rng)
+            # Sort the settings in each column, which will ensure that the
             # unconstrained settings are distributed in a space-filling way too
-            full_sample.sort(axis=0)
-            full_sample = full_sample.tolist()
+            transposed_sample = list(zip(*full_sample))
+            sort_trans_sample = [sorted(inner_tuple) for inner_tuple in transposed_sample]
+            # Place the settings back in a list of lists
+            full_sample = list(map(list, zip(*sort_trans_sample)))
             
             # Overwrite the random setting values for the constrained factors
             for j in remaining_dimensions:
