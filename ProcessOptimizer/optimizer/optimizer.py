@@ -75,7 +75,7 @@ class Optimizer(object):
         first n_initial_points. If set to False, the optimizer will return 
         random points
 
-    * `acq_func` [string, default=`"gp_hedge"`]:
+    * `acq_func` [string, default=`"EI"`]:
         Function to minimize over the posterior distribution. Can be either
 
         - `"LCB"` for lower confidence bound.
@@ -159,7 +159,7 @@ class Optimizer(object):
         n_random_starts=None,
         n_initial_points=10,
         lhs=True,
-        acq_func="gp_hedge",
+        acq_func="EI",
         acq_optimizer="auto",
         random_state=None,
         acq_func_kwargs=None,
