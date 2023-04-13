@@ -1,25 +1,35 @@
 # Release history
 
-## Version 0.7.9 [unpublished]
+## Version 0.8.1 [unpublished]
 
 ### Changes
 
+### Bugfixes
+
+## Version 0.8.0
+
+### Changes
+
+- Default acquisition function changed to expected improvement (EI)
+- Updated list of contributors
 - Minor addition of guidance in plot_objectives()
-- Implemented a major new constraint type called SumEquals. This constraint is 
-designed to be used for mixture experiments where a (sub)set of factors must
-sum to a specific number.
+- Implemented a major new constraint type called SumEquals. This constraint is
+  designed to be used for mixture experiments where a (sub)set of factors must
+  sum to a specific number.
 - Add a module to add noise to model systems
 - QoL opt.space.names added as property
 - Changed default behavior of plot_objective to show uncertainty in 1D plots
+
 ### Bugfixes
 
-- 
+-
 
 ## Version 0.7.8
 
 ### Changes
 
-- 
+-
+
 ### Bugfixes
 
 - ParetoFront did not show full recipe for model points
@@ -31,9 +41,10 @@ sum to a specific number.
 
 - Changed look of uncertainty-plots in plot_objective
 - Added plot to only show 1d plots
-- Align code in GPR module to reflect sklearn. While still supporting SKlearn 
-0.24.2, we have some parallel code between our local GPR and the original from
-sklearn.
+- Align code in GPR module to reflect sklearn. While still supporting SKlearn
+  0.24.2, we have some parallel code between our local GPR and the original from
+  sklearn.
+
 ### Bugfixes
 
 - Model systems should now be imported as intended.
@@ -52,7 +63,7 @@ sklearn.
 
 - Remove call of plot_width and plot_height in bokeh
 
-## Version 0.7.5 
+## Version 0.7.5
 
 ### Changes
 
@@ -81,8 +92,8 @@ sklearn.
 
 - Bokeh_plot is repaired after we started returning the std to plots
 - LHS is rewritten to ensure consistent returns in between real and integer
-dimensions (integer types are ensure to return values "close" to those of a
-corresponding real dimension)
+  dimensions (integer types are ensure to return values "close" to those of a
+  corresponding real dimension)
 
 ## Version 0.7.2
 
@@ -91,12 +102,13 @@ corresponding real dimension)
 - New plot-type to envision model coverage
 - Kriging Believer now supports multiobjective opt
 - Examples pruned to better reflect the purpose of ProcessOptimizer as a tool
-for optimizing real world physical/chemical processes
+  for optimizing real world physical/chemical processes
 - Expected_minimum can now return both maximum and minimum and can return the
-expected std in the points. Works for both numerical and categorical dimensions
+  expected std in the points. Works for both numerical and categorical dimensions
 - QoL improvements with easy impoart of most used features through \_\_init\_\_
-.py
+  .py
 - Add possibility to show ~95% credibility_intervals in plot_objective
+
 ### Bugfixes
 
 - More linting
@@ -204,14 +216,14 @@ expected std in the points. Works for both numerical and categorical dimensions
 
 ### Changes
 
-- Remove dependency on scipy>=0.14.0 *
-- Remove dependency on scikit-learn==0.21.0 *^
-- Remove dependency on bokeh==1.4.0 *
-- Remove dependency on tornado==5.1.1 *
-- *from setup.py
+- Remove dependency on scipy>=0.14.0 \*
+- Remove dependency on scikit-learn==0.21.0 \*^
+- Remove dependency on bokeh==1.4.0 \*
+- Remove dependency on tornado==5.1.1 \*
+- \*from setup.py
 - ^from requirements.txt
 - Change gpr (as in skopt #943) to reflect changes in sklearn gpr-module
-     (relates to normalilzation)
+  (relates to normalilzation)
 - Change searchCV to reflect skopt #939 and #904 (relates to np.mask and imports)
 - Changes in tests (skopt#939 and #808). Extensive changes in tests!
 - Change in Bokeh_plot.py to fix bug when Bokeh>=2.2.0

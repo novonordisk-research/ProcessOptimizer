@@ -11,7 +11,7 @@ from ..utils import normalize_dimensions
 
 def gp_minimize(func, dimensions, base_estimator=None,
                 n_calls=100, n_random_starts=10,
-                acq_func="gp_hedge", acq_optimizer="auto", x0=None, y0=None,
+                acq_func="EI", acq_optimizer="auto", x0=None, y0=None,
                 random_state=None, verbose=False, callback=None,
                 n_points=10000, n_restarts_optimizer=5, xi=0.01, kappa=1.96,
                 noise="gaussian", n_jobs=1):
@@ -81,7 +81,7 @@ def gp_minimize(func, dimensions, base_estimator=None,
         Number of evaluations of `func` with random points before
         approximating it with `base_estimator`.
 
-    * `acq_func` [string, default=`"gp_hedge"`]:
+    * `acq_func` [string, default=`"EI"`]:
         Function to minimize over the gaussian prior. Can be either
 
         - `"LCB"` for lower confidence bound.
