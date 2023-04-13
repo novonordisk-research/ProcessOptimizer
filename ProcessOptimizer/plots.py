@@ -1587,35 +1587,39 @@ def plot_objectives(
 
     if titles is None:
         for result in results:
-            plot_objective(result,
-                           levels=levels,
-                           n_points=n_points,
-                           n_samples=n_samples,
-                           size=size,
-                           zscale=zscale,
-                           dimensions=dimensions,
-                           usepartialdependence=usepartialdependence,
-                           pars=pars,
-                           expected_minimum_samples=expected_minimum_samples,
-                           title=None,
-                           show_confidence=show_confidence,
-                           plot_options = plot_options)
+            plot_objective(
+                result,
+                levels=levels,
+                n_points=n_points,
+                n_samples=n_samples,
+                size=size,
+                zscale=zscale,
+                dimensions=dimensions,
+                usepartialdependence=usepartialdependence,
+                pars=pars,
+                expected_minimum_samples=expected_minimum_samples,
+                title=None,
+                show_confidence=show_confidence,
+                plot_options=plot_options,
+            )
         return
     else:
         for k in range(len(results)):
-            plot_objective(results[k], 
-                           levels=levels,
-                           n_points=n_points,
-                           n_samples=n_samples,
-                           size=size,
-                           zscale=zscale,
-                           dimensions=dimensions,
-                           usepartialdependence=usepartialdependence,
-                           pars=pars,
-                           expected_minimum_samples=expected_minimum_samples,
-                           title=titles[k],
-                           show_confidence=show_confidence,
-                           plot_options = plot_options)
+            plot_objective(
+                results[k], 
+                levels=levels,
+                n_points=n_points,
+                n_samples=n_samples,
+                size=size,
+                zscale=zscale,
+                dimensions=dimensions,
+                usepartialdependence=usepartialdependence,
+                pars=pars,
+                expected_minimum_samples=expected_minimum_samples,
+                title=titles[k],
+                show_confidence=show_confidence,
+                plot_options=plot_options,
+            )
         return
 
 
