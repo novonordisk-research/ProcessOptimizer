@@ -6,11 +6,12 @@ from ProcessOptimizer.model_systems.noise_models import NoiseModel, parse_noise_
 
 class ModelSystem:
     """
-    Model System for testing the ProcessOptimizer. Instances of this class 
-    will be used in the example notebooks. 
+    Model System for testing ProcessOptimizer. Instances of this class are used 
+    in benchmarks and the example notebooks. 
 
-    Parameters:
-    * `score` [callable]:
+    Parameters
+    ----------
+    * `score` [Callable]:
         Function for calculating the noiseless score of the system at a given 
         point in the parameter space.
 
@@ -51,32 +52,38 @@ class ModelSystem:
         
         
     def result_loss(self, result):
-        """Calculate the loss of the optimization result. 
+        """
+        Calculate the loss of the optimization result. 
 
-        Parameters:
+        Parameters
+        ----------
         * `result` [OptimizeResult object of scipy.optimize.optimize module]:
             The result of an optimization. 
 
         Returns
-        * loss [float]:
+        -------
+        * `loss` [float]:
             The loss of the system, i.e. the difference between the true system 
             value at the location of the model's expected minimum and the best 
             possible system value. 
         """
         # Get the location of the expected minimum
-        model_x,_ = expected_minimum(result)
+        model_x, _ = expected_minimum(result)
         # Calculate the difference between the score at model_x and the true minimum value
         loss = self.score(model_x) - self.true_min
         return loss
     
-    def get_score(self,X) -> float:
-        """Returns the noisy score of the system.
+    def get_score(self, X) -> float:
+        """
+        Returns the noisy score of the system.
 
-        Parameters:
+        Parameters
+        ----------
         * `X`: The point in space to evaluate the score at.
 
-        Returns:
-        * Noisy score [float].
+        Returns
+        -------
+        * Noisy score at X [float].
         """
         Y = self.score(X)
-        return self.noise_model.get_noise(X,Y) + Y
+        return Y + self.noise_model.get_noise(X, Y)

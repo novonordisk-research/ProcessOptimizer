@@ -13,11 +13,19 @@ class NoiseModel(ABC):
         seed: Union[int, None] = 42,
     ):
         """        
-        Parameters:
-        * `noise_size` [Option[float]]: The size of the noise. If ´None´, it signifies that
-            the class is compound, and should not have its own noise signal, but refer to
-            its compounding NoiseModels instead. An example is SumNoise, which sums the
-            noise of a list of noise models, but doesn't add any noise by itself."""
+        Parameters
+        ----------
+        * `noise_size` [Optional[float]]: 
+            The size (magnitude) of the noise. If ´None´, it signifies that
+            the class is compound, and should not have its own noise signal, 
+            but refer to its compounding NoiseModels instead. An example is 
+            SumNoise, which sums the noise of a list of noise models, but does
+            not add any noise by itself.
+        
+        * `seed` [Union[int, None], default=42]:
+            Seed to pass forward to the numpy random number generator that is
+            used when providing samples with noise.
+        """
         # We could just set noise_dist and let that have a size, but being able to
         # directly set the size is more intuitive, and that would be complicated if it
         # was just one variable.
@@ -33,7 +41,7 @@ class NoiseModel(ABC):
         self._noise_distribution: Callable[[], float]        
 
     @abstractmethod
-    def get_noise(self,X,Y: float) -> float:
+    def get_noise(self, X, Y: float) -> float:
         pass
     
     @property
@@ -59,13 +67,15 @@ class ConstantNoise(NoiseModel):
     resulting score; The noise is constant. Another name is "additive noise", as the
     same noise is added to the score. This is typical for many measurements.
 
-    Parameters:
-    * `noise_size` [float, default 1]: The size of the noise. 
+    Parameters
+    ----------
+    * `noise_size` [float, default=1]: 
+        The size (magnitude) of the noise. 
     """
     def __init__(self, noise_size: float = 1, **kwargs):
         super().__init__(noise_size=noise_size, **kwargs)
 
-    def get_noise(self,_,Y: float) -> float:
+    def get_noise(self, _, Y: float) -> float:
         return self._sample_noise
 
     
@@ -75,13 +85,15 @@ class ProportionalNoise(NoiseModel):
     point. Another name is "multiplicative noise", as the same noise is multiplied with
     the score. This is typical of some electronic measurements.
 
-    Parameters:
-    * `noise_size` [float, default 0.1]: The size of the noise relative to the signal.
+    Parameters
+    ----------
+    * `noise_size` [float, default=0.1]: 
+        The size of the noise relative to the signal.
     """
-    def __init__(self, noise_size : float = 0.1,**kwargs):
-        super().__init__(noise_size=noise_size,**kwargs)
+    def __init__(self, noise_size : float = 0.1, **kwargs):
+        super().__init__(noise_size=noise_size, **kwargs)
     
-    def get_noise(self,_,Y: float) -> float:
+    def get_noise(self, _, Y: float) -> float:
         return self._sample_noise*Y
     
 
@@ -89,12 +101,14 @@ class DataDependentNoise(NoiseModel):
     """
     Noise model for noise that depends on the input parameters.
 
-    Parameters:
-    * `noise_function` [(parameters) -> NoiseModel]: A function that takes a set of
-        parameters, and returns a noise model to apply.
+    Parameters
+    ----------
+    * `noise_function` [(parameters) -> NoiseModel]: 
+        A function that takes a set of parameters, and returns a noise model to 
+        apply.
 
-    Examples:
-
+    Examples
+    --------
     To make additive noise proportional to the input parameter (not to the score):
     ```
     noise_choice = lambda X: AdditiveNoise(noise_size=X)
@@ -107,12 +121,12 @@ class DataDependentNoise(NoiseModel):
     noise_model = DataDependentNoise(noise_function=noise_choice)
     ```
     """
-    def __init__(self, noise_function: Callable[...,NoiseModel], **kwargs):
+    def __init__(self, noise_function: Callable[..., NoiseModel], **kwargs):
         self.noise_function = noise_function
         super().__init__(noise_size=None, **kwargs)
     
-    def get_noise(self,X,Y: float) -> float:
-        return self.noise_function(X).get_noise(X,Y)           
+    def get_noise(self, X, Y: float) -> float:
+        return self.noise_function(X).get_noise(X, Y)           
     
 class ZeroNoise(NoiseModel):
     """
@@ -122,7 +136,7 @@ class ZeroNoise(NoiseModel):
     def __init__(self):
         super().__init__(noise_size=0)
 
-    def get_noise(self,_,Y: float) -> float:
+    def get_noise(self, _, Y: float) -> float:
         return 0
 
 class SumNoise(NoiseModel):
@@ -130,9 +144,11 @@ class SumNoise(NoiseModel):
     Noise model that returns the sum of two or more noise models. Can be used if the
     total noise is a sum of constant and proportional noise.
 
-    Args:
-    * `noise_model_list` [List[Union[dict,NoiseModel]]]: List of either noise models, or
-        dicts containing at least the type of noise model to create.
+    Parameters
+    ----------
+    * `noise_model_list` [List[Union[dict, NoiseModel]]]: 
+        List of either noise models, or dicts containing at least the type of 
+        noise model to create.
 
     """
     def __init__(self,noise_model_list: List[Union[str,dict,NoiseModel]], **kwargs):
@@ -140,25 +156,25 @@ class SumNoise(NoiseModel):
         self.noise_model_list: List[NoiseModel]
         self.set_noise_model_list(noise_model_list=noise_model_list)
 
-    def set_noise_model_list(self,noise_model_list: List[Union[dict,NoiseModel]]):
+    def set_noise_model_list(self, noise_model_list: List[Union[dict, NoiseModel]]):
         self.noise_model_list = []
         for model_description in noise_model_list:
             self.noise_model_list.append(parse_noise_model(model_description))
 
-    def get_noise(self,X,Y: float) -> float:
-        noise_list = [model.get_noise(X,Y) for model in self.noise_model_list]
+    def get_noise(self, X, Y: float) -> float:
+        noise_list = [model.get_noise(X, Y) for model in self.noise_model_list]
         return sum(noise_list)
 
 
-def parse_noise_model(model: Union[str,dict,NoiseModel], **kwargs) -> NoiseModel:
-    if isinstance(model,NoiseModel):
+def parse_noise_model(model: Union[str, dict, NoiseModel], **kwargs) -> NoiseModel:
+    if isinstance(model, NoiseModel):
         return model
     elif type(model) == str:
         return noise_model_factory(model_type=model, **kwargs)
     else:
         return noise_model_factory(**model)
 
-def noise_model_factory(model_type: str, **kwargs)-> NoiseModel:
+def noise_model_factory(model_type: str, **kwargs) -> NoiseModel:
     if model_type == "constant":
         return ConstantNoise(**kwargs)
     elif model_type == "proportional":
