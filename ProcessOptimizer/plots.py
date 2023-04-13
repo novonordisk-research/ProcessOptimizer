@@ -426,7 +426,7 @@ def dependence(
     n_samples=250,
     n_points=40,
     x_eval=None,
-    return_std=False
+    return_std=False,
 ):
     """
     Calculate the dependence for dimensions `i` and `j` with
@@ -580,8 +580,8 @@ def plot_objective(
     pars="result",
     expected_minimum_samples=None,
     title=None,
-    show_confidence=False,
-    plot_options = None
+    show_confidence=True,
+    plot_options=None,
 ):
     """Pairwise dependence plot of the objective function.
 
@@ -650,7 +650,7 @@ def plot_objective(
     * `title` [str, default=None]
         String to use as title of the figure
 
-    * `show_confidence` [bool, default=false] Whether or not to show a credible
+    * `show_confidence` [bool, default=true] Whether or not to show a credible
         range around the mean estimate on the 1d-plots in the diagonal. The
         credible range is given as 1.96 times the std in the point.
 
@@ -1567,9 +1567,9 @@ def plot_objectives(
     pars="result",
     expected_minimum_samples=None,
     titles=None,
-    show_confidence=False,
-    plot_options = None,
-    ):
+    show_confidence=True,
+    plot_options=None,
+):
     """Pairwise dependence plots of each of the objective functions.
     Parameters
     ----------
