@@ -1,6 +1,12 @@
 # Release history
 
-## Version 0.7.9 [unpublished]
+## Version 0.8.1 [unpublished]
+
+### Changes
+
+### Bugfixes
+
+## Version 0.8.0
 
 ### Changes
 
