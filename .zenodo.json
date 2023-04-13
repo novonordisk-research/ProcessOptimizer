@@ -41,6 +41,11 @@
         {
             "affiliation": "Danish Technological Institute", 
             "name": "Christian Bladt Brandt",
+        },
+        {
+            "affiliation": "Novo Nordisk",
+            "name": "Søren Furbo",
+            "orcid": "0000-0002-2044-7438"
         }
     ], 
     "access_right": "open"
