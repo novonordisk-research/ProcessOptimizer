@@ -67,48 +67,101 @@ def bench5(x):
     return float(x[0]) ** 2 + x[1] ** 2
 
 
-def branin(x, a=1, b=5.1 / (4 * np.pi**2), c=5. / np.pi,
-           r=6, s=10, t=1. / (8 * np.pi)):
-    """Branin-Hoo function is defined on the square x1 ∈ [-5, 10], x2 ∈ [0, 15].
+def branin(x):
+    """
+    The Branin-Hoo function.
+    
+    Intended parameter Space during benchmark use:
+        [(-5.0, 10.0), (0.0, 15.0)]
+        If x contains more than two dimensions the excess are ignored.
 
-    It has three minima with f(x*) = 0.397887 at x* = (-pi, 12.275),
-    (+pi, 2.275), and (9.42478, 2.475).
+    Global minimum value, f(x*): 0.3979
+    Global mimimum location, x*: (-pi, 12.275), (+pi, 2.275), and (9.425, 2.475)
+    Local minima locations, x**: None.
 
     More details: <http://www.sfu.ca/~ssurjano/branin.html>
+    
+    Parameters
+    ----------
+    * 'x' [array of floats of length >=2]:
+        The point to evaluate the function at.
+    * 'a, b, c, r, s, t' [all float]:
+        Default values typically used with this function. Changing any of these
+        values will change the relative shape of the function in the space.
+
+    Returns
+    -------
+    * 'score' [float]:
+        The score of the system at x.
     """
+    # Define the constants that are canonically used with this function.
+    a=1
+    b=5.1/(4*np.pi**2)
+    c=5./np.pi
+    r=6
+    s=10
+    t=1./(8*np.pi)
     return (a * (x[1] - b * x[0] ** 2 + c * x[0] - r) ** 2 +
             s * (1 - t) * np.cos(x[0]) + s)
 
 
-def hart6(x,
-          alpha=np.asarray([1.0, 1.2, 3.0, 3.2]),
-          P=10**-4 * np.asarray([[1312, 1696, 5569, 124, 8283, 5886],
-                                 [2329, 4135, 8307, 3736, 1004, 9991],
-                                 [2348, 1451, 3522, 2883, 3047, 6650],
-                                 [4047, 8828, 8732, 5743, 1091, 381]]),
-          A=np.asarray([[10, 3, 17, 3.50, 1.7, 8],
-                        [0.05, 10, 17, 0.1, 8, 14],
-                        [3, 3.5, 1.7, 10, 17, 8],
-                        [17, 8, 0.05, 10, 0.1, 14]])):
-    """The six dimensional Hartmann function is defined on the unit hypercube.
-
-    It has six local minima and one global minimum f(x*) = -3.32237 at
-    x* = (0.20169, 0.15001, 0.476874, 0.275332, 0.311652, 0.6573).
+def hart6(x):
+    """
+    The six dimensional Hartmann function.
+    
+    Intended parameter Space during benchmark use:
+        The unit hypercube [(0.0, 1.0), (0.0, 1.0), etc.] in six dimensions.
+        If x contains more than six dimensions the excess are ignored.
+    
+    Global minimum value, f(x*): -3.3224
+    Global mimimum location, x*: (0.2017, 0.1500, 0.4769, 0.2753, 0.3117, 0.6573)
+    Local minima locations, x**: Six exist, not stated here.
 
     More details: <http://www.sfu.ca/~ssurjano/hart6.html>
+    
+    Parameters
+    ----------
+    * 'x' [array of floats of length >=6]:
+        The point to evaluate the function at.
+
+    Returns
+    -------
+    * 'score' [float]:
+        The score of the system at x.
     """
+    # Define the constants that are canonically used with this function.
+    alpha=np.asarray([1.0, 1.2, 3.0, 3.2]),
+    P=10**-4 * np.asarray([[1312, 1696, 5569, 124, 8283, 5886],
+                           [2329, 4135, 8307, 3736, 1004, 9991],
+                           [2348, 1451, 3522, 2883, 3047, 6650],
+                           [4047, 8828, 8732, 5743, 1091, 381]]),
+    A=np.asarray([[10, 3, 17, 3.50, 1.7, 8],
+                  [0.05, 10, 17, 0.1, 8, 14],
+                  [3, 3.5, 1.7, 10, 17, 8],
+                  [17, 8, 0.05, 10, 0.1, 14]])
     return -np.sum(alpha * np.exp(-np.sum(A * (np.array(x) - P)**2, axis=1)))
 
 
 def poly_2d(x):
-    """A 2D polynomial. In the domain x[0] in [-1,1] and x[1] in [-1,1], 
-    this function has its minimum at (0.6667,-0.4833), with a value of 
-    about -2.0512, and the maximum in this domain is located at (-1,-1) 
-    with a value of -1.27
+    """
+    A simple 2D polynomial with one minimum. 
+    
+    Intended parameter Space during benchmark use:
+        [(-1.0, 1.0), (-1.0, 1.0)]
+        If x contains more than two dimensions the excess are ignored.
+    
+    Global minimum value, f(x*): -2.0512
+    Global mimimum location, x*: (0.6667, -0.4833)
+    
+    Parameters
+    ----------
+    * 'x' [array of floats of length >=2]:
+        The point to evaluate the function at.
 
-    Parameters:
-    * x [array of length 2 containing floats]:
-        The point in the parameter space at which to evaluate the polynomial. 
+    Returns
+    -------
+    * 'score' [float]:
+        The score of the system at x. 
     """
     return -(
         2 
@@ -120,24 +173,25 @@ def poly_2d(x):
 
 def peaks(x):
     """
-    The peaks function widely used in MATLAB. It is designed to operate on the 
-    space: [(-3.0, 3.0), (-3.0, 3.0), ..., ...] only changing according to the
-    first two dimensions while any other values are ignored. 
+    The peaks function widely used in MATLAB. 
     
-    It has one global minimum f(x*) = -6.551 at x* = (0.228, -1.626), and a 
-    local minimum at f(x**) = -3.050 at x** = (-1.348, 0.205).
+    Intended parameter Space during benchmark use: 
+        [(-3.0, 3.0), (-3.0, 3.0)].
+        If x contains more than two dimensions the excess are ignored.
+    
+    Global minimum value, f(x*): -6.5511
+    Global mimimum location, x*: (0.228, -1.626)
+    Local minima locations, x**: (-1.348, 0.205)
 
     Parameters
     ----------
     * 'x' [array of floats of length >=2]:
-        The point to evaluate the function at. Works in higher dimensions by
-        simply ignoring their values.
+        The point to evaluate the function at.
 
     Returns
     -------
     * 'score' [float]:
         The score of the system at x.
-
     """
     score = (
         3*(1- x[0])**2 * np.exp(-x[0]**2 - (x[1]+1)**2)
