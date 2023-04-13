@@ -31,18 +31,24 @@ class ModelSystem:
             "constant": The noise level is constant.
             "proportional": Tne noise level is proportional to the score.
             "zero": No noise is applied.
-
     """
-    def __init__(self, score: Callable[..., float], space: Union[Space, List], noise_model: Union[str,dict,NoiseModel], true_min=None):
-        self.space = space_factory(space)
+    def __init__(
+        self, 
+        score: Callable[..., float], 
+        space: Union[Space, List], 
+        noise_model: Union[str, dict, NoiseModel], 
+        true_min=None,
+    ):
         self.score = score
+        self.space = space_factory(space)
+        self.noise_model = parse_noise_model(noise_model)
         if true_min is None:
             ndims = self.space.n_dims
-            points = self.space.lhs(ndims*10)
+            points = self.space.lhs(ndims*10) #TODO: This should be many more
             scores = [score(point) for point in points]
             true_min = np.min(scores)
         self.true_min = true_min
-        self.noise_model = parse_noise_model(noise_model)
+        
         
     def result_loss(self, result):
         """Calculate the loss of the optimization result. 

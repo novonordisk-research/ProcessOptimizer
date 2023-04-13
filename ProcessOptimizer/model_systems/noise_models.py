@@ -1,15 +1,17 @@
 from abc import ABC, abstractmethod
 from typing import Callable, List, Union, Optional
 
-from scipy.stats import norm, uniform
+import numpy as np
 
 class NoiseModel(ABC):
     """
     Abstract class that is the basis for noise models.
     """
     def __init__(
-            self,
-            noise_size: Optional[float]):
+        self,
+        noise_size: Optional[float],
+        seed: Union[int, None] = 42,
+    ):
         """        
         Parameters:
         * `noise_size` [Option[float]]: The size of the noise. If ´None´, it signifies that
@@ -23,8 +25,12 @@ class NoiseModel(ABC):
         # have "size" 1, but as long as it is only set by set_noise_type(), it should be
         # safe.
         self.noise_size = noise_size
-        self._noise_distribution: Callable[[],float]
+        if seed != None:
+            self._rng = np.random.default_rng(seed)
+        else:
+            self._rng = np.random.default_rng()
         self.set_noise_type("normal")
+        self._noise_distribution: Callable[[], float]        
 
     @abstractmethod
     def get_noise(self,X,Y: float) -> float:
@@ -38,11 +44,11 @@ class NoiseModel(ABC):
                             f"{self.__class__.__name__} is not supposed to be called.")
         return self._noise_distribution()*self.noise_size
     
-    def set_noise_type(self,noise_type: str):
+    def set_noise_type(self, noise_type: str):
         if noise_type in ["normal", "Gaussian", "norm"]:
-            self._noise_distribution = norm.rvs
+            self._noise_distribution = self._rng.normal
         elif noise_type == "uniform":
-            self._noise_distribution = uniform(loc=-1,scale=2).rvs
+            self._noise_distribution = self._rng.uniform(low=-1, high=1)
         else:
             raise ValueError(f"Noise distribution \"{noise_type}\" not recognised.")
 
