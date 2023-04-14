@@ -40,27 +40,27 @@ def test_constant_noise(signal_list):
 def test_proportional_noise(signal_list, noise_level):
     noise_model = ProportionalNoise(noise_size=1)
     noise_model._noise_distribution = lambda: noise_level
-    noise_list = [noise_model.get_noise(None, signal) for signal in signal_list()]
-    rel_noise_list = [noise/signal for (signal, noise) in zip(signal_list(), noise_list)]
+    noise_list = [noise_model.get_noise(None, signal) for signal in signal_list]
+    rel_noise_list = [noise/signal for (signal, noise) in zip(signal_list, noise_list)]
     assert np.allclose(rel_noise_list, noise_level)
 
 def test_proportional_noise_default(long_signal_list):
     noise_model = ProportionalNoise()
-    noise_list = [noise_model.get_noise(None, signal) for signal in long_signal_list()]
+    noise_list = [noise_model.get_noise(None, signal) for signal in long_signal_list]
     rel_noise_list = [noise/signal
-                       for (signal, noise) in zip(long_signal_list(), noise_list)]
+                       for (signal, noise) in zip(long_signal_list, noise_list)]
     evaluate_random_dist(rel_noise_list, size=0.1)
 
 def test_proportional_noise_given_size(long_signal_list):
     noise_model = ProportionalNoise(noise_size = 0.1)
-    noise_list = [noise_model.get_noise(None, signal) for signal in long_signal_list()]
+    noise_list = [noise_model.get_noise(None, signal) for signal in long_signal_list]
     rel_noise_list = [noise/signal 
                       for (signal,noise) in zip(long_signal_list, noise_list)]      
     evaluate_random_dist(rel_noise_list, size=0.1)
 
 def test_random_noise(long_signal_list):
     noise_model = ConstantNoise()
-    noise_list = [noise_model.get_noise(None,signal) for signal in long_signal_list()]
+    noise_list = [noise_model.get_noise(None,signal) for signal in long_signal_list]
     evaluate_random_dist(noise_list)
 
 @pytest.mark.parametrize("size",(1,2,47))
