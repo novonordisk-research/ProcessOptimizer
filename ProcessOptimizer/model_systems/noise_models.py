@@ -38,8 +38,7 @@ class NoiseModel(ABC):
         else:
             self._rng = np.random.default_rng()
         self.set_noise_type("normal")
-        self.noise_type = "normal"
-        #self._noise_distribution: Callable[[], float]        
+        self._noise_distribution: Callable[[], float]
 
     @abstractmethod
     def get_noise(self, X, Y: float) -> float:
@@ -51,21 +50,21 @@ class NoiseModel(ABC):
         if self.noise_size is None:
             raise TypeError("Method \"raw_noise()\" for NoiseModel class "
                             f"{self.__class__.__name__} is not supposed to be called.")
-        
-        if self.noise_type in ["normal", "Gaussian", "norm"]:
-            return self._rng.normal() * self.noise_size
-        elif self.noise_type == "uniform":
-            return self._rng.uniform(low=-1, high=1) * self.noise_size
+            
+        if self.noise_type == "uniform":
+            return self._noise_distribution(low=-1, high=1)*self.noise_size
         else:
-            raise ValueError(f"Noise distribution \"{self.noise_type}\" not recognised.")
+            return self._noise_distribution()*self.noise_size
     
-    # def set_noise_type(self, noise_type: str):
-    #     if noise_type in ["normal", "Gaussian", "norm"]:
-    #         self._noise_distribution = self._rng.normal
-    #     elif noise_type == "uniform":
-    #         self._noise_distribution = self._rng.uniform(low=-1, high=1)
-    #     else:
-    #         raise ValueError(f"Noise distribution \"{noise_type}\" not recognised.")
+    def set_noise_type(self, noise_type: str):
+        if noise_type in ["normal", "Gaussian", "norm"]:
+            self.noise_type = noise_type
+            self._noise_distribution = self._rng.normal
+        elif noise_type == "uniform":
+            self.noise_type = noise_type
+            self._noise_distribution = self._rng.uniform
+        else:
+            raise ValueError(f"Noise distribution \"{noise_type}\" not recognised.")
 
 
 class ConstantNoise(NoiseModel):
