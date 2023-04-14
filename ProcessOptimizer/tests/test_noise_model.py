@@ -33,7 +33,7 @@ def test_noise_abstract():
 def test_constant_noise(signal_list):
     noise_model = ConstantNoise()
     noise_model._noise_distribution = lambda: 2
-    noise_list = [noise_model.get_noise(None,signal) for signal in signal_list]
+    noise_list = [noise_model.get_noise(None, signal) for signal in signal_list]
     assert all([noise == 2 for noise in noise_list])
 
 @pytest.mark.parametrize("noise_level",(1,2,3))
@@ -60,24 +60,24 @@ def test_proportional_noise_given_size(long_signal_list):
 
 def test_random_noise(long_signal_list):
     noise_model = ConstantNoise()
-    noise_list = [noise_model.get_noise(None,signal) for signal in long_signal_list]
+    noise_list = [noise_model.get_noise(None, signal) for signal in long_signal_list]
     evaluate_random_dist(noise_list)
 
-@pytest.mark.parametrize("size",(1,2,47))
+@pytest.mark.parametrize("size", (1, 2, 47))
 def test_noise_size_constant(size, long_signal_list):
     noise_model = ConstantNoise(noise_size=size)
-    noise_list = [noise_model.get_noise(None,signal) for signal in long_signal_list]
+    noise_list = [noise_model.get_noise(None, signal) for signal in long_signal_list]
     evaluate_random_dist(noise_list,size)
 
-@pytest.mark.parametrize("size",(1,2,47))
+@pytest.mark.parametrize("size", (1, 2, 47))
 def test_noise_size_proportional(size, long_signal_list):
     noise_model = ProportionalNoise(noise_size=size)
-    noise_list = [noise_model.get_noise(None,signal) for signal in long_signal_list]
+    noise_list = [noise_model.get_noise(None, signal) for signal in long_signal_list]
     rel_noise_list = [noise/signal
-                       for (signal,noise) in zip(long_signal_list,noise_list)]
-    evaluate_random_dist(rel_noise_list,size)
+                       for (signal, noise) in zip(long_signal_list, noise_list)]
+    evaluate_random_dist(rel_noise_list, size)
 
-@pytest.mark.parametrize("input",(1,2,3))
+@pytest.mark.parametrize("input", (1, 2, 3))
 def test_data_dependent_noise(signal_list, input):
     # noise_choice returns a noise model that gives the same noise as the input data.
     def noise_choice(X):
@@ -85,12 +85,12 @@ def test_data_dependent_noise(signal_list, input):
         local_noise_model._noise_distribution = lambda: X
         return local_noise_model
     noise_model = DataDependentNoise(noise_function=noise_choice)
-    noise_list = [noise_model.get_noise(input,signal) for signal in signal_list]  
-    assert [noise==signal for (signal,noise) in zip(signal_list,noise_list)]
+    noise_list = [noise_model.get_noise(input, signal) for signal in signal_list]  
+    assert [noise==signal for (signal, noise) in zip(signal_list, noise_list)]
 
 def test_zero_noise(signal_list):
     noise_model = ZeroNoise()
-    noise_list = [noise_model.get_noise(None,signal) for signal in signal_list]    
+    noise_list = [noise_model.get_noise(None, signal) for signal in signal_list]    
     assert [noise==0 for noise in noise_list]
 
 # Testing that the examples in the docstring of DataDependentNoise work
@@ -100,31 +100,32 @@ def test_noise_model_example_1(long_signal_list, magnitude):
     noise_choice = lambda X: ConstantNoise(noise_size=X, seed=None)
     noise_model = DataDependentNoise(noise_function=noise_choice)
     data = [magnitude]*len(long_signal_list)
-    noise_list = [noise_model.get_noise(x,signal) 
-                  for (x,signal) in zip(data,long_signal_list)]    
-    evaluate_random_dist(noise_list,magnitude)
+    noise_list = [noise_model.get_noise(x, signal) 
+                  for (x, signal) in zip(data,long_signal_list)]
+    evaluate_random_dist(noise_list, magnitude)
 
 def test_noise_model_example_2(long_signal_list):
     # the following two lines are taken from the docstring of DataDependentNoise
     noise_choice = lambda X: ZeroNoise() if X[0]==0 else ConstantNoise(seed=None)
     noise_model = DataDependentNoise(noise_function=noise_choice)
-    X=[0,10,5]
-    noise_list = [noise_model.get_noise(X,signal) for signal in long_signal_list]
-    (mean, spread) = norm.fit(noise_list)
+    X = [0, 10, 5]
+    noise_list = [noise_model.get_noise(X, signal) for signal in long_signal_list]
+    (mean, stddev) = norm.fit(noise_list)
     # This yields the zero noise model, where the fitted parameters are exactly zero
     assert mean==0
-    assert spread==0
-    X=[1,27,53.4]
-    noise_list = [noise_model.get_noise(X,signal) for signal in long_signal_list]
+    assert stddev==0
+    X = [1, 27, 53.4]
+    noise_list = [noise_model.get_noise(X, signal) for signal in long_signal_list]
     evaluate_random_dist(noise_list)
 
 def test_sum_noise(signal_list):
     noise_model = SumNoise(noise_model_list=[
         "constant",
-        {"model_type" : "proportional", "noise_size" : 1}])
+        {"model_type" : "proportional", "noise_size" : 1}
+    ])
     noise_model.noise_model_list[0]._noise_distribution = lambda: 2
     noise_model.noise_model_list[1]._noise_distribution = lambda: 3
-    noise_list = [noise_model.get_noise(None,signal) for signal in signal_list]
+    noise_list = [noise_model.get_noise(None, signal) for signal in signal_list]
     true_noise_list = [2 + 3 * signal for signal in signal_list]
     assert noise_list == true_noise_list
 
