@@ -182,8 +182,8 @@ def test_uniform_noise(long_signal_list):
     noise_model.set_noise_type("uniform")
     noise_list = [noise_model.get_noise(None, Y) for Y in long_signal_list]
     (start,width) = uniform.fit(noise_list)
-    assert np.allclose(start,-1,atol=0.1)
-    assert np.allclose(width,2,atol=0.1)
+    assert np.allclose(start, -1, atol=0.1)
+    assert np.allclose(width, 2, atol=0.1)
 
 def test_unknown_distribution():
     noise_model = ConstantNoise()
@@ -195,7 +195,7 @@ def test_unknown_distribution():
 def test_reset_model_list():
     noise_model = SumNoise(noise_model_list=[ConstantNoise(noise_size=100)])
     noise_model.set_noise_model_list([ConstantNoise()])
-    noise_list = [noise_model.get_noise(None,None) for _ in range(30)]
+    noise_list = [noise_model.get_noise(None, None) for _ in range(30)]
     # It is very unlikely that a normally distributed noise with size 1 is above 10. It
     # is unlikely none of 30 normally distributed noise reading with size 100 is above
     # 10
