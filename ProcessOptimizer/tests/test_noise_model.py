@@ -21,9 +21,9 @@ def setup_function():
 
 # Function for fitting a distribution and evaulating its mean and standard deviation.
 def evaluate_random_dist(noise_list: List[float], size: float=1):
-    (mean, spread) = norm.fit(noise_list)
-    assert np.allclose(mean,0,atol=0.1*size)
-    assert np.allclose(spread,size,atol=0.1*size)
+    (mean, stddev) = norm.fit(noise_list)
+    assert np.allclose(mean, 0, atol=0.1*size)
+    assert np.allclose(stddev, size, atol=0.1*size)
 
 def test_noise_abstract():
     # Tests that the abstract class can not be instantiated.
@@ -97,7 +97,7 @@ def test_zero_noise(signal_list):
 @pytest.mark.parametrize("magnitude",(1,2,3))
 def test_noise_model_example_1(long_signal_list, magnitude):
     # the following two lines are taken from the docstring of DataDependentNoise
-    noise_choice = lambda X: ConstantNoise(noise_size=X)
+    noise_choice = lambda X: ConstantNoise(noise_size=X, seed=None)
     noise_model = DataDependentNoise(noise_function=noise_choice)
     data = [magnitude]*len(long_signal_list)
     noise_list = [noise_model.get_noise(x,signal) 
@@ -106,7 +106,7 @@ def test_noise_model_example_1(long_signal_list, magnitude):
 
 def test_noise_model_example_2(long_signal_list):
     # the following two lines are taken from the docstring of DataDependentNoise
-    noise_choice = lambda X: ZeroNoise() if X[0]==0 else ConstantNoise()
+    noise_choice = lambda X: ZeroNoise() if X[0]==0 else ConstantNoise(seed=None)
     noise_model = DataDependentNoise(noise_function=noise_choice)
     X=[0,10,5]
     noise_list = [noise_model.get_noise(X,signal) for signal in long_signal_list]

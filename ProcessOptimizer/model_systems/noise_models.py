@@ -38,7 +38,8 @@ class NoiseModel(ABC):
         else:
             self._rng = np.random.default_rng()
         self.set_noise_type("normal")
-        self._noise_distribution: Callable[[], float]        
+        self.noise_type = "normal"
+        #self._noise_distribution: Callable[[], float]        
 
     @abstractmethod
     def get_noise(self, X, Y: float) -> float:
@@ -50,15 +51,21 @@ class NoiseModel(ABC):
         if self.noise_size is None:
             raise TypeError("Method \"raw_noise()\" for NoiseModel class "
                             f"{self.__class__.__name__} is not supposed to be called.")
-        return self._noise_distribution()*self.noise_size
-    
-    def set_noise_type(self, noise_type: str):
-        if noise_type in ["normal", "Gaussian", "norm"]:
-            self._noise_distribution = self._rng.normal
-        elif noise_type == "uniform":
-            self._noise_distribution = self._rng.uniform(low=-1, high=1)
+        
+        if self.noise_type in ["normal", "Gaussian", "norm"]:
+            return self._rng.normal() * self.noise_size
+        elif self.noise_type == "uniform":
+            return self._rng.uniform(low=-1, high=1) * self.noise_size
         else:
-            raise ValueError(f"Noise distribution \"{noise_type}\" not recognised.")
+            raise ValueError(f"Noise distribution \"{self.noise_type}\" not recognised.")
+    
+    # def set_noise_type(self, noise_type: str):
+    #     if noise_type in ["normal", "Gaussian", "norm"]:
+    #         self._noise_distribution = self._rng.normal
+    #     elif noise_type == "uniform":
+    #         self._noise_distribution = self._rng.uniform(low=-1, high=1)
+    #     else:
+    #         raise ValueError(f"Noise distribution \"{noise_type}\" not recognised.")
 
 
 class ConstantNoise(NoiseModel):
@@ -111,13 +118,13 @@ class DataDependentNoise(NoiseModel):
     --------
     To make additive noise proportional to the input parameter (not to the score):
     ```
-    noise_choice = lambda X: AdditiveNoise(noise_size=X)
+    noise_choice = lambda X: ConstantNoise(noise_size=X)
     noise_model = DataDependentNoise(noise_function=noise_choice)
     ```
 
-    To add additive noise except if X[0] is 0:
+    To add constant noise except if X[0] is 0:
     ```
-    noise_choice = lambda X: ZeroNoise() if X[0]==0 else AdditiveNoise()
+    noise_choice = lambda X: ZeroNoise() if X[0]==0 else ConstantNoise()
     noise_model = DataDependentNoise(noise_function=noise_choice)
     ```
     """
