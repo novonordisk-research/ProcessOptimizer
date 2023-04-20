@@ -39,16 +39,23 @@ class ModelSystem:
         space: Union[Space, List], 
         noise_model: Union[str, dict, NoiseModel], 
         true_min=None,
+        true_max=None,
     ):
         self.score = score
         self.space = space_factory(space)
         self.noise_model = parse_noise_model(noise_model)
         if true_min is None:
             ndims = self.space.n_dims
-            points = self.space.lhs(ndims*10) #TODO: This should be many more
+            points = self.space.lhs(ndims*10) #TODO: This should be many more and shouldnt use LHS
             scores = [score(point) for point in points]
             true_min = np.min(scores)
         self.true_min = true_min
+        if true_max is None:
+            ndims = self.space.n_dims
+            points = self.space.lhs(ndims*10) #TODO: This should be many more and shouldnt use LHS
+            scores = [score(point) for point in points]
+            true_max = np.max(scores)
+        self.true_max = true_max
         
         
     def result_loss(self, result):
