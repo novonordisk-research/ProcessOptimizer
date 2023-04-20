@@ -59,18 +59,18 @@ class NoiseModel(ABC):
             self._noise_distribution = self._rng.normal
         elif noise_type == "uniform":
             self.noise_type = noise_type
-            self._noise_distribution = self._rng.uniform
+            self._noise_distribution = lambda: self._rng.uniform(low=-1, high=1)
         else:
             raise ValueError(f"Noise distribution \"{noise_type}\" not recognised.")
     
-    def set_seed(self, seed: Union[int, None]):
+    def set_seed(self, seed: Optional[int]):
         # Instantiate the random number generator again
         self._rng = np.random.default_rng(seed)
         # Make sure to do the same for the noise distribution
         if self.noise_type in ["normal", "Gaussian", "norm"]:
             self._noise_distribution = self._rng.normal
         elif self.noise_type == "uniform":
-            self._noise_distribution = self._rng.uniform
+            self._noise_distribution = lambda: self._rng.uniform(low=-1, high=1)
 
 class ConstantNoise(NoiseModel):
     """
