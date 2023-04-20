@@ -200,3 +200,26 @@ def test_reset_model_list():
     # is unlikely none of 30 normally distributed noise reading with size 100 is above
     # 10
     assert all([noise<10 for noise in noise_list])
+
+def test_noise_seeding():
+    # Test that two noise models created with no seeding give different values
+    noise_model_1 = ConstantNoise(seed=None)
+    noise_model_2 = ConstantNoise(seed=None)
+    assert noise_model_1.get_noise(None, 0) != noise_model_2.get_noise(None, 0)
+    # Test that two noise models created with the same seed give the same value
+    noise_model_1 = ConstantNoise(seed=1)
+    noise_model_2 = ConstantNoise(seed=1)
+    assert noise_model_1.get_noise(None, 0) == noise_model_2.get_noise(None, 0)
+
+def test_noise_seed_reset():
+    # Test that you can reset the seed of a noise model after drawing noise
+    noise_model = ConstantNoise(seed=1)
+    # Sample noise value one time and store
+    first_noise = noise_model.get_noise(None, 0)
+    # Advance the noise sampling
+    second_noise = noise_model.get_noise(None, 0)
+    # Reset to the same seed
+    noise_model.set_seed(1)
+    reset_noise = noise_model.get_noise(None, 0)
+    assert first_noise == reset_noise
+    assert first_noise != second_noise
