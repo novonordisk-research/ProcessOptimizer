@@ -48,10 +48,7 @@ class NoiseModel(ABC):
             raise TypeError("Method \"raw_noise()\" for NoiseModel class "
                             f"{self.__class__.__name__} is not supposed to be called.")
             
-        if self.noise_type == "uniform":
-            return self._noise_distribution(low=-1, high=1)*self.noise_size
-        else:
-            return self._noise_distribution()*self.noise_size
+        return self._noise_distribution()*self.noise_size
     
     def set_noise_type(self, noise_type: str):
         if noise_type in ["normal", "Gaussian", "norm"]:
