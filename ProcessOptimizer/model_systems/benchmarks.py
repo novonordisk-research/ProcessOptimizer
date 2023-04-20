@@ -78,6 +78,8 @@ def branin(x):
     Global minimum value, f(x*): 0.3979
     Global mimimum location, x*: (-pi, 12.275), (+pi, 2.275), and (9.425, 2.475)
     Local minima locations, x**: None.
+    Global maximum value, f(x+): 308.13
+    Global maximum location, x+: (-5.0, 0.0)
 
     More details: <http://www.sfu.ca/~ssurjano/branin.html>
     
@@ -116,6 +118,9 @@ def hart6(x):
     Global minimum value, f(x*): -3.3224
     Global mimimum location, x*: (0.2017, 0.1500, 0.4769, 0.2753, 0.3117, 0.6573)
     Local minima locations, x**: Six exist, not stated here.
+    Global maximum value, f(x+): 0.0000
+    Global maximum location, x+: (1, 1, 0, 1, 1, 1), but close to the same in 
+                                 all other corners of the space
 
     More details: <http://www.sfu.ca/~ssurjano/hart6.html>
     
@@ -142,7 +147,7 @@ def hart6(x):
     return -np.sum(alpha * np.exp(-np.sum(A * (np.array(x) - P)**2, axis=1)))
 
 
-def poly_2d(x):
+def poly2(x):
     """
     A simple 2D polynomial with one minimum. 
     
@@ -152,6 +157,8 @@ def poly_2d(x):
     
     Global minimum value, f(x*): -2.0512
     Global mimimum location, x*: (0.6667, -0.4833)
+    Global maximum value, f(x+): -1.270
+    Global maximum location, x+: (-1.0, -1.0)
     
     Parameters
     ----------
@@ -182,6 +189,8 @@ def peaks(x):
     Global minimum value, f(x*): -6.5511
     Global mimimum location, x*: (0.228, -1.626)
     Local minima locations, x**: (-1.348, 0.205)
+    Global maximum value, f(x+): 8.106
+    Global maximum location, x+: (-0.010, 1.581)
 
     Parameters
     ----------
