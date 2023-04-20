@@ -10,7 +10,7 @@ class NoiseModel(ABC):
     def __init__(
         self,
         noise_size: Optional[float],
-        seed: Union[int, None] = 42,
+        seed: Optional[int] = 42,
     ):
         """        
         Parameters
@@ -22,7 +22,7 @@ class NoiseModel(ABC):
             SumNoise, which sums the noise of a list of noise models, but does
             not add any noise by itself.
         
-        * `seed` [Union[int, None], default=42]:
+        * `seed` [Optional[int], default=42]:
             Seed to pass forward to the numpy random number generator that is
             used when providing samples with noise.
         """
@@ -33,10 +33,7 @@ class NoiseModel(ABC):
         # have "size" 1, but as long as it is only set by set_noise_type(), it should be
         # safe.
         self.noise_size = noise_size
-        if seed != None:
-            self._rng = np.random.default_rng(seed)
-        else:
-            self._rng = np.random.default_rng()
+        self._rng = np.random.default_rng(seed)
         self.set_noise_type("normal")
         self._noise_distribution: Callable[[], float]
 
