@@ -94,3 +94,27 @@ class ModelSystem:
         """
         Y = self.score(X)
         return Y + self.noise_model.get_noise(X, Y)
+    
+    def set_noise_model(self, noise_model: Union[str, dict, NoiseModel]):
+        """
+        Sets or updates the noise model used by the model system.
+
+        Parameters
+        ----------
+        noise_model : Union[str, dict, NoiseModel]
+            Noise model to apply to the score.
+            If str, it should be the name of the noise model type. In this case, 
+                further arguments can be given (e.g. `noise_size`).
+            If dict, one key should be `model_type`.
+            If NoiseModel, this NoiseModel will be used.
+                
+            Possible model type strings are:
+                "constant": The noise level is constant.
+                "proportional": Tne noise level is proportional to the score.
+                "zero": No noise is applied.
+
+        Returns
+        -------
+        None.
+        """
+        self.noise_model = parse_noise_model(noise_model)
