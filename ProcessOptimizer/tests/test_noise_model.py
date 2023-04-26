@@ -1,7 +1,16 @@
 from typing import List
 
 import numpy as np
-from ProcessOptimizer.model_systems.noise_models import NoiseModel, ConstantNoise, ProportionalNoise, DataDependentNoise, ZeroNoise, SumNoise, noise_model_factory, parse_noise_model
+from ProcessOptimizer.model_systems.noise_models import (
+    NoiseModel,
+    ConstantNoise,
+    ProportionalNoise,
+    DataDependentNoise,
+    ZeroNoise,
+    SumNoise,
+    noise_model_factory,
+    parse_noise_model,
+)
 from scipy.stats import norm, uniform
 import pytest
 
