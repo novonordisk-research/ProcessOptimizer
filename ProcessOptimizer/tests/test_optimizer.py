@@ -346,21 +346,24 @@ def test_add_remove_modelled_noise():
     # Set noise and model system
     noise_size = 0.45
     flat_space = [(-1.0, 1.0)]
-    flat_noise = {"model_type": "constant",
-                  "noise_size": noise_size,
-                  }
+    flat_noise = {
+        "model_type": "constant",
+        "noise_size": noise_size,
+        }
     # Build ModelSystem object
-    model = ModelSystem(score=flat_score,
-                        space=flat_space,
-                        noise_model=flat_noise,
-                        )
+    model = ModelSystem(
+        score=flat_score,
+        space=flat_space,
+        noise_model=flat_noise,
+        )
     # Instantiate Optimizer
-    opt = Optimizer(flat_space,
-                    "GP",
-                    lhs=False,
-                    n_initial_points=1,
-                    random_state=42
-                    )
+    opt = Optimizer(
+        flat_space,
+        "GP",
+        lhs=False,
+        n_initial_points=1,
+        random_state=42
+        )
     #Make 20 dispersed points on X
     next_x = np.linspace(-1, 1, 20).tolist()
     x = []
