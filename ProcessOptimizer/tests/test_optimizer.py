@@ -6,12 +6,15 @@ from numpy.testing import assert_array_equal
 from numpy.testing import assert_equal
 from numpy.testing import assert_raises
 
+from math import isclose
+
 from ProcessOptimizer import gp_minimize
 from ProcessOptimizer.model_systems.benchmarks import bench1, bench1_with_time
 from ProcessOptimizer.model_systems.benchmarks import branin
 from ProcessOptimizer.learning import ExtraTreesRegressor, RandomForestRegressor
 from ProcessOptimizer.learning import GradientBoostingQuantileRegressor
 from ProcessOptimizer.optimizer import Optimizer
+from ProcessOptimizer.utils import expected_minimum
 from scipy.optimize import OptimizeResult
 
 
@@ -328,3 +331,60 @@ def test_iterating_ask_tell_lhs():
     assert opt.ask(n_points=3) == samples[2:5]  # samples 2,3 and 4
     opt.tell([[2], [2], [2]], [0, 0, 0])
     assert opt.ask() == samples[5]  # sample 5
+
+
+@pytest.mark.slow_test
+def test_add_remove_modelled_noise():
+    '''
+    Tests whether the addition of white noise leads to predictions closer to
+    known true values of experimental noise (iid gaussian noise)'''
+    # Define objective function
+    def flat_score(x):
+        return 42
+    
+    # Set noise and model system
+    noise_size = 0.45
+    flat_space = [(-1.0, 1.0)]
+    flat_noise = {"model_type": "constant",
+                  "noise_size": noise_size,
+                  }
+    # Build ModelSystem object
+    model = ModelSystem(score=flat_score,
+                        space=flat_space,
+                        noise_model=flat_noise,
+                        )
+    # Instantiate Optimizer
+    opt = Optimizer(flat_space,
+                    "GP",
+                    lhs=False,
+                    n_initial_points=1,
+                    random_state=42
+                    )
+    #Make 20 dispersed points on X
+    next_x = np.linspace(-1, 1, 20).tolist()
+    x = []
+    y = []
+    #sample noisy experiments, 10 in each x-value
+    for i in range(10):
+        for xx in next_x:
+            x.append([xx])
+            y.append(model.get_score([xx]))
+    # Fit the model
+    res = opt.tell(x,y)
+    res_x, [res_y, res_std_no_white] = expected_minimum(res, return_std=True)
+    #Add moddeled experimental noise
+    opt.add_modelled_noise()
+    res_noise = opt.get_result()
+    res_x, [res_y, res_std_white] = expected_minimum(res_noise,
+                                                     return_std=True)
+    #Test modelled noise is added and predicts know noise within tolerance 10%
+    assert res_std_no_white < res_std_white
+    assert isclose (noise_size, res_std_white, rel_tol=0.1)
+    #Test function to remove experimental noise and regain "old" noise level
+    opt.remove_modelled_noise()
+    res_noise = opt.get_result()
+    res_x, [res_y, res_std_reset] = expected_minimum(res_noise,
+                                                    return_std=True)
+    assert isclose(res_std_no_white, res_std_reset, rel_tol=0.001)
+    
+    
