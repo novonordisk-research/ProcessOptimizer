@@ -319,7 +319,7 @@ class HammingKernel(sk_StationaryKernelMixin, sk_NormalizedKernelMixin,
     """
     The HammingKernel is used to handle categorical inputs.
 
-    ``K(x_1, x_2) = exp(\sum_{j=1}^{d} -ls_j * (I(x_1j != x_2j)))``
+    ``K(x_1, x_2) = exp(\\sum_{j=1}^{d} -ls_j * (I(x_1j != x_2j)))``
 
     Parameters
     -----------
