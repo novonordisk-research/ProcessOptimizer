@@ -379,7 +379,7 @@ def test_add_remove_modelled_noise():
     #Add moddeled experimental noise
     opt_noise = opt.copy()
     opt_noise.add_modelled_noise()
-    res_noise = opt.get_result()
+    res_noise = opt_noise.get_result()
     _, [_, res_std_white] = expected_minimum(res_noise,
                                                      return_std=True)
     #Test modelled noise is added and predicts know noise within tolerance 10%
