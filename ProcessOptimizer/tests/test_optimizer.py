@@ -372,19 +372,20 @@ def test_add_remove_modelled_noise():
             y.append(model.get_score([xx]))
     # Fit the model
     res = opt.tell(x,y)
-    res_x, [res_y, res_std_no_white] = expected_minimum(res, return_std=True)
+    _, [_, res_std_no_white] = expected_minimum(res, return_std=True)
     #Add moddeled experimental noise
-    opt.add_modelled_noise()
+    opt_noise = opt.copy()
+    opt_noise.add_modelled_noise()
     res_noise = opt.get_result()
-    res_x, [res_y, res_std_white] = expected_minimum(res_noise,
+    _, [_, res_std_white] = expected_minimum(res_noise,
                                                      return_std=True)
     #Test modelled noise is added and predicts know noise within tolerance 10%
     assert res_std_no_white < res_std_white
     assert isclose (noise_size, res_std_white, rel_tol=0.1)
     #Test function to remove experimental noise and regain "old" noise level
-    opt.remove_modelled_noise()
-    res_noise = opt.get_result()
-    res_x, [res_y, res_std_reset] = expected_minimum(res_noise,
+    opt_noise.remove_modelled_noise()
+    res_noise = opt_noise.get_result()
+    _, [_, res_std_reset] = expected_minimum(res_noise,
                                                     return_std=True)
     assert isclose(res_std_no_white, res_std_reset, rel_tol=0.001)
     
