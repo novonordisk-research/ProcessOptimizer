@@ -1188,7 +1188,6 @@ class Optimizer(object):
         white_present, white_param = _param_for_white_kernel_in_Sum(self.models[-1].kernel_)
         if white_present:
             self.models[-1].kernel_.set_params(**{white_param: WhiteKernel(noise_level=noise_estimate)})
-        return self
     
     def remove_modelled_noise(self):
         '''
@@ -1202,4 +1201,4 @@ class Optimizer(object):
         white_present, white_param = _param_for_white_kernel_in_Sum(self.models[-1].kernel_)
         if white_present:
             self.models[-1].kernel_.set_params(**{white_param: WhiteKernel(noise_level=0.0)})
-        return self
+    
