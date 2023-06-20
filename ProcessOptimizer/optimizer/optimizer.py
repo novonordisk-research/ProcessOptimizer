@@ -41,6 +41,14 @@ class Optimizer(object):
 
     Use this class directly if you want to control the iterations of your
     bayesian optimisation loop.
+    
+    In default behavior, the optimizer will reset the modelled experimental
+    noise between each refitting (read: while adding new data). This is
+    described in Rasmussen and Williams chapter 2. 
+    Some users might want to plot, predict or sample from a model that includes
+    the modelling of the experimental noise: in that case, two helper methods
+    can "switch" the noise "on/off". Functions are called 'add_modelled_noise'
+    and 'remove_modelled_noise'.
 
     Parameters
     ----------
