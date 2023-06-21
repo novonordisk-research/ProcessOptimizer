@@ -28,6 +28,9 @@ from ..utils import is_listlike
 from ..utils import is_2Dlistlike
 from ..utils import normalize_dimensions
 
+from ..learning.gaussian_process.gpr import _param_for_white_kernel_in_Sum
+from ..learning.gaussian_process.kernels import WhiteKernel
+
 
 class Optimizer(object):
     """Run bayesian optimisation loop.
@@ -38,6 +41,14 @@ class Optimizer(object):
 
     Use this class directly if you want to control the iterations of your
     bayesian optimisation loop.
+    
+    In default behavior, the optimizer will reset the modelled experimental
+    noise between each refitting (read: while adding new data). This is
+    described in Rasmussen and Williams chapter 2. 
+    Some users might want to plot, predict or sample from a model that includes
+    the modelling of the experimental noise: in that case, two helper methods
+    can "switch" the noise "on/off". Functions are called 'add_modelled_noise'
+    and 'remove_modelled_noise'.
 
     Parameters
     ----------
@@ -88,9 +99,9 @@ class Optimizer(object):
                 - Each acquisition function is optimised independently to
                   propose an candidate point `X_i`.
                 - Out of all these candidate points, the next point `X_best` is
-                  chosen by $softmax(\eta g_i)$
+                  chosen by $softmax(\\eta g_i)$
                 - After fitting the surrogate model with `(X_best, y_best)`,
-                  the gains are updated such that $g_i -= \mu(X_i)$
+                  the gains are updated such that $g_i -= \\mu(X_i)$
         - `"EIps" for negated expected improvement per second to take into
           account the function compute time. Then, the objective function is
           assumed to return two values, the first being the objective value and
@@ -1169,3 +1180,33 @@ class Optimizer(object):
         )
 
         return pop, logbook, front
+    
+    # This function adds the modelled white noise to the regressor to allow predictions including noise
+    def add_modelled_noise(self):
+        '''
+        This method will add the noise that has been modelled to fit the data. (The noise is disabled
+        by default to reflect description in book on gaussian processes for Machine Learning
+        This has been described in Eq 2.24 of
+        http://www.gaussianprocess.org/gpml/chapters/RW2.pdf)
+        '''
+        if isinstance(self.models[-1].noise, str) and self.models[-1].noise != "gaussian":
+            raise ValueError("expected noise to be 'gaussian', got %s"
+                             % self.models[-1].noise)
+        noise_estimate = self.models[-1].noise_
+        white_present, white_param = _param_for_white_kernel_in_Sum(self.models[-1].kernel_)
+        if white_present:
+            self.models[-1].kernel_.set_params(**{white_param: WhiteKernel(noise_level=noise_estimate)})
+    
+    def remove_modelled_noise(self):
+        '''
+        This method resets the noise levels to only include the "true" uncertaincy of the main kernel
+        used for fitting and predicting. This method can be used in conjunction with the 
+        'add_modelled_noise()'
+        '''
+        if isinstance(self.models[-1].noise, str) and self.models[-1].noise != "gaussian":
+            raise ValueError("expected noise to be 'gaussian', got %s"
+                             % self.models[-1].noise)
+        white_present, white_param = _param_for_white_kernel_in_Sum(self.models[-1].kernel_)
+        if white_present:
+            self.models[-1].kernel_.set_params(**{white_param: WhiteKernel(noise_level=0.0)})
+    
