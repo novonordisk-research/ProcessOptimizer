@@ -4,6 +4,11 @@
 
 ### Changes
 
+- Added additonal model systems to the list of benchmarks and made their
+  structure more consistent.
+- Added seeding to the noise models used for benchmarking to ensure 
+  reproducible results when benchmarking.
+
 ### Bugfixes
 
 ## Version 0.8.0
