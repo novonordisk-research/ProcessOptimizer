@@ -10,6 +10,7 @@ from matplotlib.ticker import LogLocator
 from matplotlib.ticker import MaxNLocator, FuncFormatter
 from scipy.optimize import OptimizeResult
 from scipy.stats.mstats import mquantiles
+from scipy.stats import norm
 from scipy.ndimage import gaussian_filter1d
 from ProcessOptimizer import expected_minimum, expected_minimum_random_sampling
 from .space import Categorical
@@ -1559,7 +1560,7 @@ def plot_brownie_bee(
     result,
     n_points=40,
     n_samples=250,
-    size=3,
+    size=2,
     max_quality=5,
 ):
     """Single factor dependence plot of the model intended for use with the 
@@ -1582,7 +1583,7 @@ def plot_brownie_bee(
         Number of random samples to use for averaging the model function
         at each of the `n_points`.
 
-    * `size` [float, default=3]
+    * `size` [float, default=2]
         Height (in inches) of each returned figure.
 
     * `max_quality` [int, default=5] 
@@ -1613,15 +1614,10 @@ def plot_brownie_bee(
     )
         
     rvs_transformed = space.transform(space.rvs(n_samples=n_samples))
-    samples, minimum, _ = _map_categories(space, result.x_iters, x_eval)
+    _, minimum, _ = _map_categories(space, result.x_iters, x_eval)
     
-    # Create the list to store figure handles
-    figure_list = []    
-    # val_min_1d = float("inf")
-    # val_max_1d = -float("inf")
-
-    plots_data = []
     # Gather all data relevant for plotting
+    plots_data = []
     for i in range(space.n_dims):
         row = []
         xi, yi, stddevs = dependence(
@@ -1635,9 +1631,10 @@ def plot_brownie_bee(
         )
         row.append({"xi": xi, "yi": yi, "std": stddevs})
         
-        # yi_low_bound = yi - 1.96 * stddevs
-        # yi_high_bound = yi + 1.96 * stddevs
         plots_data.append(row)
+
+    # Create the list to store figure handles
+    figure_list = []  
     
     # Build all the plots in the figure
     for n in range(space.n_dims):
@@ -1648,7 +1645,7 @@ def plot_brownie_bee(
         )
         # Set the padding
         fig.subplots_adjust(
-            left=0.18, right=0.95, bottom=0.2, top=0.9, hspace=0.0, wspace=0.0
+            left=0.18, right=0.95, bottom=0.2, top=0.95, hspace=0.0, wspace=0.0
         )
 
         # Get data to plot in this subplot
@@ -1657,11 +1654,7 @@ def plot_brownie_bee(
         stddevs = plots_data[n][0]["std"]        
         
         # Set y-axis limits
-        ax_.set_ylim(0, max_quality)  
-        # ax_.set_ylim(
-        #     val_min_1d-abs(val_min_1d)*.02,
-        #     val_max_1d+abs(val_max_1d)*.02
-        # )        
+        ax_.set_ylim(0, max_quality)      
         
         # Enter here when we plot a categoric factor
         if is_cat[n]:                    
@@ -1670,14 +1663,6 @@ def plot_brownie_bee(
             ax_.set_xlim(np.min(xi)-0.2, np.max(xi)+0.2)            
             
             # Highlight the expected minimum
-            # ax_.scatter(
-            #     minimum[n],
-            #     -yi[int(minimum[n])],
-            #     c="k",
-            #     s=20,
-            #     marker="D",
-            #     zorder=1,
-            # )
             ax_.axvline(minimum[n], linestyle="--", color="k", lw=1)
             # Create one uniformly colored bar for each category.
             # Edgecolor ensures we can see the bar when plotting 
@@ -1690,8 +1675,7 @@ def plot_brownie_bee(
                 alpha=0.5,
                 color="green",
                 edgecolor="green",
-            )
-            
+            )            
         
         # For non-categoric factors
         else:
@@ -1710,7 +1694,7 @@ def plot_brownie_bee(
             )
 
         # Fix formatting of the y-axis with ticks from 0 to our max quality
-        ax_.yaxis.set_major_locator(MaxNLocator(max_quality))
+        ax_.yaxis.set_major_locator(MaxNLocator(5, integer=True))
         ax_.tick_params(axis="y", direction="inout")
         # Fix formatting of the x-axis
         [labl.set_rotation(45) for labl in ax_.get_xticklabels()]
@@ -1719,7 +1703,7 @@ def plot_brownie_bee(
             ax_.set_xscale("log")
         else:
             ax_.xaxis.set_major_locator(
-                MaxNLocator(5, prune="both", integer=is_cat[n])
+                MaxNLocator(6, prune="both", integer=is_cat[n])
             )
             if is_cat[n]:
                 # Axes for categorical dimensions are really integers; 
