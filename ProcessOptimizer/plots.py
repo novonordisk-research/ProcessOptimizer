@@ -1733,7 +1733,38 @@ def plot_brownie_bee(
         # Add the figure to the output list
         figure_list.append(fig)
     
-    # TODO: Add a final figure for the histogram of expected outcomes
+    # Prepare a figure for a histogram of expected quality
+    fig, ax_ = plt.subplots(
+        figsize=(size, size),
+        dpi=200,
+    )
+    # Set the padding
+    fig.subplots_adjust(
+        left=0.05, right=0.95, bottom=0.2, top=0.95, hspace=0.0, wspace=0.0
+    )
+    # Plot out to 3 standard deviations from the mean but not outside the scale
+    xi = np.linspace(
+        max(-res_mean-3*res_std, 0),
+        min(-res_mean+3*res_std, max_quality),
+        100,
+    )
+    # Create histogram y-values
+    yi = norm.pdf(xi, -res_mean, res_std)
+    # Build the plot
+    ax_.fill_between(
+        xi,
+        y1=np.zeros((len(xi),)),
+        y2=yi,
+        alpha=0.5,
+        color="blue",
+        edgecolor="blue",
+        linewidth=0.0,
+    )
+    # Cosmetics
+    ax_.get_yaxis().set_visible(False)
+    
+    # Add the figure to the output list
+    figure_list.append(fig)
     
     return figure_list
 
