@@ -1711,13 +1711,13 @@ def plot_brownie_bee(
         ax_.yaxis.set_major_locator(MaxNLocator(max_quality))
         ax_.tick_params(axis="y", direction="inout")
         # Fix formatting of the x-axis
-        [labl.set_rotation(20) for labl in ax_.get_xticklabels()]
+        [labl.set_rotation(45) for labl in ax_.get_xticklabels()]
         
         if space.dimensions[n].prior == "log-uniform":
             ax_.set_xscale("log")
         else:
             ax_.xaxis.set_major_locator(
-                MaxNLocator(6, prune="both", integer=is_cat[n])
+                MaxNLocator(5, prune="both", integer=is_cat[n])
             )
             if is_cat[n]:
                 # Axes for categorical dimensions are really integers; 
