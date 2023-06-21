@@ -829,12 +829,12 @@ def check_constraints(space, constraints):
                     raise ValueError('SumEquals constraint can not be applied to integer dimensions: {}'.format(space.dimensions[ind_dim]))
             # Check if the sum equals constraint is below the combined lower 
             # bound of the space dimensions in question
-            low_limit_sum = np.sum(space.bounds[dim][0] for dim in constraint.dimensions)
+            low_limit_sum = sum(space.bounds[dim][0] for dim in constraint.dimensions)
             if low_limit_sum > constraint.value:
                 raise ValueError('Constraint cannot be met inside dimension limits, value ({}) is too small.'.format(constraint.value))
             # Check if the sum equals constraint is above the combined higher
             # bound of the space dimensions in question
-            high_limit_sum = np.sum(space.bounds[dim][1] for dim in constraint.dimensions)
+            high_limit_sum = sum(space.bounds[dim][1] for dim in constraint.dimensions)
             if high_limit_sum < constraint.value:
                 raise ValueError('Constraint cannot be met inside dimension limits, value ({}) is too large.'.format(constraint.value))
         elif isinstance(constraint, Conditional):
