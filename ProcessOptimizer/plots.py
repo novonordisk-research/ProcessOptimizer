@@ -1669,6 +1669,16 @@ def plot_brownie_bee(
             # and the last category
             ax_.set_xlim(np.min(xi)-0.2, np.max(xi)+0.2)            
             
+            # Highlight the expected minimum
+            # ax_.scatter(
+            #     minimum[n],
+            #     -yi[int(minimum[n])],
+            #     c="k",
+            #     s=20,
+            #     marker="D",
+            #     zorder=1,
+            # )
+            ax_.axvline(minimum[n], linestyle="--", color="k", lw=1)
             # Create one uniformly colored bar for each category.
             # Edgecolor ensures we can see the bar when plotting 
             # at best obeservation, as stddev is often tiny there
@@ -1676,27 +1686,19 @@ def plot_brownie_bee(
                 xi,
                 2*1.96*stddevs,
                 width=0.2,
-                bottom=-(yi-1.96*stddevs),
+                bottom=(-yi-1.96*stddevs),
                 alpha=0.5,
                 color="green",
                 edgecolor="green",
-                zorder=1,
             )
-            # Highlight the expected minimum
-            ax_.scatter(
-                minimum[n],
-                yi[int(minimum[n])],
-                c="k",
-                s=20,
-                marker="D",
-                zorder=0,
-            )
+            
         
         # For non-categoric factors
         else:
             ax_.set_xlim(np.min(xi), np.max(xi))
             # Highlight the expected minimum
             ax_.axvline(minimum[n], linestyle="--", color="k", lw=1)
+            # Show the uncertainty
             ax_.fill_between(
                 xi,
                 y1=-(yi - 1.96*stddevs),
