@@ -1,6 +1,14 @@
 # Release history
 
-## Version 0.8.1 [unpublished]
+## Version 0.8.2 [unpublished]
+
+### Changes
+
+- 
+
+### Bugfixes
+
+## Version 0.8.1
 
 ### Changes
 
@@ -8,8 +16,12 @@
   structure more consistent.
 - Added seeding to the noise models used for benchmarking to ensure 
   reproducible results when benchmarking.
+- Allow addition or removal of modelled noise to the optimizer object. This
+  is to allow user to predict the full outcome space of a given new exp.
 
 ### Bugfixes
+
+- Fix a small number of deprecationwarnings.
 
 ## Version 0.8.0
 
