@@ -913,3 +913,5 @@ class Space(object):
                 row.append(samples[j][i])
             transposed_samples.append(row)
         return transposed_samples
+    
+    # TODO: Add a R1 QRS sampling method here

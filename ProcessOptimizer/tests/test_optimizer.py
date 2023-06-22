@@ -368,8 +368,8 @@ def test_add_remove_modelled_noise():
     next_x = np.linspace(-1, 1, 20).tolist()
     x = []
     y = []
-    #sample noisy experiments, 10 in each x-value
-    for i in range(10):
+    #sample noisy experiments, 20 in each x-value
+    for i in range(20):
         for xx in next_x:
             x.append([xx])
             y.append(model.get_score([xx]))

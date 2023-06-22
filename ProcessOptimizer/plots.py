@@ -1142,7 +1142,7 @@ def _2d_dependency_plot(data, axes, samples, highlighted, limits, options = {}):
         s=30,
         marker="D",
         lw=0.0,
-        zorder=10,
+        zorder=9,
         clip_on=False,
     )
 
