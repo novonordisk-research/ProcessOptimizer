@@ -110,8 +110,7 @@ def test_real_bounds():
     assert np.nextafter(2.1, 3.0) not in a
 
 
-# Make a test that paramtrizes over real, inteager and categorical dimensions
-# and checks that the random values are within the bounds of the space
+@pytest.mark.fast_test
 @pytest.mark.parametrize(
     "Dimension, ismember, point_type",
     [
@@ -121,8 +120,8 @@ def test_real_bounds():
             lambda x: 10**-5 <= x <= 10**5,
             np.float64,
         ),
-        (Integer(1, 10), lambda x: 1 <= x <= 10, np.int64),
-        (Integer(1, 10, transform="normalize"), lambda x: 0 <= x <= 10, np.int64),
+        (Integer(1, 10), lambda x: 1 <= x <= 10, np.int32),
+        (Integer(1, 10, transform="normalize"), lambda x: 0 <= x <= 10, np.int32),
         (Categorical(["cat", "dog", "rat"]), lambda x: x in ["cat", "dog", "rat"], str),
     ],
 )
