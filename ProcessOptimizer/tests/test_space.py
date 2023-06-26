@@ -10,12 +10,13 @@ from numpy.testing import assert_equal
 from numpy.testing import assert_raises_regex
 
 from ProcessOptimizer import Optimizer
+from ProcessOptimizer.space import Dimension
 from ProcessOptimizer.space import Space
 from ProcessOptimizer.space import Real
 from ProcessOptimizer.space import Integer
 from ProcessOptimizer.space import Categorical
-from ProcessOptimizer.space import check_dimension as space_check_dimension
 from ProcessOptimizer.space import space_factory
+from ProcessOptimizer.space import check_dimension as space_check_dimension
 
 
 def check_dimension(Dimension, vals, random_val):
@@ -107,6 +108,66 @@ def test_real_bounds():
     assert 2.09 in a
     assert 2.1 in a
     assert np.nextafter(2.1, 3.0) not in a
+
+
+# Make a test that paramtrizes over real, inteager and categorical dimensions
+# and checks that the random values are within the bounds of the space
+@pytest.mark.parametrize(
+    "Dimension, ismember, point_type",
+    [
+        (Real(1, 10), lambda x: 1 <= x <= 10, np.float64),
+        (
+            Real(10**-5, 10**5, prior="log-uniform"),
+            lambda x: 10**-5 <= x <= 10**5,
+            np.float64,
+        ),
+        (Integer(1, 10), lambda x: 1 <= x <= 10, np.int64),
+        (Integer(1, 10, transform="normalize"), lambda x: 0 <= x <= 10, np.int64),
+        (Categorical(["cat", "dog", "rat"]), lambda x: x in ["cat", "dog", "rat"], str),
+    ],
+)
+def test_sampling_values(Dimension: Dimension, ismember, point_type):
+    generator = np.random.default_rng(42)
+    single_sample = Dimension.sample(0.5)
+    # Testing that sampling a single point gives the desired properties
+    assert isinstance(single_sample, np.ndarray)
+    assert isinstance(single_sample[0], point_type)
+    assert ismember(single_sample[0])
+    randomvalues = Dimension.sample(generator.random(size=50))
+    # Testing that sampling multiple points gives the desired properties
+    assert len(randomvalues) == 50
+    assert isinstance(randomvalues, np.ndarray)
+    assert all([isinstance(sample, point_type) for sample in randomvalues])
+    assert all([ismember(sample) for sample in randomvalues])
+    generator = np.random.default_rng(42)  # Resetting the random number generator
+    deduplicated_values = Dimension.sample(generator.random(size=50), deduplicate=True)
+    assert len(deduplicated_values) == len(set(deduplicated_values))
+    # Checking of no repeated values
+    assert set(deduplicated_values) == set(randomvalues)
+    # Checking that seeding works
+    for i in range(len(deduplicated_values)):
+        # Checking that order is preserved when deduplicating
+        if i < len(deduplicated_values) - 1:
+            first_pos = np.argwhere(randomvalues == deduplicated_values[i])[0][0]
+            second_pos = np.argwhere(randomvalues == deduplicated_values[i + 1])[0][0]
+            assert first_pos < second_pos
+    with pytest.raises(ValueError):
+        Dimension.sample(1.1)
+    with pytest.raises(ValueError):
+        Dimension.sample(-0.1)
+    with pytest.raises(ValueError):
+        Dimension.sample([0.5, 1.1])
+    with pytest.raises(ValueError):
+        Dimension.sample([0.5, -0.1])
+
+
+def test_sampling_of_categorical_with_priors():
+    dimension = Categorical(["cat", "dog", "rat"], prior=[0.1, 0.2, 0.7])
+    generator = np.random.default_rng(42)
+    randomvalues = dimension.sample(generator.random(size=100))
+    assert sum(randomvalues == "cat") / len(randomvalues) == pytest.approx(0.1, 0.3)
+    assert sum(randomvalues == "dog") / len(randomvalues) == pytest.approx(0.2, 0.1)
+    assert sum(randomvalues == "rat") / len(randomvalues) == pytest.approx(0.7, 0.1)
 
 
 @pytest.mark.fast_test

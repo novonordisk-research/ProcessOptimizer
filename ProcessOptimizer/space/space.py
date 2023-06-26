@@ -182,6 +182,47 @@ class Dimension(object):
         else:
             raise ValueError("Dimension's name must be either string or None.")
 
+    def sample(
+        self, points: Union[int, float, Iterable[float]], deduplicate: bool = False
+    ) -> np.ndarray:
+        """Draw points from the dimension.
+
+        The sampling should be a reasonable mapping from the intercal [0, 1] to the
+        dimension, whatever that may mean. For example, for an integer dimension, the
+        sampling should be give a higher integer for a higher value of the point, and
+        each integer should be mapped to from en equally large interval.
+
+        Parameters
+        ----------
+        * `points` [float or list[float]]:
+            A single point or a list of points to sample. All must be between 0 and 1.
+
+        * `deduplicate` [bool]:
+            If True, remove duplicate points from the output. If False, the output will
+            have the same size as `points`.
+        """
+        if isinstance(points, (int, float)):  # If a single point is given, convert it
+            # to a list.
+            points = [points]
+        if any([point < 0 or point > 1 for point in points]):
+            raise ValueError("Sample points must be between 0 and 1.")
+        sampled_points = self._sample(points)
+        if deduplicate:
+            # np.unique sorts the inputs, which we do not wan't, so we have to reinvent
+            # the wheel.
+            seen = set()
+            deduplicated_points = []
+            for point in sampled_points:
+                if point not in seen:
+                    deduplicated_points.append(point)
+                    seen.add(point)
+            sampled_points = deduplicated_points
+        return np.array(sampled_points)
+
+    @abstractmethod
+    def _sample(self, points: Iterable[float]) -> np.array:
+        pass
+
 
 def _uniform_inclusive(loc=0.0, scale=1.0):
     # like scipy.stats.distributions but inclusive of `high`
@@ -330,7 +371,19 @@ class Real(Dimension):
         samples = (np.arange(n)+0.5)/n
 
         # Transform the samples to the range used for this dimension
-        return samples*(self.high - self.low) + self.low
+
+    def _sample(self, point_list: Iterable[float]) -> np.ndarray:
+        if self.prior == "uniform":
+            sampled_points = [
+                point * (self.high - self.low) + self.low for point in point_list
+            ]
+        else:
+            log_sampled_points = [
+                point * np.log(self.high / self.low) + np.log(self.low)
+                for point in point_list
+            ]
+            sampled_points = np.exp(log_sampled_points)
+        return sampled_points
 
 
 class Integer(Dimension):
@@ -446,6 +499,16 @@ class Integer(Dimension):
         
         # Convert samples to a list of integers
         return samples.astype(int)
+
+    def _sample(self, point_list=Iterable[float]) -> np.ndarray:
+        point_list = [
+            (
+                point * (self.transformed_bounds[1] - self.transformed_bounds[0])
+                + self.transformed_bounds[0]
+            )
+            for point in point_list
+        ]
+        return self.inverse_transform(np.array(point_list))
 
 
 class Categorical(Dimension):
@@ -584,6 +647,13 @@ class Categorical(Dimension):
             # Loop through all categories by using the modulus.
             s.append(self.categories[i % l])
         return s
+
+    def _sample(self, point_list=Iterable[float]) -> np.ndarray:
+        cummulative_prior = np.cumsum(self.prior_)
+        # For each point in point_list, find the index of the first element in cummulative_prior that is greater than the point
+        # This is the index of the category that the point corresponds to
+        category_index = [np.argmax(cummulative_prior > point) for point in point_list]
+        return np.array([self.categories[index] for index in category_index])
 
 
 class Space(object):
