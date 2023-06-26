@@ -336,22 +336,6 @@ class Real(Dimension):
                                "the space, not %s and %s." % (a, b))
         return abs(a - b)
 
-    def lhs_arange(self, n):
-        """ Returns an evenly distributed numpy array of samples to use with latin hypercube sampling.
-
-        Parameters
-        -----------
-        * `n` [int]
-            Number of samples.
-        """
-        # Generate sample points by splitting the space 0 to 1 into n pieces
-        # and picking the middle of each piece. Samples are spaced 1/n apart
-        # inside the interval with a buffer of half a step size to the extremes
-        samples = (np.arange(n) + 0.5) / n
-
-        # Transform the samples to the range used for this dimension
-        return samples * (self.high - self.low) + self.low
-
     def _sample(self, point_list: Iterable[float]) -> np.ndarray:
         if self.prior == "uniform":
             sampled_points = [
@@ -454,26 +438,6 @@ class Integer(Dimension):
             raise RuntimeError("Can only compute distance for values within "
                                "the space, not %s and %s." % (a, b))
         return abs(a - b)
-
-    def lhs_arange(self, n):
-        """ Returns an evenly distributed list of samples to use with latin hypercube sampling.
-
-        Parameters
-        -----------
-        * `n` [int]
-            Number of samples.
-        """
-        # Generate sample points by splitting the space 0 to 1 into n pieces
-        # and picking the middle of each piece. Samples are spaced 1/n apart
-        # inside the interval with a buffer of half a step size to the extremes
-        samples = (np.arange(n)+0.5)/n
-        # Transform the samples to the range used for this dimension and then 
-        # round them back to integers. If your space is less than n wide, some 
-        # of your samples will be rounded to the same number
-        samples = np.round(samples*(self.high - self.low) + self.low)
-        
-        # Convert samples to a list of integers
-        return samples.astype(int)
 
     def _sample(self, point_list=Iterable[float]) -> np.ndarray:
         point_list = [
@@ -590,22 +554,6 @@ class Categorical(Dimension):
             raise RuntimeError("Can only compute distance for values within"
                                " the space, not {} and {}.".format(a, b))
         return 1 if a != b else 0
-
-    def lhs_arange(self, n):
-        """ Returns an evenly distributed list of samples to use with latin hypercube sampling.
-
-        Parameters
-        -----------
-        * `n` [int]
-            Number of samples.
-        """
-
-        s = []
-        l = len(self.categories)  # Number of categories
-        for i in range(n):
-            # Loop through all categories by using the modulus.
-            s.append(self.categories[i % l])
-        return s
 
     def _sample(self, point_list=Iterable[float]) -> np.ndarray:
         # XXX check that sum(prior) == 1
@@ -928,7 +876,8 @@ class Space(object):
         for i in range(self.n_dims):
             lhs_perm = []
             # Get evenly distributed samples from one dimension
-            lhs_aranged = self.dimensions[i].lhs_arange(n)
+            sample_indices = (np.arange(n) + 0.5) / n
+            lhs_aranged = self.dimensions[i].sample(sample_indices)
             perm = np.random.RandomState(seed=42 + i).permutation(n)
             for p in perm:  # Random permutate the order of the samples
                 lhs_perm.append(lhs_aranged[p])
