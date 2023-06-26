@@ -1,17 +1,11 @@
 from abc import ABC, abstractmethod
-from math import floor
 from typing import Iterable, List, Union
 
 import numbers
 import numpy as np
 import yaml
 
-from scipy.stats.distributions import randint
-from scipy.stats.distributions import rv_discrete
-from scipy.stats.distributions import uniform
-
 from sklearn.utils import check_random_state
-from sklearn.utils.fixes import sp_version
 
 from .transformers import CategoricalEncoder
 from .transformers import Normalize
@@ -126,7 +120,7 @@ def check_dimension(dimension, transform=None):
                      "supported types.".format(dimension))
 
 
-class Dimension(object):
+class Dimension(ABC):
     """Base class for search space dimensions."""
 
     prior = None
@@ -143,9 +137,9 @@ class Dimension(object):
             Set random state to something other than None for reproducible
             results.
         """
-        rng = check_random_state(random_state)
-        samples = self._rvs.rvs(size=n_samples, random_state=rng)
-        return self.inverse_transform(samples)
+        random_state = check_random_state(random_state)
+        index_array = random_state.uniform(size=n_samples)
+        return self.sample(index_array)
 
     def transform(self, X):
         """Transform samples form the original space to a warped space."""
@@ -226,13 +220,6 @@ class Dimension(object):
         pass
 
 
-def _uniform_inclusive(loc=0.0, scale=1.0):
-    # like scipy.stats.distributions but inclusive of `high`
-    # XXX scale + 1. might not actually be a float after scale if
-    # XXX scale is very large.
-    return uniform(loc=loc, scale=np.nextafter(scale, scale + 1.))
-
-
 class Real(Dimension):
     def __init__(self, low, high, prior="uniform", transform=None, name=None):
         """Search space dimension that can take on any real value.
@@ -280,29 +267,19 @@ class Real(Dimension):
             raise ValueError("transform should be 'normalize' or 'identity'"
                              " got {}".format(self.transform_))
 
-        # Define _rvs and transformer spaces.
-        # XXX: The _rvs is for sampling in the transformed space.
-        # The rvs on Dimension calls inverse_transform on the points sampled
-        # using _rvs
         if self.transform_ == "normalize":
             # set upper bound to next float after 1. to make the numbers
             # inclusive of upper edge
-            self._rvs = _uniform_inclusive(0., 1.)
             if self.prior == "uniform":
-                self.transformer = Pipeline(
-                    [Identity(), Normalize(low, high)])
+                self.transformer = Pipeline([Identity(), Normalize(low, high)])
             else:
                 self.transformer = Pipeline(
                     [Log10(), Normalize(np.log10(low), np.log10(high))]
                 )
         else:
             if self.prior == "uniform":
-                self._rvs = _uniform_inclusive(self.low, self.high - self.low)
                 self.transformer = Identity()
             else:
-                self._rvs = _uniform_inclusive(
-                    np.log10(self.low),
-                    np.log10(self.high) - np.log10(self.low))
                 self.transformer = Log10()
 
     def __eq__(self, other):
@@ -370,9 +347,10 @@ class Real(Dimension):
         # Generate sample points by splitting the space 0 to 1 into n pieces
         # and picking the middle of each piece. Samples are spaced 1/n apart
         # inside the interval with a buffer of half a step size to the extremes
-        samples = (np.arange(n)+0.5)/n
+        samples = (np.arange(n) + 0.5) / n
 
         # Transform the samples to the range used for this dimension
+        return samples * (self.high - self.low) + self.low
 
     def _sample(self, point_list: Iterable[float]) -> np.ndarray:
         if self.prior == "uniform":
@@ -427,14 +405,9 @@ class Integer(Dimension):
             raise ValueError("transform should be 'normalize' or 'identity'"
                              " got {}".format(self.transform_))
         if transform == "normalize":
-            self._rvs = uniform(0, 1)
             self.transformer = Normalize(low, high, is_int=True)
         else:
-            self._rvs = randint(self.low, self.high + 1)
             self.transformer = Identity()
-
-    def update_samplingspace(self, new_space):
-        self._rvs = new_space
 
     def __eq__(self, other):
         return (type(self) is type(other) and
@@ -558,11 +531,6 @@ class Categorical(Dimension):
         else:
             self.prior_ = prior
 
-        # XXX check that sum(prior) == 1
-        self._rvs = rv_discrete(
-            values=(range(len(self.categories)), self.prior_)
-        )
-
     def __eq__(self, other):
         return (type(self) is type(other) and
                 self.categories == other.categories and
@@ -580,13 +548,6 @@ class Categorical(Dimension):
             prior = self.prior
 
         return "Categorical(categories={}, prior={})".format(cats, prior)
-
-    def rvs(self, n_samples=None, random_state=None):
-        choices = self._rvs.rvs(size=n_samples, random_state=random_state)
-        if isinstance(choices, numbers.Integral):
-            return self.categories[choices]
-        else:
-            return [self.categories[c] for c in choices]
 
     @property
     def transformed_size(self):
@@ -647,6 +608,7 @@ class Categorical(Dimension):
         return s
 
     def _sample(self, point_list=Iterable[float]) -> np.ndarray:
+        # XXX check that sum(prior) == 1
         cummulative_prior = np.cumsum(self.prior_)
         # For each point in point_list, find the index of the first element in cummulative_prior that is greater than the point
         # This is the index of the category that the point corresponds to
