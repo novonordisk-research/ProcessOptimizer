@@ -1,4 +1,6 @@
-from typing import List, Union
+from abc import ABC, abstractmethod
+from math import floor
+from typing import Iterable, List, Union
 
 import numbers
 import numpy as np
@@ -502,13 +504,9 @@ class Integer(Dimension):
 
     def _sample(self, point_list=Iterable[float]) -> np.ndarray:
         point_list = [
-            (
-                point * (self.transformed_bounds[1] - self.transformed_bounds[0])
-                + self.transformed_bounds[0]
-            )
-            for point in point_list
+            floor(point * (self.high + 1 - self.low) + self.low) for point in point_list
         ]
-        return self.inverse_transform(np.array(point_list))
+        return point_list
 
 
 class Categorical(Dimension):

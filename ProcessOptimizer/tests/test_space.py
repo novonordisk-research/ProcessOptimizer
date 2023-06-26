@@ -161,6 +161,24 @@ def test_sampling_values(Dimension: Dimension, ismember, point_type):
         Dimension.sample([0.5, -0.1])
 
 
+@pytest.mark.fast_test
+@pytest.mark.parametrize(
+    "Dimension, lower, probability",
+    [
+        (Real(1, 10), 3, 2 / 9),
+        (Real(10**-5, 10**5, prior="log-uniform"), 10**-3, 0.2),
+        (Integer(1, 10), 2.5, 0.2),
+        (Integer(1, 10, transform="normalize"), 2.5, 0.2),
+    ],
+)
+def test_sampling_of_numerical_with_priors(Dimension, lower, probability):
+    randomvalues = Dimension.sample(np.random.default_rng(42).random(size=100))
+    assert sum(randomvalues <= lower) / len(randomvalues) == pytest.approx(
+        probability, 0.1
+    )
+
+
+@pytest.mark.fast_test
 def test_sampling_of_categorical_with_priors():
     dimension = Categorical(["cat", "dog", "rat"], prior=[0.1, 0.2, 0.7])
     generator = np.random.default_rng(42)
