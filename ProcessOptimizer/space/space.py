@@ -19,7 +19,7 @@ class _Ellipsis:
     def __repr__(self):
 
 def get_random_generator(
-    input: Union[int, float, np.random.RandomState, np.random.Generator, None]
+    input: Union[int, np.random.RandomState, np.random.Generator, None]
 ) -> np.random.Generator:
     """Get a random generator from an input.
 
@@ -36,15 +36,18 @@ def get_random_generator(
     """
     if input is None:
         return np.random.default_rng()
-    elif isinstance(input, (int, float)):
+    elif isinstance(input, int):
         return np.random.default_rng(input)
     elif isinstance(input, np.random.RandomState):
-        return np.random.Generator(input)
+        return np.random.default_rng(
+            input.randint(1000, size=10)
+        )  # Draws 10 integers from the deprecate RandomState to use as a seed for the current RNG.
+    # This only allows for 10 000 different values, but since the main use case is to ensure reproducibility, this should be enough.
     elif isinstance(input, np.random.Generator):
         return input
     else:
         raise TypeError(
-            "Random state must be either None, an integer, a float, a RandomState instance, or a Generator instance."
+            "Random state must be either None, an integer, a RandomState instance, or a Generator instance."
         )
 
 
@@ -683,7 +686,13 @@ class Space(object):
 
         return space
 
-    def rvs(self, n_samples=1, random_state=None):
+    def rvs(
+        self,
+        n_samples=1,
+        random_state: Union[
+            int, np.random.RandomState, np.random.Generator, None
+        ] = None,
+    ):
         """Draw random samples.
 
         The samples are in the original space. They need to be transformed
@@ -694,7 +703,7 @@ class Space(object):
         * `n_samples` [int, default=1]:
             Number of samples to be drawn from the space.
 
-        * `random_state` [int, RandomState instance, or None (default)]:
+        * `random_state` [int, np.random.RandomState, np.random.Generator, or None, default=None]:
             Set random state to something other than None for reproducible
             results.
 
