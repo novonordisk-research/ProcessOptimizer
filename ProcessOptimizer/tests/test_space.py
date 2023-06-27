@@ -169,8 +169,11 @@ def test_random_values():
             Categorical(["a", "b", "c"]),
         ]
     )
-    random_values = space.rvs(1)
-    assert False  # Add in pseudorandom values to check against
+    random_values = space.rvs(1, random_state=42)
+    assert random_values[0][0] == pytest.approx(0.77395604)
+    assert random_values[0][1] == pytest.approx(0.42980418)
+    assert random_values[0][2] == 9
+    assert random_values[0][3] == "c"
 
 
 @pytest.mark.fast_test
