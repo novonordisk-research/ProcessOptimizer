@@ -17,6 +17,8 @@ from .transformers import Pipeline
 
 class _Ellipsis:
     def __repr__(self):
+        return "..."
+
 
 def get_random_generator(
     input: Union[int, np.random.RandomState, np.random.Generator, None]
