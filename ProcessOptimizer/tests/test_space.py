@@ -93,8 +93,8 @@ def test_real_bounds():
             lambda x: 10**-5 <= x <= 10**5,
             np.float64,
         ),
-        (Integer(1, 10), lambda x: 1 <= x <= 10, np.int32),
-        (Integer(1, 10, transform="normalize"), lambda x: 0 <= x <= 10, np.int32),
+        (Integer(1, 10), lambda x: 1 <= x <= 10, np.integer),
+        (Integer(1, 10, transform="normalize"), lambda x: 0 <= x <= 10, np.integer),
         (Categorical(["cat", "dog", "rat"]), lambda x: x in ["cat", "dog", "rat"], str),
     ],
 )
