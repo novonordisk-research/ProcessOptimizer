@@ -450,7 +450,7 @@ class Integer(Dimension):
                                "the space, not %s and %s." % (a, b))
         return abs(a - b)
 
-    def _sample(self, point_list=Iterable[float]) -> np.ndarray:
+    def _sample(self, point_list: Iterable[float]) -> np.ndarray:
         point_list = [
             point * (self.high + 1 - self.low) + self.low for point in point_list
         ]
@@ -566,7 +566,7 @@ class Categorical(Dimension):
                                " the space, not {} and {}.".format(a, b))
         return 1 if a != b else 0
 
-    def _sample(self, point_list=Iterable[float]) -> np.ndarray:
+    def _sample(self, point_list: Iterable[float]) -> np.ndarray:
         # XXX check that sum(prior) == 1
         cummulative_prior = np.cumsum(self.prior_)
         # For each point in point_list, find the index of the first element in cummulative_prior that is greater than the point
