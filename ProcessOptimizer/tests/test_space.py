@@ -112,7 +112,9 @@ def test_sampling_values(Dimension: Dimension, ismember, point_type):
     assert all([isinstance(sample, point_type) for sample in randomvalues])
     assert all([ismember(sample) for sample in randomvalues])
     generator = np.random.default_rng(42)  # Resetting the random number generator
-    deduplicated_values = Dimension.sample(generator.random(size=50), deduplicate=True)
+    deduplicated_values = Dimension.sample(
+        generator.random(size=50), allow_duplicates=False
+    )
     assert len(deduplicated_values) == len(set(deduplicated_values))
     # Checking of no repeated values
     assert set(deduplicated_values) == set(randomvalues)

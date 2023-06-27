@@ -193,7 +193,7 @@ class Dimension(ABC):
             raise ValueError("Dimension's name must be either string or None.")
 
     def sample(
-        self, points: Union[int, float, Iterable[float]], deduplicate: bool = False
+        self, points: Union[float, Iterable[float]], allow_duplicates: bool = True
     ) -> np.ndarray:
         """Draw points from the dimension.
 
@@ -207,9 +207,10 @@ class Dimension(ABC):
         * `points` [float or list[float]]:
             A single point or a list of points to sample. All must be between 0 and 1.
 
-        * `deduplicate` [bool]:
-            If True, remove duplicate points from the output. If False, the output will
-            have the same size as `points`.
+        * `allow_duplicates` [bool, default=True]:
+            If True, the output will have the same size as `points`. If False, each
+            point in the output will be unique. This means that the output can be
+            shorter than `points`.
         """
         if isinstance(points, (int, float)):  # If a single point is given, convert it
             # to a list.
@@ -217,7 +218,7 @@ class Dimension(ABC):
         if any([point < 0 or point > 1 for point in points]):
             raise ValueError("Sample points must be between 0 and 1.")
         sampled_points = self._sample(points)
-        if deduplicate:
+        if not allow_duplicates:
             # np.unique sorts the inputs, which we do not wan't, so we have to reinvent
             # the wheel.
             seen = set()
