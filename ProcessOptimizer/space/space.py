@@ -197,10 +197,7 @@ class Dimension(ABC):
     ) -> np.ndarray:
         """Draw points from the dimension.
 
-        The sampling should be a reasonable mapping from the intercal [0, 1] to the
-        dimension, whatever that may mean. For example, for an integer dimension, the
-        sampling should be give a higher integer for a higher value of the point, and
-        each integer should be mapped to from en equally large interval.
+
 
         Parameters
         ----------
@@ -232,6 +229,17 @@ class Dimension(ABC):
 
     @abstractmethod
     def _sample(self, points: Iterable[float]) -> np.array:
+        """A reasonable mapping from the interval [0, 1] to the dimension, whatever that
+        may mean. For example, for an integer dimension, the sampling should be give a
+        higher integer for a higher value of the point, and each integer should be
+        mapped to from en equally large interval.
+
+        The mapping should be monotonic, but it does not have to be strictly monotonic.
+
+        The mapping should respect (informative) priors. For example, if the prior is
+        log-uniform, the mapping should be logarithmic, so that the interval that maps
+        to [0.1, 1] is the same size as the interval that maps to [1, 10].
+        """
         pass
 
 
