@@ -860,7 +860,7 @@ class Space(object):
         return any([isinstance(dim, Categorical) for dim in self.dimensions])
 
     def distance(self, point_a, point_b):
-        """Compute distance between two points in this space.
+        """Compute the L1 (Manhattan or taxicab) distance between two points in this space.
 
         Parameters
         ----------
