@@ -152,22 +152,6 @@ class Dimension(ABC):
 
     prior = None
 
-    def rvs(self, n_samples=1, random_state=None):
-        """Draw random samples.
-
-        Parameters
-        ----------
-        * `n_samples` [int or None]:
-            The number of samples to be drawn.
-
-        * `random_state` [int, RandomState instance, or None (default)]:
-            Set random state to something other than None for reproducible
-            results.
-        """
-        random_state = get_random_generator(random_state)
-        index_array = random_state.uniform(size=n_samples)
-        return self.sample(index_array)
-
     def transform(self, X):
         """Transform samples form the original space to a warped space."""
         return self.transformer.transform(X)
