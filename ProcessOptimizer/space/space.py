@@ -5,7 +5,6 @@ import numbers
 import numpy as np
 import yaml
 
-from sklearn.utils import check_random_state
 
 from .transformers import CategoricalEncoder
 from .transformers import Normalize
@@ -18,7 +17,35 @@ from .transformers import Pipeline
 
 class _Ellipsis:
     def __repr__(self):
-        return '...'
+
+def get_random_generator(
+    input: Union[int, float, np.random.RandomState, np.random.Generator, None]
+) -> np.random.Generator:
+    """Get a random generator from an input.
+
+    Parameters
+    ----------
+    * `input` [int, float, RandomState instance, Generator instance, or None (default)]:
+        Set random state to something other than None for reproducible
+        results.
+
+    Returns
+    -------
+    * `rng`: [Generator instance]
+       Random generator.
+    """
+    if input is None:
+        return np.random.default_rng()
+    elif isinstance(input, (int, float)):
+        return np.random.default_rng(input)
+    elif isinstance(input, np.random.RandomState):
+        return np.random.Generator(input)
+    elif isinstance(input, np.random.Generator):
+        return input
+    else:
+        raise TypeError(
+            "Random state must be either None, an integer, a float, a RandomState instance, or a Generator instance."
+        )
 
 
 def space_factory(input: Union["Space", List]) -> "Space":
@@ -137,7 +164,7 @@ class Dimension(ABC):
             Set random state to something other than None for reproducible
             results.
         """
-        random_state = check_random_state(random_state)
+        random_state = get_random_generator(random_state)
         index_array = random_state.uniform(size=n_samples)
         return self.sample(index_array)
 
@@ -693,12 +720,13 @@ class Space(object):
            Points sampled from the space.
         """
 
-        rng = check_random_state(random_state)
+        rng = get_random_generator(random_state)
 
         columns = []
 
         for dim in self.dimensions:
-            columns.append(dim.rvs(n_samples=n_samples, random_state=rng))
+            index_array = rng.uniform(size=n_samples)
+            columns.append(dim.sample(index_array))
 
         # Transpose
         rows = []
