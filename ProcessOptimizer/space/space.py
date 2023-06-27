@@ -880,17 +880,31 @@ class Space(object):
 
         return distance
 
-    def lhs(self, n):
-        """ Returns n latin hypercube samples as a list of lists
-        """
+    def lhs(
+        self,
+        n: int,
+        random_state: Union[
+            int, float, np.random.RandomState, np.random.Generator, None
+        ] = 42,
+    ):
+        """Returns n latin hypercube samples as a list of lists
 
+        Parameters
+        ----------
+        * `n` [int]: The number of samples to generate.
+
+        * `random_state`
+            [int, float, np.random.RandomState, np.random.Generator, or None, default=42]:
+            The seed used by the random number generator. If None, the results are not reproducible.
+        """
+        rng = get_random_generator(random_state)
         samples = []
         for i in range(self.n_dims):
             lhs_perm = []
             # Get evenly distributed samples from one dimension
             sample_indices = (np.arange(n) + 0.5) / n
             lhs_aranged = self.dimensions[i].sample(sample_indices)
-            perm = np.random.RandomState(seed=42 + i).permutation(n)
+            perm = rng.permutation(n)
             for p in perm:  # Random permutate the order of the samples
                 lhs_perm.append(lhs_aranged[p])
             samples.append(lhs_perm)
