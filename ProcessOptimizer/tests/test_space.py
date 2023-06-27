@@ -164,7 +164,7 @@ def test_random_values():
     space = Space(
         [
             Real(0, 1),
-            Real(0, 1, prior="log-uniform"),
+            Real(10**-3, 10**3, prior="log-uniform"),
             Integer(0, 10),
             Categorical(["a", "b", "c"]),
         ]
