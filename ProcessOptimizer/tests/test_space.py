@@ -709,7 +709,33 @@ def test_purely_categorical_space():
 
 @pytest.mark.fast_test
 def test_lhs():
-    SPACE = Space([Integer(-20, 20), Real(-10.5, 100), Categorical(list("abc"))])
-    samples = SPACE.lhs(10)
-    assert len(samples) == 10
-    assert len(samples[0]) == 3
+    SPACE = Space(
+        [
+            Integer(1, 6),
+            Real(1, 7),
+            Real(10**-3, 10**3, prior="log-uniform"),
+            Categorical(list("abc")),
+        ]
+    )
+    samples = SPACE.lhs(6)
+    assert len(samples) == 6
+    assert len(samples[0]) == 4
+    values = [[sample[i] for sample in samples] for i in range(4)]
+    # set disregards order, so we use it to test which values we got.
+    assert set(values[0]) == set(range(1, 6 + 1))
+    # We should get all six integers, in any order
+    assert set(values[1]) == set(0.5 + np.arange(1, 7))
+    # Six reals between 1 and 7, evenly divide, lie halfway between integers
+    for log_real in values[2]:
+        assert any(
+            log_real == pytest.approx(value)
+            for value in np.sqrt(10) * 10**-3 * 10 ** np.arange(6)
+        )
+    # there are no good tests for approximate equality that disregards order
+    # For log-uniform, we should get six values evenly spaced on a log scale
+    assert set(values[3]) == set("abc")
+    is_min_pos = [[y == min(x) for y in x] for x in values]
+    num_min_pos = np.where(is_min_pos[0:3])[1]
+    # We only bother for the numerical axes, since the categorical axis has fewer than six values, so it has repeated values.
+    assert len(np.unique(num_min_pos)) > 1
+    # The minimum value should not always be in the same position
