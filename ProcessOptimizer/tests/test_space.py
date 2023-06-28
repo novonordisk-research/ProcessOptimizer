@@ -739,3 +739,10 @@ def test_lhs():
     # We only bother for the numerical axes, since the categorical axis has fewer than six values, so it has repeated values.
     assert len(np.unique(num_min_pos)) > 1
     # The minimum value should not always be in the same position
+    lhs_one = SPACE.lhs(n=6, random_state=None)
+    lhs_two = SPACE.lhs(n=6, random_state=None)
+    assert lhs_one != lhs_two
+    # Verfying that lhs can be performed randomly
+    for i in range(4):
+        assert set([x[i] for x in lhs_one]) == set([x[i] for x in lhs_two])
+    # Asserting the the values are the same for both the lhs, even though the order is different
