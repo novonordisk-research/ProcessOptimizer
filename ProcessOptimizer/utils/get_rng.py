@@ -24,10 +24,9 @@ def get_random_generator(
     elif isinstance(input, int):
         return np.random.default_rng(input)
     elif isinstance(input, np.random.RandomState):
-        return np.random.default_rng(
-            input.randint(1000, size=10)
-        )  # Draws 10 integers from the deprecate RandomState to use as a seed for the current RNG.
-    # This only allows for 10 000 different values, but since the main use case is to ensure reproducibility, this should be enough.
+        return np.random.default_rng(input.randint(1000, size=10))
+    # Draws 10 integers under 1000 from the deprecate RandomState to use as a seed for
+    # the current RNG. This allows for 10**30 different values.
     elif isinstance(input, np.random.Generator):
         return input
     else:
