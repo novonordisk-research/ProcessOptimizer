@@ -11,6 +11,7 @@ from .transformers import Normalize
 from .transformers import Identity
 from .transformers import Log10
 from .transformers import Pipeline
+from ..utils import get_random_generator
 
 # helper class to be able to print [1, ..., 4] instead of [1, '...', 4]
 
@@ -18,39 +19,6 @@ from .transformers import Pipeline
 class _Ellipsis:
     def __repr__(self):
         return "..."
-
-
-def get_random_generator(
-    input: Union[int, np.random.RandomState, np.random.Generator, None]
-) -> np.random.Generator:
-    """Get a random generator from an input.
-
-    Parameters
-    ----------
-    * `input` [int, float, RandomState instance, Generator instance, or None (default)]:
-        Set random state to something other than None for reproducible
-        results.
-
-    Returns
-    -------
-    * `rng`: [Generator instance]
-       Random generator.
-    """
-    if input is None:
-        return np.random.default_rng()
-    elif isinstance(input, int):
-        return np.random.default_rng(input)
-    elif isinstance(input, np.random.RandomState):
-        return np.random.default_rng(
-            input.randint(1000, size=10)
-        )  # Draws 10 integers from the deprecate RandomState to use as a seed for the current RNG.
-    # This only allows for 10 000 different values, but since the main use case is to ensure reproducibility, this should be enough.
-    elif isinstance(input, np.random.Generator):
-        return input
-    else:
-        raise TypeError(
-            "Random state must be either None, an integer, a RandomState instance, or a Generator instance."
-        )
 
 
 def space_factory(input: Union["Space", List]) -> "Space":
@@ -65,10 +33,11 @@ def space_factory(input: Union["Space", List]) -> "Space":
     Returns:
     * `space`: The resulting Space.
     """
-    if isinstance(input,Space):
+    if isinstance(input, Space):
         return input
     else:
         return Space(input)
+
 
 def check_dimension(dimension, transform=None):
     """Turn a provided dimension description into a dimension object.
@@ -127,20 +96,24 @@ def check_dimension(dimension, transform=None):
         return Categorical(dimension, transform=transform)
 
     if len(dimension) == 2:
-        if any([isinstance(d, (str, bool)) or isinstance(d, np.bool_)
-                for d in dimension]):
+        if any(
+            [isinstance(d, (str, bool)) or isinstance(d, np.bool_) for d in dimension]
+        ):
             return Categorical(dimension, transform=transform)
         elif all([isinstance(dim, numbers.Integral) for dim in dimension]):
             return Integer(*dimension, transform=transform)
         elif any([isinstance(dim, numbers.Real) for dim in dimension]):
             return Real(*dimension, transform=transform)
         else:
-            raise ValueError("Invalid dimension {}. Read the documentation for"
-                             " supported types.".format(dimension))
+            raise ValueError(
+                "Invalid dimension {}. Read the documentation for"
+                " supported types.".format(dimension)
+            )
 
     if len(dimension) == 3:
-        if (any([isinstance(dim, (float, int)) for dim in dimension[:2]]) and
-                dimension[2] in ["uniform", "log-uniform"]):
+        if any([isinstance(dim, (float, int)) for dim in dimension[:2]]) and dimension[
+            2
+        ] in ["uniform", "log-uniform"]:
             return Real(*dimension, transform=transform)
         else:
             return Categorical(dimension, transform=transform)
@@ -148,8 +121,10 @@ def check_dimension(dimension, transform=None):
     if len(dimension) > 3:
         return Categorical(dimension, transform=transform)
 
-    raise ValueError("Invalid dimension {}. Read the documentation for "
-                     "supported types.".format(dimension))
+    raise ValueError(
+        "Invalid dimension {}. Read the documentation for "
+        "supported types.".format(dimension)
+    )
 
 
 class Dimension(ABC):
@@ -163,7 +138,7 @@ class Dimension(ABC):
 
     def inverse_transform(self, Xt):
         """Inverse transform samples from the warped space back into the
-           original space.
+        original space.
         """
         return self.transformer.inverse_transform(Xt)
 
@@ -276,8 +251,10 @@ class Real(Dimension):
             Name associated with the dimension, e.g., "learning rate".
         """
         if high <= low:
-            raise ValueError("the lower bound {} has to be less than the"
-                             " upper bound {}".format(low, high))
+            raise ValueError(
+                "the lower bound {} has to be less than the"
+                " upper bound {}".format(low, high)
+            )
         self.low = low
         self.high = high
         self.prior = prior
@@ -289,8 +266,10 @@ class Real(Dimension):
         self.transform_ = transform
 
         if self.transform_ not in ["normalize", "identity"]:
-            raise ValueError("transform should be 'normalize' or 'identity'"
-                             " got {}".format(self.transform_))
+            raise ValueError(
+                "transform should be 'normalize' or 'identity'"
+                " got {}".format(self.transform_)
+            )
 
         if self.transform_ == "normalize":
             # set upper bound to next float after 1. to make the numbers
@@ -308,23 +287,25 @@ class Real(Dimension):
                 self.transformer = Log10()
 
     def __eq__(self, other):
-        return (type(self) is type(other) and
-                np.allclose([self.low], [other.low]) and
-                np.allclose([self.high], [other.high]) and
-                self.prior == other.prior and
-                self.transform_ == other.transform_)
+        return (
+            type(self) is type(other)
+            and np.allclose([self.low], [other.low])
+            and np.allclose([self.high], [other.high])
+            and self.prior == other.prior
+            and self.transform_ == other.transform_
+        )
 
     def __repr__(self):
         return "Real(low={}, high={}, prior='{}', transform='{}')".format(
-            self.low, self.high, self.prior, self.transform_)
+            self.low, self.high, self.prior, self.transform_
+        )
 
     def inverse_transform(self, Xt):
         """Inverse transform samples from the warped space back into the
-           orignal space.
+        orignal space.
         """
         return np.clip(
-            super(Real, self).inverse_transform(Xt).astype(float),
-            self.low, self.high
+            super(Real, self).inverse_transform(Xt).astype(float), self.low, self.high
         )
 
     @property
@@ -345,7 +326,6 @@ class Real(Dimension):
                 return np.log10(self.low), np.log10(self.high)
 
     def distance(self, a, b):
-
         """Compute distance between point `a` and `b`.
 
         Parameters
@@ -357,8 +337,10 @@ class Real(Dimension):
             Second point.
         """
         if not (a in self and b in self):
-            raise RuntimeError("Can only compute distance for values within "
-                               "the space, not %s and %s." % (a, b))
+            raise RuntimeError(
+                "Can only compute distance for values within "
+                "the space, not %s and %s." % (a, b)
+            )
         return abs(a - b)
 
     def _sample(self, point_list: Iterable[float]) -> np.ndarray:
@@ -399,8 +381,10 @@ class Integer(Dimension):
             Name associated with dimension, e.g., "number of trees".
         """
         if high <= low:
-            raise ValueError("the lower bound {} has to be less than the"
-                             " upper bound {}".format(low, high))
+            raise ValueError(
+                "the lower bound {} has to be less than the"
+                " upper bound {}".format(low, high)
+            )
         self.low = low
         self.high = high
         self.name = name
@@ -411,24 +395,28 @@ class Integer(Dimension):
         self.transform_ = transform
 
         if transform not in ["normalize", "identity"]:
-            raise ValueError("transform should be 'normalize' or 'identity'"
-                             " got {}".format(self.transform_))
+            raise ValueError(
+                "transform should be 'normalize' or 'identity'"
+                " got {}".format(self.transform_)
+            )
         if transform == "normalize":
             self.transformer = Normalize(low, high, is_int=True)
         else:
             self.transformer = Identity()
 
     def __eq__(self, other):
-        return (type(self) is type(other) and
-                np.allclose([self.low], [other.low]) and
-                np.allclose([self.high], [other.high]))
+        return (
+            type(self) is type(other)
+            and np.allclose([self.low], [other.low])
+            and np.allclose([self.high], [other.high])
+        )
 
     def __repr__(self):
         return "Integer(low={}, high={})".format(self.low, self.high)
 
     def inverse_transform(self, Xt):
         """Inverse transform samples from the warped space back into the
-           orignal space.
+        orignal space.
         """
         # The concatenation of all transformed dimensions makes Xt to be
         # of type float, hence the required cast back to int.
@@ -460,8 +448,10 @@ class Integer(Dimension):
             Second point.
         """
         if not (a in self and b in self):
-            raise RuntimeError("Can only compute distance for values within "
-                               "the space, not %s and %s." % (a, b))
+            raise RuntimeError(
+                "Can only compute distance for values within "
+                "the space, not %s and %s." % (a, b)
+            )
         return abs(a - b)
 
     def _sample(self, point_list: Iterable[float]) -> np.ndarray:
@@ -493,7 +483,7 @@ class Categorical(Dimension):
         * `name` [str or None]:
             Name associated with dimension, e.g., "colors".
         """
-        if transform == 'identity':
+        if transform == "identity":
             self.categories = tuple([str(c) for c in categories])
         else:
             self.categories = tuple(categories)
@@ -504,8 +494,10 @@ class Categorical(Dimension):
             transform = "onehot"
         self.transform_ = transform
         if transform not in ["identity", "onehot"]:
-            raise ValueError("Expected transform to be 'identity' or 'onehot' "
-                             "got {}".format(transform))
+            raise ValueError(
+                "Expected transform to be 'identity' or 'onehot' "
+                "got {}".format(transform)
+            )
         if transform == "onehot":
             self.transformer = CategoricalEncoder()
             self.transformer.fit(self.categories)
@@ -515,19 +507,20 @@ class Categorical(Dimension):
         self.prior = prior
 
         if prior is None:
-            self.prior_ = np.tile(1. / len(self.categories),
-                                  len(self.categories))
+            self.prior_ = np.tile(1.0 / len(self.categories), len(self.categories))
         else:
             self.prior_ = prior
 
     def __eq__(self, other):
-        return (type(self) is type(other) and
-                self.categories == other.categories and
-                np.allclose(self.prior_, other.prior_))
+        return (
+            type(self) is type(other)
+            and self.categories == other.categories
+            and np.allclose(self.prior_, other.prior_)
+        )
 
     def __repr__(self):
         if len(self.categories) > 7:
-            cats = self.categories[:3] + (_Ellipsis(), ) + self.categories[-3:]
+            cats = self.categories[:3] + (_Ellipsis(),) + self.categories[-3:]
         else:
             cats = self.categories
 
@@ -576,8 +569,10 @@ class Categorical(Dimension):
             Second category.
         """
         if not (a in self and b in self):
-            raise RuntimeError("Can only compute distance for values within"
-                               " the space, not {} and {}.".format(a, b))
+            raise RuntimeError(
+                "Can only compute distance for values within"
+                " the space, not {} and {}.".format(a, b)
+            )
         return 1 if a != b else 0
 
     def _sample(self, point_list: Iterable[float]) -> np.ndarray:
@@ -622,7 +617,7 @@ class Space(object):
             dims = self.dimensions[:15] + [_Ellipsis()] + self.dimensions[-15:]
         else:
             dims = self.dimensions
-        return "Space([{}])".format(',\n       '.join(map(str, dims)))
+        return "Space([{}])".format(",\n       ".join(map(str, dims)))
 
     def __iter__(self):
         return iter(self.dimensions)
@@ -663,12 +658,14 @@ class Space(object):
         * `space` [Space]:
            Instantiated Space object
         """
-        with open(yml_path, 'rb') as f:
+        with open(yml_path, "rb") as f:
             config = yaml.safe_load(f)
 
-        dimension_classes = {'real': Real,
-                             'integer': Integer,
-                             'categorical': Categorical}
+        dimension_classes = {
+            "real": Real,
+            "integer": Integer,
+            "categorical": Categorical,
+        }
 
         # Extract space options for configuration file
         if isinstance(config, dict):
@@ -679,7 +676,7 @@ class Space(object):
         elif isinstance(config, list):
             options = config
         else:
-            raise TypeError('YaML does not specify a list or dictionary')
+            raise TypeError("YaML does not specify a list or dictionary")
 
         # Populate list with Dimension objects
         dimensions = []
@@ -802,8 +799,7 @@ class Space(object):
             if offset == 1:
                 columns.append(dim.inverse_transform(Xt[:, start]))
             else:
-                columns.append(
-                    dim.inverse_transform(Xt[:, start:start+offset]))
+                columns.append(dim.inverse_transform(Xt[:, start : start + offset]))
 
             start += offset
 
@@ -841,12 +837,14 @@ class Space(object):
                 b.extend(dim.bounds)
 
         return b
-    
+
     @property
     def names(self):
-        '''The names of the dimensions if given. Otherwise [X1, X2, ... Xn]'''
-        labels = ["$X_{%i}$" % i if d.name is None else d.name
-            for i, d in enumerate(self.dimensions)]
+        """The names of the dimensions if given. Otherwise [X1, X2, ... Xn]"""
+        labels = [
+            "$X_{%i}$" % i if d.name is None else d.name
+            for i, d in enumerate(self.dimensions)
+        ]
         return labels
 
     def __contains__(self, point):
@@ -890,13 +888,13 @@ class Space(object):
         * `b` [array]
             Second point.
         """
-        distance = 0.
+        distance = 0.0
         if len(self.dimensions) > 1:
             for a, b, dim in zip(point_a, point_b, self.dimensions):
                 distance += dim.distance(a, b)
-                
+
         if len(self.dimensions) == 1:
-             distance +=  self.dimensions[0].distance(point_a[0], point_b[0])
+            distance += self.dimensions[0].distance(point_a[0], point_b[0])
 
         return distance
 
@@ -938,5 +936,5 @@ class Space(object):
                 row.append(samples[j][i])
             transposed_samples.append(row)
         return transposed_samples
-    
+
     # TODO: Add a R1 QRS sampling method here
