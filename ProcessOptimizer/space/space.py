@@ -218,7 +218,7 @@ class Dimension(ABC):
             raise ValueError("Sample points must be between 0 and 1.")
         sampled_points = self._sample(points)
         if not allow_duplicates:
-            # np.unique sorts the inputs, which we do not wan't, so we have to reinvent
+            # np.unique sorts the inputs, which we do not want, so we have to reinvent
             # the wheel.
             seen = set()
             deduplicated_points = []
