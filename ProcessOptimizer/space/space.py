@@ -112,7 +112,7 @@ def check_dimension(dimension, transform=None):
 
     if len(dimension) == 3:
         if any([isinstance(dim, (float, int)) for dim in dimension[:2]]) and 
-            dimension[2] in ["uniform", "log-uniform"]:
+                dimension[2] in ["uniform", "log-uniform"]:
             return Real(*dimension, transform=transform)
         else:
             return Categorical(dimension, transform=transform)
