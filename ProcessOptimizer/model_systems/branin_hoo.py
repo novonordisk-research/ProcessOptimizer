@@ -1,4 +1,3 @@
-import numpy as np
 from .model_system import ModelSystem
 from .benchmarks import branin
 from ..space import Real
