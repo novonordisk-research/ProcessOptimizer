@@ -739,8 +739,8 @@ def test_lhs():
     # We only bother for the numerical axes, since the categorical axis has fewer than six values, so it has repeated values.
     assert len(np.unique(num_min_pos)) > 1
     # For a space of this size, two LHS samples with six points should always be different
-    lhs_one = SPACE.lhs(n=6, random_state=None)
-    lhs_two = SPACE.lhs(n=6, random_state=None)
+    lhs_one = SPACE.lhs(n=6, seed=None)
+    lhs_two = SPACE.lhs(n=6, seed=None)
     assert lhs_one != lhs_two
     
     # Asserting the the values are the same for both the lhs, even though the order is different
