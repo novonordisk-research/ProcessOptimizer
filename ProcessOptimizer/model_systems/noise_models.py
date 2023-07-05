@@ -45,29 +45,26 @@ class NoiseModel(ABC):
     def _sample_noise(self) -> float:
         """A raw noise value, to be used in the get_noise() function."""
         if self.noise_size is None:
-            raise TypeError("Method \"raw_noise()\" for NoiseModel class "
-                            f"{self.__class__.__name__} is not supposed to be called.")
-            
-        return self._noise_distribution()*self.noise_size
-    
+
     def set_noise_type(self, noise_type: str):
-        if noise_type in ["normal", "Gaussian", "norm"]:
+        if noise_type in ["normal", "Gaussian", "norm", "uniform"]:
             self.noise_type = noise_type
-            self._noise_distribution = self._rng.normal
-        elif noise_type == "uniform":
-            self.noise_type = noise_type
-            self._noise_distribution = lambda: self._rng.uniform(low=-1, high=1)
         else:
-            raise ValueError(f"Noise distribution \"{noise_type}\" not recognised.")
-    
+            raise ValueError(f'Noise distribution "{noise_type}" not recognised.')
+
     def set_seed(self, seed: Optional[int]):
         # Instantiate the random number generator again
         self._rng = np.random.default_rng(seed)
-        # Make sure to do the same for the noise distribution
+
+    @property
+    def _noise_distribution(self) -> Callable[[], float]:
         if self.noise_type in ["normal", "Gaussian", "norm"]:
-            self._noise_distribution = self._rng.normal
+            return self._rng.normal
         elif self.noise_type == "uniform":
-            self._noise_distribution = lambda: self._rng.uniform(low=-1, high=1)
+            return lambda: self._rng.uniform(low=-1, high=1)
+        else:
+            raise ValueError(f'Noise distribution "{self.noise_type}" not recognised.')
+
 
 class ConstantNoise(NoiseModel):
     """
