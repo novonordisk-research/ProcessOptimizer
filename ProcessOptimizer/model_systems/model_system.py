@@ -120,3 +120,11 @@ class ModelSystem:
         None.
         """
         self.noise_model = parse_noise_model(noise_model)
+
+    @property
+    def noise_size(self):
+        return self.noise_model.noise_size
+
+    @noise_size.setter
+    def noise_size(self, noise_size):
+        self.noise_model.noise_size = noise_size
