@@ -34,8 +34,8 @@ class NoiseModel(ABC):
         # safe.
         self.noise_size = noise_size
         self._rng = np.random.default_rng(seed)
+        # Change this to ..utils.get_random_genertor once the pull request with that have been merged
         self.set_noise_type("normal")
-        self._noise_distribution: Callable[[], float]
 
     @abstractmethod
     def get_noise(self, X, Y: float) -> float:
