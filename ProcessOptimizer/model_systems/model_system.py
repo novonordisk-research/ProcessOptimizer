@@ -1,8 +1,10 @@
 from typing import Callable, List, Union
 
 import numpy as np
-from ProcessOptimizer import expected_minimum, Space, space_factory
-from ProcessOptimizer.model_systems.noise_models import NoiseModel, parse_noise_model
+from ..space import Space, space_factory
+from ..utils import expected_minimum
+from .noise_models import NoiseModel, parse_noise_model
+
 
 class ModelSystem:
     """
