@@ -4,6 +4,8 @@
 from typing import Callable, List, Union
 import numpy as np
 
+from .model_system import ModelSystem
+
 
 def bench1(x):
     """A benchmark function for test purposes.
@@ -70,7 +72,7 @@ def bench5(x):
 def branin(x):
     """
     The Branin-Hoo function.
-    
+
     Intended parameter Space during benchmark use:
         [(-5.0, 10.0), (0.0, 15.0)]
         If x contains more than two dimensions the excess are ignored.
@@ -82,7 +84,7 @@ def branin(x):
     Global maximum location, x+: (-5.0, 0.0)
 
     More details: <http://www.sfu.ca/~ssurjano/branin.html>
-    
+
     Parameters
     ----------
     * 'x' [array of floats of length >=2]:
@@ -97,23 +99,25 @@ def branin(x):
         The score of the system at x.
     """
     # Define the constants that are canonically used with this function.
-    a=1
-    b=5.1/(4*np.pi**2)
-    c=5./np.pi
-    r=6
-    s=10
-    t=1./(8*np.pi)
-    return (a * (x[1] - b * x[0] ** 2 + c * x[0] - r) ** 2 +
-            s * (1 - t) * np.cos(x[0]) + s)
+    a = 1
+    b = 5.1 / (4 * np.pi**2)
+    c = 5.0 / np.pi
+    r = 6
+    s = 10
+    t = 1.0 / (8 * np.pi)
+    return (
+        a * (x[1] - b * x[0] ** 2 + c * x[0] - r) ** 2 + s * (1 - t) * np.cos(x[0]) + s
+    )
+
 
 def hart3(x):
     """
     The three dimensional Hartmann function.
-    
+
     Intended parameter Space during benchmark use:
         The unit hypercube [(0.0, 1.0), (0.0, 1.0), etc.] in three dimensions.
         If x contains more than three dimensions the excess are ignored.
-    
+
     Global minimum value, f(x*): -3.863
     Global mimimum location, x*: (0.1146, 0.5556, 0.8525)
     Local minima locations, x**: Four exist, not stated here.
@@ -121,7 +125,7 @@ def hart3(x):
     Global maximum location, x+: (1, 1, 0)
 
     More details: <https://www.sfu.ca/~ssurjano/hart3.html>
-    
+
     Parameters
     ----------
     * 'x' [array of floats of length >=3]:
@@ -133,34 +137,40 @@ def hart3(x):
         The score of the system at x.
     """
     # Define the constants that are canonically used with this function.
-    alpha=np.asarray([1.0, 1.2, 3.0, 3.2])
-    P=10**-4 * np.asarray([[3689, 1170, 2673],
-                           [4699, 4387, 7470],
-                           [1091, 8732, 5547],
-                           [381, 5743, 8828]])
-    A=np.asarray([[3.0, 10, 30],
-                  [0.1, 10, 35],
-                  [3.0, 10, 30],
-                  [0.1, 10, 35]])
-    return -np.sum(alpha * np.exp(-np.sum(A * (np.array(x) - P)**2, axis=1)))
+    alpha = np.asarray([1.0, 1.2, 3.0, 3.2])
+    P = 10**-4 * np.asarray(
+        [[3689, 1170, 2673], [4699, 4387, 7470], [1091, 8732, 5547], [381, 5743, 8828]]
+    )
+    A = np.asarray([[3.0, 10, 30], [0.1, 10, 35], [3.0, 10, 30], [0.1, 10, 35]])
+    return -np.sum(alpha * np.exp(-np.sum(A * (np.array(x) - P) ** 2, axis=1)))
+
+
+hart3_model_system = ModelSystem(
+    hart3,
+    [(0.0, 1.0), (0.0, 1.0), (0.0, 1.0)],
+    noise_model="constant",
+    true_max=0.0,
+    true_min=-3.863,
+)
+
 
 def hart6(x):
     """
     The six dimensional Hartmann function.
-    
+
     Intended parameter Space during benchmark use:
         The unit hypercube [(0.0, 1.0), (0.0, 1.0), etc.] in six dimensions.
         If x contains more than six dimensions the excess are ignored.
-    
+
     Global minimum value, f(x*): -3.3224
     Global mimimum location, x*: (0.2017, 0.1500, 0.4769, 0.2753, 0.3117, 0.6573)
     Local minima locations, x**: Six exist, not stated here.
     Global maximum value, f(x+): 0.0000
-    Global maximum location, x+: (1, 1, 0, 1, 1, 1), but close to the same in 
+    Global maximum location, x+: (1, 1, 0, 1, 1, 1), but close to the same in
                                  all other corners of the space
 
     More details: <http://www.sfu.ca/~ssurjano/hart6.html>
-    
+
     Parameters
     ----------
     * 'x' [array of floats of length >=6]:
@@ -172,31 +182,48 @@ def hart6(x):
         The score of the system at x.
     """
     # Define the constants that are canonically used with this function.
-    alpha=np.asarray([1.0, 1.2, 3.0, 3.2])
-    P=10**-4 * np.asarray([[1312, 1696, 5569, 124, 8283, 5886],
-                           [2329, 4135, 8307, 3736, 1004, 9991],
-                           [2348, 1451, 3522, 2883, 3047, 6650],
-                           [4047, 8828, 8732, 5743, 1091, 381]])
-    A=np.asarray([[10, 3, 17, 3.50, 1.7, 8],
-                  [0.05, 10, 17, 0.1, 8, 14],
-                  [3, 3.5, 1.7, 10, 17, 8],
-                  [17, 8, 0.05, 10, 0.1, 14]])
-    return -np.sum(alpha * np.exp(-np.sum(A * (np.array(x) - P)**2, axis=1)))
+    alpha = np.asarray([1.0, 1.2, 3.0, 3.2])
+    P = 10**-4 * np.asarray(
+        [
+            [1312, 1696, 5569, 124, 8283, 5886],
+            [2329, 4135, 8307, 3736, 1004, 9991],
+            [2348, 1451, 3522, 2883, 3047, 6650],
+            [4047, 8828, 8732, 5743, 1091, 381],
+        ]
+    )
+    A = np.asarray(
+        [
+            [10, 3, 17, 3.50, 1.7, 8],
+            [0.05, 10, 17, 0.1, 8, 14],
+            [3, 3.5, 1.7, 10, 17, 8],
+            [17, 8, 0.05, 10, 0.1, 14],
+        ]
+    )
+    return -np.sum(alpha * np.exp(-np.sum(A * (np.array(x) - P) ** 2, axis=1)))
+
+
+hart6_model_system = ModelSystem(
+    hart6,
+    [(0.0, 1.0) for _ in range(6)],
+    noise_model="constant",
+    true_max=0.0,
+    true_min=-3.3224,
+)
 
 
 def poly2(x):
     """
-    A simple 2D polynomial with one minimum. 
-    
+    A simple 2D polynomial with one minimum.
+
     Intended parameter Space during benchmark use:
         [(-1.0, 1.0), (-1.0, 1.0)]
         If x contains more than two dimensions the excess are ignored.
-    
+
     Global minimum value, f(x*): -2.0512
     Global mimimum location, x*: (0.6667, -0.4833)
     Global maximum value, f(x+): -1.270
     Global maximum location, x+: (-1.0, -1.0)
-    
+
     Parameters
     ----------
     * 'x' [array of floats of length >=2]:
@@ -205,24 +232,34 @@ def poly2(x):
     Returns
     -------
     * 'score' [float]:
-        The score of the system at x. 
+        The score of the system at x.
     """
     return -(
-        2 
-        - 0.2*((x[0] - 0.3)**2 + (x[1] - 0.1)**2) 
-        + 0.05*x[0] 
-        - 0.1*x[1] 
-        - 0.2*x[0]*x[1]
-        )
+        2
+        - 0.2 * ((x[0] - 0.3) ** 2 + (x[1] - 0.1) ** 2)
+        + 0.05 * x[0]
+        - 0.1 * x[1]
+        - 0.2 * x[0] * x[1]
+    )
+
+
+poly2_model_system = ModelSystem(
+    poly2,
+    [(-1.0, 1.0), (-1.0, 1.0)],
+    noise_model="constant",
+    true_max=-1.270,
+    true_min=-2.0512,
+)
+
 
 def peaks(x):
     """
-    The peaks function widely used in MATLAB. 
-    
-    Intended parameter Space during benchmark use: 
+    The peaks function widely used in MATLAB.
+
+    Intended parameter Space during benchmark use:
         [(-3.0, 3.0), (-3.0, 3.0)].
         If x contains more than two dimensions the excess are ignored.
-    
+
     Global minimum value, f(x*): -6.5511
     Global mimimum location, x*: (0.228, -1.626)
     Local minima locations, x**: (-1.348, 0.205)
@@ -240,8 +277,17 @@ def peaks(x):
         The score of the system at x.
     """
     score = (
-        3*(1- x[0])**2 * np.exp(-x[0]**2 - (x[1]+1)**2)
-        - 10*(x[0]/5 - x[0]**3 - x[1]**5) * np.exp(-x[0]**2 - x[1]**2)
-        - 1/3*np.exp(-(x[0]+1)**2 - x[1]**2)
+        3 * (1 - x[0]) ** 2 * np.exp(-x[0] ** 2 - (x[1] + 1) ** 2)
+        - 10 * (x[0] / 5 - x[0] ** 3 - x[1] ** 5) * np.exp(-x[0] ** 2 - x[1] ** 2)
+        - 1 / 3 * np.exp(-((x[0] + 1) ** 2) - x[1] ** 2)
     )
     return score
+
+
+peaks_model_system = ModelSystem(
+    peaks,
+    [(-3.0, 3.0), (-3.0, 3.0)],
+    noise_model="constant",
+    true_max=8.106,
+    true_min=-6.5511,
+)
