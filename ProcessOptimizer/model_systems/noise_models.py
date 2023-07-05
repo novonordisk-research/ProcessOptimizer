@@ -3,25 +3,27 @@ from typing import Callable, List, Union, Optional
 
 import numpy as np
 
+
 class NoiseModel(ABC):
     """
     Abstract class that is the basis for noise models.
     """
+
     def __init__(
         self,
         noise_size: Optional[float],
         seed: Optional[int] = 42,
     ):
-        """        
+        """
         Parameters
         ----------
-        * `noise_size` [Optional[float]]: 
+        * `noise_size` [Optional[float]]:
             The size (magnitude) of the noise. If ´None´, it signifies that
-            the class is compound, and should not have its own noise signal, 
-            but refer to its compounding NoiseModels instead. An example is 
+            the class is compound, and should not have its own noise signal,
+            but refer to its compounding NoiseModels instead. An example is
             SumNoise, which sums the noise of a list of noise models, but does
             not add any noise by itself.
-        
+
         * `seed` [Optional[int], default=42]:
             Seed to pass forward to the numpy random number generator that is
             used when providing samples with noise.
@@ -40,7 +42,7 @@ class NoiseModel(ABC):
     @abstractmethod
     def get_noise(self, X, Y: float) -> float:
         pass
-    
+
     @property
     def _sample_noise(self) -> float:
         """A raw noise value, to be used in the get_noise() function."""
@@ -80,16 +82,17 @@ class ConstantNoise(NoiseModel):
 
     Parameters
     ----------
-    * `noise_size` [float, default=1]: 
-        The size (magnitude) of the noise. 
+    * `noise_size` [float, default=1]:
+        The size (magnitude) of the noise.
     """
+
     def __init__(self, noise_size: float = 1, **kwargs):
         super().__init__(noise_size=noise_size, **kwargs)
 
     def get_noise(self, _, Y: float) -> float:
         return self._sample_noise
 
-    
+
 class ProportionalNoise(NoiseModel):
     """
     Noise model for noise proportional to the signal, but independent of the sampled
@@ -98,15 +101,16 @@ class ProportionalNoise(NoiseModel):
 
     Parameters
     ----------
-    * `noise_size` [float, default=0.1]: 
+    * `noise_size` [float, default=0.1]:
         The size of the noise relative to the signal.
     """
-    def __init__(self, noise_size : float = 0.1, **kwargs):
+
+    def __init__(self, noise_size: float = 0.1, **kwargs):
         super().__init__(noise_size=noise_size, **kwargs)
-    
+
     def get_noise(self, _, Y: float) -> float:
-        return self._sample_noise*Y
-    
+        return self._sample_noise * Y
+
 
 class DataDependentNoise(NoiseModel):
     """
@@ -154,16 +158,20 @@ class DataDependentNoise(NoiseModel):
         if self.overwrite_rng:
             noise_model._rng = self._rng
         return noise_model.get_noise(X, Y)
+
+
 class ZeroNoise(NoiseModel):
     """
     Noise model for zero noise. Doesn't take any arguments. Exist for consistency,
     and to be used in data dependent noise models.
     """
+
     def __init__(self):
         super().__init__(noise_size=0)
 
     def get_noise(self, _, Y: float) -> float:
         return 0
+
 
 class SumNoise(NoiseModel):
     """
@@ -172,8 +180,8 @@ class SumNoise(NoiseModel):
 
     Parameters
     ----------
-    * `noise_model_list` [List[Union[dict, NoiseModel]]]: 
-        List of either noise models, or dicts containing at least the type of 
+    * `noise_model_list` [List[Union[dict, NoiseModel]]]:
+        List of either noise models, or dicts containing at least the type of
         noise model to create.
     * `overwrite_rng` [bool, default=True]:
         Whether to overwrite the random number generator of underlying noise models.
@@ -211,10 +219,11 @@ class SumNoise(NoiseModel):
 def parse_noise_model(model: Union[str, dict, NoiseModel], **kwargs) -> NoiseModel:
     if isinstance(model, NoiseModel):
         return model
-    elif type(model) == str:
+    elif isinstance(model, str):
         return noise_model_factory(model_type=model, **kwargs)
     else:
         return noise_model_factory(**model)
+
 
 def noise_model_factory(model_type: str, **kwargs) -> NoiseModel:
     if model_type == "constant":
