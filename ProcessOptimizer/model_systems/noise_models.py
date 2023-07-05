@@ -114,9 +114,15 @@ class DataDependentNoise(NoiseModel):
 
     Parameters
     ----------
-    * `noise_function` [(parameters) -> NoiseModel]: 
-        A function that takes a set of parameters, and returns a noise model to 
+    * `noise_function` [(parameters) -> NoiseModel]:
+        A function that takes a set of parameters, and returns a noise model to
         apply.
+    * `overwrite_rng` [bool, default=True]:
+        Whether to overwrite the random number generator of underlying noise models.
+        This is necessary if the underlying noise models are created each time
+        `noise_function()` is called, since they will otherwise have the same random
+        seed. If the underlying noise models are created once, this can be set to
+        False to not mess with the underlying noise models.
 
     Examples
     --------
@@ -132,13 +138,22 @@ class DataDependentNoise(NoiseModel):
     noise_model = DataDependentNoise(noise_function=noise_choice)
     ```
     """
-    def __init__(self, noise_function: Callable[..., NoiseModel], **kwargs):
-        self.noise_function = noise_function
+
+    def __init__(
+        self,
+        noise_function: Callable[..., NoiseModel],
+        overwrite_rng: bool = True,
+        **kwargs,
+    ):
         super().__init__(noise_size=None, **kwargs)
-    
+        self.noise_function = noise_function
+        self.overwrite_rng = overwrite_rng
+
     def get_noise(self, X, Y: float) -> float:
-        return self.noise_function(X).get_noise(X, Y)           
-    
+        noise_model = self.noise_function(X)
+        if self.overwrite_rng:
+            noise_model._rng = self._rng
+        return noise_model.get_noise(X, Y)
 class ZeroNoise(NoiseModel):
     """
     Noise model for zero noise. Doesn't take any arguments. Exist for consistency,
@@ -160,17 +175,33 @@ class SumNoise(NoiseModel):
     * `noise_model_list` [List[Union[dict, NoiseModel]]]: 
         List of either noise models, or dicts containing at least the type of 
         noise model to create.
+    * `overwrite_rng` [bool, default=True]:
+        Whether to overwrite the random number generator of underlying noise models.
+        This is necessary if the underlying noise models are created with the same seed,
+        which they are by default, since they will otherwise give correlated noise.
 
     """
-    def __init__(self,noise_model_list: List[Union[str,dict,NoiseModel]], **kwargs):
-        super().__init__(noise_size = None,**kwargs)
+
+    def __init__(
+        self,
+        noise_model_list: List[Union[str, dict, NoiseModel]],
+        overwrite_rng: bool = True,
+        **kwargs,
+    ):
+        super().__init__(noise_size=None, **kwargs)
         self.noise_model_list: List[NoiseModel]
+        self.overwrite_rng = overwrite_rng
         self.set_noise_model_list(noise_model_list=noise_model_list)
 
-    def set_noise_model_list(self, noise_model_list: List[Union[dict, NoiseModel]]):
+    def set_noise_model_list(
+        self, noise_model_list: List[Union[str, dict, NoiseModel]]
+    ):
         self.noise_model_list = []
         for model_description in noise_model_list:
             self.noise_model_list.append(parse_noise_model(model_description))
+        if self.overwrite_rng:
+            for model in self.noise_model_list:
+                model._rng = self._rng
 
     def get_noise(self, X, Y: float) -> float:
         noise_list = [model.get_noise(X, Y) for model in self.noise_model_list]
