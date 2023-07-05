@@ -45,6 +45,12 @@ class NoiseModel(ABC):
     def _sample_noise(self) -> float:
         """A raw noise value, to be used in the get_noise() function."""
         if self.noise_size is None:
+            raise TypeError(
+                'Method "raw_noise()" for NoiseModel class '
+                f"{self.__class__.__name__} is not supposed to be called."
+            )
+
+        return self._noise_distribution() * self.noise_size
 
     def set_noise_type(self, noise_type: str):
         if noise_type in ["normal", "Gaussian", "norm", "uniform"]:
