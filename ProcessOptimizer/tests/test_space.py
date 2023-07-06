@@ -112,18 +112,18 @@ def test_sampling_values(dimension: Dimension, ismember, point_type):
     assert all([isinstance(sample, point_type) for sample in randomvalues])
     assert all([ismember(sample) for sample in randomvalues])
     generator = np.random.default_rng(42)  # Resetting the random number generator
-    deduplicated_values = dimension.sample(
+    unique_values = dimension.sample(
         generator.random(size=50), allow_duplicates=False
     )
-    assert len(deduplicated_values) == len(set(deduplicated_values))
+    assert len(unique_values) == len(set(unique_values))
     # Checking of no repeated values
-    assert set(deduplicated_values) == set(randomvalues)
+    assert set(unique_values) == set(randomvalues)
     # Checking that seeding works
-    for i in range(len(deduplicated_values)):
-        # Checking that order is preserved when deduplicating
-        if i < len(deduplicated_values) - 1:
-            first_pos = np.argwhere(randomvalues == deduplicated_values[i])[0][0]
-            second_pos = np.argwhere(randomvalues == deduplicated_values[i + 1])[0][0]
+    for i in range(len(unique_values)):
+        # Checking that order is preserved when removing duplicates
+        if i < len(unique_values) - 1:
+            first_pos = np.argwhere(randomvalues == unique_values[i])[0][0]
+            second_pos = np.argwhere(randomvalues == unique_values[i + 1])[0][0]
             assert first_pos < second_pos
     with pytest.raises(ValueError):
         dimension.sample(1.1)
@@ -721,28 +721,28 @@ def test_lhs():
     assert len(samples) == 6
     assert len(samples[0]) == 4
     values = [[sample[i] for sample in samples] for i in range(4)]
-    # set disregards order, so we use it to test which values we got.
-    assert set(values[0]) == set(range(1, 6 + 1))
+    # Set disregards order, so we use it to test which values we got.
     # We should get all six integers, in any order
-    assert set(values[1]) == set(0.5 + np.arange(1, 7))
+    assert set(values[0]) == set(range(1, 6 + 1))
     # Six reals between 1 and 7, evenly divide, lie halfway between integers
+    assert set(values[1]) == set(0.5 + np.arange(1, 7))
+    # There are no good tests for approximate equality that disregards order
+    # For log-uniform, we should get six values evenly spaced on a log scale
     for log_real in values[2]:
         assert any(
             log_real == pytest.approx(value)
             for value in np.sqrt(10) * 10**-3 * 10 ** np.arange(6)
         )
-    # there are no good tests for approximate equality that disregards order
-    # For log-uniform, we should get six values evenly spaced on a log scale
     assert set(values[3]) == set("abc")
     is_min_pos = [[y == min(x) for y in x] for x in values]
     num_min_pos = np.where(is_min_pos[0:3])[1]
     # We only bother for the numerical axes, since the categorical axis has fewer than six values, so it has repeated values.
     assert len(np.unique(num_min_pos)) > 1
-    # The minimum value should not always be in the same position
-    lhs_one = SPACE.lhs(n=6, random_state=None)
-    lhs_two = SPACE.lhs(n=6, random_state=None)
+    # For a space of this size, two LHS samples with six points should always be different
+    lhs_one = SPACE.lhs(n=6, seed=None)
+    lhs_two = SPACE.lhs(n=6, seed=None)
     assert lhs_one != lhs_two
-    # Verfying that lhs can be performed randomly
-    for i in range(4):
-        assert set([x[i] for x in lhs_one]) == set([x[i] for x in lhs_two])
+    
     # Asserting the the values are the same for both the lhs, even though the order is different
+    for i in range(4):
+        assert set([x[i] for x in lhs_one]) == set([x[i] for x in lhs_two])    

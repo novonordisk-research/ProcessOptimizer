@@ -205,14 +205,14 @@ def is_2Dlistlike(x):
 def check_x_in_space(x, space):
     if is_2Dlistlike(x):
         if not np.all([p in space for p in x]):
-            raise ValueError("Not all points are within the bounds of" " the space.")
+            raise ValueError("Not all points are within the bounds of the space.")
         if any([len(p) != len(space.dimensions) for p in x]):
-            raise ValueError("Not all points have the same dimensions as" " the space.")
+            raise ValueError("Not all points have the same dimensions as the space.")
     elif is_listlike(x):
         if x not in space:
             raise ValueError(
-                "Point (%s) is not within the bounds of"
-                " the space (%s)." % (x, space.bounds)
+                "Point (%s) is not within the bounds of "
+                "the space (%s)." % (x, space.bounds)
             )
         if len(x) != len(space.dimensions):
             raise ValueError(
@@ -222,7 +222,11 @@ def check_x_in_space(x, space):
 
 
 def expected_minimum(
-    res, n_random_starts=20, random_state=None, return_std=False, minmax="min"
+    res, 
+    n_random_starts=20,
+    random_state=None,
+    return_std=False,
+    minmax="min",
 ):
     """
     Compute the minimum over the predictions of the last surrogate model.
@@ -267,7 +271,7 @@ def expected_minimum(
             return -1 * reg.predict(x.reshape(1, -1))[0]
         else:
             raise ValueError(
-                "expected minmax to be in ['min','max'], got %s" % (minmax)
+                "Expected minmax to be in ['min','max'], got %s" % (minmax)
             )
 
     xs = [res.x]
@@ -302,11 +306,15 @@ def expected_minimum(
             return [v for v in best_x], -best_fun
 
     else:
-        raise ValueError("expected acq_func to be in ['min','max'], got %s" % (minmax))
+        raise ValueError("Expected acq_func to be in ['min','max'], got %s" % (minmax))
 
 
 def expected_minimum_random_sampling(
-    res, n_random_starts=100000, random_state=None, return_std=False, minmax="min"
+    res,
+    n_random_starts=100000,
+    random_state=None,
+    return_std=False,
+    minmax="min",
 ):
     """Minimum search by doing naive random sampling, Returns the parameters
     that gave the minimum function value. Can be used when the space
@@ -343,7 +351,7 @@ def expected_minimum_random_sampling(
     elif minmax == "max":
         index_best_objective = np.argmax(y_random)
     else:
-        raise ValueError("expected minmax to be in ['min','max'], got %s" % (minmax))
+        raise ValueError("Expected minmax to be in ['min','max'], got %s" % (minmax))
 
     extreme_x = random_samples[index_best_objective]
     if return_std == True:
@@ -387,7 +395,11 @@ def has_gradients(estimator):
 
 
 def cook_estimator(
-    base_estimator, space=None, length_scale_bounds=None, length_scale=None, **kwargs
+    base_estimator,
+    space=None,
+    length_scale_bounds=None,
+    length_scale=None,
+    **kwargs,
 ):
     """
     Cook a default estimator.
@@ -423,7 +435,7 @@ def cook_estimator(
         if base_estimator not in ["GP", "ET", "RF", "GBRT", "DUMMY"]:
             raise ValueError(
                 "Valid strings for the base_estimator parameter "
-                " are: 'RF', 'ET', 'GP', 'GBRT' or 'DUMMY' not "
+                "are: 'RF', 'ET', 'GP', 'GBRT' or 'DUMMY' not "
                 "%s." % base_estimator
             )
     elif not is_regressor(base_estimator):
@@ -796,25 +808,13 @@ def y_coverage(res, return_plot=False, random_state=None, horizontal=False):
     assert len(res.func_vals) != 0, "train model before using this function"
     observed_min = res.func_vals.min()
     observed_max = res.func_vals.max()
-    min_x, expected_min = expected_minimum(
-        res, n_random_starts=20, random_state=None, minmax="min"
-    )
-    max_x, expected_max = expected_minimum(
-        res, n_random_starts=20, random_state=None, minmax="max"
-    )
+    min_x, expected_min = expected_minimum(res, random_state=random_state)
+    max_x, expected_max = expected_minimum(res, random_state=random_state, minmax="max")
 
     if return_plot:
         reg = res.models[-1]
-        min_x = res.space.transform(
-            [
-                min_x,
-            ]
-        )
-        max_x = res.space.transform(
-            [
-                max_x,
-            ]
-        )
+        min_x = res.space.transform([min_x, ])
+        max_x = res.space.transform([max_x, ])
         sampled_mins = reg.sample_y(min_x, n_samples=5000, random_state=random_state)[0]
         sampled_maxs = reg.sample_y(max_x, n_samples=5000, random_state=random_state)[0]
         extreme_min = sampled_mins.min()

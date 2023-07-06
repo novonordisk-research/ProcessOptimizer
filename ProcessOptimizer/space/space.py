@@ -111,9 +111,8 @@ def check_dimension(dimension, transform=None):
             )
 
     if len(dimension) == 3:
-        if any([isinstance(dim, (float, int)) for dim in dimension[:2]]) and dimension[
-            2
-        ] in ["uniform", "log-uniform"]:
+        if (any([isinstance(dim, (float, int)) for dim in dimension[:2]]) and 
+                dimension[2] in ["uniform", "log-uniform"]):
             return Real(*dimension, transform=transform)
         else:
             return Categorical(dimension, transform=transform)
@@ -196,12 +195,12 @@ class Dimension(ABC):
             # np.unique sorts the inputs, which we do not want, so we have to reinvent
             # the wheel.
             seen = set()
-            deduplicated_points = []
+            unique_points = []
             for point in sampled_points:
                 if point not in seen:
-                    deduplicated_points.append(point)
+                    unique_points.append(point)
                     seen.add(point)
-            sampled_points = deduplicated_points
+            sampled_points = unique_points
         return np.array(sampled_points)
 
     @abstractmethod
@@ -209,7 +208,7 @@ class Dimension(ABC):
         """A reasonable mapping from the interval [0, 1] to the dimension, whatever that
         may mean. For example, for an integer dimension, the sampling should be give a
         higher integer for a higher value of the point, and each integer should be
-        mapped to from en equally large interval.
+        mapped to from an equally large interval.
 
         The mapping should be monotonic, but it does not have to be strictly monotonic.
 
@@ -305,7 +304,9 @@ class Real(Dimension):
         orignal space.
         """
         return np.clip(
-            super(Real, self).inverse_transform(Xt).astype(float), self.low, self.high
+            super(Real, self).inverse_transform(Xt).astype(float), 
+            self.low, 
+            self.high
         )
 
     @property
@@ -382,8 +383,8 @@ class Integer(Dimension):
         """
         if high <= low:
             raise ValueError(
-                "the lower bound {} has to be less than the"
-                " upper bound {}".format(low, high)
+                "The lower bound {} has to be less than the "
+                "upper bound {}".format(low, high)
             )
         self.low = low
         self.high = high
@@ -396,8 +397,8 @@ class Integer(Dimension):
 
         if transform not in ["normalize", "identity"]:
             raise ValueError(
-                "transform should be 'normalize' or 'identity'"
-                " got {}".format(self.transform_)
+                "Transform should be 'normalize' or 'identity' "
+                "got {}".format(self.transform_)
             )
         if transform == "normalize":
             self.transformer = Normalize(low, high, is_int=True)
@@ -570,8 +571,8 @@ class Categorical(Dimension):
         """
         if not (a in self and b in self):
             raise RuntimeError(
-                "Can only compute distance for values within"
-                " the space, not {} and {}.".format(a, b)
+                "Can only compute distance for values within "
+                "the space, not {} and {}.".format(a, b)
             )
         return 1 if a != b else 0
 
@@ -901,7 +902,7 @@ class Space(object):
     def lhs(
         self,
         n: int,
-        random_state: Union[
+        seed: Union[
             int, float, np.random.RandomState, np.random.Generator, None
         ] = 42,
     ):
@@ -911,11 +912,11 @@ class Space(object):
         ----------
         * `n` [int]: The number of samples to generate.
 
-        * `random_state`
+        * `seed`
             [int, float, np.random.RandomState, np.random.Generator, or None, default=42]:
             The seed used by the random number generator. If None, the results are not reproducible.
         """
-        rng = get_random_generator(random_state)
+        rng = get_random_generator(seed)
         samples = []
         for i in range(self.n_dims):
             lhs_perm = []

@@ -9,8 +9,8 @@
   Sampling (LHS)) are handled through `Space`, referencing the sampling functions of the
   `Dimesion`s
 - LHS now allows for arbitrary seeding, or for random seeding, better supporting
-  benchmarking
-- the module `space` uses `np.random.default_rng` as a random number generator, instead
+  benchmarking. The algorithm still uses a fixed seed by default.
+- The module `space` uses `np.random.default_rng` as a random number generator, instead
   of the deprecated `np.random.RandomState`. A bridging strategy allows it to still
   accept `RandomState`s, but it will tranform them to `default_rng` for internal use.
   The rest of the codebase still uses `RandomState`.
