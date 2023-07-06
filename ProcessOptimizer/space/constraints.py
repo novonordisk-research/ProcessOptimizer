@@ -92,16 +92,15 @@ class Constraints:
         while len(rows) < n_samples:
             columns = []
             # Iterate through all dimensions:
+            random_samples = self.space.rvs(n_samples=n_samples, random_state=rng)
             for i in range(self.space.n_dims):
-                dim = self.space.dimensions[i]
                 # If a dimension has a "Single"-type constraint we just sample
                 # that value:
                 if self.single[i]:
                     column = np.full(n_samples, self.single[i].value)
                 else:  # Using the default rvs() for the given dimension
                     try:
-                        column = (dim.rvs(n_samples=n_samples, 
-                                          random_state=rng))
+                        column = [sample[i] for sample in random_samples]
                     except Exception as error:
                         print(f'''Caught an error while making random points in
                          constrained space, error is: {error}''')
