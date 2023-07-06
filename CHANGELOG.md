@@ -4,9 +4,16 @@
 
 ### Changes
 
-- 
+- `hart3`, `hart6`, `poly2`, `peaks` benchmarks systems exist as `ModelSystem`s.
+- `gold_map` exist as `ModelSystem`.
 
 ### Bugfixes
+
+- Fixes to `DataDependentNoise` and `SumNoise` to avoid highly correlated
+  noise of the underlying noise models.
+- Switched to local imports internally to avoid circular import errors.
+- `NoiseModel._noise_distribution` is now a method, to allow changes of
+  `self._rng` to affect `self._noise_distribution` automatically.
 
 ## Version 0.8.1
 
@@ -14,7 +21,7 @@
 
 - Added additonal model systems to the list of benchmarks and made their
   structure more consistent.
-- Added seeding to the noise models used for benchmarking to ensure 
+- Added seeding to the noise models used for benchmarking to ensure
   reproducible results when benchmarking.
 - Allow addition or removal of modelled noise to the optimizer object. This
   is to allow user to predict the full outcome space of a given new exp.
