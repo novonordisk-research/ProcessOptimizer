@@ -6,6 +6,22 @@
 
 - `hart3`, `hart6`, `poly2`, `peaks` benchmarks systems exist as `ModelSystem`s.
 - `gold_map` exist as `ModelSystem`.
+- Sampling consolidated. There is now only one sampling function per `Dimension`.
+  Different sampling types (at the moment, random value sampling and Latin Hypercube
+  Sampling (LHS)) are handled through `Space`, referencing the sampling functions of the
+  `Dimesion`s
+- LHS now allows for arbitrary seeding, or for random seeding, better supporting
+  benchmarking. The algorithm still uses a fixed seed by default.
+- The module `space` uses `np.random.default_rng` as a random number generator, instead
+  of the deprecated `np.random.RandomState`. A bridging strategy allows it to still
+  accept `RandomState`s, but it will tranform them to `default_rng` for internal use.
+  The rest of the codebase still uses `RandomState`.
+- **BREAKING**: LHS now respects priors. This means that performing LHS on a space with
+  a log-normal `Real` `Dimension`, or a `Categorical` `Dimension` with informative
+  priors will give different results in this release than in previous releases.
+- **BREAKING**: The mechanism for seeding pseudorandom generators in the `space` module
+  have changed, meaning that, while the results are reproducible within a release, they
+  will not be the same as in old releases.
 
 ### Bugfixes
 
