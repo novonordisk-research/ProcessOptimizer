@@ -5,20 +5,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import OptimizeResult
 from scipy.optimize import minimize as sp_minimize
-from sklearn.base import is_regressor
-from sklearn.ensemble import GradientBoostingRegressor
+
 from joblib import dump as dump_
 from joblib import load as load_
 
-from ..learning import ExtraTreesRegressor
-from ..learning import GaussianProcessRegressor
-from ..learning import GradientBoostingQuantileRegressor
-from ..learning import RandomForestRegressor
-from ..learning.gaussian_process.kernels import ConstantKernel
-from ..learning.gaussian_process.kernels import HammingKernel
-from ..learning.gaussian_process.kernels import Matern
-
-from ..space import Space, Categorical, Integer, Real, Dimension
 
 __all__ = (
     "load",
@@ -222,7 +212,7 @@ def check_x_in_space(x, space):
 
 
 def expected_minimum(
-    res, 
+    res,
     n_random_starts=20,
     random_state=None,
     return_std=False,
@@ -361,140 +351,6 @@ def expected_minimum_random_sampling(
         return extreme_x, [y_random[index_best_objective], std_estimate]
     else:
         return extreme_x, y_random[index_best_objective]
-
-
-def has_gradients(estimator):
-    """
-    Check if an estimator's ``predict`` method provides gradients.
-
-    Parameters
-    ----------
-    estimator: sklearn BaseEstimator instance.
-    """
-    tree_estimators = (
-        ExtraTreesRegressor,
-        RandomForestRegressor,
-        GradientBoostingQuantileRegressor,
-    )
-
-    # cook_estimator() returns None for "dummy minimize" aka random values only
-    if estimator is None:
-        return False
-
-    if isinstance(estimator, tree_estimators):
-        return False
-
-    categorical_gp = False
-    if hasattr(estimator, "kernel"):
-        params = estimator.get_params()
-        categorical_gp = isinstance(estimator.kernel, HammingKernel) or any(
-            [isinstance(params[p], HammingKernel) for p in params]
-        )
-
-    return not categorical_gp
-
-
-def cook_estimator(
-    base_estimator,
-    space=None,
-    length_scale_bounds=None,
-    length_scale=None,
-    **kwargs,
-):
-    """
-    Cook a default estimator.
-
-    For the special base_estimator called "DUMMY" the return value is None.
-    This corresponds to sampling points at random, hence there is no need
-    for an estimator.
-
-    Parameters
-    ----------
-    * `base_estimator` ["GP", "RF", "ET", "GBRT", "DUMMY"
-                        or sklearn regressor, default="GP"]:
-        Should inherit from `sklearn.base.RegressorMixin`.
-        In addition the `predict` method should have an optional `return_std`
-        argument, which returns `std(Y | x)`` along with `E[Y | x]`.
-        If base_estimator is one of ["GP", "RF", "ET", "GBRT", "DUMMY"], a
-        surrogate model corresponding to the relevant `X_minimize` function
-        is created.
-
-    * `space` [Space instance]:
-        Has to be provided if the base_estimator is a gaussian process.
-        Ignored otherwise.
-    * `length_scale_bounds` [list of tuples]:
-        the length scale bounds for the matern kernel
-    * `length_scale_bounds` [list of floats]:
-        the length scales for the Matern or Hamming kernel
-    * `kwargs` [dict]:
-        Extra parameters provided to the base_estimator at init time.
-    """
-
-    if isinstance(base_estimator, str):
-        base_estimator = base_estimator.upper()
-        if base_estimator not in ["GP", "ET", "RF", "GBRT", "DUMMY"]:
-            raise ValueError(
-                "Valid strings for the base_estimator parameter "
-                "are: 'RF', 'ET', 'GP', 'GBRT' or 'DUMMY' not "
-                "%s." % base_estimator
-            )
-    elif not is_regressor(base_estimator):
-        raise ValueError("base_estimator has to be a regressor.")
-
-    if base_estimator == "GP":
-        if space is not None:
-            space = Space(space)
-            space = Space(normalize_dimensions(space.dimensions))
-            n_dims = space.transformed_n_dims
-            is_cat = space.is_categorical
-
-        else:
-            raise ValueError("Expected a Space instance, not None.")
-
-        cov_amplitude = ConstantKernel(1.0, (0.01, 1000))
-
-        if not length_scale:
-            length_scale = np.ones(n_dims)
-        if not length_scale_bounds:
-            length_scale_bounds = [(0.1, 1)] * n_dims
-
-        # Transform lengthscale bounds:
-        length_scale_bounds_transformed = []
-        length_scale_transformed = []
-        for i in range(len(space.dimensions)):
-            for j in range(space.dimensions[i].transformed_size):
-                length_scale_bounds_transformed.append(length_scale_bounds[i])
-                length_scale_transformed.append(length_scale[i])
-
-        # only special if *all* dimensions are categorical
-        if is_cat:
-            other_kernel = HammingKernel(length_scale=length_scale_transformed)
-        else:
-            other_kernel = Matern(
-                length_scale=length_scale_transformed,
-                length_scale_bounds=length_scale_bounds_transformed,
-                nu=2.5,
-            )
-
-        base_estimator = GaussianProcessRegressor(
-            kernel=cov_amplitude * other_kernel,
-            normalize_y=True,
-            noise="gaussian",
-            n_restarts_optimizer=4,
-        )
-    elif base_estimator == "RF":
-        base_estimator = RandomForestRegressor(n_estimators=100, min_samples_leaf=3)
-    elif base_estimator == "ET":
-        base_estimator = ExtraTreesRegressor(n_estimators=100, min_samples_leaf=3)
-    elif base_estimator == "GBRT":
-        gbrt = GradientBoostingRegressor(n_estimators=30, loss="quantile")
-        base_estimator = GradientBoostingQuantileRegressor(base_estimator=gbrt)
-
-    elif base_estimator == "DUMMY":
-        return None
-
-    base_estimator.set_params(**kwargs)
-    return base_estimator
 
 
 def dimensions_aslist(search_space):
@@ -813,8 +669,16 @@ def y_coverage(res, return_plot=False, random_state=None, horizontal=False):
 
     if return_plot:
         reg = res.models[-1]
-        min_x = res.space.transform([min_x, ])
-        max_x = res.space.transform([max_x, ])
+        min_x = res.space.transform(
+            [
+                min_x,
+            ]
+        )
+        max_x = res.space.transform(
+            [
+                max_x,
+            ]
+        )
         sampled_mins = reg.sample_y(min_x, n_samples=5000, random_state=random_state)[0]
         sampled_maxs = reg.sample_y(max_x, n_samples=5000, random_state=random_state)[0]
         extreme_min = sampled_mins.min()

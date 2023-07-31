@@ -1,4 +1,3 @@
-
 import numpy as np
 import pytest
 
@@ -14,11 +13,10 @@ from ProcessOptimizer.acquisition import gaussian_acquisition_1D
 from ProcessOptimizer.acquisition import gaussian_ei
 from ProcessOptimizer.acquisition import gaussian_lcb
 from ProcessOptimizer.acquisition import gaussian_pi
-from ProcessOptimizer.learning import GaussianProcessRegressor
+from ProcessOptimizer.learning import GaussianProcessRegressor, cook_estimator
 from ProcessOptimizer.learning.gaussian_process.kernels import Matern
 from ProcessOptimizer.learning.gaussian_process.kernels import WhiteKernel
 from ProcessOptimizer.space import Space
-from ProcessOptimizer.utils import cook_estimator
 
 
 class ConstSurrogate:
@@ -32,6 +30,7 @@ class ConstSurrogate:
 # prefer candidate points that take lesser time.
 # The second estimator mimics the GP regressor that is fit on
 # the log of the input.
+
 
 class ConstantGPRSurrogate(object):
     def __init__(self, space):
@@ -56,7 +55,7 @@ class ConstantGPRSurrogate(object):
 def test_acquisition_ei_correctness():
     # check that it works with a vector as well
     X = 10 * np.ones((4, 2))
-    ei = gaussian_ei(X, ConstSurrogate(), -0.5, xi=0.)
+    ei = gaussian_ei(X, ConstSurrogate(), -0.5, xi=0.0)
     assert_array_almost_equal(ei, [0.1977966] * 4)
 
 
@@ -64,7 +63,7 @@ def test_acquisition_ei_correctness():
 def test_acquisition_pi_correctness():
     # check that it works with a vector as well
     X = 10 * np.ones((4, 2))
-    pi = gaussian_pi(X, ConstSurrogate(), -0.5, xi=0.)
+    pi = gaussian_pi(X, ConstSurrogate(), -0.5, xi=0.0)
     assert_array_almost_equal(pi, [0.308538] * 4)
 
 
@@ -72,7 +71,7 @@ def test_acquisition_pi_correctness():
 def test_acquisition_variance_correctness():
     # check that it works with a vector as well
     X = 10 * np.ones((4, 2))
-    var = gaussian_lcb(X, ConstSurrogate(), kappa='inf')
+    var = gaussian_lcb(X, ConstSurrogate(), kappa="inf")
     assert_array_almost_equal(var, [-1.0] * 4)
 
 
@@ -98,10 +97,11 @@ def test_acquisition_api():
 
 
 def check_gradient_correctness(X_new, model, acq_func, y_opt):
-    analytic_grad = gaussian_acquisition_1D(
-        X_new, model, y_opt, acq_func)[1]
-    def num_grad_func(x): return gaussian_acquisition_1D(
-        x, model, y_opt, acq_func=acq_func)[0]
+    analytic_grad = gaussian_acquisition_1D(X_new, model, y_opt, acq_func)[1]
+
+    def num_grad_func(x):
+        return gaussian_acquisition_1D(x, model, y_opt, acq_func=acq_func)[0]
+
     num_grad = optimize.approx_fprime(X_new, num_grad_func, 1e-5)
     assert_array_almost_equal(analytic_grad, num_grad, 3)
 
@@ -121,9 +121,8 @@ def test_acquisition_gradient():
         check_gradient_correctness(X_new, gpr, acq_func, np.max(y))
 
 
-
 def test_gaussian_acquisition_check_inputs():
     model = ConstantGPRSurrogate(Space(((1.0, 9.0),)))
     with pytest.raises(ValueError) as err:
         _gaussian_acquisition(np.arange(1, 5), model)
-    assert("it must be 2-dimensional" in err.value.args[0])
+    assert "it must be 2-dimensional" in err.value.args[0]

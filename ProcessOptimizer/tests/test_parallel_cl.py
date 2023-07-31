@@ -18,13 +18,18 @@ import pytest
 supported_strategies = ["cl_min", "cl_mean", "cl_max"]
 
 # test one acq function that incorporates the runtime, and one that does not
-supported_acq_functions = ["EI"] #, "EIps" removed
+supported_acq_functions = ["EI"]  # , "EIps" removed
 
 # Extract available surrogates, so that new ones are used automatically
 available_surrogates = [
-    getattr(sol, name) for name in sol.__all__
+    getattr(sol, name)
+    for name in sol.__all__
     if "GradientBoostingQuantileRegressor" not in name
+    and "cook" not in name
+    and "has_gradient" not in name
+    and "use_named_args" not in name
 ]  # excluding the GradientBoostingQuantileRegressor, will open issue later
+# Also excluding cook_estimator, has_gradient, and use_named_args, as they are not surrogates
 
 n_steps = 5  # number of steps to test the algorithms with
 n_points = 4  # number of points to evaluate at a single step
@@ -51,8 +56,8 @@ def test_constant_liar_runs(strategy, surrogate, acq_func):
         base_estimator=surrogate(),
         dimensions=[Real(-5.0, 10.0), Real(0.0, 15.0)],
         acq_func=acq_func,
-        acq_optimizer='sampling',
-        random_state=0
+        acq_optimizer="sampling",
+        random_state=0,
     )
 
     # test arguments check
@@ -89,8 +94,8 @@ def test_all_points_different(strategy, surrogate):
     optimizer = Optimizer(
         base_estimator=surrogate(),
         dimensions=[Real(-5.0, 10.0), Real(0.0, 15.0)],
-        acq_optimizer='sampling',
-        random_state=1
+        acq_optimizer="sampling",
+        random_state=1,
     )
 
     tolerance = 1e-3  # distance above which points are assumed same
@@ -120,8 +125,8 @@ def test_same_set_of_points_ask(strategy, surrogate):
     optimizer = Optimizer(
         base_estimator=surrogate(),
         dimensions=[Real(-5.0, 10.0), Real(0.0, 15.0)],
-        acq_optimizer='sampling',
-        random_state=2
+        acq_optimizer="sampling",
+        random_state=2,
     )
 
     for i in range(n_steps):
@@ -139,8 +144,8 @@ def test_reproducible_runs(strategy, surrogate):
     optimizer = Optimizer(
         base_estimator=surrogate(random_state=1),
         dimensions=[Real(-5.0, 10.0), Real(0.0, 15.0)],
-        acq_optimizer='sampling',
-        random_state=1
+        acq_optimizer="sampling",
+        random_state=1,
     )
 
     points = []
@@ -153,8 +158,8 @@ def test_reproducible_runs(strategy, surrogate):
     optimizer = Optimizer(
         base_estimator=surrogate(random_state=1),
         dimensions=[Real(-5.0, 10.0), Real(0.0, 15.0)],
-        acq_optimizer='sampling',
-        random_state=1
+        acq_optimizer="sampling",
+        random_state=1,
     )
     for i in range(n_steps):
         x = optimizer.ask(n_points, strategy)
