@@ -221,6 +221,8 @@ def parse_noise_model(model: Union[str, dict, NoiseModel], **kwargs) -> NoiseMod
         return model
     elif isinstance(model, str):
         return noise_model_factory(model_type=model, **kwargs)
+    elif model is None:
+        return noise_model_factory(model_type="zero")
     else:
         return noise_model_factory(**model)
 
