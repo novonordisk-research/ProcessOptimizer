@@ -19,4 +19,7 @@ class TestModelSystem(unittest.TestCase):
         self.assertAlmostEqual(branin.get_score([0, 0]), 55.60820698386535, places=5)
         # This also tests the seeding of the random state
         branin.noise_size = 0
-        assert branin.get_score([-np.pi, 12.275]) == 0.39788735772973816
+        xstars = np.asarray([(-np.pi, 12.275), (+np.pi, 2.275), (9.42478, 2.475)])
+        f_at_xstars = np.asarray([branin.get_score(xstar) for xstar in xstars])
+        for value in f_at_xstars:
+            self.assertAlmostEqual(value, 0.397887, places=5)
