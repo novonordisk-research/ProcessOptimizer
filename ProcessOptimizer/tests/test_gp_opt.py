@@ -7,8 +7,11 @@ from ProcessOptimizer.model_systems.benchmarks import bench1
 from ProcessOptimizer.model_systems.benchmarks import bench2
 from ProcessOptimizer.model_systems.benchmarks import bench3
 from ProcessOptimizer.model_systems.benchmarks import bench4
-from ProcessOptimizer.model_systems.benchmarks import branin
+from ProcessOptimizer.model_systems import branin_no_noise
 from ProcessOptimizer.learning import cook_estimator
+
+
+branin = branin_no_noise.get_score
 
 
 def check_minimize(

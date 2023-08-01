@@ -8,11 +8,15 @@ from numpy.testing import assert_raises
 
 from ProcessOptimizer.space import Real
 from ProcessOptimizer import Optimizer
-from ProcessOptimizer.model_systems.benchmarks import branin
+from ProcessOptimizer.model_systems import branin_no_noise
 import ProcessOptimizer.learning as sol
 
 from scipy.spatial.distance import pdist
 import pytest
+
+# Introducing branin function as a test function from hte Branin no noise ModelSystem
+
+branin = branin_no_noise.get_score
 
 # list of all strategies for parallelization
 supported_strategies = ["cl_min", "cl_mean", "cl_max"]
