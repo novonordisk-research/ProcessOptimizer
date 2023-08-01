@@ -1,7 +1,12 @@
 import unittest
 
 import numpy as np
-from ProcessOptimizer.model_systems import branin, branin_no_noise, hart3_no_noise
+from ProcessOptimizer.model_systems import (
+    branin,
+    branin_no_noise,
+    hart3_no_noise,
+    hart6_no_noise,
+)
 from ProcessOptimizer.space import Real
 
 
@@ -26,3 +31,16 @@ class TestModelSystem(unittest.TestCase):
     def test_hart3(self):
         assert hart3_no_noise.noise_size == 0
         assert hart3_no_noise.space.bounds == [(0, 1), (0, 1), (0, 1)]
+
+    def test_hart6(self):
+        assert hart6_no_noise.noise_size == 0
+        assert hart6_no_noise.space.bounds == [
+            (0, 1),
+            (0, 1),
+            (0, 1),
+            (0, 1),
+            (0, 1),
+            (0, 1),
+        ]
+        x_test = np.asarray((0.20169, 0.15001, 0.476874, 0.275332, 0.311652, 0.6573))
+        self.assertAlmostEqual(hart6_no_noise.get_score(x_test), -3.32237, places=5)

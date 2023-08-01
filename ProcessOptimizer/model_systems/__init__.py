@@ -14,6 +14,7 @@ from .benchmarks import poly2_model_system as poly2
 from .benchmarks import peaks_model_system as peaks
 from .gold_map import gold_map
 from .hart3 import hart3, hart3_no_noise
+from .hart6 import hart6, hart6_no_noise
 
 __all__ = [
     "branin",
@@ -29,6 +30,7 @@ __all__ = [
     "hart3",
     "hart3_no_noise",
     "hart6",
+    "hart6_no_noise",
     "poly2",
     "peaks",
     "gold_map",
