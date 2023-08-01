@@ -1,7 +1,7 @@
 import unittest
 
 import numpy as np
-from ProcessOptimizer.model_systems import branin
+from ProcessOptimizer.model_systems import branin, branin_no_noise
 from ProcessOptimizer.space import Real
 
 
@@ -18,8 +18,7 @@ class TestModelSystem(unittest.TestCase):
         assert branin.space.dimensions[1].bounds == (0, 15)
         self.assertAlmostEqual(branin.get_score([0, 0]), 55.60820698386535, places=5)
         # This also tests the seeding of the random state
-        branin.noise_size = 0
         xstars = np.asarray([(-np.pi, 12.275), (+np.pi, 2.275), (9.42478, 2.475)])
-        f_at_xstars = np.asarray([branin.get_score(xstar) for xstar in xstars])
+        f_at_xstars = np.asarray([branin_no_noise.get_score(xstar) for xstar in xstars])
         for value in f_at_xstars:
             self.assertAlmostEqual(value, 0.397887, places=5)
