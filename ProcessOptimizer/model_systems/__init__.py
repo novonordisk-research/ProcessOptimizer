@@ -1,4 +1,4 @@
-from .branin_hoo import branin
+from .branin_hoo import branin, branin_no_noise
 from .model_system import ModelSystem
 from .noise_models import (
     DataDependentNoise,
@@ -17,6 +17,7 @@ from .gold_map import gold_map
 
 __all__ = [
     "branin",
+    "branin_no_noise",
     "ModelSystem",
     "DataDependentNoise",
     "ZeroNoise",
