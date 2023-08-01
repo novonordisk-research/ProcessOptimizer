@@ -232,7 +232,7 @@ def noise_model_factory(model_type: Optional[str], **kwargs) -> NoiseModel:
         return ConstantNoise(**kwargs)
     elif model_type == "proportional":
         return ProportionalNoise(**kwargs)
-    elif model_type == "zero":
+    elif model_type in ["zero", "none"]:
         return ZeroNoise()
     else:
         raise ValueError(f"Noise model of type '{model_type}' not recognised")
