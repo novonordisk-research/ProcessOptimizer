@@ -69,47 +69,6 @@ def bench5(x):
     return float(x[0]) ** 2 + x[1] ** 2
 
 
-def branin(x):
-    """
-    The Branin-Hoo function.
-
-    Intended parameter Space during benchmark use:
-        [(-5.0, 10.0), (0.0, 15.0)]
-        If x contains more than two dimensions the excess are ignored.
-
-    Global minimum value, f(x*): 0.3979
-    Global mimimum location, x*: (-pi, 12.275), (+pi, 2.275), and (9.425, 2.475)
-    Local minima locations, x**: None.
-    Global maximum value, f(x+): 308.13
-    Global maximum location, x+: (-5.0, 0.0)
-
-    More details: <http://www.sfu.ca/~ssurjano/branin.html>
-
-    Parameters
-    ----------
-    * 'x' [array of floats of length >=2]:
-        The point to evaluate the function at.
-    * 'a, b, c, r, s, t' [all float]:
-        Default values typically used with this function. Changing any of these
-        values will change the relative shape of the function in the space.
-
-    Returns
-    -------
-    * 'score' [float]:
-        The score of the system at x.
-    """
-    # Define the constants that are canonically used with this function.
-    a = 1
-    b = 5.1 / (4 * np.pi**2)
-    c = 5.0 / np.pi
-    r = 6
-    s = 10
-    t = 1.0 / (8 * np.pi)
-    return (
-        a * (x[1] - b * x[0] ** 2 + c * x[0] - r) ** 2 + s * (1 - t) * np.cos(x[0]) + s
-    )
-
-
 def hart3(x):
     """
     The three dimensional Hartmann function.

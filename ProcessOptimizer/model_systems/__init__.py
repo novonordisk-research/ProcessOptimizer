@@ -1,4 +1,4 @@
-from .branin_hoo import branin_hoo
+from .branin_hoo import branin
 from .model_system import ModelSystem
 from .noise_models import (
     DataDependentNoise,
@@ -16,7 +16,7 @@ from .benchmarks import peaks_model_system as peaks
 from .gold_map import gold_map
 
 __all__ = [
-    "branin_hoo",
+    "branin",
     "ModelSystem",
     "DataDependentNoise",
     "ZeroNoise",
