@@ -40,7 +40,7 @@ class ModelSystem:
         self,
         score: Callable[..., float],
         space: Union[Space, List],
-        noise_model: Union[str, dict, NoiseModel],
+        noise_model: Union[str, dict, NoiseModel, None],
         true_min=None,
         true_max=None,
     ):
@@ -101,7 +101,7 @@ class ModelSystem:
         Y = self.score(X)
         return Y + self.noise_model.get_noise(X, Y)
 
-    def set_noise_model(self, noise_model: Union[str, dict, NoiseModel]):
+    def set_noise_model(self, noise_model: Union[str, dict, NoiseModel, None]):
         """
         Sets or updates the noise model used by the model system.
 

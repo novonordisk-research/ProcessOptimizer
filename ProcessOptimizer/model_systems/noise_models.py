@@ -227,7 +227,7 @@ def parse_noise_model(model: Union[str, dict, NoiseModel], **kwargs) -> NoiseMod
         return noise_model_factory(**model)
 
 
-def noise_model_factory(model_type: str, **kwargs) -> NoiseModel:
+def noise_model_factory(model_type: Optional[str], **kwargs) -> NoiseModel:
     if model_type == "constant":
         return ConstantNoise(**kwargs)
     elif model_type == "proportional":
