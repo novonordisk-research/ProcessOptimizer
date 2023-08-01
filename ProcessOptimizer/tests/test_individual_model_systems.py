@@ -6,6 +6,7 @@ from ProcessOptimizer.model_systems import (
     branin_no_noise,
     hart3_no_noise,
     hart6_no_noise,
+    poly2_no_noise,
 )
 from ProcessOptimizer.space import Real
 
@@ -44,3 +45,11 @@ class TestModelSystem(unittest.TestCase):
         ]
         x_test = np.asarray((0.20169, 0.15001, 0.476874, 0.275332, 0.311652, 0.6573))
         self.assertAlmostEqual(hart6_no_noise.get_score(x_test), -3.32237, places=5)
+
+    def test_poly2(self):
+        assert poly2_no_noise.noise_size == 0
+        assert poly2_no_noise.space.bounds == [(-1, 1), (-1, 1)]
+        x_test = np.asarray((0.6667, -0.4833))
+        self.assertAlmostEqual(poly2_no_noise.get_score(x_test), -2.0512, places=4)
+        x_test_max = np.asarray((-1.0, -1.0))
+        self.assertAlmostEqual(poly2_no_noise.get_score(x_test_max), -1.270, places=3)
