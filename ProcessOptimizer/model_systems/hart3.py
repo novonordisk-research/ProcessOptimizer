@@ -1,7 +1,6 @@
 import numpy as np
 
 from .model_system import ModelSystem
-from ..space import Real
 
 
 def hart3_score(x):
