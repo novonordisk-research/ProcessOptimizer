@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 """A collection of benchmark problems."""
 
-from typing import Callable, List, Union
 import numpy as np
-
-from .model_system import ModelSystem
 
 
 def bench1(x):
