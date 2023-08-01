@@ -69,50 +69,6 @@ def bench5(x):
     return float(x[0]) ** 2 + x[1] ** 2
 
 
-def hart3(x):
-    """
-    The three dimensional Hartmann function.
-
-    Intended parameter Space during benchmark use:
-        The unit hypercube [(0.0, 1.0), (0.0, 1.0), etc.] in three dimensions.
-        If x contains more than three dimensions the excess are ignored.
-
-    Global minimum value, f(x*): -3.863
-    Global mimimum location, x*: (0.1146, 0.5556, 0.8525)
-    Local minima locations, x**: Four exist, not stated here.
-    Global maximum value, f(x+): 0.0000
-    Global maximum location, x+: (1, 1, 0)
-
-    More details: <https://www.sfu.ca/~ssurjano/hart3.html>
-
-    Parameters
-    ----------
-    * 'x' [array of floats of length >=3]:
-        The point to evaluate the function at.
-
-    Returns
-    -------
-    * 'score' [float]:
-        The score of the system at x.
-    """
-    # Define the constants that are canonically used with this function.
-    alpha = np.asarray([1.0, 1.2, 3.0, 3.2])
-    P = 10**-4 * np.asarray(
-        [[3689, 1170, 2673], [4699, 4387, 7470], [1091, 8732, 5547], [381, 5743, 8828]]
-    )
-    A = np.asarray([[3.0, 10, 30], [0.1, 10, 35], [3.0, 10, 30], [0.1, 10, 35]])
-    return -np.sum(alpha * np.exp(-np.sum(A * (np.array(x) - P) ** 2, axis=1)))
-
-
-hart3_model_system = ModelSystem(
-    hart3,
-    [(0.0, 1.0), (0.0, 1.0), (0.0, 1.0)],
-    noise_model="constant",
-    true_max=0.0,
-    true_min=-3.863,
-)
-
-
 def hart6(x):
     """
     The six dimensional Hartmann function.

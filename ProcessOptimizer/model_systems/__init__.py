@@ -9,11 +9,11 @@ from .noise_models import (
     parse_noise_model,
     noise_model_factory,
 )
-from .benchmarks import hart3_model_system as hart3
 from .benchmarks import hart6_model_system as hart6
 from .benchmarks import poly2_model_system as poly2
 from .benchmarks import peaks_model_system as peaks
 from .gold_map import gold_map
+from .hart3 import hart3, hart3_no_noise
 
 __all__ = [
     "branin",
@@ -27,6 +27,7 @@ __all__ = [
     "parse_noise_model",
     "noise_model_factory",
     "hart3",
+    "hart3_no_noise",
     "hart6",
     "poly2",
     "peaks",
