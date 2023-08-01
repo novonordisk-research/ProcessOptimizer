@@ -6,7 +6,7 @@
 
 - **BREAKING**: `cook_estimator`, `has_gradients`, and `use_named_args` are moved from
   `utils` to `learning`.
-- **BREAKING**: `normlaize_dimensions` is moved from `utils` to `space`.
+- **BREAKING**: `normalize_dimensions` is moved from `utils` to `space`.
 - `hart3`, `hart6`, `poly2`, `peaks` benchmarks systems exist as `ModelSystem`s.
 - `gold_map` exist as `ModelSystem`.
 - Sampling consolidated. There is now only one sampling function per `Dimension`.
