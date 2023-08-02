@@ -13,7 +13,7 @@ from scipy.stats.mstats import mquantiles
 from scipy.stats import norm
 from scipy.ndimage import gaussian_filter1d
 from ProcessOptimizer import expected_minimum, expected_minimum_random_sampling
-from .space import Categorical
+from .space import Categorical, Integer
 from .optimizer import Optimizer
 
 import json
@@ -1598,13 +1598,12 @@ def plot_brownie_bee(
         present in 'result' and a last one representing a histogram of samples
         drawn at the expected minimum.
     """
-    # Here we define the value to highlight in each dimension. These 
-    # same values will be used for evaluating the plots when calculating 
-    # dependence. (Unless partial dependence is to be used instead).
-    
+   
     space = result.space
     # Check if we have any categorical dimensions, as this influences the plots
     is_cat = [isinstance(dim, Categorical) for dim in space.dimensions]
+    # Check if we have any integer dimensions, as this influences the plots
+    is_int = [isinstance(dim, Integer) for dim in space.dimensions]
     # Identify the location of the expected minimum, and its mean and std
     x_eval, [res_mean, res_std] = expected_minimum(
         result,
@@ -1645,7 +1644,7 @@ def plot_brownie_bee(
         )
         # Set the padding
         fig.subplots_adjust(
-            left=0.18, right=0.95, bottom=0.2, top=0.95, hspace=0.0, wspace=0.0
+            left=0.12, right=0.93, bottom=0.2, top=0.95, hspace=0.0, wspace=0.0
         )
 
         # Get data to plot in this subplot
@@ -1662,8 +1661,6 @@ def plot_brownie_bee(
             # and the last category
             ax_.set_xlim(np.min(xi)-0.2, np.max(xi)+0.2)            
             
-            # Highlight the expected minimum
-            ax_.axvline(minimum[n], linestyle="--", color="k", lw=1)
             # Create one uniformly colored bar for each category.
             # Edgecolor ensures we can see the bar when plotting 
             # at best obeservation, as stddev is often tiny there
@@ -1691,18 +1688,18 @@ def plot_brownie_bee(
                 edgecolor="green",
                 linewidth=0.0,
             )
-
+        
+        # Highlight the expected minimum
+        ax_.axvline(minimum[n], linestyle="--", color="r", lw=2, zorder=6)
         # Fix formatting of the y-axis with ticks from 0 to our max quality
         ax_.yaxis.set_major_locator(MaxNLocator(5, integer=True))
         ax_.tick_params(axis="y", direction="inout")
-        # Fix formatting of the x-axis
-        [labl.set_rotation(45) for labl in ax_.get_xticklabels()]
         
         if space.dimensions[n].prior == "log-uniform":
             ax_.set_xscale("log")
         else:
             ax_.xaxis.set_major_locator(
-                MaxNLocator(6, prune="both", integer=is_cat[n])
+                MaxNLocator(4, prune=None, integer=(is_cat[n] | is_int[n]))
             )
             if is_cat[n]:
                 # Axes for categorical dimensions are really integers; 
