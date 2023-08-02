@@ -1725,12 +1725,8 @@ def plot_brownie_bee(
     fig.subplots_adjust(
         left=0.05, right=0.95, bottom=0.2, top=0.95, hspace=0.0, wspace=0.0
     )
-    # Plot out to 3 standard deviations from the mean but not outside the scale
-    xi = np.linspace(
-        max(-res_mean-3*res_std, 0),
-        min(-res_mean+3*res_std, max_quality),
-        100,
-    )
+    # Plot in the interval between 0 and our max quality
+    xi = np.linspace(0, max_quality, 250)
     # Create histogram y-values
     yi = norm.pdf(xi, -res_mean, res_std)
     # Build the plot
@@ -1745,6 +1741,12 @@ def plot_brownie_bee(
     )
     # Cosmetics
     ax_.get_yaxis().set_visible(False)
+    ax_.set_ylim(0, max(yi)*1.05)
+    # Fix formatting of the x-axis with ticks from 0 to our max quality
+    ax_.set_xlim(0, max_quality)
+    ax_.xaxis.set_major_locator(
+        MaxNLocator(5, prune=None, integer=True)
+    )
     
     # Add the figure to the output list
     figure_list.append(fig)
