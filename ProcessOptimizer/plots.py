@@ -1675,13 +1675,12 @@ def plot_brownie_bee(
                 alpha=0.5,
                 color="green",
                 edgecolor="green",
-            )            
+            )
+            [labl.set_fontsize(6) for labl in ax_.get_xticklabels()]
         
         # For non-categoric factors
         else:
             ax_.set_xlim(np.min(xi), np.max(xi))
-            # Highlight the expected minimum
-            ax_.axvline(minimum[n], linestyle="--", color="k", lw=1)
             # Show the uncertainty
             ax_.fill_between(
                 xi,
@@ -1974,7 +1973,19 @@ def _evenly_sample(dim, n_points):
 def _cat_format(dimension, x, _):
     """Categorical axis tick formatter function.  Returns the name of category
     `x` in `dimension`.  Used with `matplotlib.ticker.FuncFormatter`."""
-    return str(dimension.categories[int(x)])
+    x = min(max(int(x), 0), len(dimension.categories)-1)
+    label = str(dimension.categories[x])
+    # If longer than 10 characters, try to break on spaces
+    if len(label) > 10:
+        if ' ' in label:
+            # Break label at a space near the middle
+            spaces = [i for i in range(len(label)) if label[i] == ' ']
+            middle_space = spaces[len(spaces)//2]
+            label = label[:middle_space] + '\n' + label[middle_space+1:]
+        else:
+            # If no spaces, abbreviate to first 7 characters
+            label = label[:7] + '...'
+    return label
 
 
 def plot_expected_minimum_convergence(
