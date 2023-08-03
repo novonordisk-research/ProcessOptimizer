@@ -3,7 +3,7 @@ from typing import Callable, List, Union
 import numpy as np
 from ..space import Space, space_factory
 from ..utils import expected_minimum
-from .noise_models import NoiseModel, parse_noise_model
+from .noise_models import NoiseModel, parse_noise_model, ConstantNoise
 
 
 class ModelSystem:
@@ -63,6 +63,12 @@ class ModelSystem:
             scores = [score(point) for point in points]
             true_max = np.max(scores)
         self.true_max = true_max
+        noise_size_is_default = type(noise_model) == str or (
+            type(noise_model) == dict and "noise_size" not in noise_model.keys()
+        )  # Determining whether the noise size is given, or if it is the default.
+        if type(self.noise_model) == ConstantNoise and noise_size_is_default:
+            # For ConstantNoise models, the noise size is set to 1% of the span of the score.
+            self.noise_size = 0.01 * (self.true_max - self.true_min)
 
     def result_loss(self, result):
         """
