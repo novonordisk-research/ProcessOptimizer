@@ -14,7 +14,7 @@ import ProcessOptimizer.learning as sol
 from scipy.spatial.distance import pdist
 import pytest
 
-# Introducing branin function as a test function from hte Branin no noise ModelSystem
+# Introducing branin function as a test function from the Branin no noise ModelSystem
 branin = branin_no_noise.get_score
 
 # list of all strategies for parallelization

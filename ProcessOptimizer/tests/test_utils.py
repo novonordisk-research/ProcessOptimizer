@@ -20,9 +20,7 @@ from ProcessOptimizer.learning import (
 )
 from ProcessOptimizer import Optimizer
 from ProcessOptimizer import Space
-from ProcessOptimizer.utils import point_asdict
-from ProcessOptimizer.utils import point_aslist
-from ProcessOptimizer.utils import dimensions_aslist
+from ProcessOptimizer.utils import point_asdict, point_aslist, dimensions_aslist
 from ProcessOptimizer.space import normalize_dimensions, Real, Integer, Categorical
 
 
@@ -134,9 +132,9 @@ def test_expected_minimum_minmax_argument():
     opt = Optimizer(
         dimensions=[(-2, 2), ("A", "B")], base_estimator="GP", n_initial_points=1
     )
-    X = [[-2, "A"], [-1, "A"], [0, "A"], [1, "A"], [2, "A"]]
+    x = [[-2, "A"], [-1, "A"], [0, "A"], [1, "A"], [2, "A"]]
     y = [2, 1, 0, 1, 2]
-    result = opt.tell(X, y)
+    result = opt.tell(x, y)
     x_min, f_min = expected_minimum(
         result, n_random_starts=20, random_state=1, minmax="min"
     )
@@ -152,9 +150,9 @@ def test_expected_minimum_return_std():
     opt = Optimizer(
         dimensions=[(-2, 2), ("A", "B")], base_estimator="GP", n_initial_points=1
     )
-    X = [[-2, "A"], [-1, "A"], [0, "A"], [1, "A"], [2, "A"]]
+    x = [[-2, "A"], [-1, "A"], [0, "A"], [1, "A"], [2, "A"]]
     y = [2, 1, 0, 1, 2]
-    result = opt.tell(X, y)
+    result = opt.tell(x, y)
     x_min, f_min = expected_minimum(
         result, n_random_starts=20, random_state=1, return_std=False, minmax="min"
     )

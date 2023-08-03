@@ -238,6 +238,21 @@ def test_parse_dict():
     assert isinstance(noise_model, ConstantNoise)
 
 
+def test_parse_none():
+    noise_model = parse_noise_model(None)
+    assert isinstance(noise_model, ZeroNoise)
+
+
+def test_parse_none_str():
+    noise_model = parse_noise_model("none")
+    assert isinstance(noise_model, ZeroNoise)
+
+
+def test_parse_zero():
+    noise_model = parse_noise_model("zero")
+    assert isinstance(noise_model, ZeroNoise)
+
+
 def test_uniform_noise(long_signal_list):
     noise_model = ConstantNoise()
     noise_model.set_noise_type("uniform")

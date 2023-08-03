@@ -49,7 +49,7 @@ def branin_score(x):
 branin = ModelSystem(
     branin_score,
     [Real(-5, 10, name="x1"), Real(0, 15, name="x2")],
-    noise_model={"model_type": "constant", "noise_size": 0.02},
+    noise_model={"model_type": "proportional", "noise_size": 0.1},
     true_max=308.13,
     true_min=0.397887,
 )

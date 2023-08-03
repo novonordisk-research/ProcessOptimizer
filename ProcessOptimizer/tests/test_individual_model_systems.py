@@ -8,14 +8,16 @@ from ProcessOptimizer.model_systems import (
     hart6_no_noise,
     poly2_no_noise,
     peaks_no_noise,
+    ProportionalNoise,
 )
 from ProcessOptimizer.space import Real
 
 
-class TestModelSystem(unittest.TestCase):
+class TestIndividualModelSystem(unittest.TestCase):
     # Make a test for the branin ModelSystem
     def test_branin(self):
-        assert branin.noise_size == 0.02
+        assert branin.noise_size == 0.1
+        assert type(branin.noise_model) == ProportionalNoise
         assert len(branin.space.dimensions) == 2
         assert branin.space.dimensions[0].name == "x1"
         assert branin.space.dimensions[1].name == "x2"
@@ -23,7 +25,7 @@ class TestModelSystem(unittest.TestCase):
         assert isinstance(branin.space.dimensions[0], Real)
         assert branin.space.dimensions[0].bounds == (-5, 10)
         assert branin.space.dimensions[1].bounds == (0, 15)
-        self.assertAlmostEqual(branin.get_score([0, 0]), 55.60820698386535, places=5)
+        self.assertAlmostEqual(branin.get_score([0, 0]), 57.29640398152322, places=5)
         # This also tests the seeding of the random state
         xstars = np.asarray([(-np.pi, 12.275), (+np.pi, 2.275), (9.42478, 2.475)])
         f_at_xstars = np.asarray([branin_no_noise.get_score(xstar) for xstar in xstars])

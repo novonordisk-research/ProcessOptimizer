@@ -46,7 +46,7 @@ poly2 = ModelSystem(
 poly2_no_noise = ModelSystem(
     poly2_score,
     [(-1.0, 1.0), (-1.0, 1.0)],
-    noise_model="none",
+    noise_model=None,
     true_max=-1.270,
     true_min=-2.0512,
 )

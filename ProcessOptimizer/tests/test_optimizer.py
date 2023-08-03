@@ -18,7 +18,7 @@ from ProcessOptimizer.optimizer import Optimizer
 from ProcessOptimizer.utils import expected_minimum
 from scipy.optimize import OptimizeResult
 
-# Introducing branin function as a test function from hte Branin no noise ModelSystem
+# Introducing branin function as a test function from the Branin no noise ModelSystem
 branin = branin_no_noise.get_score
 
 
@@ -48,7 +48,10 @@ def test_multiple_asks():
     # be a "no op"
     base_estimator = ExtraTreesRegressor(random_state=2)
     opt = Optimizer(
-        [(-2.0, 2.0)], base_estimator, n_initial_points=1, acq_optimizer="sampling"
+        [(-2.0, 2.0)],
+        base_estimator,
+        n_initial_points=1,
+        acq_optimizer="sampling",
     )
 
     opt.run(bench1, n_iter=3)
@@ -66,7 +69,10 @@ def test_multiple_asks():
 def test_invalid_tell_arguments():
     base_estimator = ExtraTreesRegressor(random_state=2)
     opt = Optimizer(
-        [(-2.0, 2.0)], base_estimator, n_initial_points=2, acq_optimizer="sampling"
+        [(-2.0, 2.0)],
+        base_estimator,
+        n_initial_points=2,
+        acq_optimizer="sampling",
     )
 
     # can't have single point and multiple values for y
@@ -77,7 +83,10 @@ def test_invalid_tell_arguments():
 def test_invalid_tell_arguments_list():
     base_estimator = ExtraTreesRegressor(random_state=2)
     opt = Optimizer(
-        [(-2.0, 2.0)], base_estimator, n_initial_points=2, acq_optimizer="sampling"
+        [(-2.0, 2.0)],
+        base_estimator,
+        n_initial_points=2,
+        acq_optimizer="sampling",
     )
 
     assert_raises(ValueError, opt.tell, [[1.0], [2.0]], [1.0, None])
@@ -164,12 +173,7 @@ def test_dimension_checking_2D():
     opt = Optimizer([(low, high), (low, high)])
     # within bounds but one dimension too little
     with pytest.raises(ValueError) as e:
-        opt.tell(
-            [
-                low + 1,
-            ],
-            2.0,
-        )
+        opt.tell([low + 1], 2.0)
     assert "Dimensions of point " in str(e.value)
     # within bounds but one dimension too much
     with pytest.raises(ValueError) as e:
@@ -184,16 +188,7 @@ def test_dimension_checking_2D_multiple_points():
     opt = Optimizer([(low, high), (low, high)])
     # within bounds but one dimension too little
     with pytest.raises(ValueError) as e:
-        opt.tell(
-            [
-                [
-                    low + 1,
-                ],
-                [low + 1, low + 2],
-                [low + 1, low + 3],
-            ],
-            2.0,
-        )
+        opt.tell([[low + 1], [low + 1, low + 2], [low + 1, low + 3]], 2.0)
     assert "dimensions as the space" in str(e.value)
     # within bounds but one dimension too much
     with pytest.raises(ValueError) as e:
@@ -207,7 +202,10 @@ def test_dimension_checking_2D_multiple_points():
 def test_returns_result_object():
     base_estimator = ExtraTreesRegressor(random_state=2)
     opt = Optimizer(
-        [(-2.0, 2.0)], base_estimator, n_initial_points=2, acq_optimizer="sampling"
+        [(-2.0, 2.0)],
+        base_estimator,
+        n_initial_points=2,
+        acq_optimizer="sampling",
     )
     result = opt.tell([1.5], 2.0)
 
@@ -344,7 +342,10 @@ def test_optimizer_base_estimator_string_invalid():
 @pytest.mark.parametrize("base_estimator", ESTIMATOR_STRINGS)
 def test_optimizer_base_estimator_string_smoke(base_estimator):
     opt = Optimizer(
-        [(-2.0, 2.0)], base_estimator=base_estimator, n_initial_points=2, acq_func="EI"
+        [(-2.0, 2.0)],
+        base_estimator=base_estimator,
+        n_initial_points=2,
+        acq_func="EI",
     )
     opt.run(func=lambda x: x[0] ** 2, n_iter=3)
 
@@ -409,16 +410,9 @@ def test_add_remove_modelled_noise():
     # Set noise and model system
     noise_size = 0.45
     flat_space = [(-1.0, 1.0)]
-    flat_noise = {
-        "model_type": "constant",
-        "noise_size": noise_size,
-    }
+    flat_noise = {"model_type": "constant", "noise_size": noise_size}
     # Build ModelSystem object
-    model = ModelSystem(
-        score=flat_score,
-        space=flat_space,
-        noise_model=flat_noise,
-    )
+    model = ModelSystem(score=flat_score, space=flat_space, noise_model=flat_noise)
     # Instantiate Optimizer
     opt = Optimizer(flat_space, "GP", lhs=False, n_initial_points=1, random_state=42)
     # Make 20 dispersed points on X
@@ -426,7 +420,7 @@ def test_add_remove_modelled_noise():
     x = []
     y = []
     # sample noisy experiments, 20 in each x-value
-    for i in range(20):
+    for _ in range(20):
         for xx in next_x:
             x.append([xx])
             y.append(model.get_score([xx]))

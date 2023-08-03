@@ -22,6 +22,6 @@ def score(coordinates: List[int]):
 gold_map = ModelSystem(
     score,
     space=[(0.0, 15.0), (0.0, 15.0)],
-    noise_model="zero",
+    noise_model=None,
     true_min=-3.09,
 )

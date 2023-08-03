@@ -1134,7 +1134,7 @@ class Optimizer(object):
             and self.models[-1].noise != "gaussian"
         ):
             raise ValueError(
-                "expected noise to be 'gaussian', got %s" % self.models[-1].noise
+                "Expected noise to be 'gaussian', got %s" % self.models[-1].noise
             )
         noise_estimate = self.models[-1].noise_
         white_present, white_param = _param_for_white_kernel_in_Sum(
