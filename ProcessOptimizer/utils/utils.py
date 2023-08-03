@@ -456,16 +456,8 @@ def y_coverage(res, return_plot=False, random_state=None, horizontal=False):
 
     if return_plot:
         reg = res.models[-1]
-        min_x = res.space.transform(
-            [
-                min_x,
-            ]
-        )
-        max_x = res.space.transform(
-            [
-                max_x,
-            ]
-        )
+        min_x = res.space.transform([min_x])
+        max_x = res.space.transform([max_x])
         sampled_mins = reg.sample_y(min_x, n_samples=5000, random_state=random_state)[0]
         sampled_maxs = reg.sample_y(max_x, n_samples=5000, random_state=random_state)[0]
         extreme_min = sampled_mins.min()

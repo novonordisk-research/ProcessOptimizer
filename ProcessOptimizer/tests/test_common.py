@@ -159,7 +159,11 @@ def test_fixed_random_states(minimizer):
 
     space = [(-5.0, 10.0), (0.0, 15.0)]
     result1 = minimizer(
-        branin, space, n_calls=n_calls, n_random_starts=n_random_starts, random_state=1
+        branin,
+        space,
+        n_calls=n_calls,
+        n_random_starts=n_random_starts,
+        random_state=1,
     )
 
     dimensions = [(-5.0, 10.0), (0.0, 15.0)]
@@ -185,7 +189,11 @@ def test_minimizer_with_space(minimizer):
 
     space = Space([(-5.0, 10.0), (0.0, 15.0)])
     space_result = minimizer(
-        branin, space, n_calls=n_calls, n_random_starts=n_random_starts, random_state=1
+        branin,
+        space,
+        n_calls=n_calls,
+        n_random_starts=n_random_starts,
+        random_state=1,
     )
 
     check_minimizer_api(space_result, n_calls)
@@ -218,7 +226,14 @@ def test_init_vals_and_models(n_random_starts, optimizer_func):
     n_calls = 7
 
     optimizer = partial(optimizer_func, n_random_starts=n_random_starts)
-    res = optimizer(branin, space, x0=x0, y0=y0, random_state=0, n_calls=n_calls)
+    res = optimizer(
+        branin,
+        space,
+        x0=x0,
+        y0=y0,
+        random_state=0,
+        n_calls=n_calls,
+    )
 
     assert_equal(len(res.models), n_calls - n_random_starts + 1)
 
@@ -236,7 +251,13 @@ def test_init_points_and_models(n_random_starts, optimizer_func):
     n_calls = 7
 
     optimizer = partial(optimizer_func, n_random_starts=n_random_starts)
-    res = optimizer(branin, space, x0=x0, random_state=0, n_calls=n_calls)
+    res = optimizer(
+        branin,
+        space,
+        x0=x0,
+        random_state=0,
+        n_calls=n_calls,
+    )
     assert_equal(len(res.models), n_calls - len(x0) - n_random_starts + 1)
 
 
@@ -299,14 +320,27 @@ def check_init_vals(optimizer, func, space, x0, n_calls):
     y0 = list(map(func, x0))
     # testing whether the provided points with their evaluations
     # are taken into account
-    res = optimizer(func, space, x0=x0, y0=y0, random_state=0, n_calls=n_calls)
+    res = optimizer(
+        func,
+        space,
+        x0=x0,
+        y0=y0,
+        random_state=0,
+        n_calls=n_calls,
+    )
     assert_array_equal(res.x_iters[0 : len(x0)], x0)
     assert_array_equal(res.func_vals[0 : len(y0)], y0)
     assert_equal(len(res.x_iters), len(x0) + n_calls)
     assert_equal(len(res.func_vals), len(x0) + n_calls)
 
     # testing whether the provided points are taken into account
-    res = optimizer(func, space, x0=x0, random_state=0, n_calls=n_calls)
+    res = optimizer(
+        func,
+        space,
+        x0=x0,
+        random_state=0,
+        n_calls=n_calls,
+    )
     assert_array_equal(res.x_iters[0 : len(x0)], x0)
     assert_array_equal(res.func_vals[0 : len(y0)], y0)
     assert_equal(len(res.x_iters), n_calls)
@@ -314,7 +348,13 @@ def check_init_vals(optimizer, func, space, x0, n_calls):
 
     # testing whether providing a single point instead of a list
     # of points works correctly
-    res = optimizer(func, space, x0=x0[0], random_state=0, n_calls=n_calls)
+    res = optimizer(
+        func,
+        space,
+        x0=x0[0],
+        random_state=0,
+        n_calls=n_calls,
+    )
     assert_array_equal(res.x_iters[0], x0[0])
     assert_array_equal(res.func_vals[0], y0[0])
     assert_equal(len(res.x_iters), n_calls)
@@ -322,7 +362,14 @@ def check_init_vals(optimizer, func, space, x0, n_calls):
 
     # testing whether providing a single point and its evaluation
     # instead of a list of points and their evaluations works correctly
-    res = optimizer(func, space, x0=x0[0], y0=y0[0], random_state=0, n_calls=n_calls)
+    res = optimizer(
+        func,
+        space,
+        x0=x0[0],
+        y0=y0[0],
+        random_state=0,
+        n_calls=n_calls,
+    )
     assert_array_equal(res.x_iters[0], x0[0])
     assert_array_equal(res.func_vals[0], y0[0])
     assert_equal(len(res.x_iters), 1 + n_calls)
@@ -337,11 +384,19 @@ def check_init_vals(optimizer, func, space, x0, n_calls):
 @pytest.mark.parametrize("minimizer", MINIMIZERS)
 def test_invalid_n_calls_arguments(minimizer):
     with pytest.raises(ValueError):
-        minimizer(branin, [(-5.0, 10.0), (0.0, 15.0)], n_calls=0, random_state=1)
+        minimizer(
+            branin,
+            [(-5.0, 10.0), (0.0, 15.0)],
+            n_calls=0,
+            random_state=1,
+        )
 
     with pytest.raises(ValueError):
         minimizer(
-            branin, [(-5.0, 10.0), (0.0, 15.0)], n_random_starts=0, random_state=1
+            branin,
+            [(-5.0, 10.0), (0.0, 15.0)],
+            n_random_starts=0,
+            random_state=1,
         )
 
     # n_calls >= n_random_starts
@@ -420,18 +475,32 @@ def test_consistent_x_iter_dimensions(minimizer):
 
     # one dimensional problem
     res = minimizer(
-        bench1, dimensions=[(0, 1)], x0=[[0], [1]], n_calls=3, n_random_starts=0
+        bench1,
+        dimensions=[(0, 1)],
+        x0=[[0], [1]],
+        n_calls=3,
+        n_random_starts=0,
     )
     assert len(set(len(x) for x in res.x_iters)) == 1
     assert len(res.x_iters[0]) == 1
 
     with pytest.raises(RuntimeError):
         minimizer(
-            bench1, dimensions=[(0, 1)], x0=[[0, 1]], n_calls=3, n_random_starts=0
+            bench1,
+            dimensions=[(0, 1)],
+            x0=[[0, 1]],
+            n_calls=3,
+            n_random_starts=0,
         )
 
     with pytest.raises(RuntimeError):
-        minimizer(bench1, dimensions=[(0, 1)], x0=[0, 1], n_calls=3, n_random_starts=0)
+        minimizer(
+            bench1,
+            dimensions=[(0, 1)],
+            x0=[0, 1],
+            n_calls=3,
+            n_random_starts=0,
+        )
 
 
 @pytest.mark.slow_test
