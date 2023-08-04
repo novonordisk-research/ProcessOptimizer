@@ -111,8 +111,8 @@ def check_dimension(dimension, transform=None):
             )
 
     if len(dimension) == 3:
-        if (any([isinstance(dim, (float, int)) for dim in dimension[:2]]) and 
-                dimension[2] in ["uniform", "log-uniform"]):
+        if (any([isinstance(dim, (float, int)) for dim in dimension[:2]])
+            and dimension[2] in ["uniform", "log-uniform"]):
             return Real(*dimension, transform=transform)
         else:
             return Categorical(dimension, transform=transform)
@@ -304,9 +304,7 @@ class Real(Dimension):
         orignal space.
         """
         return np.clip(
-            super(Real, self).inverse_transform(Xt).astype(float), 
-            self.low, 
-            self.high
+            super(Real, self).inverse_transform(Xt).astype(float), self.low, self.high
         )
 
     @property
@@ -902,9 +900,7 @@ class Space(object):
     def lhs(
         self,
         n: int,
-        seed: Union[
-            int, float, np.random.RandomState, np.random.Generator, None
-        ] = 42,
+        seed: Union[int, float, np.random.RandomState, np.random.Generator, None] = 42,
     ):
         """Returns n latin hypercube samples as a list of lists
 

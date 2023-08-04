@@ -3,25 +3,27 @@ from typing import Callable, List, Union, Optional
 
 import numpy as np
 
+
 class NoiseModel(ABC):
     """
     Abstract class that is the basis for noise models.
     """
+
     def __init__(
         self,
         noise_size: Optional[float],
         seed: Optional[int] = 42,
     ):
-        """        
+        """
         Parameters
         ----------
-        * `noise_size` [Optional[float]]: 
+        * `noise_size` [Optional[float]]:
             The size (magnitude) of the noise. If ´None´, it signifies that
-            the class is compound, and should not have its own noise signal, 
-            but refer to its compounding NoiseModels instead. An example is 
+            the class is compound, and should not have its own noise signal,
+            but refer to its compounding NoiseModels instead. An example is
             SumNoise, which sums the noise of a list of noise models, but does
             not add any noise by itself.
-        
+
         * `seed` [Optional[int], default=42]:
             Seed to pass forward to the numpy random number generator that is
             used when providing samples with noise.
@@ -34,40 +36,43 @@ class NoiseModel(ABC):
         # safe.
         self.noise_size = noise_size
         self._rng = np.random.default_rng(seed)
+        # Change this to ..utils.get_random_genertor once the pull request with that have been merged
         self.set_noise_type("normal")
-        self._noise_distribution: Callable[[], float]
 
     @abstractmethod
     def get_noise(self, X, Y: float) -> float:
         pass
-    
+
     @property
     def _sample_noise(self) -> float:
         """A raw noise value, to be used in the get_noise() function."""
         if self.noise_size is None:
-            raise TypeError("Method \"raw_noise()\" for NoiseModel class "
-                            f"{self.__class__.__name__} is not supposed to be called.")
-            
-        return self._noise_distribution()*self.noise_size
-    
+            raise TypeError(
+                'Method "raw_noise()" for NoiseModel class '
+                f"{self.__class__.__name__} is not supposed to be called."
+            )
+
+        return self._noise_distribution() * self.noise_size
+
     def set_noise_type(self, noise_type: str):
-        if noise_type in ["normal", "Gaussian", "norm"]:
+        if noise_type in ["normal", "Gaussian", "norm", "uniform"]:
             self.noise_type = noise_type
-            self._noise_distribution = self._rng.normal
-        elif noise_type == "uniform":
-            self.noise_type = noise_type
-            self._noise_distribution = lambda: self._rng.uniform(low=-1, high=1)
         else:
-            raise ValueError(f"Noise distribution \"{noise_type}\" not recognised.")
-    
+            raise ValueError(f'Noise distribution "{noise_type}" not recognised.')
+
     def set_seed(self, seed: Optional[int]):
         # Instantiate the random number generator again
         self._rng = np.random.default_rng(seed)
-        # Make sure to do the same for the noise distribution
+
+    @property
+    def _noise_distribution(self) -> Callable[[], float]:
         if self.noise_type in ["normal", "Gaussian", "norm"]:
-            self._noise_distribution = self._rng.normal
+            return self._rng.normal
         elif self.noise_type == "uniform":
-            self._noise_distribution = lambda: self._rng.uniform(low=-1, high=1)
+            return lambda: self._rng.uniform(low=-1, high=1)
+        else:
+            raise ValueError(f'Noise distribution "{self.noise_type}" not recognised.')
+
 
 class ConstantNoise(NoiseModel):
     """
@@ -77,16 +82,17 @@ class ConstantNoise(NoiseModel):
 
     Parameters
     ----------
-    * `noise_size` [float, default=1]: 
-        The size (magnitude) of the noise. 
+    * `noise_size` [float, default=1]:
+        The size (magnitude) of the noise.
     """
+
     def __init__(self, noise_size: float = 1, **kwargs):
         super().__init__(noise_size=noise_size, **kwargs)
 
     def get_noise(self, _, Y: float) -> float:
         return self._sample_noise
 
-    
+
 class ProportionalNoise(NoiseModel):
     """
     Noise model for noise proportional to the signal, but independent of the sampled
@@ -95,15 +101,16 @@ class ProportionalNoise(NoiseModel):
 
     Parameters
     ----------
-    * `noise_size` [float, default=0.1]: 
+    * `noise_size` [float, default=0.1]:
         The size of the noise relative to the signal.
     """
-    def __init__(self, noise_size : float = 0.1, **kwargs):
+
+    def __init__(self, noise_size: float = 0.1, **kwargs):
         super().__init__(noise_size=noise_size, **kwargs)
-    
+
     def get_noise(self, _, Y: float) -> float:
-        return self._sample_noise*Y
-    
+        return self._sample_noise * Y
+
 
 class DataDependentNoise(NoiseModel):
     """
@@ -111,9 +118,15 @@ class DataDependentNoise(NoiseModel):
 
     Parameters
     ----------
-    * `noise_function` [(parameters) -> NoiseModel]: 
-        A function that takes a set of parameters, and returns a noise model to 
+    * `noise_function` [(parameters) -> NoiseModel]:
+        A function that takes a set of parameters, and returns a noise model to
         apply.
+    * `overwrite_rng` [bool, default=True]:
+        Whether to overwrite the random number generator of underlying noise models.
+        This is necessary if the underlying noise models are created each time
+        `noise_function()` is called, since they will otherwise have the same random
+        seed. If the underlying noise models are created once, this can be set to
+        False to not mess with the underlying noise models.
 
     Examples
     --------
@@ -129,23 +142,36 @@ class DataDependentNoise(NoiseModel):
     noise_model = DataDependentNoise(noise_function=noise_choice)
     ```
     """
-    def __init__(self, noise_function: Callable[..., NoiseModel], **kwargs):
-        self.noise_function = noise_function
+
+    def __init__(
+        self,
+        noise_function: Callable[..., NoiseModel],
+        overwrite_rng: bool = True,
+        **kwargs,
+    ):
         super().__init__(noise_size=None, **kwargs)
-    
+        self.noise_function = noise_function
+        self.overwrite_rng = overwrite_rng
+
     def get_noise(self, X, Y: float) -> float:
-        return self.noise_function(X).get_noise(X, Y)           
-    
+        noise_model = self.noise_function(X)
+        if self.overwrite_rng:
+            noise_model._rng = self._rng
+        return noise_model.get_noise(X, Y)
+
+
 class ZeroNoise(NoiseModel):
     """
     Noise model for zero noise. Doesn't take any arguments. Exist for consistency,
     and to be used in data dependent noise models.
     """
+
     def __init__(self):
         super().__init__(noise_size=0)
 
     def get_noise(self, _, Y: float) -> float:
         return 0
+
 
 class SumNoise(NoiseModel):
     """
@@ -154,40 +180,61 @@ class SumNoise(NoiseModel):
 
     Parameters
     ----------
-    * `noise_model_list` [List[Union[dict, NoiseModel]]]: 
-        List of either noise models, or dicts containing at least the type of 
+    * `noise_model_list` [List[Union[dict, NoiseModel]]]:
+        List of either noise models, or dicts containing at least the type of
         noise model to create.
+    * `overwrite_rng` [bool, default=True]:
+        Whether to overwrite the random number generator of underlying noise models.
+        This is necessary if the underlying noise models are created with the same seed,
+        which they are by default, since they will otherwise give correlated noise.
 
     """
-    def __init__(self,noise_model_list: List[Union[str,dict,NoiseModel]], **kwargs):
-        super().__init__(noise_size = None,**kwargs)
+
+    def __init__(
+        self,
+        noise_model_list: List[Union[str, dict, NoiseModel]],
+        overwrite_rng: bool = True,
+        **kwargs,
+    ):
+        super().__init__(noise_size=None, **kwargs)
         self.noise_model_list: List[NoiseModel]
+        self.overwrite_rng = overwrite_rng
         self.set_noise_model_list(noise_model_list=noise_model_list)
 
-    def set_noise_model_list(self, noise_model_list: List[Union[dict, NoiseModel]]):
+    def set_noise_model_list(
+        self, noise_model_list: List[Union[str, dict, NoiseModel]]
+    ):
         self.noise_model_list = []
         for model_description in noise_model_list:
             self.noise_model_list.append(parse_noise_model(model_description))
+        if self.overwrite_rng:
+            for model in self.noise_model_list:
+                model._rng = self._rng
 
     def get_noise(self, X, Y: float) -> float:
         noise_list = [model.get_noise(X, Y) for model in self.noise_model_list]
         return sum(noise_list)
 
 
-def parse_noise_model(model: Union[str, dict, NoiseModel], **kwargs) -> NoiseModel:
+def parse_noise_model(
+    model: Union[str, dict, NoiseModel, None], **kwargs
+) -> NoiseModel:
     if isinstance(model, NoiseModel):
         return model
-    elif type(model) == str:
+    elif isinstance(model, str):
         return noise_model_factory(model_type=model, **kwargs)
+    elif model is None:
+        return noise_model_factory(model_type="zero")
     else:
         return noise_model_factory(**model)
+
 
 def noise_model_factory(model_type: str, **kwargs) -> NoiseModel:
     if model_type == "constant":
         return ConstantNoise(**kwargs)
     elif model_type == "proportional":
         return ProportionalNoise(**kwargs)
-    elif model_type == "zero":
+    elif model_type in ["zero", "none"]:
         return ZeroNoise()
     else:
         raise ValueError(f"Noise model of type '{model_type}' not recognised")

@@ -4,6 +4,12 @@
 
 ### Changes
 
+- **BREAKING**: `cook_estimator`, `has_gradients`, and `use_named_args` are moved from
+  `utils` to `learning`.
+- **BREAKING**: `normalize_dimensions` is moved from `utils` to `space`.
+- **BREAKING**: `branin`, `hart3`, `hart6`, `poly2`, and `peaks` has been changed to noisy and noiseless `ModelSystem`s.
+- Implemented tests for ModelSystems.
+- `gold_map` exist as `ModelSystem`.
 - Sampling consolidated. There is now only one sampling function per `Dimension`.
   Different sampling types (at the moment, random value sampling and Latin Hypercube
   Sampling (LHS)) are handled through `Space`, referencing the sampling functions of the
@@ -22,6 +28,12 @@
   will not be the same as in old releases.
 
 ### Bugfixes
+
+- Fixes to `DataDependentNoise` and `SumNoise` to avoid highly correlated
+  noise of the underlying noise models.
+- Switched to local imports internally to avoid circular import errors.
+- `NoiseModel._noise_distribution` is now a method, to allow changes of
+  `self._rng` to affect `self._noise_distribution` automatically.
 
 ## Version 0.8.1
 

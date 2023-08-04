@@ -9,13 +9,9 @@ from .utils import (
     check_x_in_space,
     expected_minimum,
     expected_minimum_random_sampling,
-    has_gradients,
-    cook_estimator,
     dimensions_aslist,
     point_asdict,
     point_aslist,
-    normalize_dimensions,
-    use_named_args,
     y_coverage,
 )
 
@@ -30,12 +26,8 @@ __all__ = [
     "check_x_in_space",
     "expected_minimum",
     "expected_minimum_random_sampling",
-    "has_gradients",
-    "cook_estimator",
     "dimensions_aslist",
     "point_asdict",
     "point_aslist",
-    "normalize_dimensions",
-    "use_named_args",
     "y_coverage",
 ]
