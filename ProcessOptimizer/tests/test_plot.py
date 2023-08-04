@@ -143,8 +143,8 @@ def test_plot_objective():
         "uncertain_color": [1, 1, 1],
         "colormap": "viridis_r",
         "normalize_uncertainty": (
-            lambda x, global_min, global_max: (x - global_min)
-            / (global_max - global_min)
+            lambda x, global_min, global_max:
+                (x - global_min)/ (global_max - global_min)
         ),
     }
     axes = plot_objective(
