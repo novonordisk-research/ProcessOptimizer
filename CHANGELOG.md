@@ -1,6 +1,16 @@
 # Release history
 
-## Version 0.8.2 [unpublished]
+## Version 0.8.3 [unpublished]
+
+### Changes
+
+- 
+
+### Bugfixes
+
+- 
+
+## Version 0.8.2
 
 ### Changes
 
@@ -26,6 +36,7 @@
 - **BREAKING**: The mechanism for seeding pseudorandom generators in the `space` module
   have changed, meaning that, while the results are reproducible within a release, they
   will not be the same as in old releases.
+- Bokeh is now (again) a required installation.
 
 ### Bugfixes
 
@@ -34,6 +45,7 @@
 - Switched to local imports internally to avoid circular import errors.
 - `NoiseModel._noise_distribution` is now a method, to allow changes of
   `self._rng` to affect `self._noise_distribution` automatically.
+- Removed max_features='auto' to avoid using hardcoded variables to external functions
 
 ## Version 0.8.1
 
