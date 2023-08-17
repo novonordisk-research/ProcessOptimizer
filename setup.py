@@ -21,6 +21,7 @@ setup(name='ProcessOptimizer',
           'ProcessOptimizer.model_systems',
           'ProcessOptimizer.optimizer',
           'ProcessOptimizer.space',
+          'ProcessOptimizer.utils',
           'ProcessOptimizer.learning.gaussian_process'
           ],
       install_requires=['numpy', 'matplotlib', 'scipy', 'bokeh',
