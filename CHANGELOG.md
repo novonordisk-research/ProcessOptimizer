@@ -1,14 +1,14 @@
 # Release history
 
-## Version 0.8.3 [unpublished]
+## Version 0.9.0 [unpublished]
 
 ### Changes
 
-- 
+-
 
 ### Bugfixes
 
-- 
+- Fix install issue in 0.8.2
 
 ## Version 0.8.2
 
