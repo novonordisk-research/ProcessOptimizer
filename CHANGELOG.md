@@ -1,6 +1,6 @@
 # Release history
 
-## Version 0.9.0 [unpublished]
+## Version 0.9.1 [unpublished]
 
 ### Changes
 
@@ -8,7 +8,17 @@
 
 ### Bugfixes
 
-- Fix install issue in 0.8.2
+-
+
+## Version 0.9.0
+
+### Changes
+
+-
+
+### Bugfixes
+
+- Fix install issue in 0.8.2. Th installed package could not be imported.
 
 ## Version 0.8.2
 
