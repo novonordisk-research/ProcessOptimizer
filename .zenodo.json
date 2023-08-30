@@ -27,6 +27,25 @@
             "affiliation": "Novo Nordisk", 
             "name": "Søren Bertelsen",
             "orcid": "0000-0003-2401-3650"
+        },
+        {
+            "affiliation": "Danish Technological Institute", 
+            "name": "Morten Bormann Nielsen",
+            "orcid": "0000-0001-5055-9097"
+        },
+        {
+            "affiliation": "Danish Technological Institute", 
+            "name": "Anders Bank Blichfeld",
+            "orcid": "0000-0001-5631-4197"
+        },
+        {
+            "affiliation": "Danish Technological Institute", 
+            "name": "Christian Bladt Brandt"
+        },
+        {
+            "affiliation": "Novo Nordisk",
+            "name": "Søren Furbo",
+            "orcid": "0000-0002-2044-7438"
         }
     ], 
     "access_right": "open"

@@ -1,19 +1,101 @@
 # Release history
 
-## Version 0.7.9 [unpublished]
+## Version 0.9.1 [unpublished]
 
 ### Changes
 
-- Minor addition of guidance in plot_objectives()
+-
+
 ### Bugfixes
 
-- 
+-
+
+## Version 0.9.0
+
+### Changes
+
+-
+
+### Bugfixes
+
+- Fix install issue in 0.8.2. Th installed package could not be imported.
+
+## Version 0.8.2
+
+### Changes
+
+- **BREAKING**: `cook_estimator`, `has_gradients`, and `use_named_args` are moved from
+  `utils` to `learning`.
+- **BREAKING**: `normalize_dimensions` is moved from `utils` to `space`.
+- **BREAKING**: `branin`, `hart3`, `hart6`, `poly2`, and `peaks` has been changed to noisy and noiseless `ModelSystem`s.
+- Implemented tests for ModelSystems.
+- `gold_map` exist as `ModelSystem`.
+- Sampling consolidated. There is now only one sampling function per `Dimension`.
+  Different sampling types (at the moment, random value sampling and Latin Hypercube
+  Sampling (LHS)) are handled through `Space`, referencing the sampling functions of the
+  `Dimesion`s
+- LHS now allows for arbitrary seeding, or for random seeding, better supporting
+  benchmarking. The algorithm still uses a fixed seed by default.
+- The module `space` uses `np.random.default_rng` as a random number generator, instead
+  of the deprecated `np.random.RandomState`. A bridging strategy allows it to still
+  accept `RandomState`s, but it will tranform them to `default_rng` for internal use.
+  The rest of the codebase still uses `RandomState`.
+- **BREAKING**: LHS now respects priors. This means that performing LHS on a space with
+  a log-normal `Real` `Dimension`, or a `Categorical` `Dimension` with informative
+  priors will give different results in this release than in previous releases.
+- **BREAKING**: The mechanism for seeding pseudorandom generators in the `space` module
+  have changed, meaning that, while the results are reproducible within a release, they
+  will not be the same as in old releases.
+- Bokeh is now (again) a required installation.
+
+### Bugfixes
+
+- Fixes to `DataDependentNoise` and `SumNoise` to avoid highly correlated
+  noise of the underlying noise models.
+- Switched to local imports internally to avoid circular import errors.
+- `NoiseModel._noise_distribution` is now a method, to allow changes of
+  `self._rng` to affect `self._noise_distribution` automatically.
+- Removed max_features='auto' to avoid using hardcoded variables to external functions
+
+## Version 0.8.1
+
+### Changes
+
+- Added additonal model systems to the list of benchmarks and made their
+  structure more consistent.
+- Added seeding to the noise models used for benchmarking to ensure
+  reproducible results when benchmarking.
+- Allow addition or removal of modelled noise to the optimizer object. This
+  is to allow user to predict the full outcome space of a given new exp.
+
+### Bugfixes
+
+- Fix a small number of deprecationwarnings.
+
+## Version 0.8.0
+
+### Changes
+
+- Default acquisition function changed to expected improvement (EI)
+- Updated list of contributors
+- Minor addition of guidance in plot_objectives()
+- Implemented a major new constraint type called SumEquals. This constraint is
+  designed to be used for mixture experiments where a (sub)set of factors must
+  sum to a specific number.
+- Add a module to add noise to model systems
+- QoL opt.space.names added as property
+- Changed default behavior of plot_objective to show uncertainty in 1D plots
+
+### Bugfixes
+
+-
 
 ## Version 0.7.8
 
 ### Changes
 
-- 
+-
+
 ### Bugfixes
 
 - ParetoFront did not show full recipe for model points
@@ -25,9 +107,10 @@
 
 - Changed look of uncertainty-plots in plot_objective
 - Added plot to only show 1d plots
-- Align code in GPR module to reflect sklearn. While still supporting SKlearn 
-0.24.2, we have some parallel code between our local GPR and the original from
-sklearn.
+- Align code in GPR module to reflect sklearn. While still supporting SKlearn
+  0.24.2, we have some parallel code between our local GPR and the original from
+  sklearn.
+
 ### Bugfixes
 
 - Model systems should now be imported as intended.
@@ -46,7 +129,7 @@ sklearn.
 
 - Remove call of plot_width and plot_height in bokeh
 
-## Version 0.7.5 
+## Version 0.7.5
 
 ### Changes
 
@@ -75,8 +158,8 @@ sklearn.
 
 - Bokeh_plot is repaired after we started returning the std to plots
 - LHS is rewritten to ensure consistent returns in between real and integer
-dimensions (integer types are ensure to return values "close" to those of a
-corresponding real dimension)
+  dimensions (integer types are ensure to return values "close" to those of a
+  corresponding real dimension)
 
 ## Version 0.7.2
 
@@ -85,12 +168,13 @@ corresponding real dimension)
 - New plot-type to envision model coverage
 - Kriging Believer now supports multiobjective opt
 - Examples pruned to better reflect the purpose of ProcessOptimizer as a tool
-for optimizing real world physical/chemical processes
+  for optimizing real world physical/chemical processes
 - Expected_minimum can now return both maximum and minimum and can return the
-expected std in the points. Works for both numerical and categorical dimensions
+  expected std in the points. Works for both numerical and categorical dimensions
 - QoL improvements with easy impoart of most used features through \_\_init\_\_
-.py
+  .py
 - Add possibility to show ~95% credibility_intervals in plot_objective
+
 ### Bugfixes
 
 - More linting
@@ -198,14 +282,14 @@ expected std in the points. Works for both numerical and categorical dimensions
 
 ### Changes
 
-- Remove dependency on scipy>=0.14.0 *
-- Remove dependency on scikit-learn==0.21.0 *^
-- Remove dependency on bokeh==1.4.0 *
-- Remove dependency on tornado==5.1.1 *
-- *from setup.py
+- Remove dependency on scipy>=0.14.0 \*
+- Remove dependency on scikit-learn==0.21.0 \*^
+- Remove dependency on bokeh==1.4.0 \*
+- Remove dependency on tornado==5.1.1 \*
+- \*from setup.py
 - ^from requirements.txt
 - Change gpr (as in skopt #943) to reflect changes in sklearn gpr-module
-     (relates to normalilzation)
+  (relates to normalilzation)
 - Change searchCV to reflect skopt #939 and #904 (relates to np.mask and imports)
 - Changes in tests (skopt#939 and #808). Extensive changes in tests!
 - Change in Bokeh_plot.py to fix bug when Bokeh>=2.2.0
