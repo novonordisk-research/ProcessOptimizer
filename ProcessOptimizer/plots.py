@@ -239,10 +239,7 @@ def _format_scatter_plot_axes(ax, space, ylabel, dim_labels=None):
     )
 
     if dim_labels is None:
-        dim_labels = [
-            "$X_{%i}$" % i if d.name is None else d.name
-            for i, d in enumerate(space.dimensions)
-        ]
+        dim_labels = space.names
     # Axes for categorical dimensions are really integers; we have to
     # label them with the category names
     iscat = [isinstance(dim, Categorical) for dim in space.dimensions]
@@ -338,10 +335,7 @@ def _format_scatter_plot_axes(ax, space, ylabel, dim_labels=None):
 def _format_1d_dependency_axes(ax, space, ylabel, dim_labels=None):
 
     if dim_labels is None:
-        dim_labels = [
-            "$X_{%i}$" % i if d.name is None else d.name
-            for i, d in enumerate(space.dimensions)
-        ]
+        dim_labels = space.names
     # Figure out where we have categorical factors
     iscat = [isinstance(dim, Categorical) for dim in space.dimensions]
 
@@ -432,7 +426,7 @@ def dependence(
     n_samples=250,
     n_points=40,
     x_eval=None,
-    return_std=False
+    return_std=False,
 ):
     """
     Calculate the dependence for dimensions `i` and `j` with
@@ -586,8 +580,8 @@ def plot_objective(
     pars="result",
     expected_minimum_samples=None,
     title=None,
-    show_confidence=False,
-    plot_options = None
+    show_confidence=True,
+    plot_options=None,
 ):
     """Pairwise dependence plot of the objective function.
 
@@ -656,7 +650,7 @@ def plot_objective(
     * `title` [str, default=None]
         String to use as title of the figure
 
-    * `show_confidence` [bool, default=false] Whether or not to show a credible
+    * `show_confidence` [bool, default=true] Whether or not to show a credible
         range around the mean estimate on the 1d-plots in the diagonal. The
         credible range is given as 1.96 times the std in the point.
 
@@ -1148,7 +1142,7 @@ def _2d_dependency_plot(data, axes, samples, highlighted, limits, options = {}):
         s=30,
         marker="D",
         lw=0.0,
-        zorder=10,
+        zorder=9,
         clip_on=False,
     )
 
@@ -1569,12 +1563,13 @@ def plot_objectives(
     size=2,
     zscale="linear",
     dimensions=None,
-    usepartialdependence=True,
+    usepartialdependence=False,
     pars="result",
     expected_minimum_samples=None,
     titles=None,
-    show_confidence=False
-    ):
+    show_confidence=True,
+    plot_options=None,
+):
     """Pairwise dependence plots of each of the objective functions.
     Parameters
     ----------
@@ -1592,33 +1587,39 @@ def plot_objectives(
 
     if titles is None:
         for result in results:
-            plot_objective(result,
-                           levels=levels,
-                           n_points=n_points,
-                           n_samples=n_samples,
-                           size=size,
-                           zscale=zscale,
-                           dimensions=dimensions,
-                           usepartialdependence=usepartialdependence,
-                           pars=pars,
-                           expected_minimum_samples=expected_minimum_samples,
-                           title=None,
-                           show_confidence=show_confidence)
+            plot_objective(
+                result,
+                levels=levels,
+                n_points=n_points,
+                n_samples=n_samples,
+                size=size,
+                zscale=zscale,
+                dimensions=dimensions,
+                usepartialdependence=usepartialdependence,
+                pars=pars,
+                expected_minimum_samples=expected_minimum_samples,
+                title=None,
+                show_confidence=show_confidence,
+                plot_options=plot_options,
+            )
         return
     else:
         for k in range(len(results)):
-            plot_objective(results[k], 
-                           levels=levels,
-                           n_points=n_points,
-                           n_samples=n_samples,
-                           size=size,
-                           zscale=zscale,
-                           dimensions=dimensions,
-                           usepartialdependence=usepartialdependence,
-                           pars=pars,
-                           expected_minimum_samples=expected_minimum_samples,
-                           title=titles[k],
-                           show_confidence=show_confidence)
+            plot_objective(
+                results[k], 
+                levels=levels,
+                n_points=n_points,
+                n_samples=n_samples,
+                size=size,
+                zscale=zscale,
+                dimensions=dimensions,
+                usepartialdependence=usepartialdependence,
+                pars=pars,
+                expected_minimum_samples=expected_minimum_samples,
+                title=titles[k],
+                show_confidence=show_confidence,
+                plot_options=plot_options,
+            )
         return
 
 
@@ -1908,7 +1909,7 @@ def plot_Pareto(
 
     * `dimensions` [list, default=None]
         List of dimension names. Used for plots. If None the dimensions
-        will be named "1_1", "x_2"...
+        will be named "x_1", "x_2"...
         
     * `return_data` [bool, default=False]
         Whether to return data or not. If True the function will return
@@ -1973,10 +1974,7 @@ def plot_Pareto(
         raise ValueError("Pareto_plot is not possible with >3 objectives")
 
     if dimensions == None:
-        dimensions = [
-            "$X_{%i}$" % i if d.name is None else d.name
-            for i, d in enumerate(optimizer.space.dimensions)
-        ]
+        dimensions = optimizer.space.names
 
     if len(dimensions) != len(optimizer.space.dimensions):
         raise ValueError(

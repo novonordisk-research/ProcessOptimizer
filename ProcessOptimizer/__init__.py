@@ -21,23 +21,24 @@ from . import learning
 from . import optimizer
 
 from . import space
+from .learning import cook_estimator
 from .optimizer import dummy_minimize
 from .optimizer import forest_minimize
 from .optimizer import gbrt_minimize
 from .optimizer import gp_minimize
 from .optimizer import Optimizer
 from .searchcv import BayesSearchCV
-from .space import Space
+from .space import Space, space_factory
 from .utils import dump
 from .utils import expected_minimum
 from .utils import expected_minimum_random_sampling
 from .utils import load
-from .utils import cook_estimator, create_result, y_coverage
+from .utils import create_result, y_coverage
 from .plots import plot_objective, plot_objectives
 from .plots import plot_evaluations, plot_convergence
 from .plots import plot_Pareto, plot_expected_minimum_convergence
 
-__version__ = "0.7.8"
+__version__ = "0.9.0"
 
 
 __all__ = (
@@ -60,13 +61,13 @@ __all__ = (
     "expected_minimum",
     "expected_minimum_random_sampling",
     "BayesSearchCV",
-    "Space"
     "Space",
+    "space_factory",
     "plot_objective",
     "plot_objectives",
     "plot_evaluations",
     "plot_convergence",
     "plot_Pareto",
     "y_coverage",
-    "plot_expected_minimum_convergence"
+    "plot_expected_minimum_convergence",
 )

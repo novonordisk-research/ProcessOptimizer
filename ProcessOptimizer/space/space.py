@@ -1,26 +1,42 @@
+from abc import ABC, abstractmethod
+from typing import Iterable, List, Union
+
 import numbers
 import numpy as np
 import yaml
 
-from scipy.stats.distributions import randint
-from scipy.stats.distributions import rv_discrete
-from scipy.stats.distributions import uniform
-
-from sklearn.utils import check_random_state
-from sklearn.utils.fixes import sp_version
 
 from .transformers import CategoricalEncoder
 from .transformers import Normalize
 from .transformers import Identity
 from .transformers import Log10
 from .transformers import Pipeline
+from ..utils import get_random_generator
 
 # helper class to be able to print [1, ..., 4] instead of [1, '...', 4]
 
 
 class _Ellipsis:
     def __repr__(self):
-        return '...'
+        return "..."
+
+
+def space_factory(input: Union["Space", List]) -> "Space":
+    """Transforms a list of dimension definitions into a Space
+
+    If the input is already a Space, that is returned.
+
+    Parameters:
+    * `input` (List, Space): The list of Dimension definitions. For more details,
+        see documentation for check_dimensions.
+
+    Returns:
+    * `space`: The resulting Space.
+    """
+    if isinstance(input, Space):
+        return input
+    else:
+        return Space(input)
 
 
 def check_dimension(dimension, transform=None):
@@ -80,20 +96,23 @@ def check_dimension(dimension, transform=None):
         return Categorical(dimension, transform=transform)
 
     if len(dimension) == 2:
-        if any([isinstance(d, (str, bool)) or isinstance(d, np.bool_)
-                for d in dimension]):
+        if any(
+            [isinstance(d, (str, bool)) or isinstance(d, np.bool_) for d in dimension]
+        ):
             return Categorical(dimension, transform=transform)
         elif all([isinstance(dim, numbers.Integral) for dim in dimension]):
             return Integer(*dimension, transform=transform)
         elif any([isinstance(dim, numbers.Real) for dim in dimension]):
             return Real(*dimension, transform=transform)
         else:
-            raise ValueError("Invalid dimension {}. Read the documentation for"
-                             " supported types.".format(dimension))
+            raise ValueError(
+                "Invalid dimension {}. Read the documentation for"
+                " supported types.".format(dimension)
+            )
 
     if len(dimension) == 3:
-        if (any([isinstance(dim, (float, int)) for dim in dimension[:2]]) and
-                dimension[2] in ["uniform", "log-uniform"]):
+        if (any([isinstance(dim, (float, int)) for dim in dimension[:2]])
+            and dimension[2] in ["uniform", "log-uniform"]):
             return Real(*dimension, transform=transform)
         else:
             return Categorical(dimension, transform=transform)
@@ -101,30 +120,16 @@ def check_dimension(dimension, transform=None):
     if len(dimension) > 3:
         return Categorical(dimension, transform=transform)
 
-    raise ValueError("Invalid dimension {}. Read the documentation for "
-                     "supported types.".format(dimension))
+    raise ValueError(
+        "Invalid dimension {}. Read the documentation for "
+        "supported types.".format(dimension)
+    )
 
 
-class Dimension(object):
+class Dimension(ABC):
     """Base class for search space dimensions."""
 
     prior = None
-
-    def rvs(self, n_samples=1, random_state=None):
-        """Draw random samples.
-
-        Parameters
-        ----------
-        * `n_samples` [int or None]:
-            The number of samples to be drawn.
-
-        * `random_state` [int, RandomState instance, or None (default)]:
-            Set random state to something other than None for reproducible
-            results.
-        """
-        rng = check_random_state(random_state)
-        samples = self._rvs.rvs(size=n_samples, random_state=rng)
-        return self.inverse_transform(samples)
 
     def transform(self, X):
         """Transform samples form the original space to a warped space."""
@@ -132,7 +137,7 @@ class Dimension(object):
 
     def inverse_transform(self, Xt):
         """Inverse transform samples from the warped space back into the
-           original space.
+        original space.
         """
         return self.transformer.inverse_transform(Xt)
 
@@ -163,12 +168,55 @@ class Dimension(object):
         else:
             raise ValueError("Dimension's name must be either string or None.")
 
+    def sample(
+        self, points: Union[float, Iterable[float]], allow_duplicates: bool = True
+    ) -> np.ndarray:
+        """Draw points from the dimension.
 
-def _uniform_inclusive(loc=0.0, scale=1.0):
-    # like scipy.stats.distributions but inclusive of `high`
-    # XXX scale + 1. might not actually be a float after scale if
-    # XXX scale is very large.
-    return uniform(loc=loc, scale=np.nextafter(scale, scale + 1.))
+
+
+        Parameters
+        ----------
+        * `points` [float or list[float]]:
+            A single point or a list of points to sample. All must be between 0 and 1.
+
+        * `allow_duplicates` [bool, default=True]:
+            If True, the output will have the same size as `points`. If False, each
+            point in the output will be unique. This means that the output can be
+            shorter than `points`.
+        """
+        if isinstance(points, (int, float)):  # If a single point is given, convert it
+            # to a list.
+            points = [points]
+        if any([point < 0 or point > 1 for point in points]):
+            raise ValueError("Sample points must be between 0 and 1.")
+        sampled_points = self._sample(points)
+        if not allow_duplicates:
+            # np.unique sorts the inputs, which we do not want, so we have to reinvent
+            # the wheel.
+            seen = set()
+            unique_points = []
+            for point in sampled_points:
+                if point not in seen:
+                    unique_points.append(point)
+                    seen.add(point)
+            sampled_points = unique_points
+        return np.array(sampled_points)
+
+    @abstractmethod
+    def _sample(self, points: Iterable[float]) -> np.array:
+        """A reasonable mapping from the interval [0, 1] to the dimension, whatever that
+        may mean. For example, for an integer dimension, the sampling should be give a
+        higher integer for a higher value of the point, and each integer should be
+        mapped to from an equally large interval.
+
+        The mapping should be monotonic, but it does not have to be strictly monotonic.
+
+        The mapping should respect (informative) priors. For example, if the prior is
+        log-uniform, the mapping should be logarithmic, so that the interval that maps
+        to [0.1, 1] is the same size as the interval that maps to [1, 10].
+        """
+        pass
 
 
 class Real(Dimension):
@@ -202,8 +250,10 @@ class Real(Dimension):
             Name associated with the dimension, e.g., "learning rate".
         """
         if high <= low:
-            raise ValueError("the lower bound {} has to be less than the"
-                             " upper bound {}".format(low, high))
+            raise ValueError(
+                "the lower bound {} has to be less than the"
+                " upper bound {}".format(low, high)
+            )
         self.low = low
         self.high = high
         self.prior = prior
@@ -215,52 +265,46 @@ class Real(Dimension):
         self.transform_ = transform
 
         if self.transform_ not in ["normalize", "identity"]:
-            raise ValueError("transform should be 'normalize' or 'identity'"
-                             " got {}".format(self.transform_))
+            raise ValueError(
+                "transform should be 'normalize' or 'identity'"
+                " got {}".format(self.transform_)
+            )
 
-        # Define _rvs and transformer spaces.
-        # XXX: The _rvs is for sampling in the transformed space.
-        # The rvs on Dimension calls inverse_transform on the points sampled
-        # using _rvs
         if self.transform_ == "normalize":
             # set upper bound to next float after 1. to make the numbers
             # inclusive of upper edge
-            self._rvs = _uniform_inclusive(0., 1.)
             if self.prior == "uniform":
-                self.transformer = Pipeline(
-                    [Identity(), Normalize(low, high)])
+                self.transformer = Pipeline([Identity(), Normalize(low, high)])
             else:
                 self.transformer = Pipeline(
                     [Log10(), Normalize(np.log10(low), np.log10(high))]
                 )
         else:
             if self.prior == "uniform":
-                self._rvs = _uniform_inclusive(self.low, self.high - self.low)
                 self.transformer = Identity()
             else:
-                self._rvs = _uniform_inclusive(
-                    np.log10(self.low),
-                    np.log10(self.high) - np.log10(self.low))
                 self.transformer = Log10()
 
     def __eq__(self, other):
-        return (type(self) is type(other) and
-                np.allclose([self.low], [other.low]) and
-                np.allclose([self.high], [other.high]) and
-                self.prior == other.prior and
-                self.transform_ == other.transform_)
+        return (
+            type(self) is type(other)
+            and np.allclose([self.low], [other.low])
+            and np.allclose([self.high], [other.high])
+            and self.prior == other.prior
+            and self.transform_ == other.transform_
+        )
 
     def __repr__(self):
         return "Real(low={}, high={}, prior='{}', transform='{}')".format(
-            self.low, self.high, self.prior, self.transform_)
+            self.low, self.high, self.prior, self.transform_
+        )
 
     def inverse_transform(self, Xt):
         """Inverse transform samples from the warped space back into the
-           orignal space.
+        orignal space.
         """
         return np.clip(
-            super(Real, self).inverse_transform(Xt).astype(float),
-            self.low, self.high
+            super(Real, self).inverse_transform(Xt).astype(float), self.low, self.high
         )
 
     @property
@@ -281,7 +325,6 @@ class Real(Dimension):
                 return np.log10(self.low), np.log10(self.high)
 
     def distance(self, a, b):
-
         """Compute distance between point `a` and `b`.
 
         Parameters
@@ -293,25 +336,24 @@ class Real(Dimension):
             Second point.
         """
         if not (a in self and b in self):
-            raise RuntimeError("Can only compute distance for values within "
-                               "the space, not %s and %s." % (a, b))
+            raise RuntimeError(
+                "Can only compute distance for values within "
+                "the space, not %s and %s." % (a, b)
+            )
         return abs(a - b)
 
-    def lhs_arange(self, n):
-        """ Returns an evenly distributed numpy array of samples to use with latin hypercube sampling.
-
-        Parameters
-        -----------
-        * `n` [int]
-            Number of samples.
-        """
-        # Generate sample points by splitting the space 0 to 1 into n pieces
-        # and picking the middle of each piece. Samples are spaced 1/n apart
-        # inside the interval with a buffer of half a step size to the extremes
-        samples = (np.arange(n)+0.5)/n
-
-        # Transform the samples to the range used for this dimension
-        return samples*(self.high - self.low) + self.low
+    def _sample(self, point_list: Iterable[float]) -> np.ndarray:
+        if self.prior == "uniform":
+            sampled_points = [
+                point * (self.high - self.low) + self.low for point in point_list
+            ]
+        else:
+            log_sampled_points = [
+                point * np.log(self.high / self.low) + np.log(self.low)
+                for point in point_list
+            ]
+            sampled_points = np.exp(log_sampled_points)
+        return sampled_points
 
 
 class Integer(Dimension):
@@ -338,8 +380,10 @@ class Integer(Dimension):
             Name associated with dimension, e.g., "number of trees".
         """
         if high <= low:
-            raise ValueError("the lower bound {} has to be less than the"
-                             " upper bound {}".format(low, high))
+            raise ValueError(
+                "The lower bound {} has to be less than the "
+                "upper bound {}".format(low, high)
+            )
         self.low = low
         self.high = high
         self.name = name
@@ -350,29 +394,28 @@ class Integer(Dimension):
         self.transform_ = transform
 
         if transform not in ["normalize", "identity"]:
-            raise ValueError("transform should be 'normalize' or 'identity'"
-                             " got {}".format(self.transform_))
+            raise ValueError(
+                "Transform should be 'normalize' or 'identity' "
+                "got {}".format(self.transform_)
+            )
         if transform == "normalize":
-            self._rvs = uniform(0, 1)
             self.transformer = Normalize(low, high, is_int=True)
         else:
-            self._rvs = randint(self.low, self.high + 1)
             self.transformer = Identity()
 
-    def update_samplingspace(self, new_space):
-        self._rvs = new_space
-
     def __eq__(self, other):
-        return (type(self) is type(other) and
-                np.allclose([self.low], [other.low]) and
-                np.allclose([self.high], [other.high]))
+        return (
+            type(self) is type(other)
+            and np.allclose([self.low], [other.low])
+            and np.allclose([self.high], [other.high])
+        )
 
     def __repr__(self):
         return "Integer(low={}, high={})".format(self.low, self.high)
 
     def inverse_transform(self, Xt):
         """Inverse transform samples from the warped space back into the
-           orignal space.
+        orignal space.
         """
         # The concatenation of all transformed dimensions makes Xt to be
         # of type float, hence the required cast back to int.
@@ -404,29 +447,17 @@ class Integer(Dimension):
             Second point.
         """
         if not (a in self and b in self):
-            raise RuntimeError("Can only compute distance for values within "
-                               "the space, not %s and %s." % (a, b))
+            raise RuntimeError(
+                "Can only compute distance for values within "
+                "the space, not %s and %s." % (a, b)
+            )
         return abs(a - b)
 
-    def lhs_arange(self, n):
-        """ Returns an evenly distributed list of samples to use with latin hypercube sampling.
-
-        Parameters
-        -----------
-        * `n` [int]
-            Number of samples.
-        """
-        # Generate sample points by splitting the space 0 to 1 into n pieces
-        # and picking the middle of each piece. Samples are spaced 1/n apart
-        # inside the interval with a buffer of half a step size to the extremes
-        samples = (np.arange(n)+0.5)/n
-        # Transform the samples to the range used for this dimension and then 
-        # round them back to integers. If your space is less than n wide, some 
-        # of your samples will be rounded to the same number
-        samples = np.round(samples*(self.high - self.low) + self.low)
-        
-        # Convert samples to a list of integers
-        return samples.astype(int)
+    def _sample(self, point_list: Iterable[float]) -> np.ndarray:
+        point_list = [
+            point * (self.high + 1 - self.low) + self.low for point in point_list
+        ]
+        return np.floor(point_list).astype(int)
 
 
 class Categorical(Dimension):
@@ -451,7 +482,7 @@ class Categorical(Dimension):
         * `name` [str or None]:
             Name associated with dimension, e.g., "colors".
         """
-        if transform == 'identity':
+        if transform == "identity":
             self.categories = tuple([str(c) for c in categories])
         else:
             self.categories = tuple(categories)
@@ -462,8 +493,10 @@ class Categorical(Dimension):
             transform = "onehot"
         self.transform_ = transform
         if transform not in ["identity", "onehot"]:
-            raise ValueError("Expected transform to be 'identity' or 'onehot' "
-                             "got {}".format(transform))
+            raise ValueError(
+                "Expected transform to be 'identity' or 'onehot' "
+                "got {}".format(transform)
+            )
         if transform == "onehot":
             self.transformer = CategoricalEncoder()
             self.transformer.fit(self.categories)
@@ -473,24 +506,20 @@ class Categorical(Dimension):
         self.prior = prior
 
         if prior is None:
-            self.prior_ = np.tile(1. / len(self.categories),
-                                  len(self.categories))
+            self.prior_ = np.tile(1.0 / len(self.categories), len(self.categories))
         else:
             self.prior_ = prior
 
-        # XXX check that sum(prior) == 1
-        self._rvs = rv_discrete(
-            values=(range(len(self.categories)), self.prior_)
-        )
-
     def __eq__(self, other):
-        return (type(self) is type(other) and
-                self.categories == other.categories and
-                np.allclose(self.prior_, other.prior_))
+        return (
+            type(self) is type(other)
+            and self.categories == other.categories
+            and np.allclose(self.prior_, other.prior_)
+        )
 
     def __repr__(self):
         if len(self.categories) > 7:
-            cats = self.categories[:3] + (_Ellipsis(), ) + self.categories[-3:]
+            cats = self.categories[:3] + (_Ellipsis(),) + self.categories[-3:]
         else:
             cats = self.categories
 
@@ -500,13 +529,6 @@ class Categorical(Dimension):
             prior = self.prior
 
         return "Categorical(categories={}, prior={})".format(cats, prior)
-
-    def rvs(self, n_samples=None, random_state=None):
-        choices = self._rvs.rvs(size=n_samples, random_state=random_state)
-        if isinstance(choices, numbers.Integral):
-            return self.categories[choices]
-        else:
-            return [self.categories[c] for c in choices]
 
     @property
     def transformed_size(self):
@@ -546,25 +568,19 @@ class Categorical(Dimension):
             Second category.
         """
         if not (a in self and b in self):
-            raise RuntimeError("Can only compute distance for values within"
-                               " the space, not {} and {}.".format(a, b))
+            raise RuntimeError(
+                "Can only compute distance for values within "
+                "the space, not {} and {}.".format(a, b)
+            )
         return 1 if a != b else 0
 
-    def lhs_arange(self, n):
-        """ Returns an evenly distributed list of samples to use with latin hypercube sampling.
-
-        Parameters
-        -----------
-        * `n` [int]
-            Number of samples.
-        """
-
-        s = []
-        l = len(self.categories)  # Number of categories
-        for i in range(n):
-            # Loop through all categories by using the modulus.
-            s.append(self.categories[i % l])
-        return s
+    def _sample(self, point_list: Iterable[float]) -> np.ndarray:
+        # XXX check that sum(prior) == 1
+        cummulative_prior = np.cumsum(self.prior_)
+        # For each point in point_list, find the index of the first element in cummulative_prior that is greater than the point
+        # This is the index of the category that the point corresponds to
+        category_index = [np.argmax(cummulative_prior > point) for point in point_list]
+        return np.array([self.categories[index] for index in category_index])
 
 
 class Space(object):
@@ -600,7 +616,7 @@ class Space(object):
             dims = self.dimensions[:15] + [_Ellipsis()] + self.dimensions[-15:]
         else:
             dims = self.dimensions
-        return "Space([{}])".format(',\n       '.join(map(str, dims)))
+        return "Space([{}])".format(",\n       ".join(map(str, dims)))
 
     def __iter__(self):
         return iter(self.dimensions)
@@ -641,12 +657,14 @@ class Space(object):
         * `space` [Space]:
            Instantiated Space object
         """
-        with open(yml_path, 'rb') as f:
+        with open(yml_path, "rb") as f:
             config = yaml.safe_load(f)
 
-        dimension_classes = {'real': Real,
-                             'integer': Integer,
-                             'categorical': Categorical}
+        dimension_classes = {
+            "real": Real,
+            "integer": Integer,
+            "categorical": Categorical,
+        }
 
         # Extract space options for configuration file
         if isinstance(config, dict):
@@ -657,7 +675,7 @@ class Space(object):
         elif isinstance(config, list):
             options = config
         else:
-            raise TypeError('YaML does not specify a list or dictionary')
+            raise TypeError("YaML does not specify a list or dictionary")
 
         # Populate list with Dimension objects
         dimensions = []
@@ -675,7 +693,13 @@ class Space(object):
 
         return space
 
-    def rvs(self, n_samples=1, random_state=None):
+    def rvs(
+        self,
+        n_samples=1,
+        random_state: Union[
+            int, np.random.RandomState, np.random.Generator, None
+        ] = None,
+    ):
         """Draw random samples.
 
         The samples are in the original space. They need to be transformed
@@ -686,7 +710,7 @@ class Space(object):
         * `n_samples` [int, default=1]:
             Number of samples to be drawn from the space.
 
-        * `random_state` [int, RandomState instance, or None (default)]:
+        * `random_state` [int, np.random.RandomState, np.random.Generator, or None, default=None]:
             Set random state to something other than None for reproducible
             results.
 
@@ -696,12 +720,13 @@ class Space(object):
            Points sampled from the space.
         """
 
-        rng = check_random_state(random_state)
+        rng = get_random_generator(random_state)
 
         columns = []
 
         for dim in self.dimensions:
-            columns.append(dim.rvs(n_samples=n_samples, random_state=rng))
+            index_array = rng.uniform(size=n_samples)
+            columns.append(dim.sample(index_array))
 
         # Transpose
         rows = []
@@ -773,8 +798,7 @@ class Space(object):
             if offset == 1:
                 columns.append(dim.inverse_transform(Xt[:, start]))
             else:
-                columns.append(
-                    dim.inverse_transform(Xt[:, start:start+offset]))
+                columns.append(dim.inverse_transform(Xt[:, start : start + offset]))
 
             start += offset
 
@@ -813,6 +837,15 @@ class Space(object):
 
         return b
 
+    @property
+    def names(self):
+        """The names of the dimensions if given. Otherwise [X1, X2, ... Xn]"""
+        labels = [
+            "$X_{%i}$" % i if d.name is None else d.name
+            for i, d in enumerate(self.dimensions)
+        ]
+        return labels
+
     def __contains__(self, point):
         """Check that `point` is within the bounds of the space."""
         for component, dim in zip(point, self.dimensions):
@@ -844,7 +877,7 @@ class Space(object):
         return any([isinstance(dim, Categorical) for dim in self.dimensions])
 
     def distance(self, point_a, point_b):
-        """Compute distance between two points in this space.
+        """Compute the L1 (Manhattan or taxicab) distance between two points in this space.
 
         Parameters
         ----------
@@ -854,26 +887,39 @@ class Space(object):
         * `b` [array]
             Second point.
         """
-        distance = 0.
+        distance = 0.0
         if len(self.dimensions) > 1:
             for a, b, dim in zip(point_a, point_b, self.dimensions):
                 distance += dim.distance(a, b)
-                
+
         if len(self.dimensions) == 1:
-             distance +=  self.dimensions[0].distance(point_a[0], point_b[0])
+            distance += self.dimensions[0].distance(point_a[0], point_b[0])
 
         return distance
 
-    def lhs(self, n):
-        """ Returns n latin hypercube samples as a list of lists
-        """
+    def lhs(
+        self,
+        n: int,
+        seed: Union[int, float, np.random.RandomState, np.random.Generator, None] = 42,
+    ):
+        """Returns n latin hypercube samples as a list of lists
 
+        Parameters
+        ----------
+        * `n` [int]: The number of samples to generate.
+
+        * `seed`
+            [int, float, np.random.RandomState, np.random.Generator, or None, default=42]:
+            The seed used by the random number generator. If None, the results are not reproducible.
+        """
+        rng = get_random_generator(seed)
         samples = []
         for i in range(self.n_dims):
             lhs_perm = []
             # Get evenly distributed samples from one dimension
-            lhs_aranged = self.dimensions[i].lhs_arange(n)
-            perm = np.random.RandomState(seed=42 + i).permutation(n)
+            sample_indices = (np.arange(n) + 0.5) / n
+            lhs_aranged = self.dimensions[i].sample(sample_indices)
+            perm = rng.permutation(n)
             for p in perm:  # Random permutate the order of the samples
                 lhs_perm.append(lhs_aranged[p])
             samples.append(lhs_perm)
@@ -887,3 +933,5 @@ class Space(object):
                 row.append(samples[j][i])
             transposed_samples.append(row)
         return transposed_samples
+
+    # TODO: Add a R1 QRS sampling method here
