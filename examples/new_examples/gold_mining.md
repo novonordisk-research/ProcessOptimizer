@@ -13,9 +13,17 @@ can be a good idea to look at them in order.
 ## Main storyline
 
 We follow the The Gold Mining Corporation's attempts to find as much gold as
-possible in the plot of land it has gotten prospecting rights over. It
-[starts out](start_here.ipynb) not knowing anything about how much gold there is or
-where, so they use the ProcessOptimizer to suggest where to dig.
+possible in the plot of land it has gotten prospecting rights over. They need to decide
+where to send their digging team, headed by Ms. Goldie Dixon, to dig, both to find gold,
+but also to learn more about where there is gold. Since they
+[start out](start_here.ipynb) not knowing anything about how much gold there is or
+where, sothey use the ProcessOptimizer to suggest where to they should send Ms. Dixon
+to dig.
+
+At one point, [Ms. Dixon gets a new digging tool](categorical.ipynb) - A narrow drill.
+Since it digs in a different way than the pickaxes she normally uses, the amount of gold
+found is different depending on the tool she use. So now she has to choose the digging
+tool as well as the the position of the dig.
 
 We then [investigate the plots we use](plots.ipynb) in a bit more detail to see what we
 can read from them. Here, we also introduce model uncertainty.
@@ -31,11 +39,6 @@ We also look at how to handle [getting several suggestions for digging sites at 
 so that Ms. Dixon doesn't have to return to the main office after every dig, but can
 just go to the next few digs, and only return to get new suggested digging sites once in
 a while.
-
-At one point, [Ms. Dixon gets a new digging tool](categorical.ipynb) - A narrow drill.
-Since it digs in a different way than the pickaxes she normally uses, the amount of gold
-found is different depending on the tool she use. So now she has to choose the digging
-tool as well as the the position of the dig.
 
 To see how [ProcessOptimizer handles constraints](contraints.ipynb), we give The Gold
 Mining Corporation prospecting rights to a new plot of land, which isn't rectangular.
