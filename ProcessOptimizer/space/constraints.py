@@ -1,7 +1,8 @@
 from sklearn.utils import check_random_state
 from .space import Real, Integer, Categorical, Space
 import numpy as np
-
+from scipy import matrix, linalg
+from typing import Union, List
 
 class Constraints:
     def __init__(self, constraints_list, space):
@@ -26,6 +27,7 @@ class Constraints:
         self.inclusive = [[] for _ in range(space.n_dims)]
         self.exclusive = [[] for _ in range(space.n_dims)]
         self.sum = []
+        self.sum_equals = []
         self.conditional = []
         # A copy of the list of constraints:
         self.constraints_list = constraints_list
@@ -39,6 +41,8 @@ class Constraints:
                 self.exclusive[constraint.dimension].append(constraint)
             elif isinstance(constraint, Sum):
                 self.sum.append(constraint)
+            elif isinstance(constraint, SumEquals):
+                self.sum_equals.append(constraint)
             elif isinstance(constraint, Conditional):
                 self.conditional.append(constraint)
             else:
@@ -52,7 +56,11 @@ class Constraints:
         else:
             return False
 
-    def rvs(self, n_samples=1, random_state=None):
+    def rvs(
+            self, 
+            n_samples: int = 1, 
+            random_state: Union[int, np.random.RandomState, None] = None,
+        ) -> List:
         """Draw random samples that all are valid with regards to the constraints.
 
         The samples are in the original space. They need to be transformed
@@ -84,16 +92,15 @@ class Constraints:
         while len(rows) < n_samples:
             columns = []
             # Iterate through all dimensions:
+            random_samples = self.space.rvs(n_samples=n_samples, random_state=rng)
             for i in range(self.space.n_dims):
-                dim = self.space.dimensions[i]
                 # If a dimension has a "Single"-type constraint we just sample
                 # that value:
                 if self.single[i]:
                     column = np.full(n_samples, self.single[i].value)
                 else:  # Using the default rvs() for the given dimension
                     try:
-                        column = (dim.rvs(n_samples=n_samples, 
-                                          random_state=rng))
+                        column = [sample[i] for sample in random_samples]
                     except Exception as error:
                         print(f'''Caught an error while making random points in
                          constrained space, error is: {error}''')
@@ -121,8 +128,158 @@ class Constraints:
         # We draw more samples when needed so we only return n_samples of the
         # samples
         return rows[:n_samples]
+    
+    def sumequal_sampling(
+            self, 
+            n_samples: int = 1,
+            random_state: Union[int, np.random.RandomState, None] = None,
+        ) -> List:
+        """Draw samples that respect SumEquals constraints.
 
-    def validate_sample(self, sample):
+        The samples are in the original space. They need to be transformed
+        before being passed to a model or minimizer by `space.transform()`.
+
+        Parameters
+        ----------
+        * `n_samples` [int, default=1]:
+            Number of samples to be drawn from the space.
+
+        * `random_state` [int, RandomState instance, or None (default)]:
+            Set random state to something other than None for reproducible
+            results.
+
+        Returns
+        -------
+        * `points`: [list of lists, shape=(n_points, n_dims)]
+           Points sampled from the space.
+        """
+
+        rng = check_random_state(random_state)
+                
+        # Find a point on the plane defined by the SumEquals constraint where
+        # A + B + ... = value. We do this by asking where the diagonal between
+        # the origin and A_max, B_max, ... intersects the plane.
+        d = len(self.sum_equals[0].dimensions)
+        origin = np.array(
+            [self.space.bounds[dim][0] 
+             for dim in self.sum_equals[0].dimensions]
+        )
+        delta = np.array(
+            [self.space.bounds[dim][1] - self.space.bounds[dim][0] 
+             for dim in self.sum_equals[0].dimensions]
+        )
+        
+        A = np.zeros((d,d))
+        B = np.zeros(d)
+        # Row representing the sum constraint
+        A[0,:] = 1
+        B[0] = self.sum_equals[0].value
+        # Rows that define the linear equation for the diagonal along the 
+        # constrained dimensions
+        for i in range(1,d):
+            A[i, 0] = -delta[i]/delta[0]
+            A[i, i] = 1
+            B[i] = origin[i]
+        # Identify the point that lies on the constraint plane and on the diagonal
+        point = np.linalg.solve(A, B)
+        # Use the fact that the vector [1, 1, ...] (a 1 for each constrained 
+        # dimension) is normal to the plane defined by A + B + ... to build
+        # basis-vectors inside the plane, using the null_space function
+        N = matrix(np.ones(d))
+        ns = linalg.null_space(N)
+        # We only need to simulate points up to a distance of half the diagonal
+        # from the origin to A_max, B_max, etc.
+        sim_distance = np.sqrt(np.sum(delta**2)) / 2
+        
+        # To avoid "clustering" of points in the constrained plane, we will 
+        # create samples using low discrepancy quasirandom sequences, see:
+        # http://extremelearning.com.au/unreasonable-effectiveness-of-quasirandom-sequences/
+        # for background on this method
+        
+        # Helper function for calculating the generalized golden ratio
+        def phi(d):
+            x = 2.0
+            for i in range(10): 
+                x = pow(1+x,1/(d+1)) 
+            return x
+        # Golden ratio for our present dimensionality (the constrained space)
+        g = phi(d-1)
+        alpha = np.zeros(d-1)
+        for j in range(d-1):
+            alpha[j] = pow(1/g, j+1) %1
+        vec_comp = np.zeros((1, d-1))
+        # Choose seed (starting location) in the normalized space
+        seed = 0.5
+        
+        # Build a list of samples
+        samples = []
+        j = 0
+        while len(samples) < n_samples:
+            # Generate next step in the sequence
+            vec_comp = (seed + alpha*(j+1)) %1
+            j += 1
+            # Center these components on zero
+            vec_comp = vec_comp - 0.5
+            # Simulate lengths of each null_space vector to add to our point
+            vec_comp = vec_comp * sim_distance * 2
+            sample_candidate = point[:, None].T + ns @ vec_comp.T
+            # Generate the correct shape 
+            sample_candidate = sample_candidate[0]
+            # Check that the candidate is inside the original parameter space
+            inspace = [
+                (sample_candidate[i] >= self.space.bounds[i][0]) and
+                (sample_candidate[i] <= self.space.bounds[i][1])
+                for i in range(d)
+            ]
+            # Only accept the candidate if it is in our space
+            if all(inspace):
+                samples.append(sample_candidate)      
+        # Convert the list of arrays to a list of lists
+        samples = [arr.tolist() for arr in samples]
+        
+        # Create settings for the dimensions that are not part of the constraint
+        if d < self.space.n_dims:
+            remaining_dimensions = [
+                i for i in range(self.space.n_dims) 
+                if i not in self.sum_equals[0].dimensions
+            ]
+            # Convert our list of samples to an array
+            samples = np.array(samples)
+            # Expand the sample array to make space for settings of the 
+            # unconstrained dimensions
+            for i in remaining_dimensions:
+                samples = np.insert(
+                    samples,
+                    i, 
+                    np.zeros(len(samples)), 
+                    axis=1
+                )
+            # Convert back to list of lists
+            samples = samples.tolist()
+            
+            # Generate random settings across all factors
+            full_sample = self.space.rvs(n_samples=n_samples, random_state=rng)
+            # Sort the settings in each column, which will ensure that the
+            # unconstrained settings are distributed in a space-filling way too
+            transposed_sample = list(zip(*full_sample))
+            sort_trans_sample = [sorted(inner_tuple) for inner_tuple in transposed_sample]
+            # Place the settings back in a list of lists
+            full_sample = list(map(list, zip(*sort_trans_sample)))
+            
+            # Overwrite the random setting values for the constrained factors
+            for j in remaining_dimensions:
+                for i in range(len(samples)):
+                    samples[i][j] = full_sample[i][j]
+            
+            # Shuffle the order of the samples, otherwise the unconstrained
+            # settings will be returned in a sorted order. Use seeding to 
+            # provide consistent initial samples
+            rng2 = np.random.default_rng(seed=42)
+            rng2.shuffle(samples)
+                    
+        return samples
+
+    def validate_sample(self, sample: List) -> bool:
         """ Validates a sample of parameter values in regards to the
         constraints.
 
@@ -172,6 +329,10 @@ class Constraints:
 
         # We iterate through sum constriants
         for constraint in self.sum:
+            if not constraint.validate_sample(sample):
+                return False
+        # We iterate through sum_equals constriants
+        for constraint in self.sum_equals:
             if not constraint.validate_sample(sample):
                 return False
         # We iterate through Conditional constraints
@@ -476,6 +637,55 @@ class Sum():
         else:
             return False
 
+class SumEquals():
+    def __init__(self, dimensions: List[int], value: Union[float, int]):
+        """Constraint class of type SumEquals.
+
+        This constraint enforces that the sum of all values drawn for the
+        specified dimensions, is exactly equal to a value. Can only be
+        used with real dimensions.
+
+        Parameters
+        ----------
+        * `dimensions` [list of ints]:
+            A list of integers coresponding to the index of the dimensions that
+            should be summed
+
+        * `value` [float or int]:
+            The value for which the sum should be equal to.
+
+        """
+
+        if not (type(dimensions) == tuple or type(dimensions) == list):
+            raise TypeError('Argument `dimensions` must be of type tuple or list. Got {}'.format(type(dimensions)))
+        if not len(dimensions) > 1:
+            raise ValueError('Argument `dimensions` must have a length of more than 1. Got {}'.format(len(dimensions)))
+        if not all(type(dim) == int for dim in dimensions):
+            raise TypeError('Dimension indices must all be of type int.')
+        if not all(dim >= 0 for dim in dimensions):
+            raise ValueError('Dimension index must be positive')
+        if not (type(value) == int or type(value) == float):
+            raise TypeError('Argument `value` must be of type float or int. Got {}'.format(type(value)))
+
+        self.dimensions = tuple(dimensions)
+        self.value = value
+
+        self.validate_sample = self._validate_sample
+
+    def _validate_sample(self, sample: List[int]) -> bool:
+        # Returns True if sample does not violate the constraints aside from 
+        # floating point errors
+        sample_sum = np.sum([sample[dim] for dim in self.dimensions])
+        return np.isclose(sample_sum, self.value)
+
+    def __repr__(self):
+        return "SumEquals(dimensions={}, value={})".format(self.dimensions, self.value)
+
+    def __eq__(self, other):
+        if isinstance(other, SumEquals):
+            return all([a == b for a, b in zip(self.dimensions, other.dimensions)]) and self.value == other.value
+        else:
+            return False
 
 class Conditional():
     def __init__(self, condition, if_true=None, if_false=None):
@@ -605,6 +815,27 @@ def check_constraints(space, constraints):
             for ind_dim in constraint.dimensions:
                 if isinstance(space.dimensions[ind_dim], Categorical):
                     raise ValueError('Sum constraint can not be applid to categorical dimension: {}'.format(space.dimensions[ind_dim]))
+        elif isinstance(constraint, SumEquals):
+            # Check that there is only one SumEquals constraint being applied
+            if len(constraints) > 1:
+                raise ValueError('SumEquals constraints can not be applied in combination with other constraints. Found {} constraints.'.format(len(constraints)))
+            if not all(dim < n_dims for dim in constraint.dimensions):
+                raise IndexError('Dimension index exceeds number of dimensions')
+            for ind_dim in constraint.dimensions:
+                if isinstance(space.dimensions[ind_dim], Categorical):
+                    raise ValueError('SumEquals constraint can not be applied to categorical dimensions: {}'.format(space.dimensions[ind_dim]))
+                if isinstance(space.dimensions[ind_dim], Integer):
+                    raise ValueError('SumEquals constraint can not be applied to integer dimensions: {}'.format(space.dimensions[ind_dim]))
+            # Check if the sum equals constraint is below the combined lower 
+            # bound of the space dimensions in question
+            low_limit_sum = sum(space.bounds[dim][0] for dim in constraint.dimensions)
+            if low_limit_sum > constraint.value:
+                raise ValueError('Constraint cannot be met inside dimension limits, value ({}) is too small.'.format(constraint.value))
+            # Check if the sum equals constraint is above the combined higher
+            # bound of the space dimensions in question
+            high_limit_sum = sum(space.bounds[dim][1] for dim in constraint.dimensions)
+            if high_limit_sum < constraint.value:
+                raise ValueError('Constraint cannot be met inside dimension limits, value ({}) is too large.'.format(constraint.value))
         elif isinstance(constraint, Conditional):
             # We run check_constraints on each constraint instance in the
             # conditional constraint. We only check them if they are not None
@@ -618,7 +849,7 @@ def check_constraints(space, constraints):
                 for constraint_if_false in constraint.if_false:
                     check_constraints(space, [constraint_if_false])
         else:
-            raise TypeError('Constraints must be of type "Single", "Exlusive", "Inclusive", "Sum" or "Conditional". Got {}'.format(type(constraint)))
+            raise TypeError('Constraints must be of type "Single", "Exlusive", "Inclusive", "Sum", "SumEquals" or "Conditional". Got {}'.format(type(constraint)))
 
 
 def check_dim_and_space(space, constraint):
