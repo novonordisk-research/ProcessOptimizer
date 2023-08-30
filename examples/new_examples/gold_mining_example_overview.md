@@ -9,4 +9,23 @@ Goldie Dixon. We learn how to define the parameter space, start a ProcessOptimiz
 it where to dig, and telling it how much gold we found. We also discuss whether to stop
 early, or keep going in the hopes of finding an even better spot.
 
-We then [learn ]
+We then [learn about batch vs. sinlge experiments](batch_vs_single.ipynb). This covers
+whether we tell the ProcessOptimizer about all of the experiments before asking for a
+new recommendation, or whether we ask for a list of new experiments to perform, do them,
+and only then tell ProcessOptimizer about the all of the results.
+
+In the third part, we [look at noisy data](noise.ipynb) - Up until now, the amount of
+gold found has simply been a function of the dig position. Now, we introduce some
+uncertainty as to how much is dug up, so if you dig at the same place twice, you won't
+find the same amount.
+
+The we look at whether to use ProcessOptimizer to be sure that we find a lot of gold at
+each dig, or whether to risk not finding a lot, because it also means that we might find
+a lot more. This is calle [the explore vs. exploit balance](explore_vs_exploit.ipynb).
+
+#TODO
+In the fifth part, we introduce small areas with a lot of gold, and see how
+ProcessOptimizer handles that.
+
+And finally, at the last installment of our main storyline, we look at the different
+ways we can [plot the result of ProcessOptimizer](plots.ipynb).
