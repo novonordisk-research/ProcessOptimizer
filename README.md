@@ -127,6 +127,6 @@ To upload a new version to PyPi do the following in the root folder of the proje
 - In terminal run the command "pytest" and make sure there are no errors
 - Change version number in setup.py
 - Change version number in ProcessOptimizer/\_\_init\_\_.py
-- Remember to `pip install twine` if running in a new virtual env
+- Remember to `pip install twine` if running in a new virtual env. (You might also have to `pip install wheel`)
 - Run `python setup.py sdist bdist_wheel`
 - Run `python -m twine upload dist/*` (make sure that /dist only contains relevant version)
