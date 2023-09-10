@@ -33,7 +33,7 @@ setup(name='ProcessOptimizer',
                          'numpy==1.24.4',
                          'pyYAML==6.0.1',
                          'scikit-learn==1.3.0',
-                         'scipy==1.11.2',
+                         'scipy==1.10.1',
                          'six==1.16.0',
                          'tornado==6.3.3',
                          ]
