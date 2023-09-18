@@ -1,10 +1,10 @@
-from typing import List
+from typing import Sequence
 import numpy as np
 
 from . import ModelSystem
 
 
-def score(coordinates: List[int]):
+def score(coordinates: Sequence[float]):
     """
     Modified Branin-Hoo function. It has three approximate local minima.
 

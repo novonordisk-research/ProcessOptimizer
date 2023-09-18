@@ -1,4 +1,4 @@
-from collections.abc import Iterable
+from typing import Sequence
 
 import numpy as np
 
@@ -11,7 +11,7 @@ well_list = [
 ]
 
 
-def score(coordinates: Iterable[float]):
+def score(coordinates: Sequence[float]):
     """Modified Branin-Hoo function, with 'narrow wells' added.'"""
     gold_found = gold_map_score(coordinates)
 
