@@ -2,8 +2,10 @@ import csv
 import math
 import numpy as np
 
+from typing import List
 from .model_system import ModelSystem
-from ..space import Real
+from ..space import Integer
+
 
 #Utility-functions to calculate delta-e (best thought of as a measure of color difference). Code used is from https://github.com/kaineyb/deltae,
 #please see the license file in the same repo for more information.
@@ -22,6 +24,7 @@ def delta_e_1976(Lab1, Lab2):
     delb = Lab1['b'] - Lab2['b']
     result = math.sqrt(delL * delL + dela * dela + delb * delb)
     return result
+
 
 def delta_e_2000(Lab1, Lab2, verbose=False, test=False, formula='Rochester'):
     """
@@ -201,3 +204,118 @@ def delta_e_2000(Lab1, Lab2, verbose=False, test=False, formula='Rochester'):
 
     else:
         return DE2000
+
+
+def find_closest_match(file_name, target_vector, target_columns):
+    # make docstring for this function
+    '''
+    file_name: name of the csv file
+    target_vector: vector of target values
+    target_columns: list of column names for the target values
+    
+    returns: row with the closest match to the target vector
+    '''
+    data = []
+    with open(file_name, 'r') as f:
+        reader = csv.reader(f)
+        headers = next(reader)
+        for row in reader:
+            data.append(row)
+
+    # Convert data to numpy array for easier manipulation
+    data = np.array(data)
+
+    # Get the indices of the target columns
+    target_indices = [headers.index(col) for col in target_columns]
+
+    # Extract the data for the target columns
+    target_data = data[:, target_indices].astype(float)
+
+    # Calculate the absolute differences for column 'B'
+    differences_B = np.abs(target_data[:, 0] - target_vector[0])
+
+    # Get the minimum difference for column 'B'
+    min_difference_B = np.min(differences_B)
+
+    # Get all rows where the difference for column 'B' is equal to the minimum difference
+    rows_with_min_difference_B = data[differences_B == min_difference_B]
+
+    # Extract the data for column 'C' from these rows
+    data_C = rows_with_min_difference_B[:, target_indices[1]].astype(float)
+
+    # Calculate the absolute differences for column 'C'
+    differences_C = np.abs(data_C - target_vector[1])
+
+    # Get the index of the minimum difference for column 'C'
+    min_difference_C_index = np.argmin(differences_C)
+
+    # Return the row with the minimum difference for column 'C'
+    return rows_with_min_difference_B[min_difference_C_index]
+
+
+def color_finder_dict(file_name, target_well):
+    '''
+    file_name: name of the csv file
+    target_well: well number of the target well
+    
+    returns: dictionary with the L,a,b values for the target well
+    '''
+    data = []
+    with open(file_name, 'r') as f:
+        reader = csv.reader(f)
+        headers = next(reader)
+        for row in reader:
+            data.append(row)
+
+    # Convert data to numpy array for easier manipulation
+    data = np.array(data)
+
+    # Get the indices of the target columns
+    target_indices = [headers.index(col) for col in ['Well','L','A','B']]
+
+    # Extract the data for the target columns
+    target_data = data[:, target_indices]
+    
+    # Take the row in which the 'Well' column matches the target well
+    target_row = target_data[target_data[:,0] == target_well]
+    
+    #Transform the values in 'L','A','B' to floats
+    target_row = target_row[0][1:].astype(float)
+    
+    #Return the values in 'L','A','B' as a dictionary
+    return {'L': target_row[0], 'a': target_row[1], 'b': target_row[2]}
+
+
+def color_difference(file_name, well1, well2):
+    '''
+    file_name: name of the csv file
+    well1: well number of the first well
+    well2: well number of the second well
+    
+    returns: delta-e value between the two wells
+    '''
+    #Find the lab color using color_finder and calculate the difference between the two colors. use the method delta_E from the colour package.
+    color1 = color_finder_dict(file_name, well1)
+    color2 = color_finder_dict(file_name, well2)
+    #return colour.delta_E(color1, color2, method='CIE 2000')
+    return delta_e_2000(color1, color2, verbose=False, test=False, formula='Bruce')
+
+
+def score(coordinates: List[int], evaluation_target='F8'):
+    """
+    Takes a list of coordinates for a single experiment and compare to the color in target cell. It then returns the delta-e value between the two wells.
+    """
+    file_name = './data/color_pH_data.csv'
+    data_lookup_position = find_closest_match(file_name, coordinates, ['percent_acid', 'Indicator'])[0]
+    evaluation = color_difference(file_name, data_lookup_position, evaluation_target)
+    return evaluation
+    
+
+color_pH = ModelSystem(
+    score,
+    space = [Integer(30, 85, name='percent_acid'),
+             Integer(5, 40, name='Indicator'),
+            ],
+    noise_model=None,
+    true_min=0,
+)
