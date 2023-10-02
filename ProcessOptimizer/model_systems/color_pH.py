@@ -303,7 +303,13 @@ def color_difference(file_name, well1, well2):
 
 def score(coordinates: List[int], evaluation_target='F8'):
     """
+    coordinates: list of coordinates for a single experiment
+    evaluation_target: well number of the target well. Default is F8 (because green is good for the eyes)
+    
+    returns: delta-e value between the two wells
+    
     Takes a list of coordinates for a single experiment and compare to the color in target cell. It then returns the delta-e value between the two wells.
+    With the default value of F8 as target, the right recipy will be 50% acid and 30uL Indicator [50,30].
     """
     file_name = './data/color_pH_data.csv'
     data_lookup_position = find_closest_match(file_name, coordinates, ['percent_acid', 'Indicator'])[0]
