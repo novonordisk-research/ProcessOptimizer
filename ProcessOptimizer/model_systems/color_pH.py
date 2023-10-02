@@ -310,12 +310,21 @@ def score(coordinates: List[int], evaluation_target='F8'):
     evaluation = color_difference(file_name, data_lookup_position, evaluation_target)
     return evaluation
     
+#Create model system
+color_pH_no_noise = ModelSystem(
+    score,
+    space = [Integer(30, 85, name='percent_acid'),
+             Integer(5, 40, name='Indicator'),
+            ],
+    noise_model = None,
+    true_min = 0,
+)
 
 color_pH = ModelSystem(
     score,
     space = [Integer(30, 85, name='percent_acid'),
              Integer(5, 40, name='Indicator'),
             ],
-    noise_model=None,
-    true_min=0,
+    noise_model = {"model_type": "proportional", "noise_size": 0.1},
+    true_min = 0,
 )
