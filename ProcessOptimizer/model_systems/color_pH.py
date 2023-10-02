@@ -1,6 +1,7 @@
 import csv
 import math
 import numpy as np
+import os
 
 from typing import List
 from .model_system import ModelSystem
@@ -311,7 +312,9 @@ def score(coordinates: List[int], evaluation_target='F8'):
     Takes a list of coordinates for a single experiment and compare to the color in target cell. It then returns the delta-e value between the two wells.
     With the default value of F8 as target, the right recipy will be 50% acid and 30uL Indicator [50,30].
     """
-    file_name = './data/color_pH_data.csv'
+    # make a relative path to the data file called color_pH_data.csv. the file should be in a subfolder called data. the path should be relative to the file that is calling this function.
+    package_directory = os.path.dirname(os.path.abspath(__file__))
+    file_name = os.path.join(package_directory, 'data', 'color_pH_data.csv')
     data_lookup_position = find_closest_match(file_name, coordinates, ['percent_acid', 'Indicator'])[0]
     evaluation = color_difference(file_name, data_lookup_position, evaluation_target)
     return evaluation
