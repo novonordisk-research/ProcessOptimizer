@@ -10,7 +10,7 @@
 
 - Changed the result object to store information about constraints (when present).
 - Updated `expected_minimum` to make sure that the returned result location respects
- SumEquals constraints if these were used during the optimization.
+  SumEquals constraints if these were used during the optimization.
 
 ## Version 0.9.0
 
