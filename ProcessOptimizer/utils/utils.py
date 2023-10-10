@@ -16,7 +16,7 @@ __all__ = (
 )
 
 
-def create_result(Xi, yi, space=None, rng=None, specs=None, models=None):
+def create_result(Xi, yi, space=None, rng=None, specs=None, models=None, constraints=None):
     """
     Initialize an `OptimizeResult` object.
 
@@ -39,6 +39,9 @@ def create_result(Xi, yi, space=None, rng=None, specs=None, models=None):
 
     * `models` [list, optional]:
         List of fit surrogate models.
+    
+    * `constraints` [Constraints object, optional]:
+        Constraints that apply to the system.
 
     Returns
     -------
@@ -61,6 +64,7 @@ def create_result(Xi, yi, space=None, rng=None, specs=None, models=None):
         res.space = space
         res.random_state = rng
         res.specs = specs
+        res.constraints = constraints
         return res
     models = np.asarray(models)
     results = []
@@ -79,6 +83,7 @@ def create_result(Xi, yi, space=None, rng=None, specs=None, models=None):
         res.space = space
         res.random_state = rng
         res.specs = specs
+        res.constraints = constraints
         results.append(res)
     return results
 

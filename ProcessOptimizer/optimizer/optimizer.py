@@ -806,7 +806,14 @@ class Optimizer(object):
                 self._next_x = self.space.inverse_transform(next_x.reshape((1, -1)))[0]
         # Pack results
 
-        return create_result(self.Xi, self.yi, self.space, self.rng, models=self.models)
+        return create_result(
+            self.Xi,
+            self.yi,
+            self.space,
+            self.rng,
+            models=self.models,
+            constraints=self._constraints,
+        )
 
     def _check_y_is_valid(self, x, y):
         """Check if the shape and types of x and y are consistent."""
@@ -865,7 +872,14 @@ class Optimizer(object):
             x = self.ask()
             self.tell(x, func(x))
 
-        return create_result(self.Xi, self.yi, self.space, self.rng, models=self.models)
+        return create_result(
+            self.Xi,
+            self.yi,
+            self.space,
+            self.rng,
+            models=self.models,
+            constraints=self._constraints,
+        )
 
     def set_constraints(self, constraints):
         """Sets the constraints for the optimizer
@@ -914,7 +928,14 @@ class Optimizer(object):
         but without calling tell.
         In the case of multiobejective optimization, a list of results are
         returned."""
-        return create_result(self.Xi, self.yi, self.space, self.rng, models=self.models)
+        return create_result(
+            self.Xi,
+            self.yi,
+            self.space,
+            self.rng,
+            models=self.models,
+            constraints=self._constraints
+        )
 
     def _check_length_scale_bounds(self, dimensions, bounds):
         """Checks if length scale bounds are of in correct format"""
