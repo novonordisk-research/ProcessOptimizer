@@ -272,31 +272,31 @@ def expected_minimum(
 
     xs = [res.x]
     if n_random_starts > 0:
-        if len(res.constraints.sum_equals) > 0:
-            # If the constraint is of the SumEquals type, create samples
-            # that respect this
-            xs = []
-            xs.extend(
-                res.constraints.sumequal_sampling(
-                    n_samples=n_random_starts, random_state=random_state
-                )
-            )
+        if getattr(res.constraints, "sum_equals", None):
+           # If we have a SumEquals constraint, create samples that respect it
+           xs = []
+           xs.extend(
+               res.constraints.sumequal_sampling(
+                   n_samples=n_random_starts, random_state=random_state
+                   )
+               )
         else:
-            # For all other constraints we use random sampling
+            # For all other cases (and constraints) we use random sampling
             xs.extend(res.space.rvs(n_random_starts, random_state=random_state))
     xs = res.space.transform(xs)
     best_x = None
     best_fun = np.inf
     
+    
+    cons = None
     # Prepare a linear constraint, if applicable
-    if len(res.constraints.sum_equals) > 0:
+    if getattr(res.constraints, "sum_equals", None):
         A = np.zeros((res.space.n_dims, res.space.n_dims))
         value = res.constraints.sum_equals[0].value
         for dim in res.constraints.sum_equals[0].dimensions:
             A[dim, dim] = 1
         cons = lin_constraint(A, lb=value, ub=value)
-    else:
-        cons = None
+    
             
     for x0 in xs:
         r = sp_minimize(
