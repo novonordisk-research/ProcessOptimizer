@@ -20,8 +20,14 @@ from ProcessOptimizer.learning import (
 )
 from ProcessOptimizer import Optimizer
 from ProcessOptimizer import Space
-from ProcessOptimizer.utils import point_asdict, point_aslist, dimensions_aslist
+from ProcessOptimizer.utils import (
+    point_asdict,
+    point_aslist,
+    dimensions_aslist,
+    create_result,
+)
 from ProcessOptimizer.space import normalize_dimensions, Real, Integer, Categorical
+from ProcessOptimizer.space.constraints import SumEquals
 
 
 def check_optimization_results_equality(res_1, res_2):
@@ -86,6 +92,26 @@ def test_dump_and_load_optimizer():
         f.seek(0)
         load(f)
 
+
+@pytest.mark.fast_test
+def test_create_result():
+    opt = Optimizer(
+        dimensions=[(-2, 2), ("A", "B")], base_estimator="GP", n_initial_points=1
+    )
+    x = [[-2, "A"], [-1, "A"], [0, "A"], [1, "A"], [2, "A"]]
+    y = [2, 1, 0, 1, 2]
+    result = opt.tell(x, y)
+    # Test that all the desired properties appear in the result object
+    assert hasattr(result, "x")
+    assert hasattr(result, "fun")
+    assert hasattr(result, "func_vals")
+    assert hasattr(result, "x_iters")
+    assert hasattr(result, "models")
+    assert hasattr(result, "space")
+    assert hasattr(result, "random_state")
+    assert hasattr(result, "specs")
+    assert hasattr(result, "constraints")
+    
 
 @pytest.mark.fast_test
 def test_expected_minimum_min():
@@ -165,6 +191,34 @@ def test_expected_minimum_return_std():
     assert len(x_min) == len(opt.space.dimensions)
     assert isinstance(f_min, list)
     assert isinstance(f_min[0], float) and f_min[1] >= 0
+
+
+@pytest.mark.fast_test
+def test_expected_minimum_respects_constraints():
+    dimensions = [(-3.0, 3.0), (-2.0, 2.0), (-3.0, 3.0), (0, 4)]
+    opt = Optimizer(
+        dimensions=dimensions, lhs=False, n_initial_points=3,
+    )
+    constraints = [SumEquals(dimensions=[0, 1, 2], value=2)]
+    opt.set_constraints(constraints)
+    x = opt.ask(3)
+    y = [1, 2, 0]
+    result = opt.tell(x, y)
+    x_min, _ = expected_minimum(result, random_state=1, return_std=False)
+    assert np.isclose(sum(x_min[:3]), constraints[0].value)
+    
+    # Feed the optimizer a really good data-point that does not respect the constraints
+    result = opt.tell([0, 0, 0, 0], -1)
+    x_min, _ = expected_minimum(result, random_state=1, return_std=False)
+    # Check that expected_minimum still doesn't violate constraints
+    assert np.isclose(sum(x_min[:3]), constraints[0].value)
+    
+    # Check that removing the constraint and generating a new result allows you
+    # to find an optimum outside the constraints
+    opt.remove_constraints()
+    result = opt.get_result()
+    x_min, _ = expected_minimum(result, random_state=1, return_std=False)
+    assert sum(x_min[:3]) != constraints[0].value
 
 
 @pytest.mark.fast_test
