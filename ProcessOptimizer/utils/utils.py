@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import OptimizeResult
 from scipy.optimize import minimize as sp_minimize
+from scipy.optimize import LinearConstraint as lin_constraint
 
 from joblib import dump as dump_
 from joblib import load as load_
@@ -271,13 +272,39 @@ def expected_minimum(
 
     xs = [res.x]
     if n_random_starts > 0:
-        xs.extend(res.space.rvs(n_random_starts, random_state=random_state))
+        if len(res.constraints.sum_equals) > 0:
+            # If the constraint is of the SumEquals type, create samples
+            # that respect this
+            xs = []
+            xs.extend(
+                res.constraints.sumequal_sampling(
+                    n_samples=n_random_starts, random_state=random_state
+                )
+            )
+        else:
+            # For all other constraints we use random sampling
+            xs.extend(res.space.rvs(n_random_starts, random_state=random_state))
     xs = res.space.transform(xs)
     best_x = None
     best_fun = np.inf
-
+    
+    # Prepare a linear constraint, if applicable
+    if len(res.constraints.sum_equals) > 0:
+        A = np.zeros((res.space.n_dims, res.space.n_dims))
+        value = res.constraints.sum_equals[0].value
+        for dim in res.constraints.sum_equals[0].dimensions:
+            A[dim, dim] = 1
+        cons = lin_constraint(A, lb=value, ub=value)
+    else:
+        cons = None
+            
     for x0 in xs:
-        r = sp_minimize(func, x0=x0, bounds=res.space.transformed_bounds)
+        r = sp_minimize(
+            func,
+            x0=x0,
+            bounds=res.space.transformed_bounds,
+            constraints=cons,
+        )
         if r.fun < best_fun:
             best_x = res.space.inverse_transform(np.array(r.x).reshape(1, -1))[0]
             best_fun = r.fun
