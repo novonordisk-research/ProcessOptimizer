@@ -163,7 +163,7 @@ class BayesSearchCV(BaseSearchCV):
 
     from ProcessOptimizer import BayesSearchCV
     # parameter ranges are specified by one of below
-    from ProcessOptimizer.space import Real, Categorical, Integer
+    from ProcessOptimizer import Real, Categorical, Integer
 
     from sklearn.datasets import load_iris
     from sklearn.svm import SVC
@@ -283,12 +283,25 @@ class BayesSearchCV(BaseSearchCV):
 
     """
 
-    def __init__(self, estimator, search_spaces, optimizer_kwargs=None,
-                 n_iter=50, scoring=None, fit_params=None, n_jobs=1,
-                 n_points=1, iid='deprecated', refit=True, cv=None, verbose=0,
-                 pre_dispatch='2*n_jobs', random_state=None,
-                 error_score='raise', return_train_score=False):
-
+    def __init__(
+        self,
+        estimator,
+        search_spaces,
+        optimizer_kwargs=None,
+        n_iter=50,
+        scoring=None,
+        fit_params=None,
+        n_jobs=1,
+        n_points=1,
+        iid="deprecated",
+        refit=True,
+        cv=None,
+        verbose=0,
+        pre_dispatch="2*n_jobs",
+        random_state=None,
+        error_score="raise",
+        return_train_score=False,
+    ):
         self.search_spaces = search_spaces
         self.n_iter = n_iter
         self.n_points = n_points
@@ -302,15 +315,22 @@ class BayesSearchCV(BaseSearchCV):
         self.fit_params = fit_params
 
         if iid != "deprecated":
-            warnings.warn("The `iid` parameter has been deprecated "
-                          "and will be ignored.")
+            warnings.warn(
+                "The `iid` parameter has been deprecated " "and will be ignored."
+            )
         self.iid = iid  # For sklearn repr pprint
 
         super(BayesSearchCV, self).__init__(
-            estimator=estimator, scoring=scoring,
-            n_jobs=n_jobs, refit=refit, cv=cv, verbose=verbose,
-            pre_dispatch=pre_dispatch, error_score=error_score,
-            return_train_score=return_train_score)
+            estimator=estimator,
+            scoring=scoring,
+            n_jobs=n_jobs,
+            refit=refit,
+            cv=cv,
+            verbose=verbose,
+            pre_dispatch=pre_dispatch,
+            error_score=error_score,
+            return_train_score=return_train_score,
+        )
 
     def _check_search_space(self, search_space):
         """Checks whether the search space argument is correct"""
@@ -343,8 +363,7 @@ class BayesSearchCV(BaseSearchCV):
                     if (not isinstance(n_iter, int)) or n_iter < 0:
                         raise ValueError(
                             "Number of iterations in search space should be"
-                            "positive integer, got %s in tuple %s " %
-                            (n_iter, elem)
+                            "positive integer, got %s in tuple %s " % (n_iter, elem)
                         )
 
                     # save subspaces here for further checking
@@ -354,7 +373,8 @@ class BayesSearchCV(BaseSearchCV):
                 else:
                     raise TypeError(
                         "A search space should be provided as a dict or"
-                        "tuple (dict, int), got %s" % elem)
+                        "tuple (dict, int), got %s" % elem
+                    )
 
             # 2. check all the dicts for correctness of contents
             for subspace in dicts_only:
@@ -363,19 +383,20 @@ class BayesSearchCV(BaseSearchCV):
         else:
             raise TypeError(
                 "Search space should be provided as a dict or list of dict,"
-                "got %s" % search_space)
+                "got %s" % search_space
+            )
 
     # copied for compatibility with 0.19 sklearn from 0.18 BaseSearchCV
     @property
     def best_score_(self):
-        check_is_fitted(self, 'cv_results_')
-        return self.cv_results_['mean_test_score'][self.best_index_]
+        check_is_fitted(self, "cv_results_")
+        return self.cv_results_["mean_test_score"][self.best_index_]
 
     # copied for compatibility with 0.19 sklearn from 0.18 BaseSearchCV
     @property
     def best_params_(self):
-        check_is_fitted(self, 'cv_results_')
-        return self.cv_results_['params'][self.best_index_]
+        check_is_fitted(self, "cv_results_")
+        return self.cv_results_["params"][self.best_index_]
 
     # copied for compatibility with 0.19 sklearn from 0.18 BaseSearchCV
     def _fit(self, X, y, groups, parameter_iterable):
@@ -387,9 +408,9 @@ class BayesSearchCV(BaseSearchCV):
 
         estimator = self.estimator
         cv = sklearn.model_selection._validation.check_cv(
-            self.cv, y, classifier=is_classifier(estimator))
-        self.scorer_ = check_scoring(
-            self.estimator, scoring=self.scoring)
+            self.cv, y, classifier=is_classifier(estimator)
+        )
+        self.scorer_ = check_scoring(self.estimator, scoring=self.scoring)
 
         X, y, groups = indexable(X, y, groups)
         n_splits = cv.get_n_splits(X, y, groups)
@@ -397,40 +418,56 @@ class BayesSearchCV(BaseSearchCV):
             n_candidates = len(parameter_iterable)
             print(
                 "Fitting {0} folds for each of {1} candidates, totalling"
-                " {2} fits".format(
-                    n_splits, n_candidates, n_candidates * n_splits
-                    )
-                    )
+                " {2} fits".format(n_splits, n_candidates, n_candidates * n_splits)
+            )
 
         base_estimator = clone(self.estimator)
         pre_dispatch = self.pre_dispatch
 
         cv_iter = list(cv.split(X, y, groups))
         out = Parallel(
-            n_jobs=self.n_jobs, verbose=self.verbose,
-            pre_dispatch=pre_dispatch
-        )(delayed(sklearn.model_selection._validation._fit_and_score)(
-            clone(base_estimator),
-            X, y, self.scorer_,
-            train, test, self.verbose, parameters,
-            fit_params=self.fit_params,
-            return_train_score=self.return_train_score,
-            return_n_test_samples=True,
-            return_times=True, return_parameters=True,
-            error_score=self.error_score
-        )
+            n_jobs=self.n_jobs, verbose=self.verbose, pre_dispatch=pre_dispatch
+        )(
+            delayed(sklearn.model_selection._validation._fit_and_score)(
+                clone(base_estimator),
+                X,
+                y,
+                self.scorer_,
+                train,
+                test,
+                self.verbose,
+                parameters,
+                fit_params=self.fit_params,
+                return_train_score=self.return_train_score,
+                return_n_test_samples=True,
+                return_times=True,
+                return_parameters=True,
+                error_score=self.error_score,
+            )
             for parameters in parameter_iterable
-            for train, test in cv_iter)
+            for train, test in cv_iter
+        )
 
         # if one choose to see train score, "out" will contain train score info
         if self.return_train_score:
-            (_fit_fail, train_scores, test_scores, test_sample_counts,
-             fit_time, score_time, parameters) = zip(*[dic.values()
-                                                       for dic in out])
+            (
+                _fit_fail,
+                train_scores,
+                test_scores,
+                test_sample_counts,
+                fit_time,
+                score_time,
+                parameters,
+            ) = zip(*[dic.values() for dic in out])
         else:
-            (_fit_fail, test_scores, test_sample_counts,
-             fit_time, score_time, parameters) = zip(*[dic.values()
-                                                       for dic in out])
+            (
+                _fit_fail,
+                test_scores,
+                test_sample_counts,
+                fit_time,
+                score_time,
+                parameters,
+            ) = zip(*[dic.values() for dic in out])
 
         candidate_params = parameters[::n_splits]
         n_candidates = len(candidate_params)
@@ -439,30 +476,29 @@ class BayesSearchCV(BaseSearchCV):
 
         def _store(key_name, array, splits=False, rank=False):
             """A small helper to store the scores/times to the cv_results_"""
-            array = np.array(array, dtype=np.float64).reshape(n_candidates,
-                                                              n_splits)
+            array = np.array(array, dtype=np.float64).reshape(n_candidates, n_splits)
             if splits:
                 for split_i in range(n_splits):
-                    results["split%d_%s"
-                            % (split_i, key_name)] = array[:, split_i]
+                    results["split%d_%s" % (split_i, key_name)] = array[:, split_i]
 
             array_means = np.average(array, axis=1)
-            results['mean_%s' % key_name] = array_means
+            results["mean_%s" % key_name] = array_means
             # Weighted std is not directly available in numpy
-            array_stds = np.sqrt(np.average((array -
-                                             array_means[:, np.newaxis]) ** 2,
-                                            axis=1))
-            results['std_%s' % key_name] = array_stds
+            array_stds = np.sqrt(
+                np.average((array - array_means[:, np.newaxis]) ** 2, axis=1)
+            )
+            results["std_%s" % key_name] = array_stds
 
             if rank:
                 results["rank_%s" % key_name] = np.asarray(
-                    rankdata(-array_means, method='min'), dtype=np.int32)
+                    rankdata(-array_means, method="min"), dtype=np.int32
+                )
 
-        _store('test_score', test_scores, splits=True, rank=True)
+        _store("test_score", test_scores, splits=True, rank=True)
         if self.return_train_score:
-            _store('train_score', train_scores, splits=True)
-        _store('fit_time', fit_time)
-        _store('score_time', score_time)
+            _store("train_score", train_scores, splits=True)
+        _store("fit_time", fit_time)
+        _store("score_time", score_time)
 
         best_index = np.flatnonzero(results["rank_test_score"] == 1)[0]
         best_parameters = candidate_params[best_index]
@@ -470,11 +506,16 @@ class BayesSearchCV(BaseSearchCV):
         # Use one MaskedArray and mask all the places where the param is not
         # applicable for that candidate. Use defaultdict as each candidate may
         # not contain all the params
-        param_results = defaultdict(partial(
-            np.ma.array,
-            np.empty(n_candidates,),
-            mask=True,
-            dtype=object))
+        param_results = defaultdict(
+            partial(
+                np.ma.array,
+                np.empty(
+                    n_candidates,
+                ),
+                mask=True,
+                dtype=object,
+            )
+        )
         for cand_i, params in enumerate(candidate_params):
             for name, value in params.items():
                 # An all masked empty array gets created for the key
@@ -485,7 +526,7 @@ class BayesSearchCV(BaseSearchCV):
         results.update(param_results)
 
         # Store a list of param dicts at the key 'params'
-        results['params'] = candidate_params
+        results["params"] = candidate_params
 
         self.cv_results_ = results
         self.best_index_ = best_index
@@ -494,8 +535,7 @@ class BayesSearchCV(BaseSearchCV):
         if self.refit:
             # fit the best estimator using the entire dataset
             # clone first to work around broken estimators
-            best_estimator = clone(base_estimator).set_params(
-                **best_parameters)
+            best_estimator = clone(base_estimator).set_params(**best_parameters)
             if y is not None:
                 best_estimator.fit(X, y, **self.fit_params)
             else:
@@ -543,14 +583,13 @@ class BayesSearchCV(BaseSearchCV):
         """
 
         kwargs = self.optimizer_kwargs_.copy()
-        kwargs['dimensions'] = dimensions_aslist(params_space)
+        kwargs["dimensions"] = dimensions_aslist(params_space)
         optimizer = Optimizer(**kwargs)
 
         return optimizer
 
     def _step(self, X, y, search_space, optimizer, groups=None, n_points=1):
-        """Generate n_jobs parameters and evaluate them in parallel.
-        """
+        """Generate n_jobs parameters and evaluate them in parallel."""
 
         # get parameter values to evaluate
         params = optimizer.ask(n_points=n_points)
@@ -578,10 +617,10 @@ class BayesSearchCV(BaseSearchCV):
             all_cv_results[k].extend(self.cv_results_[k])
 
         self.cv_results_ = all_cv_results
-        self.best_index_ = np.argmax(self.cv_results_['mean_test_score'])
+        self.best_index_ = np.argmax(self.cv_results_["mean_test_score"])
 
         # feed the point and objective back into optimizer
-        local_results = self.cv_results_['mean_test_score'][-len(params):]
+        local_results = self.cv_results_["mean_test_score"][-len(params) :]
 
         # optimizer minimizes objective, hence provide negative score
         return optimizer.tell(params, [-score for score in local_results])
@@ -599,7 +638,6 @@ class BayesSearchCV(BaseSearchCV):
         total_iter = 0
 
         for elem in self.search_spaces:
-
             if isinstance(elem, tuple):
                 space, n_iter = elem
             else:
@@ -646,7 +684,7 @@ class BayesSearchCV(BaseSearchCV):
         else:
             self.optimizer_kwargs_ = dict(self.optimizer_kwargs)
         random_state = check_random_state(self.random_state)
-        self.optimizer_kwargs_['random_state'] = random_state
+        self.optimizer_kwargs_["random_state"] = random_state
 
         # Instantiate optimizers for all the search spaces.
         optimizers = []
@@ -677,8 +715,12 @@ class BayesSearchCV(BaseSearchCV):
                 n_points_adjusted = min(n_iter, n_points)
 
                 optim_result = self._step(
-                    X, y, search_space, optimizer,
-                    groups=groups, n_points=n_points_adjusted
+                    X,
+                    y,
+                    search_space,
+                    optimizer,
+                    groups=groups,
+                    n_points=n_points_adjusted,
                 )
                 n_iter -= n_points
 

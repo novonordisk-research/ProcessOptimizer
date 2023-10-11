@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from sklearn.datasets import load_breast_cancer
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import cross_val_score
-from ProcessOptimizer.space import Integer, Categorical
+from ProcessOptimizer import Integer, Categorical
 from ProcessOptimizer import gp_minimize, bokeh_plot
 
 # For reproducibility

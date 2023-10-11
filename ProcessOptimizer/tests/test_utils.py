@@ -19,14 +19,13 @@ from ProcessOptimizer.learning import (
     use_named_args,
 )
 from ProcessOptimizer import Optimizer
-from ProcessOptimizer import Space
+from ProcessOptimizer import Categorical, Integer, Space, Real
 from ProcessOptimizer.utils import (
     point_asdict,
     point_aslist,
     dimensions_aslist,
-    create_result,
 )
-from ProcessOptimizer.space import normalize_dimensions, Real, Integer, Categorical
+from ProcessOptimizer.space import normalize_dimensions
 from ProcessOptimizer.space.constraints import SumEquals
 
 
@@ -111,7 +110,7 @@ def test_create_result():
     assert hasattr(result, "random_state")
     assert hasattr(result, "specs")
     assert hasattr(result, "constraints")
-    
+
 
 @pytest.mark.fast_test
 def test_expected_minimum_min():
@@ -197,7 +196,9 @@ def test_expected_minimum_return_std():
 def test_expected_minimum_respects_constraints():
     dimensions = [(-3.0, 3.0), (-2.0, 2.0), (-3.0, 3.0), (0, 4)]
     opt = Optimizer(
-        dimensions=dimensions, lhs=False, n_initial_points=3,
+        dimensions=dimensions,
+        lhs=False,
+        n_initial_points=3,
     )
     constraints = [SumEquals(dimensions=[0, 1, 2], value=2)]
     opt.set_constraints(constraints)
@@ -206,13 +207,13 @@ def test_expected_minimum_respects_constraints():
     result = opt.tell(x, y)
     x_min, _ = expected_minimum(result, random_state=1, return_std=False)
     assert np.isclose(sum(x_min[:3]), constraints[0].value)
-    
+
     # Feed the optimizer a really good data-point that does not respect the constraints
     result = opt.tell([0, 0, 0, 0], -1)
     x_min, _ = expected_minimum(result, random_state=1, return_std=False)
     # Check that expected_minimum still doesn't violate constraints
     assert np.isclose(sum(x_min[:3]), constraints[0].value)
-    
+
     # Check that removing the constraint and generating a new result allows you
     # to find an optimum outside the constraints
     opt.remove_constraints()

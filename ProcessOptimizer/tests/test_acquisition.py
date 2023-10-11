@@ -16,7 +16,7 @@ from ProcessOptimizer.acquisition import gaussian_pi
 from ProcessOptimizer.learning import GaussianProcessRegressor, cook_estimator
 from ProcessOptimizer.learning.gaussian_process.kernels import Matern
 from ProcessOptimizer.learning.gaussian_process.kernels import WhiteKernel
-from ProcessOptimizer.space import Space
+from ProcessOptimizer import Space
 
 
 class ConstSurrogate:

@@ -10,12 +10,12 @@ from numpy.testing import assert_equal
 from numpy.testing import assert_raises_regex
 
 from ProcessOptimizer import Optimizer
+from ProcessOptimizer import Space
+from ProcessOptimizer import Real
+from ProcessOptimizer import Integer
+from ProcessOptimizer import Categorical
+from ProcessOptimizer import space_factory
 from ProcessOptimizer.space import Dimension
-from ProcessOptimizer.space import Space
-from ProcessOptimizer.space import Real
-from ProcessOptimizer.space import Integer
-from ProcessOptimizer.space import Categorical
-from ProcessOptimizer.space import space_factory
 from ProcessOptimizer.space import check_dimension as space_check_dimension
 
 
@@ -112,9 +112,7 @@ def test_sampling_values(dimension: Dimension, ismember, point_type):
     assert all([isinstance(sample, point_type) for sample in randomvalues])
     assert all([ismember(sample) for sample in randomvalues])
     generator = np.random.default_rng(42)  # Resetting the random number generator
-    unique_values = dimension.sample(
-        generator.random(size=50), allow_duplicates=False
-    )
+    unique_values = dimension.sample(generator.random(size=50), allow_duplicates=False)
     assert len(unique_values) == len(set(unique_values))
     # Checking of no repeated values
     assert set(unique_values) == set(randomvalues)
@@ -742,7 +740,7 @@ def test_lhs():
     lhs_one = SPACE.lhs(n=6, seed=None)
     lhs_two = SPACE.lhs(n=6, seed=None)
     assert lhs_one != lhs_two
-    
+
     # Asserting the the values are the same for both the lhs, even though the order is different
     for i in range(4):
-        assert set([x[i] for x in lhs_one]) == set([x[i] for x in lhs_two])    
+        assert set([x[i] for x in lhs_one]) == set([x[i] for x in lhs_two])

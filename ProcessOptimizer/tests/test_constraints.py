@@ -15,7 +15,7 @@ from ProcessOptimizer.space.constraints import (
     check_value,
 )
 from ProcessOptimizer import Optimizer
-from ProcessOptimizer.space import Real, Integer, Categorical, Space
+from ProcessOptimizer import Real, Integer, Categorical, Space
 
 from numpy.testing import assert_equal
 
@@ -934,9 +934,7 @@ def test_lhs_with_constraints():
     cons = Constraints(cons_list, space)
     opt = Optimizer(space, "ET", lhs=True, n_initial_points=2)
     opt.tell([1], 0)  # Use one initial point so that one is still left
-    with raises(
-        RuntimeError
-    ):  # Error should be thrown when tryin got set constraints
+    with raises(RuntimeError):  # Error should be thrown when tryin got set constraints
         opt.set_constraints(cons)
     opt = Optimizer(space, "ET", lhs=True, n_initial_points=2)
     opt.tell([[1], [1]], [0, 0])  # Use all of the two initial points

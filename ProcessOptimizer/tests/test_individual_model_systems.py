@@ -10,7 +10,7 @@ from ProcessOptimizer.model_systems import (
     peaks_no_noise,
     ProportionalNoise,
 )
-from ProcessOptimizer.space import Real
+from ProcessOptimizer import Real
 
 
 class TestIndividualModelSystem(unittest.TestCase):
