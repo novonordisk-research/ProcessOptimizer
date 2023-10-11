@@ -4,8 +4,10 @@ import numpy as np
 import os
 
 from typing import List
-from .model_system import ModelSystem
+from .model_system import ModelSystem #Can be made to a direct import soon
+# from ProcessOptimizer import ModelSystem
 from ..space import Integer
+# from ProcessOptimizer import Integer
 
 
 #Utility-functions to calculate delta-e (best thought of as a measure of color difference). Code used is from https://github.com/kaineyb/deltae,
@@ -207,12 +209,13 @@ def delta_e_2000(Lab1, Lab2, verbose=False, test=False, formula='Rochester'):
         return DE2000
 
 
-def find_closest_match(file_name, target_vector, target_columns):
+def find_closest_match(file_name, target_vector, target_1, target_2):
     # make docstring for this function
     '''
     file_name: name of the csv file
     target_vector: vector of target values
-    target_columns: list of column names for the target values
+    target_1: name of the first target column. Should be the column with the highest priority.
+    target_2: name of the second target column. Should be the column with the second highest priority.
     
     returns: row with the closest match to the target vector
     '''
@@ -227,7 +230,7 @@ def find_closest_match(file_name, target_vector, target_columns):
     data = np.array(data)
 
     # Get the indices of the target columns
-    target_indices = [headers.index(col) for col in target_columns]
+    target_indices = [headers.index(col) for col in [target_1, target_2]]
 
     # Extract the data for the target columns
     target_data = data[:, target_indices].astype(float)
@@ -273,6 +276,7 @@ def color_finder_dict(file_name, target_well):
 
     # Get the indices of the target columns
     target_indices = [headers.index(col) for col in ['Well','L','A','B']]
+    # Above Should preferentially be changes to be inputs to the function
 
     # Extract the data for the target columns
     target_data = data[:, target_indices]
@@ -302,7 +306,7 @@ def color_difference(file_name, well1, well2):
     return delta_e_2000(color1, color2, verbose=False, test=False, formula='Bruce')
 
 
-def score(coordinates: List[int], evaluation_target='F8'):
+def score(coordinates: List[int], evaluation_target: str='F8') -> float:
     """
     coordinates: list of coordinates for a single experiment
     evaluation_target: well number of the target well. Default is F8 (because green is good for the eyes)
@@ -315,25 +319,16 @@ def score(coordinates: List[int], evaluation_target='F8'):
     # make a relative path to the data file called color_pH_data.csv. the file should be in a subfolder called data. the path should be relative to the file that is calling this function.
     package_directory = os.path.dirname(os.path.abspath(__file__))
     file_name = os.path.join(package_directory, 'data', 'color_pH_data.csv')
-    data_lookup_position = find_closest_match(file_name, coordinates, ['percent_acid', 'Indicator'])[0]
+    data_lookup_position = find_closest_match(file_name, coordinates, 'percent_acid', 'Indicator')[0]
     evaluation = color_difference(file_name, data_lookup_position, evaluation_target)
     return evaluation
     
 #Create model system
-color_pH_no_noise = ModelSystem(
-    score,
-    space = [Integer(30, 85, name='percent_acid'),
-             Integer(5, 40, name='Indicator'),
-            ],
-    noise_model = None,
-    true_min = 0,
-)
-
 color_pH = ModelSystem(
     score,
     space = [Integer(30, 85, name='percent_acid'),
              Integer(5, 40, name='Indicator'),
             ],
-    noise_model = {"model_type": "proportional", "noise_size": 0.1},
+    noise_model = None,
     true_min = 0,
 )
