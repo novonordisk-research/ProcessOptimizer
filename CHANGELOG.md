@@ -1,10 +1,17 @@
 # Release history
 
-## Version 0.9.1 [unpublished]
+## Version 0.9.2 [unpublished]
 
 ### Changes
 
--
+### Bugfixes
+
+## Version 0.9.1
+
+### Changes
+
+- Added colorpH as ModelSystem
+- Exposed Integer, Real, Categorical and ModelSystem as direct imports of ProcessOptimizer.
 
 ### Bugfixes
 
