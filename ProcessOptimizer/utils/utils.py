@@ -1,5 +1,6 @@
 from copy import deepcopy
 from functools import wraps
+from warnings import warn
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -281,6 +282,8 @@ def expected_minimum(
                    )
                )
         else:
+            if res.constraints:
+                warn.warning("Optimizer has constraints which expected_minimum() does not necessarily respect.")
             # For all other cases (and constraints) we use random sampling
             xs.extend(res.space.rvs(n_random_starts, random_state=random_state))
     xs = res.space.transform(xs)
