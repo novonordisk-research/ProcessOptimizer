@@ -19,9 +19,9 @@ from ProcessOptimizer.learning import (
     use_named_args,
 )
 from ProcessOptimizer import Optimizer
-from ProcessOptimizer import Space
+from ProcessOptimizer import Space, Real, Integer, Categorical
 from ProcessOptimizer.utils import point_asdict, point_aslist, dimensions_aslist
-from ProcessOptimizer.space import normalize_dimensions, Real, Integer, Categorical
+from ProcessOptimizer.space import normalize_dimensions
 
 
 def check_optimization_results_equality(res_1, res_2):

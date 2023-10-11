@@ -1,7 +1,7 @@
 import numpy as np
 from ProcessOptimizer.model_systems import ModelSystem
 from ProcessOptimizer.model_systems.benchmarks import poly_2d
-from ProcessOptimizer.space import Real
+from ProcessOptimizer import Real
 
 
 # This system is intended to run in the domain x[0] in [-1,1] and x[1] in [-1,1]. This function

@@ -1,6 +1,6 @@
 import unittest
 
-from ProcessOptimizer.model_systems import ModelSystem
+from ProcessOptimizer import ModelSystem
 
 
 class TestModelSystem(unittest.TestCase):
