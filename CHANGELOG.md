@@ -6,6 +6,9 @@
 
 ### Bugfixes
 
+- Fixed a bug in `expected_minimum` where SumEquals constraint values were not rescaled
+  correctly during normalization.
+
 ## Version 0.9.1
 
 ### Changes
