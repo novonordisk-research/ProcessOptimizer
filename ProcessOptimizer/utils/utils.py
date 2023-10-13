@@ -294,7 +294,7 @@ def expected_minimum(
     cons = None
     # Prepare a linear constraint, if applicable
     if hasattr(res.constraints, "sum_equals"):
-        A = np.zeros((1,res.space.n_dims))
+        A = np.zeros((1, res.space.n_dims))
         value = res.constraints.sum_equals[0].value
         for dim in res.constraints.sum_equals[0].dimensions:
             # Normalization rescales the ratio that the constrained dimensions 
