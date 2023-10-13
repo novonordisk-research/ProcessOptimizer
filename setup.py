@@ -8,9 +8,10 @@ this_directory = path.abspath(path.dirname(__file__))
 with open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
+
 setup(
     name="ProcessOptimizer",
-    version="0.9.0",
+    version="0.9.2",
     description="Sequential model-based optimization toolbox \
     (forked from scikit-optimize)",
     url="https://github.com/novonordisk-research/ProcessOptimizer",
@@ -38,15 +39,15 @@ setup(
     ],
     extras_require={
         "browniebee": [
-            "numpy==1.23.3",
-            "matplotlib==3.5.3",
-            "scipy==1.9.1",
-            "scikit-learn==1.1.2",
+            "bokeh==3.1.1",
+            "deap==1.4.1",
+            "matplotlib==3.7.2",
+            "numpy==1.24.4",
+            "pyYAML==6.0.1",
+            "scikit-learn==1.3.0",
+            "scipy==1.10.1",
             "six==1.16.0",
-            "deap==1.3.3",
-            "pyYAML==6.0",
-            "bokeh==2.4.3",
-            "tornado==6.2",
+            "tornado==6.3.3",
         ]
     },
     long_description=long_description,

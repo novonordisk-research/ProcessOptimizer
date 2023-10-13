@@ -22,7 +22,7 @@ from ProcessOptimizer.model_systems.benchmarks import bench1
 from ProcessOptimizer.model_systems.benchmarks import bench4
 from ProcessOptimizer.model_systems.benchmarks import bench5
 from ProcessOptimizer.callbacks import DeltaXStopper
-from ProcessOptimizer.space import Space
+from ProcessOptimizer import Space
 
 branin = branin_no_noise.get_score
 

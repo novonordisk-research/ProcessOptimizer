@@ -15,7 +15,7 @@ The library is still experimental and under heavy development.
 """
 
 from . import acquisition
-from .model_systems import benchmarks
+from .model_systems import benchmarks, ModelSystem
 from . import callbacks
 from . import learning
 from . import optimizer
@@ -28,7 +28,7 @@ from .optimizer import gbrt_minimize
 from .optimizer import gp_minimize
 from .optimizer import Optimizer
 from .searchcv import BayesSearchCV
-from .space import Space, space_factory
+from .space import Categorical, Integer, Space, space_factory, Real
 from .utils import dump
 from .utils import expected_minimum
 from .utils import expected_minimum_random_sampling
@@ -38,12 +38,13 @@ from .plots import plot_objective, plot_objectives
 from .plots import plot_evaluations, plot_convergence
 from .plots import plot_Pareto, plot_expected_minimum_convergence
 
-__version__ = "0.9.0"
+__version__ = "0.9.2"
 
 
 __all__ = (
     "acquisition",
     "benchmarks",
+    "ModelSystem",
     "callbacks",
     "learning",
     "optimizer",
@@ -61,8 +62,11 @@ __all__ = (
     "expected_minimum",
     "expected_minimum_random_sampling",
     "BayesSearchCV",
+    "Categorical",
+    "Integer",
     "Space",
     "space_factory",
+    "Real",
     "plot_objective",
     "plot_objectives",
     "plot_evaluations",

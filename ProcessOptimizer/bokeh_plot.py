@@ -5,7 +5,7 @@ from bokeh.models.widgets import Slider, Toggle
 from bokeh.models.widgets import CheckboxButtonGroup, Div, Select
 from bokeh.plotting import figure
 
-from ProcessOptimizer.space import Categorical
+from ProcessOptimizer import Categorical
 from ProcessOptimizer.plots import _map_categories, dependence
 from ProcessOptimizer import expected_minimum, expected_minimum_random_sampling
 import numpy as np
