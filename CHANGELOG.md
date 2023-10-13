@@ -1,10 +1,24 @@
 # Release history
 
-## Version 0.9.2 [unpublished]
+## Version 0.9.3 [unpublished]
 
 ### Changes
 
+- 
+
 ### Bugfixes
+
+- 
+
+## Version 0.9.2
+
+### Changes
+
+- Update ipynb file showing example of color_pH modelsystem. (Very minor)
+### Bugfixes
+
+- Fixed a bug in `expected_minimum` where SumEquals constraint values were not rescaled
+  correctly during normalization.
 
 ## Version 0.9.1
 

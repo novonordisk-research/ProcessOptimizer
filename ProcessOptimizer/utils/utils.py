@@ -273,7 +273,7 @@ def expected_minimum(
 
     xs = [res.x]
     if n_random_starts > 0:
-        if getattr(res.constraints, "sum_equals", None):
+        if hasattr(res.constraints, "sum_equals"):
            # If we have a SumEquals constraint, create samples that respect it
            xs = []
            xs.extend(
@@ -293,12 +293,21 @@ def expected_minimum(
     
     cons = None
     # Prepare a linear constraint, if applicable
-    if getattr(res.constraints, "sum_equals", None):
-        A = np.zeros((res.space.n_dims, res.space.n_dims))
+    if hasattr(res.constraints, "sum_equals"):
+        A = np.zeros((1, res.space.n_dims))
         value = res.constraints.sum_equals[0].value
         for dim in res.constraints.sum_equals[0].dimensions:
-            A[dim, dim] = 1
-        cons = lin_constraint(A, lb=value, ub=value)
+            # Normalization rescales the ratio that the constrained dimensions 
+            # need to be added together, by an amount that depends on the length
+            # of each dimension
+            dim_length = res.space.bounds[dim][1] - res.space.bounds[dim][0]
+            A[0, dim] = dim_length/value
+        # The value we have to sum to has also been changed by the normalization
+        # so we calculate the new value by just applying the scaled sum of the
+        # corresponding factors in the first candidate point
+        new_value = np.sum(A*xs[0])
+        # Create the constraint object
+        cons = lin_constraint(A, lb=new_value, ub=new_value)
     
             
     for x0 in xs:
