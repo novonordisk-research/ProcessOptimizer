@@ -773,7 +773,7 @@ class Optimizer(object):
                                         self.acq_func_kwargs,
                                     ),
                                     bounds=self.space.transformed_bounds,
-                                    approx_grad=False,
+                                    approx_grad=True,
                                     maxiter=20,
                                 )
                                 for x in x0
