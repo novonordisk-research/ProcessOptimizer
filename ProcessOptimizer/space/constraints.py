@@ -154,15 +154,30 @@ class Constraints:
            Points sampled from the space.
         """
         
-        def null_space(A, rcond=None):
-            u, s, vh = np.linalg.svd(A, full_matrices=True)
-            M, N = u.shape[0], vh.shape[1]
-            if rcond is None:
-                rcond = np.finfo(s.dtype).eps * max(M, N)
-            tol = np.amax(s) * rcond
-            num = np.sum(s > tol, dtype=int)
-            Q = vh[num:,:].T.conj()
-            return Q
+        def null_space(A, rcond=None) -> np.ndarray:
+            """Helper function to calculate the null space of a matrix
+
+            Parameters
+            ----------
+            A : numpy array
+                The matrix to calculate the null space of
+            rcond : float, optional
+                The tolerance for determining the effective rank of A.
+
+            Returns
+            -------
+            Q : numpy array
+                The null space of A, as a matrix with orthonormal columns.
+            """
+            
+            u, s, vh = np.linalg.svd(A, full_matrices=True) # A = u*s*vh
+            M, N = u.shape[0], vh.shape[1] # M = number of rows, N = number of columns
+            if rcond is None: # default value of rcond
+                rcond = np.finfo(s.dtype).eps * max(M, N) # machine precision times max dimension
+            tol = np.amax(s) * rcond # tolerance for singular values
+            num = np.sum(s > tol, dtype=int) # number of singular values greater than tol
+            Q = vh[num:,:].T.conj() # columns of vh corresponding to singular values greater than tol
+            return Q # return the null space of A
 
         rng = check_random_state(random_state)
                 
