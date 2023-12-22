@@ -1,7 +1,9 @@
 import sys
 import warnings
+from collections import namedtuple
 from math import log
 from numbers import Number
+from typing import Collection, List
 
 import numpy as np
 
@@ -143,7 +145,8 @@ class Optimizer(object):
         Number of objectives to be optimized.
         When n_objectives>1 the optimizer will fit models for each objective and the Pareto front can be approximated using NSGA2
 
-
+    * `objective_name_list` [list[str], default ["Y"] or ["Y1","Y2",...]]:
+        The names of the objetive(s).
 
     Attributes
     ----------
@@ -173,6 +176,7 @@ class Optimizer(object):
         acq_func_kwargs=None,
         acq_optimizer_kwargs=None,
         n_objectives=1,
+        objective_name_list: List[str]=None,
     ):
         self.rng = check_random_state(random_state)
 
@@ -311,6 +315,22 @@ class Optimizer(object):
                 self._cat_inds.append(ind)
             else:
                 self._non_cat_inds.append(ind)
+
+        # Setting the objective name list
+        if objective_name_list is None:
+            if n_objectives == 1:
+                objective_name_list = ["Y"]
+            else:
+                objective_name_list = [
+                    f"Y{num+1}" for num in range(n_objectives)
+                ]
+        if len(objective_name_list) != n_objectives:
+            raise ValueError(
+                "Objective name list must have length n_objectives "
+                f"({n_objectives}), but has length {len(objective_name_list)} "
+                f"(content {objective_name_list})"
+            )
+        self.objective_name_list = objective_name_list
 
         # Initialize storage for optimization
 
@@ -814,6 +834,52 @@ class Optimizer(object):
             models=self.models,
             constraints=self._constraints,
         )
+
+    def estimate(
+            self, x: Collection
+    ) -> List[namedtuple]:
+        """
+        Predicts the objective function value(s) for the point(s) `x`.
+
+        Parameters
+        ----------
+        * `x` [list or list-of-lists]:
+            Point(s) at which to predict the objective function value(s).
+
+        Returns
+        -------
+        * `y` [list[namedtuple]]:
+            List of predictions with the same length as `x`. Each elements have
+            a field per objective of the optimizer named after the objectives
+            ("Y" or "Y1", "Y2",... by default). Each objective field contains
+            a single objective prediction with field names "mean" and "std".
+            For single objective optimizers, the predictions have the fields
+            "mean" and "std", and a field with the same name as the objective
+            ("Y" by default), which in turn has the fields "mean" and "std".
+        """
+        single_objective_prediction = namedtuple(
+            "single_objective_prediction", ["mean", "std"]
+        )
+        prediction = namedtuple("prediction", self.objective_name_list)
+        check_x_in_space(x, self.space)
+        if not is_2Dlistlike(x):
+            x = np.asarray(x).reshape(1, -1).tolist()
+            # If only one point is given, make it an array
+        transformed_x = self.space.transform(x)
+        if self.n_objectives == 1:
+            single_objective_prediction = namedtuple(
+                "single_objective_prediction",
+                single_objective_prediction._fields + prediction._fields
+            )
+            y_predict = self.models[-1].predict(transformed_x, return_std = True)
+            y_predict = [single_objective_prediction(y) for y in y_predict]
+        else:
+            y_predict = [[]*len(x)]
+            for model in self.models[-1]:
+                y_predict_raw = model.predict(transformed_x, return_std = True)
+                for result, raw_prediction in zip(y_predict, y_predict_raw):
+                    result.append(prediction(raw_prediction))
+        return y_predict
 
     def _check_y_is_valid(self, x, y):
         """Check if the shape and types of x and y are consistent."""

@@ -440,3 +440,12 @@ def test_add_remove_modelled_noise():
     res_noise = opt_noise.get_result()
     _, [_, res_std_reset] = expected_minimum(res_noise, return_std=True)
     assert isclose(res_std_no_white, res_std_reset, rel_tol=0.001)
+
+
+@pytest.mark.fast_test
+def test_predict_single_value():
+    opt = Optimizer([(-2.0, 2.0), (-3.0, 3.0)])
+    for x1 in np.linspace(-2.0, 2.0, 10):
+        for x2 in np.linspace(-3.0, 3.0, 20):
+            opt.tell([x1, x2], x1+x2)
+    X = opt.predict([[1, 1], [0, 0]])
