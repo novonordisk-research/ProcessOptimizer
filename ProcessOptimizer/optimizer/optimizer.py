@@ -835,51 +835,72 @@ class Optimizer(object):
             constraints=self._constraints,
         )
 
-    def estimate(
-            self, x: Collection
-    ) -> List[namedtuple]:
+    def estimate(self, x: Collection) -> List[namedtuple]:
         """
-        Predicts the objective function value(s) for the point(s) `x`.
+        Estimates the objective function value(s) for the point(s) `x`.
 
         Parameters
         ----------
         * `x` [list or list-of-lists]:
-            Point(s) at which to predict the objective function value(s).
+            Point(s) at which to estimate the objective function value(s).
 
         Returns
         -------
         * `y` [list[namedtuple]]:
-            List of predictions with the same length as `x`. Each elements have
+            List of estimations with the same length as `x`. Each element have
             a field per objective of the optimizer named after the objectives
             ("Y" or "Y1", "Y2",... by default). Each objective field contains
-            a single objective prediction with field names "mean" and "std".
-            For single objective optimizers, the predictions have the fields
+            a single objective estimateion with field names "mean" and "std".
+            For single objective optimizers, the estimation have the fields
             "mean" and "std", and a field with the same name as the objective
             ("Y" by default), which in turn has the fields "mean" and "std".
         """
-        single_objective_prediction = namedtuple(
-            "single_objective_prediction", ["mean", "std"]
+        single_objective_estimation = namedtuple(
+            "single_objective_estimation", ["mean", "std"]
         )
-        prediction = namedtuple("prediction", self.objective_name_list)
         check_x_in_space(x, self.space)
         if not is_2Dlistlike(x):
             x = np.asarray(x).reshape(1, -1).tolist()
             # If only one point is given, make it an array
         transformed_x = self.space.transform(x)
         if self.n_objectives == 1:
-            single_objective_prediction = namedtuple(
-                "single_objective_prediction",
-                single_objective_prediction._fields + prediction._fields
+            estimation = namedtuple(
+                "estimation",
+                self.objective_name_list
+                + list(single_objective_estimation._fields),
+            )  # For single objective optimizers, the returned list's elements
+            # are namedtuples, with a field named after the objective ("Y" by
+            # default), which in turn has the fields "mean" and "std", for
+            # consistency with multiobjective. They also have the fields "mean"
+            # and "std", for ease of use.
+            prediction = self.models[-1].predict(
+                transformed_x, return_std=True
             )
-            y_predict = self.models[-1].predict(transformed_x, return_std = True)
-            y_predict = [single_objective_prediction(y) for y in y_predict]
+            # The estimate is "packed" different than sci-kit learn predictions
+            # are. The predictions are a tuple of two arrays, one for the mean
+            # and one for the standard deviation; each array has one element
+            # per parameter combination. The estimate is a list of namedtuples,
+            # each with two fields, one for the mean and one for the standard
+            # deviation; each list element corresponds to one parameter
+            # combination.
+            estimate = []
+            for mean, std in zip(prediction[0], prediction[1]):
+                estimate.append(
+                    estimation(
+                        single_objective_estimation(mean, std),
+                        mean,
+                        std,
+                    )
+                )
         else:
-            y_predict = [[]*len(x)]
+            estimation = namedtuple("estimation", self.objective_name_list)
+            estimate = [[] for _ in x]
             for model in self.models[-1]:
-                y_predict_raw = model.predict(transformed_x, return_std = True)
-                for result, raw_prediction in zip(y_predict, y_predict_raw):
-                    result.append(prediction(raw_prediction))
-        return y_predict
+                prediction = model.predict(transformed_x, return_std=True)
+                for result, mean, std in zip(estimate, prediction[0], prediction[1]):
+                    result.append(single_objective_estimation(mean, std))
+            estimate = [estimation(*result) for result in estimate]
+        return estimate
 
     def _check_y_is_valid(self, x, y):
         """Check if the shape and types of x and y are consistent."""

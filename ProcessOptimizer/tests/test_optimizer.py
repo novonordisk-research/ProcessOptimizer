@@ -2,9 +2,12 @@ import numpy as np
 import pytest
 
 from sklearn.multioutput import MultiOutputRegressor
-from numpy.testing import assert_array_equal
-from numpy.testing import assert_equal
-from numpy.testing import assert_raises
+from numpy.testing import (
+    assert_array_equal,
+    assert_almost_equal,
+    assert_equal,
+    assert_raises,
+)
 
 from math import isclose
 
@@ -12,8 +15,12 @@ from ProcessOptimizer import gp_minimize
 from ProcessOptimizer.model_systems.benchmarks import bench1, bench1_with_time
 from ProcessOptimizer.model_systems import branin_no_noise
 from ProcessOptimizer.model_systems.model_system import ModelSystem
-from ProcessOptimizer.learning import ExtraTreesRegressor, RandomForestRegressor
-from ProcessOptimizer.learning import GradientBoostingQuantileRegressor
+from ProcessOptimizer.learning import (
+    ExtraTreesRegressor,
+    GaussianProcessRegressor,
+    GradientBoostingQuantileRegressor,
+    RandomForestRegressor
+    )
 from ProcessOptimizer.optimizer import Optimizer
 from ProcessOptimizer.utils import expected_minimum
 from scipy.optimize import OptimizeResult
@@ -443,9 +450,69 @@ def test_add_remove_modelled_noise():
 
 
 @pytest.mark.fast_test
-def test_predict_single_value():
-    opt = Optimizer([(-2.0, 2.0), (-3.0, 3.0)])
-    for x1 in np.linspace(-2.0, 2.0, 10):
-        for x2 in np.linspace(-3.0, 3.0, 20):
-            opt.tell([x1, x2], x1+x2)
-    X = opt.predict([[1, 1], [0, 0]])
+def test_estimate_single_x():
+    regressor = GaussianProcessRegressor(noise=0, alpha=0)
+    opt = Optimizer(
+        [(-2.0, 2.0), (-3.0, 3.0)],
+        base_estimator=regressor,
+        n_initial_points=1,
+    )
+    opt.tell([1, 1], 2)
+    X = opt.estimate([1, 1])[0]
+    assert_almost_equal(X.Y.mean, 2)
+    assert_almost_equal(X[0].mean, 2)  # test that indexing works
+    assert_almost_equal(X.Y.std, 0)
+    assert_almost_equal(X.mean, 2)
+    assert_almost_equal(X[1], 2)  # test that indexing works
+    assert_almost_equal(X.std, 0)
+
+
+@pytest.mark.fast_test
+def test_estimate_multiple_x():
+    regressor = GaussianProcessRegressor(noise=0, alpha=0)
+    opt = Optimizer(
+        [(-2.0, 2.0), (-3.0, 3.0)],
+        base_estimator=regressor,
+        n_initial_points=3,
+    )
+    opt.tell([[1, 1], [0, 0], [1, -1]], [2, -1, 5])
+    X = opt.estimate([[1, 1], [0, 0], [1, -1]])
+    assert_almost_equal(X[0].Y.mean, 2)
+    assert_almost_equal(X[0].mean, 2)
+    assert_almost_equal(X[1].Y.mean, -1)
+    assert_almost_equal(X[1].mean, -1)
+    assert_almost_equal(X[2].Y.mean, 5)
+    assert_almost_equal(X[2].mean, 5)
+
+
+@pytest.mark.fast_test
+def test_estimate_multiple_y():
+    regressor = GaussianProcessRegressor(noise=0, alpha=0)
+    opt = Optimizer(
+        [(-2.0, 2.0), (-3.0, 3.0)],
+        base_estimator=regressor,
+        n_initial_points=3,
+        n_objectives=2
+    )
+    opt.tell([[1, 1], [0, 0], [1, -1]], [[2, 2], [-1, 0], [-3, 5]])
+    X = opt.estimate([[1, 1], [0, 0], [1, -1]])
+    assert_almost_equal(X[0].Y1.mean, 2)
+    assert_almost_equal(X[0].Y2.mean, 2)
+    assert_almost_equal(X[1].Y1.mean, -1)
+    assert_almost_equal(X[1].Y2.mean, 0)
+    assert_almost_equal(X[2].Y1.mean, -3)
+    assert_almost_equal(X[2].Y2.mean, 5)
+
+
+@pytest.mark.fast_test
+def test_named_objectives():
+    opt = Optimizer(
+        [(-2.0, 2.0), (-3.0, 3.0)],
+        n_initial_points=1,
+        n_objectives=2,
+        objective_name_list=["foo", "bar"]
+    )
+    opt.tell([[1, 1]], [[2, 2]])
+    X = opt.estimate([1, 1])[0]
+    assert_almost_equal(X.foo.mean, 2)
+    assert_almost_equal(X.bar.mean, 2)
