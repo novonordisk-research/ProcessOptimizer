@@ -505,7 +505,19 @@ def test_estimate_multiple_y():
 
 
 @pytest.mark.fast_test
-def test_named_objectives():
+def test_estimate_named_objective():
+    opt = Optimizer(
+        [(-2.0, 2.0), (-3.0, 3.0)],
+        n_initial_points=1,
+        objective_name_list=["foo"]
+    )
+    opt.tell([1, 1], 2)
+    assert_almost_equal(opt.estimate([1, 1])[0].foo.mean, 2)
+    assert_almost_equal(opt.estimate([1, 1])[0].mean, 2)
+
+
+@pytest.mark.fast_test
+def test_estimate_named_objectives():
     opt = Optimizer(
         [(-2.0, 2.0), (-3.0, 3.0)],
         n_initial_points=1,
