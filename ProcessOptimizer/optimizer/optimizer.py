@@ -176,7 +176,7 @@ class Optimizer(object):
         acq_func_kwargs=None,
         acq_optimizer_kwargs=None,
         n_objectives=1,
-        objective_name_list: List[str]=None,
+        objective_name_list: List[str] = None,
     ):
         self.rng = check_random_state(random_state)
 
