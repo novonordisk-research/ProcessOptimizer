@@ -851,7 +851,7 @@ class Optimizer(object):
             a field per objective of the optimizer named after the objectives
             ("Y" or "Y1", "Y2",... by default). Each objective field contains
             a single objective estimation with field names "mean" and "std".
-            For single objective optimizers, the estimation have the fields
+            For single objective optimizers, the estimation has the fields
             "mean" and "std", and a field with the same name as the objective
             ("Y" by default), which in turn has the fields "mean" and "std".
         """
