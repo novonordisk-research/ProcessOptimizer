@@ -847,7 +847,7 @@ class Optimizer(object):
         Returns
         -------
         * `y` [list[namedtuple]]:
-            List of estimations with the same length as `x`. Each element have
+            List of estimations with the same length as `x`. Each element has
             a field per objective of the optimizer named after the objectives
             ("Y" or "Y1", "Y2",... by default). Each objective field contains
             a single objective estimateion with field names "mean" and "std".
