@@ -883,24 +883,33 @@ class Optimizer(object):
             # each with two fields, one for the mean and one for the standard
             # deviation; each list element corresponds to one parameter
             # combination.
-            estimate = []
-            for mean, std in zip(prediction[0], prediction[1]):
-                estimate.append(
-                    estimation(
-                        single_objective_estimation(mean, std),
-                        mean,
-                        std,
-                    )
-                )
+            estimate_list = [
+                estimation(
+                    single_objective_estimation(mean, std), mean, std
+                ) for
+                mean, std in zip(prediction[0], prediction[1])
+            ]
         else:
             estimation = namedtuple("estimation", self.objective_name_list)
-            estimate = [[] for _ in x]
-            for model in self.models[-1]:
-                prediction = model.predict(transformed_x, return_std=True)
-                for result, mean, std in zip(estimate, prediction[0], prediction[1]):
-                    result.append(single_objective_estimation(mean, std))
-            estimate = [estimation(*result) for result in estimate]
-        return estimate
+            # Make a list of predictions, one for each objective. This is a
+            # list of tuples, each tuple containing two arrays, one for the
+            # mean and one for the standard deviation; each array has one
+            # element per x.
+            predict_list = [model.predict(transformed_x, return_std=True) for
+                            model in self.models[-1]
+                            ]
+            estimate_list = []
+            for i in range(len(x)):
+                # For each x and objective, create the
+                # single_objective_estimation and append it to the list of
+                # estimations for that x
+                estimate_list.append([single_objective_estimation(
+                            predict_list[j][0][i],
+                            predict_list[j][1][i],
+                        ) for j in range(self.n_objectives)])
+            # Packing the list of estimations for each x into a namedtuple.
+            estimate_list = [estimation(*result) for result in estimate_list]
+        return estimate_list
 
     def _check_y_is_valid(self, x, y):
         """Check if the shape and types of x and y are consistent."""
