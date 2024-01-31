@@ -451,42 +451,47 @@ def test_add_remove_modelled_noise():
 
 @pytest.mark.fast_test
 def test_estimate_single_x():
+    x = [1, 1]
     regressor = GaussianProcessRegressor(noise=0, alpha=0)
     opt = Optimizer(
         [(-2.0, 2.0), (-3.0, 3.0)],
         base_estimator=regressor,
         n_initial_points=1,
     )
-    opt.tell([1, 1], 2)
-    X = opt.estimate([1, 1])[0]
-    assert_almost_equal(X.Y.mean, 2)
-    assert_almost_equal(X[0].mean, 2)  # test that indexing works
-    assert_almost_equal(X.Y.std, 0)
-    assert_almost_equal(X.mean, 2)
-    assert_almost_equal(X[1], 2)  # test that indexing works
-    assert_almost_equal(X.std, 0)
+    opt.tell(x, 2)
+    estimate_list = opt.estimate(x)[0]
+    assert_almost_equal(estimate_list.Y.mean, 2)
+    assert_almost_equal(estimate_list[0].mean, 2)  # test that indexing works
+    assert_almost_equal(estimate_list.Y.std, 0)
+    assert_almost_equal(estimate_list.mean, 2)
+    assert_almost_equal(estimate_list[1], 2)  # test that indexing works
+    assert_almost_equal(estimate_list.std, 0)
 
 
 @pytest.mark.fast_test
 def test_estimate_multiple_x():
+    x_list = [[1, 1], [0, 0], [1, -1]]
+    y_list = [2, -1, 5]
     regressor = GaussianProcessRegressor(noise=0, alpha=0)
     opt = Optimizer(
         [(-2.0, 2.0), (-3.0, 3.0)],
         base_estimator=regressor,
         n_initial_points=3,
     )
-    opt.tell([[1, 1], [0, 0], [1, -1]], [2, -1, 5])
-    X = opt.estimate([[1, 1], [0, 0], [1, -1]])
-    assert_almost_equal(X[0].Y.mean, 2)
-    assert_almost_equal(X[0].mean, 2)
-    assert_almost_equal(X[1].Y.mean, -1)
-    assert_almost_equal(X[1].mean, -1)
-    assert_almost_equal(X[2].Y.mean, 5)
-    assert_almost_equal(X[2].mean, 5)
+    opt.tell(x_list, y_list)
+    etimate_list = opt.estimate(x_list)
+    assert_almost_equal(etimate_list[0].Y.mean, y_list[0])
+    assert_almost_equal(etimate_list[0].mean, y_list[0])
+    assert_almost_equal(etimate_list[1].Y.mean, y_list[1])
+    assert_almost_equal(etimate_list[1].mean, y_list[1])
+    assert_almost_equal(etimate_list[2].Y.mean, y_list[2])
+    assert_almost_equal(etimate_list[2].mean, y_list[2])
 
 
 @pytest.mark.fast_test
 def test_estimate_multiple_y():
+    x_list = [[1, 1], [0, 0], [1, -1]]
+    y_list = [[2, 2], [-1, 0], [-3, 5]]
     regressor = GaussianProcessRegressor(noise=0, alpha=0)
     opt = Optimizer(
         [(-2.0, 2.0), (-3.0, 3.0)],
@@ -494,37 +499,42 @@ def test_estimate_multiple_y():
         n_initial_points=3,
         n_objectives=2
     )
-    opt.tell([[1, 1], [0, 0], [1, -1]], [[2, 2], [-1, 0], [-3, 5]])
-    X = opt.estimate([[1, 1], [0, 0], [1, -1]])
-    assert_almost_equal(X[0].Y1.mean, 2)
-    assert_almost_equal(X[0].Y2.mean, 2)
-    assert_almost_equal(X[1].Y1.mean, -1)
-    assert_almost_equal(X[1].Y2.mean, 0)
-    assert_almost_equal(X[2].Y1.mean, -3)
-    assert_almost_equal(X[2].Y2.mean, 5)
+    opt.tell(x_list, y_list)
+    estimate_list = opt.estimate(x_list)
+    assert_almost_equal(estimate_list[0].Y1.mean, y_list[0][0])
+    assert_almost_equal(estimate_list[0].Y2.mean, y_list[0][1])
+    assert_almost_equal(estimate_list[1].Y1.mean, y_list[1][0])
+    assert_almost_equal(estimate_list[1].Y2.mean, y_list[1][1])
+    assert_almost_equal(estimate_list[2].Y1.mean, y_list[2][0])
+    assert_almost_equal(estimate_list[2].Y2.mean, y_list[2][1])
 
 
 @pytest.mark.fast_test
 def test_estimate_named_objective():
+    x = [1, 1]
+    y = 2
     opt = Optimizer(
         [(-2.0, 2.0), (-3.0, 3.0)],
         n_initial_points=1,
         objective_name_list=["foo"]
     )
-    opt.tell([1, 1], 2)
-    assert_almost_equal(opt.estimate([1, 1])[0].foo.mean, 2)
-    assert_almost_equal(opt.estimate([1, 1])[0].mean, 2)
+    opt.tell(x, y)
+    estimate = opt.estimate(x)[0]
+    assert_almost_equal(estimate.foo.mean, y)
+    assert_almost_equal(estimate.mean, y)
 
 
 @pytest.mark.fast_test
 def test_estimate_named_objectives():
+    x = [1, 1]
+    y = [2, -2]
     opt = Optimizer(
         [(-2.0, 2.0), (-3.0, 3.0)],
         n_initial_points=1,
         n_objectives=2,
         objective_name_list=["foo", "bar"]
     )
-    opt.tell([[1, 1]], [[2, 2]])
-    X = opt.estimate([1, 1])[0]
-    assert_almost_equal(X.foo.mean, 2)
-    assert_almost_equal(X.bar.mean, 2)
+    opt.tell([x], [y])
+    estimate = opt.estimate(x)[0]
+    assert_almost_equal(estimate.foo.mean, y[0])
+    assert_almost_equal(estimate.bar.mean, y[1])
