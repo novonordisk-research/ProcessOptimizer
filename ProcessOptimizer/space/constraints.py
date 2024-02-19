@@ -1,7 +1,7 @@
 from sklearn.utils import check_random_state
 from .space import Real, Integer, Categorical, Space
 import numpy as np
-from scipy import matrix, linalg
+from scipy import linalg
 from typing import Union, List
 
 class Constraints:
@@ -153,6 +153,31 @@ class Constraints:
         * `points`: [list of lists, shape=(n_points, n_dims)]
            Points sampled from the space.
         """
+        
+        def null_space(A, rcond=None) -> np.ndarray:
+            """Helper function to calculate the null space of a matrix
+
+            Parameters
+            ----------
+            A : numpy array
+                The matrix to calculate the null space of
+            rcond : float, optional
+                The tolerance for determining the effective rank of A.
+
+            Returns
+            -------
+            Q : numpy array
+                The null space of A, as a matrix with orthonormal columns.
+            """
+            
+            u, s, vh = np.linalg.svd(A, full_matrices=True) # A = u*s*vh
+            M, N = u.shape[0], vh.shape[1] # M = number of rows, N = number of columns
+            if rcond is None: # default value of rcond
+                rcond = np.finfo(s.dtype).eps * max(M, N) # machine precision times max dimension
+            tol = np.amax(s) * rcond # tolerance for singular values
+            num = np.sum(s > tol, dtype=int) # number of singular values greater than tol
+            Q = vh[num:,:].T.conj() # columns of vh corresponding to singular values greater than tol
+            return Q # return the null space of A
 
         rng = check_random_state(random_state)
                 
@@ -185,8 +210,8 @@ class Constraints:
         # Use the fact that the vector [1, 1, ...] (a 1 for each constrained 
         # dimension) is normal to the plane defined by A + B + ... to build
         # basis-vectors inside the plane, using the null_space function
-        N = matrix(np.ones(d))
-        ns = linalg.null_space(N)
+        N = np.array(np.ones(d))
+        ns = null_space(N[np.newaxis, :])
         # We only need to simulate points up to a distance of half the diagonal
         # from the origin to A_max, B_max, etc.
         sim_distance = np.sqrt(np.sum(delta**2)) / 2
