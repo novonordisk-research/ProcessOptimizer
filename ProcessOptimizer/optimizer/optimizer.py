@@ -889,11 +889,19 @@ class Optimizer(object):
         * `constraints` [list] or [Constraints]:
             Can either be a list of Constraint objects or a Constraints object
         """
+                
+        if self.n_objectives > 1:
+            raise RuntimeError(
+            "Can't set constraints for multiobjective optimization. The NSGA-II algorithm \
+            used for multiobjective optimization does not support constraints."
+            )
+            
         if self._n_initial_points > 0 and self._lhs:
             raise RuntimeError(
-                "Can't set constraints while latin hypercube sampling points are not exhausted."
+                "Can't set constraints while latin hypercube sampling points are not exhausted.\
+                Consider reinitialising the optimizer with lhs=False as argument."
             )
-
+            
         if constraints:
             if isinstance(constraints, Constraints):
                 # If constraints is a Constraints object we simply add it
