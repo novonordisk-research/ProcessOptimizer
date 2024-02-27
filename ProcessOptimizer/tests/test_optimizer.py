@@ -469,6 +469,24 @@ def test_estimate_single_x():
 
 
 @pytest.mark.fast_test
+def test_estimate_uncertainty():
+    x = [1, 1]
+    regressor = GaussianProcessRegressor(noise=1)
+    opt = Optimizer(
+        [(-2.0, 2.0), (-3.0, 3.0)],
+        base_estimator=regressor,
+        n_initial_points=1,
+    )
+    opt.tell(x, 2)
+    estimate_list = opt.estimate(x)[0]
+    assert_almost_equal(estimate_list.Y.std, (1/2)**(1/2))
+    # Why is the expected value 1, and not 2, and why is the standard
+    # deviation sqrt(1/2)? This would be the case if there were two
+    # observations, one with Y = 0, and one with Y = 2. Is that what
+    # GaussianProcessRegressor does if there is noise and only one observation?
+
+
+@pytest.mark.fast_test
 def test_estimate_multiple_x():
     x_list = [[1, 1], [0, 0], [1, -1]]
     y_list = [2, -1, 5]
