@@ -1,6 +1,6 @@
 # Release history
 
-## Version 0.9.4 [unpublished]
+## Version 0.9.5 [unpublished]
 
 ### Changes
 
@@ -9,6 +9,16 @@
 ### Bugfixes
 
 -
+
+## Version 0.9.4
+
+### Changes
+
+-
+
+### Bugfixes
+
+- Fix dependency on deprecated Matrix from scipy in favour of a numpy solution
 
 ## Version 0.9.3
 
