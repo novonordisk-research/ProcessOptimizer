@@ -408,6 +408,28 @@ class Optimizer(object):
         if not ((isinstance(n_points, int) and n_points > 0) or n_points is None):
             raise ValueError("n_points should be int > 0, got " + str(n_points))
         # These are the only filling strategies which are supported
+        
+        if strategy == "stbr_full" and self._n_initial_points < 1:
+            # Steienerberger sampling can not be used from an empty Xi set
+            if self.Xi == []:
+                raise ValueError(
+                    "Steinerberger sampling requires initial points but got [] "
+                )
+
+            if n_points is None:
+                # Returns a single Steinerberger point
+                X = self.stbr_scipy()
+            else:
+                # Returns 'n_points' Steinerberger points
+                X = self.stbr_scipy(n_points=n_points)
+            return X
+        
+        if n_points is None or n_points == 1:
+            return self._ask()
+        
+        # The following assertions deal with cases in which the user asks for more than
+        # single experiments
+        
         supported_strategies = [
             "cl_min",
             "cl_mean",
@@ -424,25 +446,12 @@ class Optimizer(object):
                 + ", "
                 + "got %s" % strategy
             )
-
-        if strategy == "stbr_full" and self._n_initial_points < 1:
-            # Steienerberger sampling can not be used from an empty Xi set
-            if self.Xi == []:
-                raise ValueError(
-                    "Steinerberger sampling requires initial points but got [] "
-                )
-
-            if n_points is None:
-                # Returns a single Steinerberger point
-                X = self.stbr_scipy()
-            else:
-                # Returns 'n_points' Steinerberger points
-                X = self.stbr_scipy(n_points=n_points)
-            return X
-
-        if n_points is None or n_points == 1:
-            return self._ask()
-
+        
+        if strategy in ["stbr_fill", "stbr_full"] and self.get_constraints() is not None:
+            raise ValueError(
+                "Steinerberger (default setting) sampling can not be used with constraints,\
+                try using another strategy like 'opt.ask(n,strategy='cl_min')'"
+            )
         # Caching the result with n_points not None. If some new parameters
         # are provided to the ask, the cache_ is not used.
         if (n_points, strategy) in self.cache_:
@@ -889,11 +898,19 @@ class Optimizer(object):
         * `constraints` [list] or [Constraints]:
             Can either be a list of Constraint objects or a Constraints object
         """
+                
+        if self.n_objectives > 1:
+            raise RuntimeError(
+            "Can't set constraints for multiobjective optimization. The NSGA-II algorithm \
+            used for multiobjective optimization does not support constraints."
+            )
+            
         if self._n_initial_points > 0 and self._lhs:
             raise RuntimeError(
-                "Can't set constraints while latin hypercube sampling points are not exhausted."
+                "Can't set constraints while latin hypercube sampling points are not exhausted.\
+                Consider reinitialising the optimizer with lhs=False as argument."
             )
-
+            
         if constraints:
             if isinstance(constraints, Constraints):
                 # If constraints is a Constraints object we simply add it
