@@ -19,6 +19,8 @@
 ### Bugfixes
 
 - Fix dependency on deprecated Matrix from scipy in favour of a numpy solution
+- Ensure prober warning/Errors when users try to combine constraints with operations that
+  doesn't support constraints.
 
 ## Version 0.9.3
 
