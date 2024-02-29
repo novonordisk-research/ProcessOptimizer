@@ -1238,8 +1238,15 @@ class Optimizer(object):
 
         return pop, logbook, front
 
+    def add_observational_noise(self):
+        if self.n_objectives > 1:
+            for model in self.models[-1]:
+                self.add_observational_noise_single_model(model)
+        else:
+            self.add_observational_noise_single_model(self.models[-1])
+
     # This function adds the modelled white noise to the regressor to allow predictions including noise
-    def add_modelled_noise(self):
+    def add_observational_noise_single_model(self, model):
         """
         This method will add the noise that has been modelled to fit the data. (The noise is disabled
         by default to reflect description in book on gaussian processes for Machine Learning
@@ -1247,38 +1254,45 @@ class Optimizer(object):
         http://www.gaussianprocess.org/gpml/chapters/RW2.pdf)
         """
         if (
-            isinstance(self.models[-1].noise, str)
-            and self.models[-1].noise != "gaussian"
+            isinstance(model.noise, str)
+            and model.noise != "gaussian"
         ):
             raise ValueError(
-                "Expected noise to be 'gaussian', got %s" % self.models[-1].noise
+                "Expected noise to be 'gaussian', got %s" % model.noise
             )
-        noise_estimate = self.models[-1].noise_
+        noise_estimate = model.noise_
         white_present, white_param = _param_for_white_kernel_in_Sum(
-            self.models[-1].kernel_
+            model.kernel_
         )
         if white_present:
-            self.models[-1].kernel_.set_params(
+            model.kernel_.set_params(
                 **{white_param: WhiteKernel(noise_level=noise_estimate)}
             )
 
-    def remove_modelled_noise(self):
+    def remove_observational_noise(self):
+        if self.n_objectives > 1:
+            for model in self.models[-1]:
+                self.remove_observational_noise_single_model(model)
+        else:
+            self.remove_observational_noise_single_model(self.models[-1])
+
+    def remove_observational_noise_single_model(self, model):
         """
         This method resets the noise levels to only include the "true" uncertaincy of the main kernel
         used for fitting and predicting. This method can be used in conjunction with the
         'add_modelled_noise()'
         """
         if (
-            isinstance(self.models[-1].noise, str)
-            and self.models[-1].noise != "gaussian"
+            isinstance(model.noise, str)
+            and model.noise != "gaussian"
         ):
             raise ValueError(
-                "expected noise to be 'gaussian', got %s" % self.models[-1].noise
+                "expected noise to be 'gaussian', got %s" % model.noise
             )
         white_present, white_param = _param_for_white_kernel_in_Sum(
-            self.models[-1].kernel_
+            model.kernel_
         )
         if white_present:
-            self.models[-1].kernel_.set_params(
+            model.kernel_.set_params(
                 **{white_param: WhiteKernel(noise_level=0.0)}
             )

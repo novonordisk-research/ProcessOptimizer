@@ -405,7 +405,7 @@ def test_iterating_ask_tell_lhs():
 
 
 @pytest.mark.slow_test
-def test_add_remove_modelled_noise():
+def test_add_remove_observational_noise():
     """
     Tests whether the addition of white noise leads to predictions closer to
     known true values of experimental noise (iid gaussian noise)"""
@@ -436,18 +436,65 @@ def test_add_remove_modelled_noise():
     _, [_, res_std_no_white] = expected_minimum(res, return_std=True)
     # Add moddeled experimental noise
     opt_noise = opt.copy()
-    opt_noise.add_modelled_noise()
+    opt_noise.add_observational_noise()
     res_noise = opt_noise.get_result()
     _, [_, res_std_white] = expected_minimum(res_noise, return_std=True)
-    # Test modelled noise is added and predicts know noise within tolerance 10%
+    # Test observational noise is added and predicts know noise within tolerance 10%
     assert res_std_no_white < res_std_white
     assert isclose(noise_size, res_std_white, rel_tol=0.1)
     # Test function to remove experimental noise and regain "old" noise level
-    opt_noise.remove_modelled_noise()
+    opt_noise.remove_observational_noise()
     res_noise = opt_noise.get_result()
     _, [_, res_std_reset] = expected_minimum(res_noise, return_std=True)
     assert isclose(res_std_no_white, res_std_reset, rel_tol=0.001)
 
+
+@pytest.mark.slow_test
+def test_add_remove_observational_noise_multiple_y():
+    """
+    Tests whether the addition of white noise leads to predictions closer to
+    known true values of experimental noise (iid gaussian noise)"""
+
+    # Define objective function
+    def flat_score(x):
+        return 42
+
+    # Set noise and model system
+    noise_size = 0.45
+    flat_space = [(-1.0, 1.0)]
+    flat_noise = {"model_type": "constant", "noise_size": noise_size}
+    # Build ModelSystem object
+    model = ModelSystem(score=flat_score, space=flat_space, noise_model=flat_noise)
+    # Instantiate Optimizer
+    opt = Optimizer(flat_space, "GP", lhs=False, n_initial_points=1, random_state=42, n_objectives=2)
+    # Make 20 dispersed points on X
+    next_x = np.linspace(-1, 1, 20).tolist()
+    x = []
+    y = []
+    # sample noisy experiments, 20 in each x-value
+    for _ in range(20):
+        for xx in next_x:
+            x.append([xx])
+            y.append([model.get_score([xx])]*opt.n_objectives)
+    # Fit the model
+    res_list = opt.tell(x, y)
+    res_std_no_white = [None]*opt.n_objectives  # Initializing list with a position per objective
+    for i, res in enumerate(res_list):
+        _, [_, res_std_no_white[i]] = expected_minimum(res, return_std=True)
+    # Add moddeled experimental noise
+    opt_noise = opt.copy()
+    opt_noise.add_observational_noise()
+    res_noise = opt_noise.get_result()
+    for i, result in enumerate(res_noise):
+        _, [_, res_std_white] = expected_minimum(result, return_std=True)
+        assert res_std_no_white[i] < res_std_white
+        assert isclose(noise_size, res_std_white, rel_tol=0.1)
+    # Test function to remove experimental noise and regain "old" noise level
+    opt_noise.remove_observational_noise()
+    res_noise = opt_noise.get_result()
+    for i, result in enumerate(res_noise):
+        _, [_, res_std_reset] = expected_minimum(result, return_std=True)
+        assert isclose(res_std_no_white[i], res_std_reset, rel_tol=0.001)
 
 @pytest.mark.fast_test
 def test_estimate_single_x():
