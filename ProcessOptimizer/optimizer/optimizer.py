@@ -45,9 +45,9 @@ class Optimizer(object):
     noise between each refitting (read: while adding new data). This is
     described in Rasmussen and Williams chapter 2.
     Some users might want to plot, predict or sample from a model that includes
-    the modelling of the experimental noise: in that case, two helper methods
-    can "switch" the noise "on/off". Functions are called 'add_modelled_noise'
-    and 'remove_modelled_noise'.
+    the modelling of the observational noise: in that case, two helper methods
+    can "switch" the noise "on/off". Functions are called 'add_observational_noise'
+    and 'remove_observational_noise'.
 
     Parameters
     ----------
@@ -1256,6 +1256,12 @@ class Optimizer(object):
         return pop, logbook, front
 
     def add_observational_noise(self):
+        """
+        This method will add the noise that has been modelled to fit the data.
+        (The noise is disabled by default to reflect description in book on
+        gaussian processes for Machine Learning. This has been described in
+        Eq 2.24 of http://www.gaussianprocess.org/gpml/chapters/RW2.pdf)
+        """
         if self.n_objectives > 1:
             for model in self.models[-1]:
                 self.add_observational_noise_single_model(model)
@@ -1264,12 +1270,6 @@ class Optimizer(object):
 
     # This function adds the modelled white noise to the regressor to allow predictions including noise
     def add_observational_noise_single_model(self, model):
-        """
-        This method will add the noise that has been modelled to fit the data. (The noise is disabled
-        by default to reflect description in book on gaussian processes for Machine Learning
-        This has been described in Eq 2.24 of
-        http://www.gaussianprocess.org/gpml/chapters/RW2.pdf)
-        """
         if (
             isinstance(model.noise, str)
             and model.noise != "gaussian"
@@ -1287,6 +1287,11 @@ class Optimizer(object):
             )
 
     def remove_observational_noise(self):
+        """
+        This method resets the noise levels to only include the "true"
+        uncertaincy of the main kernel used for fitting and predicting. This
+        method can be used in conjunction with the 'add_modelled_noise()'
+        """
         if self.n_objectives > 1:
             for model in self.models[-1]:
                 self.remove_observational_noise_single_model(model)
@@ -1294,11 +1299,6 @@ class Optimizer(object):
             self.remove_observational_noise_single_model(self.models[-1])
 
     def remove_observational_noise_single_model(self, model):
-        """
-        This method resets the noise levels to only include the "true" uncertaincy of the main kernel
-        used for fitting and predicting. This method can be used in conjunction with the
-        'add_modelled_noise()'
-        """
         if (
             isinstance(model.noise, str)
             and model.noise != "gaussian"
