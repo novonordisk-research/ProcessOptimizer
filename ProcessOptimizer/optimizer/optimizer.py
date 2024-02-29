@@ -855,8 +855,12 @@ class Optimizer(object):
             "mean" and "std", and a field with the same name as the objective
             ("Y" by default), which in turn has the fields "mean" and "std".
         """
+        self_with_observation_noise = self.copy()
+        self_with_observation_noise.add_observational_noise()
+        self_without_observation_noise = self.copy()
+        self_without_observation_noise.remove_observational_noise()
         single_objective_estimation = namedtuple(
-            "single_objective_estimation", ["mean", "std"]
+            "single_objective_estimation", ["mean", "std", "std_model"]
         )
         check_x_in_space(x, self.space)
         if not is_2Dlistlike(x):
@@ -873,7 +877,10 @@ class Optimizer(object):
             # default), which in turn has the fields "mean" and "std", for
             # consistency with multiobjective. They also have the fields "mean"
             # and "std", for ease of use.
-            prediction = self.models[-1].predict(
+            prediction = self_with_observation_noise.models[-1].predict(
+                transformed_x, return_std=True
+            )
+            (_, noiseless_predicted_std) = self_without_observation_noise.models[-1].predict(
                 transformed_x, return_std=True
             )
             # The estimate is "packed" different than sci-kit learn predictions
@@ -885,9 +892,14 @@ class Optimizer(object):
             # combination.
             estimate_list = [
                 estimation(
-                    single_objective_estimation(mean, std), mean, std
+                    single_objective_estimation(mean, std, std_model),
+                    mean,
+                    std,
+                    std_model
                 ) for
-                mean, std in zip(prediction[0], prediction[1])
+                mean, std, std_model in zip(
+                    prediction[0], prediction[1], noiseless_predicted_std
+                )
             ]
         else:
             estimation = namedtuple("estimation", self.objective_name_list)
@@ -896,8 +908,12 @@ class Optimizer(object):
             # mean and one for the standard deviation; each array has one
             # element per x.
             predict_list = [model.predict(transformed_x, return_std=True) for
-                            model in self.models[-1]
+                            model in self_with_observation_noise.models[-1]
                             ]
+            noiseless_predict_list = [
+                model.predict(transformed_x, return_std=True) for
+                model in self_without_observation_noise.models[-1]
+            ]
             estimate_list = []
             for i in range(len(x)):
                 # For each x and objective, create the
@@ -906,6 +922,7 @@ class Optimizer(object):
                 estimate_list.append([single_objective_estimation(
                             predict_list[j][0][i],
                             predict_list[j][1][i],
+                            noiseless_predict_list[j][1][i]
                         ) for j in range(self.n_objectives)])
             # Packing the list of estimations for each x into a namedtuple.
             estimate_list = [estimation(*result) for result in estimate_list]

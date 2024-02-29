@@ -25,6 +25,8 @@ from ProcessOptimizer.optimizer import Optimizer
 from ProcessOptimizer.utils import expected_minimum
 from scipy.optimize import OptimizeResult
 
+from ..learning.gaussian_process.gpr import _param_for_white_kernel_in_Sum
+
 # Introducing branin function as a test function from the Branin no noise ModelSystem
 branin = branin_no_noise.get_score
 
@@ -499,38 +501,23 @@ def test_add_remove_observational_noise_multiple_y():
 @pytest.mark.fast_test
 def test_estimate_single_x():
     x = [1, 1]
-    regressor = GaussianProcessRegressor(noise=0, alpha=0)
     opt = Optimizer(
         [(-2.0, 2.0), (-3.0, 3.0)],
-        base_estimator=regressor,
         n_initial_points=1,
     )
     opt.tell(x, 2)
     estimate_list = opt.estimate(x)[0]
-    assert_almost_equal(estimate_list.Y.mean, 2)
-    assert_almost_equal(estimate_list[0].mean, 2)  # test that indexing works
-    assert_almost_equal(estimate_list.Y.std, 0)
-    assert_almost_equal(estimate_list.mean, 2)
-    assert_almost_equal(estimate_list[1], 2)  # test that indexing works
-    assert_almost_equal(estimate_list.std, 0)
+    # here, we need to define decimal, as the prediction is propabalistic, so
+    # it is not excact.
+    assert_almost_equal(estimate_list.Y.mean, 2, decimal=2)
+    assert_almost_equal(estimate_list[0].mean, 2, decimal=2)
+    assert_almost_equal(estimate_list.Y.std, 0, decimal=2)
+    assert_almost_equal(estimate_list.Y.std_model, 0, decimal=2)
+    assert_almost_equal(estimate_list.mean, 2, decimal=2)
+    assert_almost_equal(estimate_list[1], 2, decimal=2)
+    assert_almost_equal(estimate_list.std, 0, decimal=2)
+    assert_almost_equal(estimate_list.std_model, 0, decimal=2)
 
-
-@pytest.mark.fast_test
-def test_estimate_uncertainty():
-    x = [1, 1]
-    regressor = GaussianProcessRegressor(noise=1)
-    opt = Optimizer(
-        [(-2.0, 2.0), (-3.0, 3.0)],
-        base_estimator=regressor,
-        n_initial_points=1,
-    )
-    opt.tell(x, 2)
-    estimate_list = opt.estimate(x)[0]
-    assert_almost_equal(estimate_list.Y.std, (1/2)**(1/2))
-    # Why is the expected value 1, and not 2, and why is the standard
-    # deviation sqrt(1/2)? This would be the case if there were two
-    # observations, one with Y = 0, and one with Y = 2. Is that what
-    # GaussianProcessRegressor does if there is noise and only one observation?
 
 
 @pytest.mark.fast_test
@@ -572,6 +559,46 @@ def test_estimate_multiple_y():
     assert_almost_equal(estimate_list[1].Y2.mean, y_list[1][1])
     assert_almost_equal(estimate_list[2].Y1.mean, y_list[2][0])
     assert_almost_equal(estimate_list[2].Y2.mean, y_list[2][1])
+
+
+@pytest.mark.fast_test
+def test_estimate_uncertainty():
+    x = [1, 1]
+    opt = Optimizer(
+        [(-2.0, 2.0), (-3.0, 3.0)],
+        n_initial_points=20,
+    )
+    for _ in range(10):
+        opt.tell(x, 2)
+        opt.tell(x, 0)
+    estimate_list = opt.estimate(x)[0]
+    assert_almost_equal(estimate_list.Y.std, 1, decimal=2)
+
+
+@pytest.mark.fast_test
+def test_estimate_doesnt_mutate_optimizer():
+    x = [1, 1]
+    opt = Optimizer(
+        [(-2.0, 2.0), (-3.0, 3.0)],
+        n_initial_points=1,
+    )
+    opt.tell(x, 1)
+    opt.tell(x, 2)
+    opt.add_observational_noise()
+    _, white_param = _param_for_white_kernel_in_Sum(opt.models[-1].kernel_)
+    old_noise = opt.models[-1].kernel_.get_params()[white_param].get_params()["noise_level"]
+    opt.estimate(x)[0]
+    assert_equal(
+        opt.models[-1].kernel_.get_params()["k2"].get_params()["noise_level"],
+        old_noise
+    )
+    opt.remove_observational_noise()
+    old_noise = opt.models[-1].kernel_.get_params()[white_param].get_params()["noise_level"]
+    opt.estimate(x)[0]
+    assert_equal(
+        opt.models[-1].kernel_.get_params()["k2"].get_params()["noise_level"],
+        old_noise
+    )
 
 
 @pytest.mark.fast_test
