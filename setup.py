@@ -41,7 +41,7 @@ setup(
         "browniebee": [
             "bokeh==3.1.1",
             "deap==1.4.1",
-            "matplotlib==3.7.2",
+            "matplotlib==3.8.3",
             "numpy==1.24.4",
             "pyYAML==6.0.1",
             "scikit-learn==1.3.0",
