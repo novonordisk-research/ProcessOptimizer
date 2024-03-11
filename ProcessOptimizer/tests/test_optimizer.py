@@ -2,9 +2,12 @@ import numpy as np
 import pytest
 
 from sklearn.multioutput import MultiOutputRegressor
-from numpy.testing import assert_array_equal
-from numpy.testing import assert_equal
-from numpy.testing import assert_raises
+from numpy.testing import (
+    assert_array_equal,
+    assert_almost_equal,
+    assert_equal,
+    assert_raises,
+)
 
 from math import isclose
 
@@ -12,11 +15,17 @@ from ProcessOptimizer import gp_minimize
 from ProcessOptimizer.model_systems.benchmarks import bench1, bench1_with_time
 from ProcessOptimizer.model_systems import branin_no_noise
 from ProcessOptimizer.model_systems.model_system import ModelSystem
-from ProcessOptimizer.learning import ExtraTreesRegressor, RandomForestRegressor
-from ProcessOptimizer.learning import GradientBoostingQuantileRegressor
+from ProcessOptimizer.learning import (
+    ExtraTreesRegressor,
+    GaussianProcessRegressor,
+    GradientBoostingQuantileRegressor,
+    RandomForestRegressor
+    )
 from ProcessOptimizer.optimizer import Optimizer
 from ProcessOptimizer.utils import expected_minimum
 from scipy.optimize import OptimizeResult
+
+from ..learning.gaussian_process.gpr import _param_for_white_kernel_in_Sum
 
 # Introducing branin function as a test function from the Branin no noise ModelSystem
 branin = branin_no_noise.get_score
@@ -398,10 +407,10 @@ def test_iterating_ask_tell_lhs():
 
 
 @pytest.mark.slow_test
-def test_add_remove_modelled_noise():
+def test_add_remove_observational_noise():
     """
     Tests whether the addition of white noise leads to predictions closer to
-    known true values of experimental noise (iid gaussian noise)"""
+    known true values of observational noise (iid gaussian noise)"""
 
     # Define objective function
     def flat_score(x):
@@ -427,16 +436,197 @@ def test_add_remove_modelled_noise():
     # Fit the model
     res = opt.tell(x, y)
     _, [_, res_std_no_white] = expected_minimum(res, return_std=True)
-    # Add moddeled experimental noise
+    # Add moddeled observational noise
     opt_noise = opt.copy()
-    opt_noise.add_modelled_noise()
+    opt_noise.add_observational_noise()
     res_noise = opt_noise.get_result()
     _, [_, res_std_white] = expected_minimum(res_noise, return_std=True)
-    # Test modelled noise is added and predicts know noise within tolerance 10%
+    # Test observational noise is added and predicts know noise within tolerance 10%
     assert res_std_no_white < res_std_white
     assert isclose(noise_size, res_std_white, rel_tol=0.1)
-    # Test function to remove experimental noise and regain "old" noise level
-    opt_noise.remove_modelled_noise()
+    # Test function to remove observational noise and regain "old" noise level
+    opt_noise.remove_observational_noise()
     res_noise = opt_noise.get_result()
     _, [_, res_std_reset] = expected_minimum(res_noise, return_std=True)
     assert isclose(res_std_no_white, res_std_reset, rel_tol=0.001)
+
+
+@pytest.mark.slow_test
+def test_add_remove_observational_noise_multiple_y():
+    """
+    Tests whether the addition of white noise leads to predictions closer to
+    known true values of observational noise (iid gaussian noise)"""
+
+    # Define objective function
+    def flat_score(x):
+        return 42
+
+    # Set noise and model system
+    noise_size = 0.45
+    flat_space = [(-1.0, 1.0)]
+    flat_noise = {"model_type": "constant", "noise_size": noise_size}
+    # Build ModelSystem object
+    model = ModelSystem(score=flat_score, space=flat_space, noise_model=flat_noise)
+    # Instantiate Optimizer
+    opt = Optimizer(flat_space, "GP", lhs=False, n_initial_points=1, random_state=42, n_objectives=2)
+    # Make 20 dispersed points on X
+    next_x = np.linspace(-1, 1, 20).tolist()
+    x = []
+    y = []
+    # sample noisy experiments, 20 in each x-value
+    for _ in range(20):
+        for xx in next_x:
+            x.append([xx])
+            y.append([model.get_score([xx])]*opt.n_objectives)
+    # Fit the model
+    res_list = opt.tell(x, y)
+    res_std_no_white = [None]*opt.n_objectives  # Initializing list with a position per objective
+    for i, res in enumerate(res_list):
+        _, [_, res_std_no_white[i]] = expected_minimum(res, return_std=True)
+    # Add moddeled observational noise
+    opt_noise = opt.copy()
+    opt_noise.add_observational_noise()
+    res_noise = opt_noise.get_result()
+    for i, result in enumerate(res_noise):
+        _, [_, res_std_white] = expected_minimum(result, return_std=True)
+        assert res_std_no_white[i] < res_std_white
+        assert isclose(noise_size, res_std_white, rel_tol=0.1)
+    # Test function to remove observational noise and regain "old" noise level
+    opt_noise.remove_observational_noise()
+    res_noise = opt_noise.get_result()
+    for i, result in enumerate(res_noise):
+        _, [_, res_std_reset] = expected_minimum(result, return_std=True)
+        assert isclose(res_std_no_white[i], res_std_reset, rel_tol=0.001)
+
+@pytest.mark.fast_test
+def test_estimate_single_x():
+    x = [1, 1]
+    opt = Optimizer(
+        [(-2.0, 2.0), (-3.0, 3.0)],
+        n_initial_points=1,
+    )
+    opt.tell(x, 2)
+    estimate_list = opt.estimate(x)[0]
+    # here, we need to define decimal, as the prediction is propabalistic, so
+    # it is not excact.
+    assert_almost_equal(estimate_list.Y.mean, 2, decimal=2)
+    assert_almost_equal(estimate_list[0].mean, 2, decimal=2)
+    assert_almost_equal(estimate_list.Y.std, 0, decimal=2)
+    assert_almost_equal(estimate_list.Y.std_model, 0, decimal=2)
+    assert_almost_equal(estimate_list.mean, 2, decimal=2)
+    assert_almost_equal(estimate_list[1], 2, decimal=2)
+    assert_almost_equal(estimate_list.std, 0, decimal=2)
+    assert_almost_equal(estimate_list.std_model, 0, decimal=2)
+
+
+
+@pytest.mark.fast_test
+def test_estimate_multiple_x():
+    x_list = [[1, 1], [0, 0], [1, -1]]
+    y_list = [2, -1, 5]
+    regressor = GaussianProcessRegressor(noise=0, alpha=0)
+    opt = Optimizer(
+        [(-2.0, 2.0), (-3.0, 3.0)],
+        base_estimator=regressor,
+        n_initial_points=3,
+    )
+    opt.tell(x_list, y_list)
+    etimate_list = opt.estimate(x_list)
+    assert_almost_equal(etimate_list[0].Y.mean, y_list[0])
+    assert_almost_equal(etimate_list[0].mean, y_list[0])
+    assert_almost_equal(etimate_list[1].Y.mean, y_list[1])
+    assert_almost_equal(etimate_list[1].mean, y_list[1])
+    assert_almost_equal(etimate_list[2].Y.mean, y_list[2])
+    assert_almost_equal(etimate_list[2].mean, y_list[2])
+
+
+@pytest.mark.fast_test
+def test_estimate_multiple_y():
+    x_list = [[1, 1], [0, 0], [1, -1]]
+    y_list = [[2, 2], [-1, 0], [-3, 5]]
+    regressor = GaussianProcessRegressor(noise=0, alpha=0)
+    opt = Optimizer(
+        [(-2.0, 2.0), (-3.0, 3.0)],
+        base_estimator=regressor,
+        n_initial_points=3,
+        n_objectives=2
+    )
+    opt.tell(x_list, y_list)
+    estimate_list = opt.estimate(x_list)
+    assert_almost_equal(estimate_list[0].Y1.mean, y_list[0][0])
+    assert_almost_equal(estimate_list[0].Y2.mean, y_list[0][1])
+    assert_almost_equal(estimate_list[1].Y1.mean, y_list[1][0])
+    assert_almost_equal(estimate_list[1].Y2.mean, y_list[1][1])
+    assert_almost_equal(estimate_list[2].Y1.mean, y_list[2][0])
+    assert_almost_equal(estimate_list[2].Y2.mean, y_list[2][1])
+
+
+@pytest.mark.fast_test
+def test_estimate_uncertainty():
+    x = [1, 1]
+    opt = Optimizer(
+        [(-2.0, 2.0), (-3.0, 3.0)],
+        n_initial_points=20,
+    )
+    for _ in range(10):
+        opt.tell(x, 2)
+        opt.tell(x, 0)
+    estimate_list = opt.estimate(x)[0]
+    assert_almost_equal(estimate_list.Y.std, 1, decimal=2)
+
+
+@pytest.mark.fast_test
+def test_estimate_doesnt_mutate_optimizer():
+    x = [1, 1]
+    opt = Optimizer(
+        [(-2.0, 2.0), (-3.0, 3.0)],
+        n_initial_points=1,
+    )
+    opt.tell(x, 1)
+    opt.tell(x, 2)
+    opt.add_observational_noise()
+    _, white_param = _param_for_white_kernel_in_Sum(opt.models[-1].kernel_)
+    old_noise = opt.models[-1].kernel_.get_params()[white_param].get_params()["noise_level"]
+    opt.estimate(x)[0]
+    assert_equal(
+        opt.models[-1].kernel_.get_params()["k2"].get_params()["noise_level"],
+        old_noise
+    )
+    opt.remove_observational_noise()
+    old_noise = opt.models[-1].kernel_.get_params()[white_param].get_params()["noise_level"]
+    opt.estimate(x)[0]
+    assert_equal(
+        opt.models[-1].kernel_.get_params()["k2"].get_params()["noise_level"],
+        old_noise
+    )
+
+
+@pytest.mark.fast_test
+def test_estimate_named_objective():
+    x = [1, 1]
+    y = 2
+    opt = Optimizer(
+        [(-2.0, 2.0), (-3.0, 3.0)],
+        n_initial_points=1,
+        objective_name_list=["foo"]
+    )
+    opt.tell(x, y)
+    estimate = opt.estimate(x)[0]
+    assert_almost_equal(estimate.foo.mean, y)
+    assert_almost_equal(estimate.mean, y)
+
+
+@pytest.mark.fast_test
+def test_estimate_named_objectives():
+    x = [1, 1]
+    y = [2, -2]
+    opt = Optimizer(
+        [(-2.0, 2.0), (-3.0, 3.0)],
+        n_initial_points=1,
+        n_objectives=2,
+        objective_name_list=["foo", "bar"]
+    )
+    opt.tell([x], [y])
+    estimate = opt.estimate(x)[0]
+    assert_almost_equal(estimate.foo.mean, y[0])
+    assert_almost_equal(estimate.bar.mean, y[1])
