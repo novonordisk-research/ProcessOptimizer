@@ -907,9 +907,10 @@ class Optimizer(object):
             # list of tuples, each tuple containing two arrays, one for the
             # mean and one for the standard deviation; each array has one
             # element per x.
-            predict_list = [model.predict(transformed_x, return_std=True) for
-                            model in self_with_observation_noise.models[-1]
-                            ]
+            predict_list = [
+                model.predict(transformed_x, return_std=True) for
+                model in self_with_observation_noise.models[-1]
+            ]
             noiseless_predict_list = [
                 model.predict(transformed_x, return_std=True) for
                 model in self_without_observation_noise.models[-1]
