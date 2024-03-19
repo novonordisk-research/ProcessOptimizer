@@ -28,14 +28,14 @@ setup(
         "ProcessOptimizer.learning.gaussian_process",
     ],
     install_requires=[
-        "numpy>=1.0.0",
-        "matplotlib>=1.0.0",
-        "scipy>=1.0.0",
-        "bokeh>=1.0.0",
+        "numpy",
+        "matplotlib",
+        "scipy",
+        "bokeh",
         "scikit-learn>=0.24.2",
-        "six>=1.0.0",
-        "deap>=1.0.0",
-        "pyYAML>=1.0.0",
+        "six",
+        "deap",
+        "pyYAML",
     ],
     extras_require={
         "browniebee": [
