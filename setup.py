@@ -21,7 +21,6 @@ setup(
         "ProcessOptimizer",
         "ProcessOptimizer.learning",
         "ProcessOptimizer.model_systems",
-        "ProcessOptimizer.model_systems.data",
         "ProcessOptimizer.optimizer",
         "ProcessOptimizer.space",
         "ProcessOptimizer.utils",
