@@ -39,7 +39,7 @@ setup(
     ],
     extras_require={
         "browniebee": [
-            "bokeh==3.1.1",
+            "bokeh==3.4.0",
             "deap==1.4.1",
             "matplotlib==3.7.2",
             "numpy==1.24.4",
