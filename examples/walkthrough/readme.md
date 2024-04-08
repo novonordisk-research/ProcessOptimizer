@@ -1,4 +1,4 @@
-# Gold mining examples
+# Gold mining examples (Walkthrough)
 
 The gold mining examples are a series of Jupyter notebooks that introduce the basic use
 of the `ProcessOptimizer` through a simple example. The example follows an attempt to find
