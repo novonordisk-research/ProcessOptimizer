@@ -425,9 +425,9 @@ def get_plot_list(layout, result, active_list, n_points, x_eval, confidence):
                 # We plot samples as black circles and the evaluation marker
                 # as a red circle.
                 plot.circle(x='x', y='y', source=source_samples,
-                            radius=2, color="black", alpha=0.5)
+                            radius=0.2, color="black", alpha=0.5)
                 plot.circle(x='x', y='y', source=source_red,
-                            radius=5, color="red", alpha=1)
+                            radius=0.5, color="red", alpha=1)
 
             # We rotate the categorical labels slighty
             # so they take up less space
