@@ -234,6 +234,31 @@ def test_SumEquals():
     # Check that the other dimensions have correct type
     assert isinstance(samples[0][3], str)
     assert not isinstance(samples[0][2], str)
+    
+    # Test that we can ask for multiple points at a time, as long as we have 
+    # less than n_initial_points of data
+    space = Space([[0.0, 10.0], [0.0, 10.0]])
+    cons = Constraints([SumEquals((0, 1), 5)], space)
+    opt = Optimizer(
+        dimensions=space,
+        lhs=False,
+        n_initial_points=10,
+    )
+    opt.set_constraints(cons)
+    assert opt.ask(10)
+    # We should not be able to ask for 11
+    with raises(ValueError):
+        opt.ask(11)
+    # Check that we can ask for multiple experiments piecemeal up to 
+    # n_initial_points (here 10), but not after
+    for i in range(5):
+        x = opt.ask(2)
+        y = [2, 2]
+        opt.tell(x, y)
+    with raises(ValueError):
+        opt.ask(2)
+    
+    
 
 @pytest.mark.fast_test
 def test_Conditional():
