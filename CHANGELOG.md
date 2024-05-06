@@ -10,11 +10,13 @@
 
 - 
 
-## Version 0.9.5
+## Version 0.9.5 (May 2024)
 
 ### Changes
 
 - Updated package requirements for Brownie Bee user interface.
+- Examples reworked.
+- opt.estimate() implemented - Works in non-transformed space and on all objectives.
 
 ### Bugfixes
 
