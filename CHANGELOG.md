@@ -1,14 +1,27 @@
 # Release history
 
-## Version 0.9.5 [unpublished]
+## Version 0.9.6 [unpublished]
 
 ### Changes
 
--
+- 
 
 ### Bugfixes
 
--
+- 
+
+## Version 0.9.5
+
+### Changes
+
+- Updated package requirements for Brownie Bee user interface.
+
+### Bugfixes
+
+- Fix that categorical dimensions with more than two levels induces error when used 
+  together with SumEqual constraint.
+- Fix that Bokeh has changed naming convention related to sizes of circles in their
+  plots from "size" to "radius".
 
 ## Version 0.9.4
 
