@@ -130,4 +130,4 @@ To upload a new version to PyPi do the following in the root folder of the proje
 - Remember to `pip install twine` if running in a new virtual env. (You might also have to `pip install wheel`)
 - Run `python setup.py sdist bdist_wheel`
 - Run `python -m twine upload dist/*` (make sure that /dist only contains relevant version)
-- (Remember that pypi has changed the way it handles credentials, you might have to state username: __token__ and then use your token value (incl pypi-prefix) as password. As stated here https://pypi.org/help/#apitoken
+- (Remember that pypi has changed the way it handles credentials, you might have to state username: [dunderscore]token[dunderscore] and then use your token value (incl pypi-prefix) as password. As stated here https://pypi.org/help/#apitoken
