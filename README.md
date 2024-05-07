@@ -60,7 +60,7 @@ def Booth(x0, x1):
 Below is an image of the Booth function.
 
 
-![Model for "unknown" truth](/media/Booth_function.png&raw=True)
+![Model for "unknown" truth](/media/Booth_function.png?raw=True)
 
 Suppose you are given the task of minimizing the function on the domain only using empirical observations and without any analytical function. <br/>
 Working with the ProcessOptimizer package you simply define the `Space` and create an `Optimizer` object.<br/>
@@ -96,7 +96,7 @@ Notice that this is an optimization tool and not a modelling tool. This means th
 
 The best observation against the number of observations can be plotted with `plot_convergence(res)`:
  
-![BayesianOptimization in action](/media/Convergence_plot.png&raw=True)
+![BayesianOptimization in action](/media/Convergence_plot.png?raw=True)
 
 ## Citation
 
