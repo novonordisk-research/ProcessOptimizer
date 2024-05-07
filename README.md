@@ -21,7 +21,6 @@
 </div>
 
 ----------
-This readme.md is work in progress
 
 ## Table of Contents
  * [ProcessOptimizer](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#processoptimizer)
@@ -53,22 +52,26 @@ Bayesian optimization is a great tool for optimizing black-box functions where t
 Below is an illustrative example of minimization of the Booth function in 2 dimensions using the `ProcessOptimizer` package. Notice that in real world applications the function would be black box (and typically the input space would have more than 2 dimensions). However, it would still be possible to evaluate the function given a set of input values and thus use the same framework for optimization. <br/>
 The Booth function is a 2-dimensional function defined by [Booth Function (sfu.ca)](https://www.sfu.ca/~ssurjano/booth.html). In this example uniformly distributed random noise between 0-5% of the function value is added using `np.random`.
 ```python
+import numpy as np
+
 def Booth(x0, x1):
     return ((x0 + 2 * x1 - 7)**2 + (2 * x0 + x1 - 5)**2) * (1 + 0.05 * np.random.rand())
 ```
-Below is an image of the Booth function on the square <img src="https://render.githubusercontent.com/render/math?math=x_i \in \left[ 0,5 \right]"> for i=0,1.
+Below is an image of the Booth function on the square ![Booth function](https://render.githubusercontent.com/render/math?math=x_i%20%5Cin%20%5Cleft%5B%200%2C5%20%5Cright%5D) for i=0,1.
 
 
-![BayesianOptimization in action](https://raw.githubusercontent.com/novonordisk-research/ProcessOptimizer/a6a59e5aee58d2737feabe7c3fba86c58112e43a/examples/Booth_function.png)
+![BayesianOptimization in action](https://raw.githubusercontent.com/novonordisk-research/ProcessOptimizer/a6a59e5aee58d2737feabe7c3fba86c58112e43a/media/Booth_function.png)
 
 Suppose you are given the task of minimizing the function on the domain only using empirical observations and without any analytical function. <br/>
 Working with the ProcessOptimizer package you simply define the `Space` and create an `Optimizer` object.<br/>
 The `Space` object takes a list of dimensions which can either be `Real`, `Integer` or `Categorical`. `Real` dimensions are defined by the maximum and minimum values.<br/>
 The `Optimizer` object initialized below uses GP (Gaussian Process). This means that after each step a Gaussian Process is fitted to the observations, which is used as a posterior distribution. Combined with an acquisition function the next point that should be explored can be determined. Notice that this process only takes place once n_initial_points of initial data has been aqcuired. In this case `LHS = True` (latin hypercube sampling) has been used as the initial sampling strategy for the first 6 points.
 ```python
-SPACE = Space([Real(0,5), Real(0,5)])   
+import ProcessOptimizer as po
 
-opt = Optimizer(SPACE, base_estimator = "GP", n_initial_points = 6, lhs = True)
+SPACE = po.Space([Real(0,5), Real(0,5)])   
+
+opt = po.Optimizer(SPACE, base_estimator = "GP", n_initial_points = 6, lhs = True)
 ```
 The optimizer can now be used in steps by calling the `.ask()` function, evaluating the function at the given point and use `.tell()` the `Optimizer` the result. In practise it would work like this. First ask the optimizer for the next point to perform an experiment:
 ```python
@@ -86,14 +89,14 @@ res = opt.tell([3.75, 3.75], 59.313996676981354)
 ```
 The `res` object returned by tell contains a model of the Gaussian Process predicted mean. This model can be plotted using `plot_objective(res)`. Below is a gif of how the Gaussian Process predicted mean evolves after the first 6 initial points and until 20 points have been sampled in total. The orange dots visualise each evaluation of the function and the red dot shows the position of the expected minimum. In the diagonal of the figure dependence plots are shown. These show how the function depend on each input variable with other input variables kept constant at the expected minimum.
 
-<img src="https://raw.githubusercontent.com/novonordisk-research/ProcessOptimizer/a6a59e5aee58d2737feabe7c3fba86c58112e43a/examples/BO_GIF.gif" width="500">
+<img src="https://raw.githubusercontent.com/novonordisk-research/ProcessOptimizer/a6a59e5aee58d2737feabe7c3fba86c58112e43a/media/BO_GIF.gif" width="500">
 
  
 Notice that this is an optimization tool and not a modelling tool. This means that the optimizer finds an approximate solution for the global minimum quickly however it does not guarantee that the Gaussian Process predicted mean is an accurate model on the entire domain.<br/>
 
 The best observation against the number of observations can be plotted with `plot_convergence(res)`:
  
-![BayesianOptimization in action](https://raw.githubusercontent.com/novonordisk-research/ProcessOptimizer/a6a59e5aee58d2737feabe7c3fba86c58112e43a/examples/Convergence_plot.png)
+![BayesianOptimization in action](https://raw.githubusercontent.com/novonordisk-research/ProcessOptimizer/a6a59e5aee58d2737feabe7c3fba86c58112e43a/media/Convergence_plot.png)
 
 ## Citation
 
