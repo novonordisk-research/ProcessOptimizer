@@ -57,10 +57,10 @@ import numpy as np
 def Booth(x0, x1):
     return ((x0 + 2 * x1 - 7)**2 + (2 * x0 + x1 - 5)**2) * (1 + 0.05 * np.random.rand())
 ```
-Below is an image of the Booth function on the square ![Booth function](https://render.githubusercontent.com/render/math?math=x_i%20%5Cin%20%5Cleft%5B%200%2C5%20%5Cright%5D) for i=0,1.
+Below is an image of the Booth function.
 
 
-![BayesianOptimization in action](https://raw.githubusercontent.com/novonordisk-research/ProcessOptimizer/a6a59e5aee58d2737feabe7c3fba86c58112e43a/media/Booth_function.png)
+![Model for "unknown" truth](/media/Booth_function.png&raw=True)
 
 Suppose you are given the task of minimizing the function on the domain only using empirical observations and without any analytical function. <br/>
 Working with the ProcessOptimizer package you simply define the `Space` and create an `Optimizer` object.<br/>
@@ -96,7 +96,7 @@ Notice that this is an optimization tool and not a modelling tool. This means th
 
 The best observation against the number of observations can be plotted with `plot_convergence(res)`:
  
-![BayesianOptimization in action](https://raw.githubusercontent.com/novonordisk-research/ProcessOptimizer/a6a59e5aee58d2737feabe7c3fba86c58112e43a/media/Convergence_plot.png)
+![BayesianOptimization in action](/media/Convergence_plot.png&raw=True)
 
 ## Citation
 
