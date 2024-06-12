@@ -9,7 +9,7 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "monthly"
-    assignees:
+    reviewers:
     # I can't get groups to work, so I'm just listing all the maintainers here. Not ideal, but it should work.
       - "SRFU-NN"
       - "sqbl"
@@ -17,6 +17,9 @@ updates:
     commit-message:
       # Prefix all commit messages with "[pip] " (no colon, but a trailing whitespace)
       prefix: "[pip] "
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-patch", "version-update:semver-minor"] # Ignore everything except major updates with semantic versioning
 
   # Maintain dependencies for GitHub Actions
   - package-ecosystem: "github-actions"
@@ -24,7 +27,7 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
-    assignees:
+    reviewers:
     # I can't get groups to work, so I'm just listing all the maintainers here. Not ideal, but it should work.
       - "SRFU-NN"
       - "sqbl"

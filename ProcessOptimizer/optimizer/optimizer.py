@@ -1,7 +1,9 @@
 import sys
 import warnings
+from collections import namedtuple
 from math import log
 from numbers import Number
+from typing import Collection, List
 
 import numpy as np
 
@@ -43,9 +45,9 @@ class Optimizer(object):
     noise between each refitting (read: while adding new data). This is
     described in Rasmussen and Williams chapter 2.
     Some users might want to plot, predict or sample from a model that includes
-    the modelling of the experimental noise: in that case, two helper methods
-    can "switch" the noise "on/off". Functions are called 'add_modelled_noise'
-    and 'remove_modelled_noise'.
+    the modelling of the observational noise: in that case, two helper methods
+    can "switch" the noise "on/off". Functions are called 'add_observational_noise'
+    and 'remove_observational_noise'.
 
     Parameters
     ----------
@@ -143,7 +145,8 @@ class Optimizer(object):
         Number of objectives to be optimized.
         When n_objectives>1 the optimizer will fit models for each objective and the Pareto front can be approximated using NSGA2
 
-
+    * `objective_name_list` [list[str], default ["Y"] or ["Y1","Y2",...]]:
+        The names of the objetive(s).
 
     Attributes
     ----------
@@ -173,6 +176,7 @@ class Optimizer(object):
         acq_func_kwargs=None,
         acq_optimizer_kwargs=None,
         n_objectives=1,
+        objective_name_list: List[str] = None,
     ):
         self.rng = check_random_state(random_state)
 
@@ -312,6 +316,22 @@ class Optimizer(object):
             else:
                 self._non_cat_inds.append(ind)
 
+        # Setting the objective name list
+        if objective_name_list is None:
+            if n_objectives == 1:
+                objective_name_list = ["Y"]
+            else:
+                objective_name_list = [
+                    f"Y{num+1}" for num in range(n_objectives)
+                ]
+        if len(objective_name_list) != n_objectives:
+            raise ValueError(
+                "Objective name list must have length n_objectives "
+                f"({n_objectives}), but has length {len(objective_name_list)} "
+                f"(content {objective_name_list})"
+            )
+        self.objective_name_list = objective_name_list
+
         # Initialize storage for optimization
 
         self.models = []
@@ -408,6 +428,28 @@ class Optimizer(object):
         if not ((isinstance(n_points, int) and n_points > 0) or n_points is None):
             raise ValueError("n_points should be int > 0, got " + str(n_points))
         # These are the only filling strategies which are supported
+        
+        if strategy == "stbr_full" and self._n_initial_points < 1:
+            # Steienerberger sampling can not be used from an empty Xi set
+            if self.Xi == []:
+                raise ValueError(
+                    "Steinerberger sampling requires initial points but got [] "
+                )
+
+            if n_points is None:
+                # Returns a single Steinerberger point
+                X = self.stbr_scipy()
+            else:
+                # Returns 'n_points' Steinerberger points
+                X = self.stbr_scipy(n_points=n_points)
+            return X
+        
+        if n_points is None or n_points == 1:
+            return self._ask()
+        
+        # The following assertions deal with cases in which the user asks for more than
+        # single experiments
+        
         supported_strategies = [
             "cl_min",
             "cl_mean",
@@ -424,25 +466,12 @@ class Optimizer(object):
                 + ", "
                 + "got %s" % strategy
             )
-
-        if strategy == "stbr_full" and self._n_initial_points < 1:
-            # Steienerberger sampling can not be used from an empty Xi set
-            if self.Xi == []:
-                raise ValueError(
-                    "Steinerberger sampling requires initial points but got [] "
-                )
-
-            if n_points is None:
-                # Returns a single Steinerberger point
-                X = self.stbr_scipy()
-            else:
-                # Returns 'n_points' Steinerberger points
-                X = self.stbr_scipy(n_points=n_points)
-            return X
-
-        if n_points is None or n_points == 1:
-            return self._ask()
-
+        
+        if strategy in ["stbr_fill", "stbr_full"] and self.get_constraints() is not None:
+            raise ValueError(
+                "Steinerberger (default setting) sampling can not be used with constraints,\
+                try using another strategy like 'opt.ask(n,strategy='cl_min')'"
+            )
         # Caching the result with n_points not None. If some new parameters
         # are provided to the ask, the cache_ is not used.
         if (n_points, strategy) in self.cache_:
@@ -815,6 +844,100 @@ class Optimizer(object):
             constraints=self._constraints,
         )
 
+    def estimate(self, x: Collection) -> List[namedtuple]:
+        """
+        Estimates the objective function value(s) for the point(s) `x`.
+
+        Parameters
+        ----------
+        * `x` [list or list-of-lists]:
+            Point(s) at which to estimate the objective function value(s).
+
+        Returns
+        -------
+        * `y` [list[namedtuple]]:
+            List of estimations with the same length as `x`. Each element has
+            a field per objective of the optimizer named after the objectives
+            ("Y" or "Y1", "Y2",... by default). Each objective field contains
+            a single objective estimation with field names "mean" and "std".
+            For single objective optimizers, the estimation has the fields
+            "mean" and "std", and a field with the same name as the objective
+            ("Y" by default), which in turn has the fields "mean" and "std".
+        """
+        self_with_observation_noise = self.copy()
+        self_with_observation_noise.add_observational_noise()
+        self_without_observation_noise = self.copy()
+        self_without_observation_noise.remove_observational_noise()
+        single_objective_estimation = namedtuple(
+            "single_objective_estimation", ["mean", "std", "std_model"]
+        )
+        check_x_in_space(x, self.space)
+        if not is_2Dlistlike(x):
+            x = np.asarray(x).reshape(1, -1).tolist()
+            # If only one point is given, make it an array
+        transformed_x = self.space.transform(x)
+        if self.n_objectives == 1:
+            estimation = namedtuple(
+                "estimation",
+                self.objective_name_list
+                + list(single_objective_estimation._fields),
+            )  # For single objective optimizers, the returned list's elements
+            # are namedtuples, with a field named after the objective ("Y" by
+            # default), which in turn has the fields "mean" and "std", for
+            # consistency with multiobjective. They also have the fields "mean"
+            # and "std", for ease of use.
+            prediction = self_with_observation_noise.models[-1].predict(
+                transformed_x, return_std=True
+            )
+            (_, noiseless_predicted_std) = self_without_observation_noise.models[-1].predict(
+                transformed_x, return_std=True
+            )
+            # The estimate is "packed" different than sci-kit learn predictions
+            # are. The predictions are a tuple of two arrays, one for the mean
+            # and one for the standard deviation; each array has one element
+            # per parameter combination. The estimate is a list of namedtuples,
+            # each with two fields, one for the mean and one for the standard
+            # deviation; each list element corresponds to one parameter
+            # combination.
+            estimate_list = [
+                estimation(
+                    single_objective_estimation(mean, std, std_model),
+                    mean,
+                    std,
+                    std_model
+                ) for
+                mean, std, std_model in zip(
+                    prediction[0], prediction[1], noiseless_predicted_std
+                )
+            ]
+        else:
+            estimation = namedtuple("estimation", self.objective_name_list)
+            # Make a list of predictions, one for each objective. This is a
+            # list of tuples, each tuple containing two arrays, one for the
+            # mean and one for the standard deviation; each array has one
+            # element per x.
+            predict_list = [
+                model.predict(transformed_x, return_std=True) for
+                model in self_with_observation_noise.models[-1]
+            ]
+            noiseless_predict_list = [
+                model.predict(transformed_x, return_std=True) for
+                model in self_without_observation_noise.models[-1]
+            ]
+            estimate_list = []
+            for i in range(len(x)):
+                # For each x and objective, create the
+                # single_objective_estimation and append it to the list of
+                # estimations for that x
+                estimate_list.append([single_objective_estimation(
+                            predict_list[j][0][i],
+                            predict_list[j][1][i],
+                            noiseless_predict_list[j][1][i]
+                        ) for j in range(self.n_objectives)])
+            # Packing the list of estimations for each x into a namedtuple.
+            estimate_list = [estimation(*result) for result in estimate_list]
+        return estimate_list
+
     def _check_y_is_valid(self, x, y):
         """Check if the shape and types of x and y are consistent."""
 
@@ -889,11 +1012,19 @@ class Optimizer(object):
         * `constraints` [list] or [Constraints]:
             Can either be a list of Constraint objects or a Constraints object
         """
+                
+        if self.n_objectives > 1:
+            raise RuntimeError(
+            "Can't set constraints for multiobjective optimization. The NSGA-II algorithm \
+            used for multiobjective optimization does not support constraints."
+            )
+            
         if self._n_initial_points > 0 and self._lhs:
             raise RuntimeError(
-                "Can't set constraints while latin hypercube sampling points are not exhausted."
+                "Can't set constraints while latin hypercube sampling points are not exhausted.\
+                Consider reinitialising the optimizer with lhs=False as argument."
             )
-
+            
         if constraints:
             if isinstance(constraints, Constraints):
                 # If constraints is a Constraints object we simply add it
@@ -1142,47 +1273,61 @@ class Optimizer(object):
 
         return pop, logbook, front
 
+    def add_observational_noise(self):
+        """
+        This method will add the noise that has been modelled to fit the data.
+        (The noise is disabled by default to reflect description in book on
+        gaussian processes for Machine Learning. This has been described in
+        Eq 2.24 of http://www.gaussianprocess.org/gpml/chapters/RW2.pdf)
+        """
+        if self.n_objectives > 1:
+            for model in self.models[-1]:
+                self.add_observational_noise_single_model(model)
+        else:
+            self.add_observational_noise_single_model(self.models[-1])
+
     # This function adds the modelled white noise to the regressor to allow predictions including noise
-    def add_modelled_noise(self):
-        """
-        This method will add the noise that has been modelled to fit the data. (The noise is disabled
-        by default to reflect description in book on gaussian processes for Machine Learning
-        This has been described in Eq 2.24 of
-        http://www.gaussianprocess.org/gpml/chapters/RW2.pdf)
-        """
+    def add_observational_noise_single_model(self, model):
         if (
-            isinstance(self.models[-1].noise, str)
-            and self.models[-1].noise != "gaussian"
+            isinstance(model.noise, str)
+            and model.noise != "gaussian"
         ):
             raise ValueError(
-                "Expected noise to be 'gaussian', got %s" % self.models[-1].noise
+                "Expected noise to be 'gaussian', got %s" % model.noise
             )
-        noise_estimate = self.models[-1].noise_
+        noise_estimate = model.noise_
         white_present, white_param = _param_for_white_kernel_in_Sum(
-            self.models[-1].kernel_
+            model.kernel_
         )
         if white_present:
-            self.models[-1].kernel_.set_params(
+            model.kernel_.set_params(
                 **{white_param: WhiteKernel(noise_level=noise_estimate)}
             )
 
-    def remove_modelled_noise(self):
+    def remove_observational_noise(self):
         """
-        This method resets the noise levels to only include the "true" uncertaincy of the main kernel
-        used for fitting and predicting. This method can be used in conjunction with the
-        'add_modelled_noise()'
+        This method resets the noise levels to only include the "true"
+        uncertaincy of the main kernel used for fitting and predicting. This
+        method can be used in conjunction with the 'add_modelled_noise()'
         """
+        if self.n_objectives > 1:
+            for model in self.models[-1]:
+                self.remove_observational_noise_single_model(model)
+        else:
+            self.remove_observational_noise_single_model(self.models[-1])
+
+    def remove_observational_noise_single_model(self, model):
         if (
-            isinstance(self.models[-1].noise, str)
-            and self.models[-1].noise != "gaussian"
+            isinstance(model.noise, str)
+            and model.noise != "gaussian"
         ):
             raise ValueError(
-                "expected noise to be 'gaussian', got %s" % self.models[-1].noise
+                "expected noise to be 'gaussian', got %s" % model.noise
             )
         white_present, white_param = _param_for_white_kernel_in_Sum(
-            self.models[-1].kernel_
+            model.kernel_
         )
         if white_present:
-            self.models[-1].kernel_.set_params(
+            model.kernel_.set_params(
                 **{white_param: WhiteKernel(noise_level=0.0)}
             )

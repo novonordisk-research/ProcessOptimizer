@@ -2299,7 +2299,7 @@ def plot_Pareto_bokeh(
     r1 = p.circle(
             list(data_observed_dict.keys())[0],
             list(data_observed_dict.keys())[1],
-            size=10,
+            radius=1,
             source=source_observed,
             legend_label="Observed datapoints",
             fill_alpha=0.4,
@@ -2317,7 +2317,7 @@ def plot_Pareto_bokeh(
     r2 = p.circle(
             list(data_calculated_dict.keys())[0],
             list(data_calculated_dict.keys())[1],
-            size=10,
+            radius=1,
             source=source_calculated,
             color="red",
             legend_label="Estimated Pareto front",

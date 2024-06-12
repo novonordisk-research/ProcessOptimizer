@@ -11,7 +11,7 @@ with open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="ProcessOptimizer",
-    version="0.9.3",
+    version="0.9.5",
     description="Sequential model-based optimization toolbox \
     (forked from scikit-optimize)",
     url="https://github.com/novonordisk-research/ProcessOptimizer",
@@ -28,26 +28,25 @@ setup(
         "ProcessOptimizer.learning.gaussian_process",
     ],
     install_requires=[
-        "numpy>=1.0.0",
-        "matplotlib>=1.0.0",
-        "scipy>=1.0.0",
-        "bokeh>=1.0.0",
+        "numpy",
+        "matplotlib",
+        "scipy",
+        "bokeh",
         "scikit-learn>=0.24.2",
-        "six>=1.0.0",
-        "deap>=1.0.0",
-        "pyYAML>=1.0.0",
+        "six",
+        "deap",
+        "pyYAML",
     ],
     extras_require={
         "browniebee": [
-            "bokeh==3.1.1",
+            "bokeh==3.4.1",
             "deap==1.4.1",
-            "matplotlib==3.7.2",
-            "numpy==1.24.4",
+            "matplotlib==3.8.4",
+            "numpy==1.26.4",
             "pyYAML==6.0.1",
-            "scikit-learn==1.3.0",
-            "scipy==1.10.1",
+            "scikit-learn==1.4.2",
+            "scipy==1.13.0",
             "six==1.16.0",
-            "tornado==6.3.3",
         ]
     },
     long_description=long_description,

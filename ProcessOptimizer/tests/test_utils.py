@@ -202,7 +202,7 @@ def test_expected_minimum_respects_constraints():
     )
     constraints = [SumEquals(dimensions=[0, 1, 2], value=2)]
     opt.set_constraints(constraints)
-    x = opt.ask(3)
+    x = opt.ask(3,strategy='cl_min')
     y = [1, 2, 0]
     result = opt.tell(x, y)
     x_min, _ = expected_minimum(result, random_state=1, return_std=False)
