@@ -35,18 +35,12 @@ def poly2_score(x):
     )
 
 
-poly2 = ModelSystem(
-    poly2_score,
-    [(-1.0, 1.0), (-1.0, 1.0)],
-    noise_model="constant",
-    true_max=-1.270,
-    true_min=-2.0512,
-)
-
-poly2_no_noise = ModelSystem(
-    poly2_score,
-    [(-1.0, 1.0), (-1.0, 1.0)],
-    noise_model=None,
-    true_max=-1.270,
-    true_min=-2.0512,
-)
+def create_poly2(noise: bool = True) -> ModelSystem:
+    noise_model = "constant" if noise else None
+    return ModelSystem(
+        poly2_score,
+        [(-1.0, 1.0), (-1.0, 1.0)],
+        noise_model=noise_model,
+        true_max=-1.270,
+        true_min=-2.0512,
+    )
