@@ -2,6 +2,7 @@ from .branin_hoo import create_branin
 from .color_pH import create_color_ph
 from .gold_map import create_gold_map
 from .gold_map_with_wells import create_gold_map_with_wells
+from .hart3 import create_hart3
 from .model_system import ModelSystem
 
 
@@ -29,5 +30,9 @@ def get_model_system(model_system: str) -> ModelSystem:
         return create_gold_map()
     elif model_system == "gold_map_with_wells":
         return create_gold_map_with_wells()
+    elif model_system == "hart3":
+        return create_hart3()
+    elif model_system == "hart3_no_noise":
+        return create_hart3(noise=False)
     else:
         raise ValueError(f"Model system {model_system} not found.")

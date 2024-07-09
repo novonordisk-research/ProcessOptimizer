@@ -40,18 +40,16 @@ def hart3_score(x):
     return -np.sum(alpha * np.exp(-np.sum(A * (np.array(x) - P) ** 2, axis=1)))
 
 
-hart3 = ModelSystem(
-    hart3_score,
-    [(0.0, 1.0), (0.0, 1.0), (0.0, 1.0)],
-    noise_model="constant",
-    true_max=0.0,
-    true_min=-3.863,
-)
-
-hart3_no_noise = ModelSystem(
-    hart3_score,
-    [(0.0, 1.0), (0.0, 1.0), (0.0, 1.0)],
-    noise_model=None,
-    true_max=0.0,
-    true_min=-3.863,
-)
+def create_hart3(noise=bool)-> ModelSystem:
+    hart3 = ModelSystem(
+        hart3_score,
+        [(0.0, 1.0), (0.0, 1.0), (0.0, 1.0)],
+        noise_model="constant",
+        true_max=0.0,
+        true_min=-3.863,
+    )
+    if noise:
+        return hart3
+    else:
+        hart3.set_noise_model(noise_model=None)
+        return hart3

@@ -9,7 +9,6 @@ from .noise_models import (
     noise_model_factory,
 )
 from .model_system_getter import get_model_system
-from .hart3 import hart3, hart3_no_noise
 from .hart6 import hart6, hart6_no_noise
 from .poly2 import poly2, poly2_no_noise
 from .peaks import peaks, peaks_no_noise
@@ -24,8 +23,6 @@ __all__ = [
     "parse_noise_model",
     "noise_model_factory",
     "get_model_system",
-    "hart3",
-    "hart3_no_noise",
     "hart6",
     "hart6_no_noise",
     "poly2",

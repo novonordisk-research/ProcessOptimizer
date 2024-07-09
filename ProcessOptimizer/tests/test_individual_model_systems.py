@@ -3,7 +3,6 @@ import unittest
 import numpy as np
 from ProcessOptimizer.model_systems import (
     get_model_system,
-    hart3_no_noise,
     hart6_no_noise,
     poly2_no_noise,
     peaks_no_noise,
@@ -34,6 +33,7 @@ class TestIndividualModelSystem(unittest.TestCase):
             self.assertAlmostEqual(value, 0.397887, places=5)
 
     def test_hart3(self):
+        hart3_no_noise = get_model_system("hart3_no_noise")
         assert hart3_no_noise.noise_size == 0
         assert hart3_no_noise.space.bounds == [(0, 1), (0, 1), (0, 1)]
 
