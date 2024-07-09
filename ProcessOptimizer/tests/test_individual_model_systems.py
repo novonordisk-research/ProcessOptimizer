@@ -2,8 +2,7 @@ import unittest
 
 import numpy as np
 from ProcessOptimizer.model_systems import (
-    branin,
-    branin_no_noise,
+    get_model_system,
     hart3_no_noise,
     hart6_no_noise,
     poly2_no_noise,
@@ -16,6 +15,8 @@ from ProcessOptimizer import Real
 class TestIndividualModelSystem(unittest.TestCase):
     # Make a test for the branin ModelSystem
     def test_branin(self):
+        branin = get_model_system("branin_hoo")
+        branin_no_noise = get_model_system("branin_no_noise")
         assert branin.noise_size == 0.1
         assert type(branin.noise_model) == ProportionalNoise
         assert len(branin.space.dimensions) == 2
