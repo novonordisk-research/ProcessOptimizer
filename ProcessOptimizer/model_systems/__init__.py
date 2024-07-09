@@ -8,7 +8,6 @@ from .noise_models import (
     parse_noise_model,
     noise_model_factory,
 )
-from .color_pH import color_pH
 from .model_system_getter import get_model_system
 from .gold_map import gold_map
 from .gold_map_with_wells import gold_map_with_wells
@@ -18,7 +17,6 @@ from .poly2 import poly2, poly2_no_noise
 from .peaks import peaks, peaks_no_noise
 
 __all__ = [
-    "color_pH",
     "ModelSystem",
     "DataDependentNoise",
     "ZeroNoise",
