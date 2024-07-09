@@ -1,5 +1,7 @@
 from .branin_hoo import create_branin
 from .color_pH import create_color_ph
+from .gold_map import create_gold_map
+from .gold_map_with_wells import create_gold_map_with_wells
 from .model_system import ModelSystem
 
 
@@ -23,5 +25,9 @@ def get_model_system(model_system: str) -> ModelSystem:
         return create_branin(noise=False)
     elif model_system in ["color_ph", "color_pH", "colour_ph", "colour_pH"]:
         return create_color_ph()
+    elif model_system == "gold_map":
+        return create_gold_map()
+    elif model_system == "gold_map_with_wells":
+        return create_gold_map_with_wells()
     else:
         raise ValueError(f"Model system {model_system} not found.")
