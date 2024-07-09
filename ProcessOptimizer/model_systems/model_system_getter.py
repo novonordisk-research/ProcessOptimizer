@@ -1,4 +1,5 @@
 from .branin_hoo import create_branin
+from .color_pH import create_color_ph
 from .model_system import ModelSystem
 
 
@@ -20,5 +21,7 @@ def get_model_system(model_system: str) -> ModelSystem:
         return create_branin(noise=True)
     elif model_system in ["branin_no_noise", "branin_hoo_no_noise"]:
         return create_branin(noise=False)
+    elif model_system in ["color_ph", "color_pH", "colour_ph", "colour_pH"]:
+        return create_color_ph()
     else:
         raise ValueError(f"Model system {model_system} not found.")
