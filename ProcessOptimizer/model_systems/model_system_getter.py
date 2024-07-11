@@ -23,31 +23,31 @@ def get_model_system(model_system: str) -> ModelSystem:
     * `model_system` [ModelSystem]:
         The model system object.
     """
-    if model_system == "branin_hoo":
-        return create_branin(noise=True)
-    elif model_system in ["branin_no_noise", "branin_hoo_no_noise"]:
-        return create_branin(noise=False)
-    elif model_system in ["color_ph", "color_pH", "colour_ph", "colour_pH"]:
-        return create_color_ph()
-    elif model_system == "gold_map":
-        return create_gold_map()
-    elif model_system == "gold_map_with_wells":
-        return create_gold_map_with_wells()
-    elif model_system == "hart3":
-        return create_hart3()
-    elif model_system == "hart3_no_noise":
-        return create_hart3(noise=False)
-    elif model_system == "hart6":
-        return create_hart6()
-    elif model_system == "hart6_no_noise":
-        return create_hart6(noise=False)
-    elif model_system == "poly2":
-        return create_poly2()
-    elif model_system == "poly2_no_noise":
-        return create_poly2(noise=False)
-    elif model_system == "peaks":
-        return create_peaks()
-    elif model_system == "peaks_no_noise":
-        return create_peaks(noise=False)
+    creator_dict = {
+        "branin_hoo": (create_branin,),
+        "branin_no_noise": (create_branin, False),
+        "color_ph": (create_color_ph,),
+        "color_pH": (create_color_ph,),
+        "colour_ph": (create_color_ph,),
+        "colour_pH": (create_color_ph,),
+        "gold_map": (create_gold_map,),
+        "gold_map_with_wells": (create_gold_map_with_wells,),
+        "hart3": (create_hart3,),
+        "hart3_no_noise": (create_hart3, False),
+        "hart6": (create_hart6,),
+        "hart6_no_noise": (create_hart6, False),
+        "poly2": (create_poly2,),
+        "poly2_no_noise": (create_poly2, False),
+        "peaks": (create_peaks,),
+        "peaks_no_noise": (create_peaks, False),
+    }
+    if model_system not in creator_dict:
+        raise ValueError(
+            f"Model system {model_system} not found. "
+            f"Choose from {list(creator_dict.keys())}."
+        )
+    model_system_tuple = creator_dict[model_system]
+    if len(model_system_tuple) == 1:
+        return model_system_tuple[0]()
     else:
-        raise ValueError(f"Model system {model_system} not found.")
+        return model_system_tuple[0](noise=model_system_tuple[1])
