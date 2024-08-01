@@ -14,7 +14,7 @@ class TestIndividualModelSystem(unittest.TestCase):
         branin = get_model_system("branin_hoo")
         branin_no_noise = get_model_system("branin_no_noise")
         assert branin.noise_size == 0.1
-        assert type(branin.noise_model) == ProportionalNoise
+        assert type(branin.noise_model) is ProportionalNoise
         assert len(branin.space.dimensions) == 2
         assert branin.space.dimensions[0].name == "x1"
         assert branin.space.dimensions[1].name == "x2"
