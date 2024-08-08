@@ -216,7 +216,6 @@ def test_plot_objective_1d():
     assert isinstance(fig, mpl.figure.Figure)
 
 
-<<<<<<< HEAD
 def test_plot_brownie_bee():
     # Integration test of the plot function for Brownie Bee
     
@@ -288,8 +287,7 @@ def test_plot_brownie_bee():
     assert (xlim[0] >= 0) & (xlim[1] <= star_bins)
     
 
-=======
->>>>>>> origin/develop
+
 def test_plot_Pareto_bokeh_return_data():
     opt, x, y = build_Pareto_opt()
     output = plot_Pareto_bokeh(opt, return_data=True)
