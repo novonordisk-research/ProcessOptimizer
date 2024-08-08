@@ -4,7 +4,7 @@
 
 ### Changes
 
--
+- Documentation about the features in control parameters and sampling control parameters.
 
 ### Bugfixes
 
