@@ -1,10 +1,137 @@
 # Release history
 
-## Version 0.8.1 [unpublished]
+## Version 0.9.6 [unpublished]
 
 ### Changes
 
+- 
+
 ### Bugfixes
+
+- 
+
+## Version 0.9.5 (May 2024)
+
+### Changes
+
+- Updated package requirements for Brownie Bee user interface.
+- Examples reworked.
+- opt.estimate() implemented - Works in non-transformed space and on all objectives.
+
+### Bugfixes
+
+- Fix that categorical dimensions with more than two levels induces error when used 
+  together with SumEqual constraint.
+- Fix that Bokeh has changed naming convention related to sizes of circles in their
+  plots from "size" to "radius".
+
+## Version 0.9.4
+
+### Changes
+
+-
+
+### Bugfixes
+
+- Fix dependency on deprecated Matrix from scipy in favour of a numpy solution
+- Ensure prober warning/Errors when users try to combine constraints with operations that
+  doesn't support constraints.
+
+## Version 0.9.3
+
+### Changes
+
+-
+
+### Bugfixes
+
+- Fix install bug that precluded installation of 0.9.2
+
+## Version 0.9.2
+
+### Changes
+
+- Update ipynb file showing example of color_pH modelsystem. (Very minor)
+
+### Bugfixes
+
+- Fixed a bug in `expected_minimum` where SumEquals constraint values were not rescaled
+  correctly during normalization.
+
+## Version 0.9.1
+
+### Changes
+
+- Added colorpH as ModelSystem
+- Exposed Integer, Real, Categorical and ModelSystem as direct imports of ProcessOptimizer.
+
+### Bugfixes
+
+- Changed the result object to store information about constraints (when present).
+- Updated `expected_minimum` to make sure that the returned result location respects
+  SumEquals constraints if these were used during the optimization.
+
+## Version 0.9.0
+
+### Changes
+
+-
+
+### Bugfixes
+
+- Fix install issue in 0.8.2. Th installed package could not be imported.
+
+## Version 0.8.2
+
+### Changes
+
+- **BREAKING**: `cook_estimator`, `has_gradients`, and `use_named_args` are moved from
+  `utils` to `learning`.
+- **BREAKING**: `normalize_dimensions` is moved from `utils` to `space`.
+- **BREAKING**: `branin`, `hart3`, `hart6`, `poly2`, and `peaks` has been changed to noisy and noiseless `ModelSystem`s.
+- Implemented tests for ModelSystems.
+- `gold_map` exist as `ModelSystem`.
+- Sampling consolidated. There is now only one sampling function per `Dimension`.
+  Different sampling types (at the moment, random value sampling and Latin Hypercube
+  Sampling (LHS)) are handled through `Space`, referencing the sampling functions of the
+  `Dimesion`s
+- LHS now allows for arbitrary seeding, or for random seeding, better supporting
+  benchmarking. The algorithm still uses a fixed seed by default.
+- The module `space` uses `np.random.default_rng` as a random number generator, instead
+  of the deprecated `np.random.RandomState`. A bridging strategy allows it to still
+  accept `RandomState`s, but it will tranform them to `default_rng` for internal use.
+  The rest of the codebase still uses `RandomState`.
+- **BREAKING**: LHS now respects priors. This means that performing LHS on a space with
+  a log-normal `Real` `Dimension`, or a `Categorical` `Dimension` with informative
+  priors will give different results in this release than in previous releases.
+- **BREAKING**: The mechanism for seeding pseudorandom generators in the `space` module
+  have changed, meaning that, while the results are reproducible within a release, they
+  will not be the same as in old releases.
+- Bokeh is now (again) a required installation.
+
+### Bugfixes
+
+- Fixes to `DataDependentNoise` and `SumNoise` to avoid highly correlated
+  noise of the underlying noise models.
+- Switched to local imports internally to avoid circular import errors.
+- `NoiseModel._noise_distribution` is now a method, to allow changes of
+  `self._rng` to affect `self._noise_distribution` automatically.
+- Removed max_features='auto' to avoid using hardcoded variables to external functions
+
+## Version 0.8.1
+
+### Changes
+
+- Added additonal model systems to the list of benchmarks and made their
+  structure more consistent.
+- Added seeding to the noise models used for benchmarking to ensure
+  reproducible results when benchmarking.
+- Allow addition or removal of modelled noise to the optimizer object. This
+  is to allow user to predict the full outcome space of a given new exp.
+
+### Bugfixes
+
+- Fix a small number of deprecationwarnings.
 
 ## Version 0.8.0
 

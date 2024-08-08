@@ -10,27 +10,26 @@ from numpy.testing import assert_equal
 from numpy.testing import assert_raises_regex
 
 from ProcessOptimizer import Optimizer
-from ProcessOptimizer.space import Space
-from ProcessOptimizer.space import Real
-from ProcessOptimizer.space import Integer
-from ProcessOptimizer.space import Categorical
+from ProcessOptimizer import Space
+from ProcessOptimizer import Real
+from ProcessOptimizer import Integer
+from ProcessOptimizer import Categorical
+from ProcessOptimizer import space_factory
+from ProcessOptimizer.space import Dimension
 from ProcessOptimizer.space import check_dimension as space_check_dimension
-from ProcessOptimizer.space import space_factory
 
 
-def check_dimension(Dimension, vals, random_val):
-    x = Dimension(*vals)
-    assert_equal(x, Dimension(*vals))
-    assert x != Dimension(vals[0], vals[1] + 1)
-    assert x != Dimension(vals[0] + 1, vals[1])
-    assert_equal(x.rvs(random_state=1), random_val)
+def check_dimension(dimension, vals):
+    x = dimension(*vals)
+    assert_equal(x, dimension(*vals))
+    assert x != dimension(vals[0], vals[1] + 1)
+    assert x != dimension(vals[0] + 1, vals[1])
 
 
-def check_categorical(vals, random_val):
+def check_categorical(vals):
     x = Categorical(vals)
     assert_equal(x, Categorical(vals))
     assert x != Categorical(vals[:-1] + ("zzz",))
-    assert_equal(x.rvs(random_state=1), random_val)
 
 
 def check_limits(value, low, high):
@@ -38,22 +37,24 @@ def check_limits(value, low, high):
     assert low <= value
     assert high >= value
 
+
 def test_space_factory():
-    dimension_definition = [(1,5),(1.0,5.0),("a","b")]
+    dimension_definition = [(1, 5), (1.0, 5.0), ("a", "b")]
     test_space = space_factory(dimension_definition)
     assert isinstance(test_space, Space)
     unchanging_space = Space(dimension_definition)
     unchanged_space = space_factory(unchanging_space)
     assert unchanging_space == unchanged_space
 
+
 @pytest.mark.fast_test
 def test_dimensions():
-    check_dimension(Real, (1.0, 4.0), 2.251066014107722)
-    check_dimension(Real, (1, 4), 2.251066014107722)
-    check_dimension(Integer, (1, 4), 2)
-    check_dimension(Integer, (1.0, 4.0), 2)
-    check_categorical(("a", "b", "c", "d"), "b")
-    check_categorical((1.0, 2.0, 3.0, 4.0), 2.0)
+    check_dimension(Real, (1.0, 4.0))
+    check_dimension(Real, (1, 4))
+    check_dimension(Integer, (1, 4))
+    check_dimension(Integer, (1.0, 4.0))
+    check_categorical(("a", "b", "c", "d"))
+    check_categorical((1.0, 2.0, 3.0, 4.0))
 
 
 @pytest.mark.fast_test
@@ -71,33 +72,6 @@ def test_real_log_sampling_in_bounds():
 
 
 @pytest.mark.fast_test
-def test_real():
-    a = Real(1, 25)
-    for i in range(50):
-        r = a.rvs(random_state=i)
-        check_limits(r, 1, 25)
-        assert r in a
-
-    random_values = a.rvs(random_state=0, n_samples=10)
-    assert_array_equal(random_values.shape, (10))
-    assert_array_equal(a.transform(random_values), random_values)
-    assert_array_equal(a.inverse_transform(random_values), random_values)
-
-    log_uniform = Real(10 ** -5, 10 ** 5, prior="log-uniform")
-    assert log_uniform != Real(10 ** -5, 10 ** 5)
-    for i in range(50):
-        random_val = log_uniform.rvs(random_state=i)
-        check_limits(random_val, 10 ** -5, 10 ** 5)
-    random_values = log_uniform.rvs(random_state=0, n_samples=10)
-    assert_array_equal(random_values.shape, (10))
-    transformed_vals = log_uniform.transform(random_values)
-    assert_array_equal(transformed_vals, np.log10(random_values))
-    assert_array_almost_equal(
-        log_uniform.inverse_transform(transformed_vals), random_values
-    )
-
-
-@pytest.mark.fast_test
 def test_real_bounds():
     # should give same answer as using check_limits() but this is easier
     # to read
@@ -110,18 +84,96 @@ def test_real_bounds():
 
 
 @pytest.mark.fast_test
-def test_integer():
-    a = Integer(1, 10)
-    for i in range(50):
-        r = a.rvs(random_state=i)
-        assert 1 <= r
-        assert 11 >= r
-        assert r in a
+@pytest.mark.parametrize(
+    "dimension, ismember, point_type",
+    [
+        (Real(1, 10), lambda x: 1 <= x <= 10, np.float64),
+        (
+            Real(10**-5, 10**5, prior="log-uniform"),
+            lambda x: 10**-5 <= x <= 10**5,
+            np.float64,
+        ),
+        (Integer(1, 10), lambda x: 1 <= x <= 10, np.integer),
+        (Integer(1, 10, transform="normalize"), lambda x: 0 <= x <= 10, np.integer),
+        (Categorical(["cat", "dog", "rat"]), lambda x: x in ["cat", "dog", "rat"], str),
+    ],
+)
+def test_sampling_values(dimension: Dimension, ismember, point_type):
+    generator = np.random.default_rng(42)
+    single_sample = dimension.sample(0.5)
+    # Testing that sampling a single point gives the desired properties
+    assert isinstance(single_sample, np.ndarray)
+    assert isinstance(single_sample[0], point_type)
+    assert ismember(single_sample[0])
+    randomvalues = dimension.sample(generator.random(size=50))
+    # Testing that sampling multiple points gives the desired properties
+    assert len(randomvalues) == 50
+    assert isinstance(randomvalues, np.ndarray)
+    assert all([isinstance(sample, point_type) for sample in randomvalues])
+    assert all([ismember(sample) for sample in randomvalues])
+    generator = np.random.default_rng(42)  # Resetting the random number generator
+    unique_values = dimension.sample(generator.random(size=50), allow_duplicates=False)
+    assert len(unique_values) == len(set(unique_values))
+    # Checking of no repeated values
+    assert set(unique_values) == set(randomvalues)
+    # Checking that seeding works
+    for i in range(len(unique_values)):
+        # Checking that order is preserved when removing duplicates
+        if i < len(unique_values) - 1:
+            first_pos = np.argwhere(randomvalues == unique_values[i])[0][0]
+            second_pos = np.argwhere(randomvalues == unique_values[i + 1])[0][0]
+            assert first_pos < second_pos
+    with pytest.raises(ValueError):
+        dimension.sample(1.1)
+    with pytest.raises(ValueError):
+        dimension.sample(-0.1)
+    with pytest.raises(ValueError):
+        dimension.sample([0.5, 1.1])
+    with pytest.raises(ValueError):
+        dimension.sample([0.5, -0.1])
 
-    random_values = a.rvs(random_state=0, n_samples=10)
-    assert_array_equal(random_values.shape, (10))
-    assert_array_equal(a.transform(random_values), random_values)
-    assert_array_equal(a.inverse_transform(random_values), random_values)
+
+@pytest.mark.fast_test
+@pytest.mark.parametrize(
+    "dimension, lower, probability",
+    [
+        (Real(1, 10), 3, 2 / 9),
+        (Real(10**-5, 10**5, prior="log-uniform"), 10**-3, 0.2),
+        (Integer(1, 10), 2.5, 0.2),
+        (Integer(1, 10, transform="normalize"), 2.5, 0.2),
+    ],
+)
+def test_sampling_of_numerical_with_priors(dimension, lower, probability):
+    randomvalues = dimension.sample(np.random.default_rng(42).random(size=1000))
+    assert sum(randomvalues <= lower) / len(randomvalues) == pytest.approx(
+        probability, 0.1
+    )
+
+
+@pytest.mark.fast_test
+def test_sampling_of_categorical_with_priors():
+    dimension = Categorical(["cat", "dog", "rat"], prior=[0.1, 0.2, 0.7])
+    generator = np.random.default_rng(42)
+    randomvalues = dimension.sample(generator.random(size=100))
+    assert sum(randomvalues == "cat") / len(randomvalues) == pytest.approx(0.1, 0.3)
+    assert sum(randomvalues == "dog") / len(randomvalues) == pytest.approx(0.2, 0.1)
+    assert sum(randomvalues == "rat") / len(randomvalues) == pytest.approx(0.7, 0.1)
+
+
+def test_random_values():
+    space = Space(
+        [
+            Real(0, 1),
+            Real(10**-3, 10**3, prior="log-uniform"),
+            Integer(0, 10),
+            Categorical(["a", "b", "c"]),
+        ]
+    )
+    random_values = space.rvs(1, random_state=42)
+    assert random_values[0][0] == pytest.approx(0.77395604)
+    assert random_values[0][1] == pytest.approx(0.42980418)
+    assert random_values[0][2] == 9
+    assert random_values[0][3] == "c"
 
 
 @pytest.mark.fast_test
@@ -145,12 +197,8 @@ def test_categorical_transform():
     )
     assert_array_equal(cat.transform(["apple", "orange"]), [apple, orange])
     assert_array_equal(cat.transform(["apple", "banana"]), [apple, banana])
-    assert_array_equal(
-        cat.inverse_transform([apple, orange]), ["apple", "orange"]
-    )
-    assert_array_equal(
-        cat.inverse_transform([apple, banana]), ["apple", "banana"]
-    )
+    assert_array_equal(cat.inverse_transform([apple, orange]), ["apple", "orange"])
+    assert_array_equal(cat.inverse_transform([apple, banana]), ["apple", "banana"])
     ent_inverse = cat.inverse_transform(
         [apple, orange, banana, none, true, false, three]
     )
@@ -169,9 +217,7 @@ def test_categorical_transform_binary():
     assert_equal(cat.transformed_size, cat.transform(["apple"]).size)
     assert_array_equal(cat.transform(categories), [apple, orange])
     assert_array_equal(cat.transform(["apple", "orange"]), [apple, orange])
-    assert_array_equal(
-        cat.inverse_transform([apple, orange]), ["apple", "orange"]
-    )
+    assert_array_equal(cat.inverse_transform([apple, orange]), ["apple", "orange"])
     ent_inverse = cat.inverse_transform([apple, orange])
     assert_array_equal(ent_inverse, categories)
 
@@ -179,10 +225,7 @@ def test_categorical_transform_binary():
 @pytest.mark.fast_test
 def test_categorical_repr():
     small_cat = Categorical([1, 2, 3, 4, 5])
-    assert (
-        small_cat.__repr__()
-        == "Categorical(categories=(1, 2, 3, 4, 5), prior=None)"
-    )
+    assert small_cat.__repr__() == "Categorical(categories=(1, 2, 3, 4, 5), prior=None)"
 
     big_cat = Categorical([1, 2, 3, 4, 5, 6, 7, 8])
     assert (
@@ -221,11 +264,11 @@ def test_space_consistency():
     assert_array_equal(a1, a5)
 
     # Reals (log-uniform)
-    s1 = Space([Real(10 ** -3.0, 10 ** 3.0, prior="log-uniform")])
-    s2 = Space([Real(10 ** -3.0, 10 ** 3.0, prior="log-uniform")])
-    s3 = Space([Real(10 ** -3, 10 ** 3, prior="log-uniform")])
-    s4 = Space([(10 ** -3.0, 10 ** 3.0, "log-uniform")])
-    s5 = Space([(np.float64(10 ** -3.0), 10 ** 3.0, "log-uniform")])
+    s1 = Space([Real(10**-3.0, 10**3.0, prior="log-uniform")])
+    s2 = Space([Real(10**-3.0, 10**3.0, prior="log-uniform")])
+    s3 = Space([Real(10**-3, 10**3, prior="log-uniform")])
+    s4 = Space([(10**-3.0, 10**3.0, "log-uniform")])
+    s5 = Space([(np.float64(10**-3.0), 10**3.0, "log-uniform")])
     a1 = s1.rvs(n_samples=10, random_state=0)
     a2 = s2.rvs(n_samples=10, random_state=0)
     a3 = s3.rvs(n_samples=10, random_state=0)
@@ -316,9 +359,7 @@ def test_space_api():
     # our space contains mixed types, this means we can't use
     # `array_allclose` or similar to check points are close after a round-trip
     # of transformations
-    for orig, round_trip in zip(
-        samples, space.inverse_transform(samples_transformed)
-    ):
+    for orig, round_trip in zip(samples, space.inverse_transform(samples_transformed)):
         assert space.distance(orig, round_trip) < 1.0e-8
 
     samples = space.inverse_transform(samples_transformed)
@@ -376,8 +417,8 @@ def test_space_from_space():
 @pytest.mark.fast_test
 def test_normalize():
     a = Real(2.0, 30.0, transform="normalize")
-    for i in range(50):
-        check_limits(a.rvs(random_state=i), 2, 30)
+    # for i in range(50):
+    #     check_limits(a.rvs(random_state=i), 2, 30)
 
     rng = np.random.RandomState(0)
     X = rng.randn(100)
@@ -391,12 +432,12 @@ def test_normalize():
     assert_array_almost_equal(a.inverse_transform(a.transform(X)), X)
 
     # log-uniform prior
-    a = Real(10 ** 2.0, 10 ** 4.0, prior="log-uniform", transform="normalize")
-    for i in range(50):
-        check_limits(a.rvs(random_state=i), 10 ** 2, 10 ** 4)
+    a = Real(10**2.0, 10**4.0, prior="log-uniform", transform="normalize")
+    # for i in range(50):
+    #     check_limits(a.rvs(random_state=i), 10**2, 10**4)
 
     rng = np.random.RandomState(0)
-    X = np.clip(10 ** 3 * rng.randn(100), 10 ** 2.0, 10 ** 4.0)
+    X = np.clip(10**3 * rng.randn(100), 10**2.0, 10**4.0)
 
     # Check transform
     assert np.all(a.transform(X) <= np.ones_like(X))
@@ -406,8 +447,8 @@ def test_normalize():
     assert_array_almost_equal(a.inverse_transform(a.transform(X)), X)
 
     a = Integer(2, 30, transform="normalize")
-    for i in range(50):
-        check_limits(a.rvs(random_state=i), 2, 30)
+    # for i in range(50):
+    #     check_limits(a.rvs(random_state=i), 2, 30)
     assert_array_equal(a.transformed_bounds, (0, 1))
 
     X = rng.randint(2, 31, dtype=np.int64)
@@ -433,8 +474,8 @@ def test_normalize():
     assert isinstance(X_orig, np.int64)
 
     a = Integer(2, 30, transform="normalize")
-    for i in range(50):
-        check_limits(a.rvs(random_state=i), 2, 30)
+    # for i in range(50):
+    #     check_limits(a.rvs(random_state=i), 2, 30)
     assert_array_equal(a.transformed_bounds, (0, 1))
 
     X = rng.randint(2, 31, dtype=int)
@@ -448,8 +489,8 @@ def test_normalize():
     assert_array_equal(X_orig, X)
 
     a = Real(0, 1, transform="normalize")
-    for i in range(50):
-        check_limits(a.rvs(random_state=i), 0, 1)
+    # for i in range(50):
+    #     check_limits(a.rvs(random_state=i), 0, 1)
     assert_array_equal(a.transformed_bounds, (0, 1))
 
     X = rng.rand()
@@ -507,17 +548,6 @@ def test_invalid_dimension():
     )
     # single value fixes dimension of space
     space_check_dimension((23,))
-
-
-@pytest.mark.fast_test
-def test_categorical_identity():
-    categories = ["cat", "dog", "rat"]
-    cat = Categorical(categories, transform="identity")
-    samples = cat.rvs(100)
-    assert all([t in categories for t in cat.rvs(100)])
-    transformed = cat.transform(samples)
-    assert_array_equal(transformed, samples)
-    assert_array_equal(samples, cat.inverse_transform(transformed))
 
 
 @pytest.mark.fast_test
@@ -649,9 +679,7 @@ def test_space_from_yaml():
 def test_dimension_with_invalid_names(name):
     with pytest.raises(ValueError) as exc:
         Real(1, 2, name=name)
-    assert (
-        "Dimension's name must be either string or None." == exc.value.args[0]
-    )
+    assert "Dimension's name must be either string or None." == exc.value.args[0]
 
 
 @pytest.mark.fast_test
@@ -678,30 +706,41 @@ def test_purely_categorical_space():
 
 
 @pytest.mark.fast_test
-def test_lhs_arange():
-    # Test that the latin hypercube sampling functions run normally
-    dim_cat = Categorical(["a", "b", "c"])
-    dim_cat.lhs_arange(10)
-    dim_int = Integer(-10, 20)
-    lhs_int = dim_int.lhs_arange(10)
-    dim_real = Real(-10, 20)
-    lhs_real = dim_real.lhs_arange(10)
-    # Test that the Integer and Real classes return identical points after
-    # rounding, using Numpy's allclose function
-    assert np.allclose(lhs_int, lhs_real, atol=0.5)
-    # Test that the Integer class returns values that are ints for all intents 
-    # and purposes
-    assert all([np.mod(x,1) == 0 for x in lhs_int])
-    # Test that the Real class returns flots in all locations
-    assert all([isinstance(x,np.float64) for x in lhs_real])
-
-
-@pytest.mark.fast_test
 def test_lhs():
     SPACE = Space(
-        [Integer(-20, 20), Real(-10.5, 100), Categorical(list("abc"))]
+        [
+            Integer(1, 6),
+            Real(1, 7),
+            Real(10**-3, 10**3, prior="log-uniform"),
+            Categorical(list("abc")),
+        ]
     )
-    samples = SPACE.lhs(10)
-    assert len(samples) == 10
-    assert len(samples[0]) == 3
+    samples = SPACE.lhs(6)
+    assert len(samples) == 6
+    assert len(samples[0]) == 4
+    values = [[sample[i] for sample in samples] for i in range(4)]
+    # Set disregards order, so we use it to test which values we got.
+    # We should get all six integers, in any order
+    assert set(values[0]) == set(range(1, 6 + 1))
+    # Six reals between 1 and 7, evenly divide, lie halfway between integers
+    assert set(values[1]) == set(0.5 + np.arange(1, 7))
+    # There are no good tests for approximate equality that disregards order
+    # For log-uniform, we should get six values evenly spaced on a log scale
+    for log_real in values[2]:
+        assert any(
+            log_real == pytest.approx(value)
+            for value in np.sqrt(10) * 10**-3 * 10 ** np.arange(6)
+        )
+    assert set(values[3]) == set("abc")
+    is_min_pos = [[y == min(x) for y in x] for x in values]
+    num_min_pos = np.where(is_min_pos[0:3])[1]
+    # We only bother for the numerical axes, since the categorical axis has fewer than six values, so it has repeated values.
+    assert len(np.unique(num_min_pos)) > 1
+    # For a space of this size, two LHS samples with six points should always be different
+    lhs_one = SPACE.lhs(n=6, seed=None)
+    lhs_two = SPACE.lhs(n=6, seed=None)
+    assert lhs_one != lhs_two
 
+    # Asserting the the values are the same for both the lhs, even though the order is different
+    for i in range(4):
+        assert set([x[i] for x in lhs_one]) == set([x[i] for x in lhs_two])

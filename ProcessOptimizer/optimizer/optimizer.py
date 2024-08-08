@@ -1,7 +1,9 @@
 import sys
 import warnings
+from collections import namedtuple
 from math import log
 from numbers import Number
+from typing import Collection, List
 
 import numpy as np
 
@@ -16,17 +18,14 @@ from sklearn.utils import check_random_state
 
 from ..acquisition import _gaussian_acquisition
 from ..acquisition import gaussian_acquisition_1D
-from ..learning import GaussianProcessRegressor
+from ..learning import cook_estimator, GaussianProcessRegressor, has_gradients
 from ..space import Categorical
-from ..space import Space
+from ..space import Space, normalize_dimensions
 from ..space.constraints import Constraints, SumEquals
 from ..utils import check_x_in_space
-from ..utils import cook_estimator
 from ..utils import create_result
-from ..utils import has_gradients
 from ..utils import is_listlike
 from ..utils import is_2Dlistlike
-from ..utils import normalize_dimensions
 
 from ..learning.gaussian_process.gpr import _param_for_white_kernel_in_Sum
 from ..learning.gaussian_process.kernels import WhiteKernel
@@ -41,14 +40,14 @@ class Optimizer(object):
 
     Use this class directly if you want to control the iterations of your
     bayesian optimisation loop.
-    
+
     In default behavior, the optimizer will reset the modelled experimental
     noise between each refitting (read: while adding new data). This is
-    described in Rasmussen and Williams chapter 2. 
+    described in Rasmussen and Williams chapter 2.
     Some users might want to plot, predict or sample from a model that includes
-    the modelling of the experimental noise: in that case, two helper methods
-    can "switch" the noise "on/off". Functions are called 'add_modelled_noise'
-    and 'remove_modelled_noise'.
+    the modelling of the observational noise: in that case, two helper methods
+    can "switch" the noise "on/off". Functions are called 'add_observational_noise'
+    and 'remove_observational_noise'.
 
     Parameters
     ----------
@@ -82,8 +81,8 @@ class Optimizer(object):
         additional points are sampled at random.
 
     * `lhs` [bool, default = True]:
-        If set to True, the optimizer will use latin hypercube sampling for the 
-        first n_initial_points. If set to False, the optimizer will return 
+        If set to True, the optimizer will use latin hypercube sampling for the
+        first n_initial_points. If set to False, the optimizer will return
         random points
 
     * `acq_func` [string, default=`"EI"`]:
@@ -141,12 +140,13 @@ class Optimizer(object):
         -  "length_scale" [list] a list of floats
         - "n_restarts_optimizer" [int]
         - "n_jobs" [int]
-        
+
     * `n_objectives` [int, default=1]:
-        Number of objectives to be optimized. 
+        Number of objectives to be optimized.
         When n_objectives>1 the optimizer will fit models for each objective and the Pareto front can be approximated using NSGA2
 
-
+    * `objective_name_list` [list[str], default ["Y"] or ["Y1","Y2",...]]:
+        The names of the objetive(s).
 
     Attributes
     ----------
@@ -176,6 +176,7 @@ class Optimizer(object):
         acq_func_kwargs=None,
         acq_optimizer_kwargs=None,
         n_objectives=1,
+        objective_name_list: List[str] = None,
     ):
         self.rng = check_random_state(random_state)
 
@@ -211,10 +212,7 @@ class Optimizer(object):
         # Check `n_random_starts` deprecation first
         if n_random_starts is not None:
             warnings.warn(
-                (
-                    "n_random_starts will be removed in favour of "
-                    "n_initial_points."
-                ),
+                ("n_random_starts will be removed in favour of " "n_initial_points."),
                 DeprecationWarning,
             )
             n_initial_points = n_random_starts
@@ -235,9 +233,7 @@ class Optimizer(object):
         )
         self._length_scale = acq_optimizer_kwargs.get("length_scale", None)
         self.n_points = acq_optimizer_kwargs.get("n_points", 10000)
-        self.n_restarts_optimizer = acq_optimizer_kwargs.get(
-            "n_restarts_optimizer", 5
-        )
+        self.n_restarts_optimizer = acq_optimizer_kwargs.get("n_restarts_optimizer", 5)
         n_jobs = acq_optimizer_kwargs.get("n_jobs", 1)
         self.n_jobs = n_jobs
         self.acq_optimizer_kwargs = acq_optimizer_kwargs
@@ -280,10 +276,7 @@ class Optimizer(object):
                 "'sampling', got {0}".format(acq_optimizer)
             )
 
-        if (
-            not has_gradients(self.base_estimator_)
-            and acq_optimizer != "sampling"
-        ):
+        if not has_gradients(self.base_estimator_) and acq_optimizer != "sampling":
             raise ValueError(
                 "The regressor {0} should run with "
                 "acq_optimizer"
@@ -322,6 +315,22 @@ class Optimizer(object):
                 self._cat_inds.append(ind)
             else:
                 self._non_cat_inds.append(ind)
+
+        # Setting the objective name list
+        if objective_name_list is None:
+            if n_objectives == 1:
+                objective_name_list = ["Y"]
+            else:
+                objective_name_list = [
+                    f"Y{num+1}" for num in range(n_objectives)
+                ]
+        if len(objective_name_list) != n_objectives:
+            raise ValueError(
+                "Objective name list must have length n_objectives "
+                f"({n_objectives}), but has length {len(objective_name_list)} "
+                f"(content {objective_name_list})"
+            )
+        self.objective_name_list = objective_name_list
 
         # Initialize storage for optimization
 
@@ -385,15 +394,15 @@ class Optimizer(object):
             Method to use to sample multiple points (see also `n_points`
             description). This parameter is ignored if n_points = None.
             Supported options are `"cl_min"`, `"cl_mean"` or `"cl_max"`.
-            
+
             -if set to `"stbr_fill"` then Steinerberger sampling is used
               after first point.
             -if set to `"stbr_full"` then Steinerberger sampling is used
-              from first point.   
-              
+              from first point.
+
              For details on the Steinerberger method see:
              https://arxiv.org/abs/1902.03269
-             
+
             - If set to `"cl_min"`, then constant liar strategy is used
                with lie objective value being minimum of observed objective
                values. `"cl_mean"` and `"cl_max"` means mean and max of values
@@ -416,32 +425,11 @@ class Optimizer(object):
 
         """
 
-        if not (
-            (isinstance(n_points, int) and n_points > 0) or n_points is None
-        ):
-            raise ValueError(
-                "n_points should be int > 0, got " + str(n_points)
-            )
+        if not ((isinstance(n_points, int) and n_points > 0) or n_points is None):
+            raise ValueError("n_points should be int > 0, got " + str(n_points))
         # These are the only filling strategies which are supported
-        supported_strategies = [
-            "cl_min",
-            "cl_mean",
-            "cl_max",
-            "stbr_fill",
-            "stbr_full",
-            "KB"
-        ]
-
-        if strategy not in supported_strategies:
-            raise ValueError(
-                "Expected parallel_strategy to be one of "
-                + str(supported_strategies)
-                + ", "
-                + "got %s" % strategy
-            )
-
+        
         if strategy == "stbr_full" and self._n_initial_points < 1:
-
             # Steienerberger sampling can not be used from an empty Xi set
             if self.Xi == []:
                 raise ValueError(
@@ -455,10 +443,35 @@ class Optimizer(object):
                 # Returns 'n_points' Steinerberger points
                 X = self.stbr_scipy(n_points=n_points)
             return X
-
+        
         if n_points is None or n_points == 1:
             return self._ask()
+        
+        # The following assertions deal with cases in which the user asks for more than
+        # single experiments
+        
+        supported_strategies = [
+            "cl_min",
+            "cl_mean",
+            "cl_max",
+            "stbr_fill",
+            "stbr_full",
+            "KB",
+        ]
 
+        if strategy not in supported_strategies:
+            raise ValueError(
+                "Expected parallel_strategy to be one of "
+                + str(supported_strategies)
+                + ", "
+                + "got %s" % strategy
+            )
+        
+        if strategy in ["stbr_fill", "stbr_full"] and self.get_constraints() is not None:
+            raise ValueError(
+                "Steinerberger (default setting) sampling can not be used with constraints,\
+                try using another strategy like 'opt.ask(n,strategy='cl_min')'"
+            )
         # Caching the result with n_points not None. If some new parameters
         # are provided to the ask, the cache_ is not used.
         if (n_points, strategy) in self.cache_:
@@ -467,17 +480,11 @@ class Optimizer(object):
         # Copy of the optimizer is made in order to manage the
         # deletion of points with "lie" objective (the copy of
         # optimizer is simply discarded)
-        opt = self.copy(
-            random_state=self.rng.randint(0, np.iinfo(np.int32).max)
-        )
+        opt = self.copy(random_state=self.rng.randint(0, np.iinfo(np.int32).max))
 
         X = []
         for i in range(n_points):
-            if (
-                i > 0
-                and strategy == "stbr_fill"
-                and self._n_initial_points < 1
-            ):
+            if i > 0 and strategy == "stbr_fill" and self._n_initial_points < 1:
                 x = opt.stbr_scipy()[0]
             else:
                 x = opt._ask()
@@ -504,9 +511,7 @@ class Optimizer(object):
                 )  # CL-min lie
                 if opt.n_objectives == 1 and not opt.yi:
                     y_lie = y_lie[0]
-                t_lie = (
-                    np.min(ti) if ti is not None else log(sys.float_info.max)
-                )
+                t_lie = np.min(ti) if ti is not None else log(sys.float_info.max)
             elif strategy == "cl_mean":
                 y_lie = (
                     np.mean(opt.yi, axis=0).tolist()
@@ -515,9 +520,7 @@ class Optimizer(object):
                 )  # CL-mean lie
                 if opt.n_objectives == 1 and not opt.yi:
                     y_lie = y_lie[0]
-                t_lie = (
-                    np.mean(ti) if ti is not None else log(sys.float_info.max)
-                )
+                t_lie = np.mean(ti) if ti is not None else log(sys.float_info.max)
             else:
                 y_lie = (
                     np.max(opt.yi, axis=0).tolist()
@@ -526,9 +529,7 @@ class Optimizer(object):
                 )  # CL-max lie
                 if opt.n_objectives == 1 and not opt.yi:
                     y_lie = y_lie[0]
-                t_lie = (
-                    np.max(ti) if ti is not None else log(sys.float_info.max)
-                )
+                t_lie = np.max(ti) if ti is not None else log(sys.float_info.max)
 
             # Lie to the optimizer.
             if "ps" in self.acq_func:
@@ -567,11 +568,12 @@ class Optimizer(object):
                 if len(self._constraints.sum_equals) > 0:
                     # Create a consistent list of points n_initial_points long
                     sum_equals_list = self._constraints.sumequal_sampling(
-                        n_samples=self.n_initial_points_,
-                        random_state=self.rng
+                        n_samples=self.n_initial_points_, random_state=self.rng
                     )
                     # The samples are returned one at a time from this list
-                    return sum_equals_list[self.n_initial_points_ - self._n_initial_points]
+                    return sum_equals_list[
+                        self.n_initial_points_ - self._n_initial_points
+                    ]
                 else:
                     # We use random value sampling for other constraint types
                     return self._constraints.rvs(random_state=self.rng)[0]
@@ -585,15 +587,12 @@ class Optimizer(object):
         else:
             if not self.models:
                 raise RuntimeError(
-                    "Random evaluations exhausted and no "
-                    "model has been fit."
+                    "Random evaluations exhausted and no " "model has been fit."
                 )
 
             next_x = self._next_x
 
-            min_delta_x = min(
-                [self.space.distance(next_x, xi) for xi in self.Xi]
-            )
+            min_delta_x = min([self.space.distance(next_x, xi) for xi in self.Xi])
 
             if abs(min_delta_x) <= 1e-8:
                 warnings.warn(
@@ -695,17 +694,12 @@ class Optimizer(object):
 
         # after being "told" n_initial_points we switch from sampling
         # random points to using a surrogate model(s)
-        if (
-            fit
-            and self._n_initial_points <= 0
-            and self.base_estimator_ is not None
-        ):
+        if fit and self._n_initial_points <= 0 and self.base_estimator_ is not None:
             transformed_bounds = np.array(self.space.transformed_bounds)
             est = clone(self.base_estimator_)
 
             # If the problem containts multiblie objectives a model has to be fitted for each objective
             if self.n_objectives > 1:
-
                 # fit an estimator to each objective
                 obj_models = []
                 for i in range(self.n_objectives):
@@ -728,13 +722,11 @@ class Optimizer(object):
 
                 # The random number decides what strategy to use for the next point
                 if random_uniform_number < prob_stbr:
-
                     # self._next_x is found via stbr_scipy
                     next_x = self.stbr_scipy()
                     self._next_x = next_x[0]
 
                 else:
-
                     # The Pareto front is approximated using the NSGAII algorithm
                     pop, logbook, front = self.NSGAII()
 
@@ -763,7 +755,7 @@ class Optimizer(object):
                             self._constraints.sumequal_sampling(
                                 n_samples=self.n_points, random_state=self.rng
                             )
-                        )                    
+                        )
                     # For all other constraints we use random sampling
                     else:
                         X = self.space.transform(
@@ -773,9 +765,7 @@ class Optimizer(object):
                         )
                 else:
                     X = self.space.transform(
-                        self.space.rvs(
-                            n_samples=self.n_points, random_state=self.rng
-                        )
+                        self.space.rvs(n_samples=self.n_points, random_state=self.rng)
                     )
 
                 self.next_xs_ = []
@@ -837,21 +827,116 @@ class Optimizer(object):
                     logits -= np.max(logits)
                     exp_logits = np.exp(self.eta * logits)
                     probs = exp_logits / np.sum(exp_logits)
-                    next_x = self.next_xs_[
-                        np.argmax(self.rng.multinomial(1, probs))
-                    ]
+                    next_x = self.next_xs_[np.argmax(self.rng.multinomial(1, probs))]
                 else:
                     next_x = self.next_xs_[0]
 
                 # note the need for [0] at the end
-                self._next_x = self.space.inverse_transform(
-                    next_x.reshape((1, -1))
-                )[0]
+                self._next_x = self.space.inverse_transform(next_x.reshape((1, -1)))[0]
         # Pack results
 
         return create_result(
-            self.Xi, self.yi, self.space, self.rng, models=self.models
+            self.Xi,
+            self.yi,
+            self.space,
+            self.rng,
+            models=self.models,
+            constraints=self._constraints,
         )
+
+    def estimate(self, x: Collection) -> List[namedtuple]:
+        """
+        Estimates the objective function value(s) for the point(s) `x`.
+
+        Parameters
+        ----------
+        * `x` [list or list-of-lists]:
+            Point(s) at which to estimate the objective function value(s).
+
+        Returns
+        -------
+        * `y` [list[namedtuple]]:
+            List of estimations with the same length as `x`. Each element has
+            a field per objective of the optimizer named after the objectives
+            ("Y" or "Y1", "Y2",... by default). Each objective field contains
+            a single objective estimation with field names "mean" and "std".
+            For single objective optimizers, the estimation has the fields
+            "mean" and "std", and a field with the same name as the objective
+            ("Y" by default), which in turn has the fields "mean" and "std".
+        """
+        self_with_observation_noise = self.copy()
+        self_with_observation_noise.add_observational_noise()
+        self_without_observation_noise = self.copy()
+        self_without_observation_noise.remove_observational_noise()
+        single_objective_estimation = namedtuple(
+            "single_objective_estimation", ["mean", "std", "std_model"]
+        )
+        check_x_in_space(x, self.space)
+        if not is_2Dlistlike(x):
+            x = np.asarray(x).reshape(1, -1).tolist()
+            # If only one point is given, make it an array
+        transformed_x = self.space.transform(x)
+        if self.n_objectives == 1:
+            estimation = namedtuple(
+                "estimation",
+                self.objective_name_list
+                + list(single_objective_estimation._fields),
+            )  # For single objective optimizers, the returned list's elements
+            # are namedtuples, with a field named after the objective ("Y" by
+            # default), which in turn has the fields "mean" and "std", for
+            # consistency with multiobjective. They also have the fields "mean"
+            # and "std", for ease of use.
+            prediction = self_with_observation_noise.models[-1].predict(
+                transformed_x, return_std=True
+            )
+            (_, noiseless_predicted_std) = self_without_observation_noise.models[-1].predict(
+                transformed_x, return_std=True
+            )
+            # The estimate is "packed" different than sci-kit learn predictions
+            # are. The predictions are a tuple of two arrays, one for the mean
+            # and one for the standard deviation; each array has one element
+            # per parameter combination. The estimate is a list of namedtuples,
+            # each with two fields, one for the mean and one for the standard
+            # deviation; each list element corresponds to one parameter
+            # combination.
+            estimate_list = [
+                estimation(
+                    single_objective_estimation(mean, std, std_model),
+                    mean,
+                    std,
+                    std_model
+                ) for
+                mean, std, std_model in zip(
+                    prediction[0], prediction[1], noiseless_predicted_std
+                )
+            ]
+        else:
+            estimation = namedtuple("estimation", self.objective_name_list)
+            # Make a list of predictions, one for each objective. This is a
+            # list of tuples, each tuple containing two arrays, one for the
+            # mean and one for the standard deviation; each array has one
+            # element per x.
+            predict_list = [
+                model.predict(transformed_x, return_std=True) for
+                model in self_with_observation_noise.models[-1]
+            ]
+            noiseless_predict_list = [
+                model.predict(transformed_x, return_std=True) for
+                model in self_without_observation_noise.models[-1]
+            ]
+            estimate_list = []
+            for i in range(len(x)):
+                # For each x and objective, create the
+                # single_objective_estimation and append it to the list of
+                # estimations for that x
+                estimate_list.append([single_objective_estimation(
+                            predict_list[j][0][i],
+                            predict_list[j][1][i],
+                            noiseless_predict_list[j][1][i]
+                        ) for j in range(self.n_objectives)])
+            # Packing the list of estimations for each x into a namedtuple.
+            estimate_list = [estimation(*result) for result in estimate_list]
+        return estimate_list
 
     def _check_y_is_valid(self, x, y):
         """Check if the shape and types of x and y are consistent."""
@@ -873,9 +958,7 @@ class Optimizer(object):
                     )
                 for y_value in y_values:
                     if not isinstance(y_value, Number):
-                        raise ValueError(
-                            "expected y to be a list of lists of scalars"
-                        )
+                        raise ValueError("expected y to be a list of lists of scalars")
 
         # Check batch tell with single objective
         elif is_listlike(y) and is_2Dlistlike(x) and self.n_objectives == 1:
@@ -913,22 +996,35 @@ class Optimizer(object):
             self.tell(x, func(x))
 
         return create_result(
-            self.Xi, self.yi, self.space, self.rng, models=self.models
+            self.Xi,
+            self.yi,
+            self.space,
+            self.rng,
+            models=self.models,
+            constraints=self._constraints,
         )
 
     def set_constraints(self, constraints):
-        """ Sets the constraints for the optimizer
+        """Sets the constraints for the optimizer
 
         Parameters
         ----------
         * `constraints` [list] or [Constraints]:
             Can either be a list of Constraint objects or a Constraints object
         """
+                
+        if self.n_objectives > 1:
+            raise RuntimeError(
+            "Can't set constraints for multiobjective optimization. The NSGA-II algorithm \
+            used for multiobjective optimization does not support constraints."
+            )
+            
         if self._n_initial_points > 0 and self._lhs:
             raise RuntimeError(
-                "Can't set constraints while latin hypercube sampling points are not exhausted."
+                "Can't set constraints while latin hypercube sampling points are not exhausted.\
+                Consider reinitialising the optimizer with lhs=False as argument."
             )
-
+            
         if constraints:
             if isinstance(constraints, Constraints):
                 # If constraints is a Constraints object we simply add it
@@ -942,7 +1038,7 @@ class Optimizer(object):
         self.update_next()
 
     def remove_constraints(self):
-        """ Sets constraints to None"""
+        """Sets constraints to None"""
         self.set_constraints(None)
 
     def get_constraints(self):
@@ -950,7 +1046,7 @@ class Optimizer(object):
         return self._constraints
 
     def update_next(self):
-        """ Updates the value returned by opt.ask(). Useful if a parameter was updated after ask was called."""
+        """Updates the value returned by opt.ask(). Useful if a parameter was updated after ask was called."""
         self.cache_ = {}
         # Ask for a new next_x. Usefull if new constraints have been added or lenght_scale has been tweaked.
         # We only need to overwrite _next_x if it exists.
@@ -964,11 +1060,16 @@ class Optimizer(object):
         In the case of multiobejective optimization, a list of results are
         returned."""
         return create_result(
-            self.Xi, self.yi, self.space, self.rng, models=self.models
+            self.Xi,
+            self.yi,
+            self.space,
+            self.rng,
+            models=self.models,
+            constraints=self._constraints
         )
 
     def _check_length_scale_bounds(self, dimensions, bounds):
-        """ Checks if length scale bounds are of in correct format"""
+        """Checks if length scale bounds are of in correct format"""
         space = Space(dimensions)
         n_dims = space.n_dims
         if bounds:
@@ -992,8 +1093,7 @@ class Optimizer(object):
                         )
             else:
                 raise TypeError(
-                    "Expected bounds to be of type list, got %s"
-                    % (type(bounds))
+                    "Expected bounds to be of type list, got %s" % (type(bounds))
                 )
 
     def stbr_scipy(self, n_points=1):
@@ -1043,9 +1143,7 @@ class Optimizer(object):
 
             # Decide the global minimum as the local minimum with the lowest function value
             glob_min = loc_min[np.argmin(fun_val)]
-            next_X = np.asarray(glob_min).reshape(
-                1, copy.space.transformed_n_dims
-            )
+            next_X = np.asarray(glob_min).reshape(1, copy.space.transformed_n_dims)
             # Transform back to original space
             next_X = copy.space.inverse_transform(next_X)
 
@@ -1060,9 +1158,7 @@ class Optimizer(object):
                     # Calculate the number of instances of each category
                     cat_population = np.zeros(len(categories))
                     for category, i in zip(categories, range(len(categories))):
-                        cat_population[i] = (instances.tolist()).count(
-                            category
-                        )
+                        cat_population[i] = (instances.tolist()).count(category)
                     # Find the category with the lowest population
                     least_populated = categories[np.argmin(cat_population)]
                     # Set the category to the lowest populated category
@@ -1078,7 +1174,7 @@ class Optimizer(object):
     # This function returns the Steinerberger sum for a given x
     def stbr_fun(self, x):
         # parameter to ensure that log argument is non-zero
-        eta = 10 ** -8
+        eta = 10**-8
         # Initialize Steinerberger sum
         stbr_sum = 0
         # Transform initial points to [0,1]^d space
@@ -1096,7 +1192,6 @@ class Optimizer(object):
 
     # This function returns the objective scores at x estimated by the models
     def __ObjectiveGP(self, x):
-
         # Fator = 1.0e10
         F = [None] * self.n_objectives
         xx = np.asarray(x).reshape(1, -1)
@@ -1111,14 +1206,12 @@ class Optimizer(object):
         #            Constraints -= y
 
         for i in range(self.n_objectives):
-
             F[i] = self.models[-1][i].predict(xx)[0]
 
         return F
 
     # This function returns the point in the Pareto front, which is deemed the best (furthest away from existing observations)
     def best_Pareto_point(self, pop, front, q=0.5):
-
         Population = np.asarray(pop)
 
         IndexF, FatorF = self.__LargestOfLeast(front, self.yi)
@@ -1169,7 +1262,6 @@ class Optimizer(object):
 
     # This function calls NSGAII to estimate the Pareto Front
     def NSGAII(self, MU=40):
-
         from ._NSGA2 import NSGAII
 
         pop, logbook, front = NSGAII(
@@ -1180,33 +1272,62 @@ class Optimizer(object):
         )
 
         return pop, logbook, front
-    
+
+    def add_observational_noise(self):
+        """
+        This method will add the noise that has been modelled to fit the data.
+        (The noise is disabled by default to reflect description in book on
+        gaussian processes for Machine Learning. This has been described in
+        Eq 2.24 of http://www.gaussianprocess.org/gpml/chapters/RW2.pdf)
+        """
+        if self.n_objectives > 1:
+            for model in self.models[-1]:
+                self.add_observational_noise_single_model(model)
+        else:
+            self.add_observational_noise_single_model(self.models[-1])
+
     # This function adds the modelled white noise to the regressor to allow predictions including noise
-    def add_modelled_noise(self):
-        '''
-        This method will add the noise that has been modelled to fit the data. (The noise is disabled
-        by default to reflect description in book on gaussian processes for Machine Learning
-        This has been described in Eq 2.24 of
-        http://www.gaussianprocess.org/gpml/chapters/RW2.pdf)
-        '''
-        if isinstance(self.models[-1].noise, str) and self.models[-1].noise != "gaussian":
-            raise ValueError("expected noise to be 'gaussian', got %s"
-                             % self.models[-1].noise)
-        noise_estimate = self.models[-1].noise_
-        white_present, white_param = _param_for_white_kernel_in_Sum(self.models[-1].kernel_)
+    def add_observational_noise_single_model(self, model):
+        if (
+            isinstance(model.noise, str)
+            and model.noise != "gaussian"
+        ):
+            raise ValueError(
+                "Expected noise to be 'gaussian', got %s" % model.noise
+            )
+        noise_estimate = model.noise_
+        white_present, white_param = _param_for_white_kernel_in_Sum(
+            model.kernel_
+        )
         if white_present:
-            self.models[-1].kernel_.set_params(**{white_param: WhiteKernel(noise_level=noise_estimate)})
-    
-    def remove_modelled_noise(self):
-        '''
-        This method resets the noise levels to only include the "true" uncertaincy of the main kernel
-        used for fitting and predicting. This method can be used in conjunction with the 
-        'add_modelled_noise()'
-        '''
-        if isinstance(self.models[-1].noise, str) and self.models[-1].noise != "gaussian":
-            raise ValueError("expected noise to be 'gaussian', got %s"
-                             % self.models[-1].noise)
-        white_present, white_param = _param_for_white_kernel_in_Sum(self.models[-1].kernel_)
+            model.kernel_.set_params(
+                **{white_param: WhiteKernel(noise_level=noise_estimate)}
+            )
+
+    def remove_observational_noise(self):
+        """
+        This method resets the noise levels to only include the "true"
+        uncertaincy of the main kernel used for fitting and predicting. This
+        method can be used in conjunction with the 'add_modelled_noise()'
+        """
+        if self.n_objectives > 1:
+            for model in self.models[-1]:
+                self.remove_observational_noise_single_model(model)
+        else:
+            self.remove_observational_noise_single_model(self.models[-1])
+
+    def remove_observational_noise_single_model(self, model):
+        if (
+            isinstance(model.noise, str)
+            and model.noise != "gaussian"
+        ):
+            raise ValueError(
+                "expected noise to be 'gaussian', got %s" % model.noise
+            )
+        white_present, white_param = _param_for_white_kernel_in_Sum(
+            model.kernel_
+        )
         if white_present:
-            self.models[-1].kernel_.set_params(**{white_param: WhiteKernel(noise_level=0.0)})
-    
+            model.kernel_.set_params(
+                **{white_param: WhiteKernel(noise_level=0.0)}
+            )

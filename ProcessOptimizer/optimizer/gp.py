@@ -5,16 +5,30 @@ import numpy as np
 from sklearn.utils import check_random_state
 
 from .base import base_minimize
-from ..utils import cook_estimator
-from ..utils import normalize_dimensions
+from ..learning import cook_estimator
+from ..space import normalize_dimensions
 
 
-def gp_minimize(func, dimensions, base_estimator=None,
-                n_calls=100, n_random_starts=10,
-                acq_func="EI", acq_optimizer="auto", x0=None, y0=None,
-                random_state=None, verbose=False, callback=None,
-                n_points=10000, n_restarts_optimizer=5, xi=0.01, kappa=1.96,
-                noise="gaussian", n_jobs=1):
+def gp_minimize(
+    func,
+    dimensions,
+    base_estimator=None,
+    n_calls=100,
+    n_random_starts=10,
+    acq_func="EI",
+    acq_optimizer="auto",
+    x0=None,
+    y0=None,
+    random_state=None,
+    verbose=False,
+    callback=None,
+    n_points=10000,
+    n_restarts_optimizer=5,
+    xi=0.01,
+    kappa=1.96,
+    noise="gaussian",
+    n_jobs=1,
+):
     """Bayesian optimization using Gaussian Processes.
 
     If every function evaluation is expensive, for instance
@@ -215,17 +229,28 @@ def gp_minimize(func, dimensions, base_estimator=None,
 
     if base_estimator is None:
         base_estimator = cook_estimator(
-            "GP", space=space, random_state=rng.randint(
-              0, np.iinfo(np.int32).max
-              ),
-            noise=noise
-            )
+            "GP",
+            space=space,
+            random_state=rng.randint(0, np.iinfo(np.int32).max),
+            noise=noise,
+        )
 
     return base_minimize(
-        func, space, base_estimator=base_estimator,
+        func,
+        space,
+        base_estimator=base_estimator,
         acq_func=acq_func,
-        xi=xi, kappa=kappa, acq_optimizer=acq_optimizer, n_calls=n_calls,
-        n_points=n_points, n_random_starts=n_random_starts,
+        xi=xi,
+        kappa=kappa,
+        acq_optimizer=acq_optimizer,
+        n_calls=n_calls,
+        n_points=n_points,
+        n_random_starts=n_random_starts,
         n_restarts_optimizer=n_restarts_optimizer,
-        x0=x0, y0=y0, random_state=rng, verbose=verbose,
-        callback=callback, n_jobs=n_jobs)
+        x0=x0,
+        y0=y0,
+        random_state=rng,
+        verbose=verbose,
+        callback=callback,
+        n_jobs=n_jobs,
+    )
