@@ -1,5 +1,3 @@
-import numpy as np
-
 from .model_system import ModelSystem
 
 
