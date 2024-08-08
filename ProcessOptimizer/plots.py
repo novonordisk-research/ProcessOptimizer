@@ -1558,9 +1558,9 @@ def plot_objective_1d(
 
 def plot_brownie_bee(
     result,
-    n_points=40,
+    n_points=60,
     n_samples=250,
-    size=2,
+    size=3,
     max_quality=5,
 ):
     """Single factor dependence plot of the model intended for use with the 
@@ -1575,7 +1575,7 @@ def plot_brownie_bee(
     * `result` [`OptimizeResult`]
         The result for which to create the plots.
 
-    * `n_points` [int, default=40]
+    * `n_points` [int, default=60]
         Number of points at which to evaluate the partial dependence
         along each dimension.
 
@@ -1583,13 +1583,14 @@ def plot_brownie_bee(
         Number of random samples to use for averaging the model function
         at each of the `n_points`.
 
-    * `size` [float, default=2]
+    * `size` [float, default=3]
         Height (in inches) of each returned figure.
 
     * `max_quality` [int, default=5] 
-        The maximal quality obtainable in the setup of Brownie Bee. Quality is
+        The maximal quality intended for the setup of Brownie Bee. Quality is
         assumed to be measured on a scale from 0 to this number, and the y-axis
-        of each plot is scaled to reflect this.
+        of each plot is scaled to reflect this. If the uncertainty reaches above
+        this number, the y-axis is expanded to accomodate this.
 
     Returns
     -------
@@ -1617,6 +1618,9 @@ def plot_brownie_bee(
     
     # Gather all data relevant for plotting
     plots_data = []
+    # Starting point for our maximum visible quality
+    plot_max_q = max_quality
+    
     for i in range(space.n_dims):
         row = []
         xi, yi, stddevs = dependence(
@@ -1629,11 +1633,16 @@ def plot_brownie_bee(
             x_eval=x_eval,
         )
         row.append({"xi": xi, "yi": yi, "std": stddevs})
-        
         plots_data.append(row)
-
+        # Check if our quality interval goes above our desired max_quality view
+        if -np.min(yi-1.96*stddevs) > plot_max_q:
+            plot_max_q = -np.min(yi-1.96*stddevs)
+    
     # Create the list to store figure handles
     figure_list = []  
+    
+    # Expand maximal quality value if needed to show upper bound on uncertainty
+    max_quality = plot_max_q
     
     # Build all the plots in the figure
     for n in range(space.n_dims):
@@ -1652,11 +1661,11 @@ def plot_brownie_bee(
         yi = plots_data[n][0]["yi"]
         stddevs = plots_data[n][0]["std"]        
         
-        # Set y-axis limits
-        ax_.set_ylim(0, max_quality)      
+        # Set y-axis limits with a small buffer
+        ax_.set_ylim(0, max_quality*1.02)
         
         # Enter here when we plot a categoric factor
-        if is_cat[n]:                    
+        if is_cat[n]:
             # Expand the x-axis for this factor so we can see the first
             # and the last category
             ax_.set_xlim(np.min(xi)-0.2, np.max(xi)+0.2)            
@@ -1673,7 +1682,13 @@ def plot_brownie_bee(
                 color="green",
                 edgecolor="green",
             )
-            [labl.set_fontsize(6) for labl in ax_.get_xticklabels()]
+            # Adjust font size according to the number of labesl
+            if len(xi) < 3:
+                [labl.set_fontsize(10) for labl in ax_.get_xticklabels()]
+            elif len(xi) < 6:
+                [labl.set_fontsize(7) for labl in ax_.get_xticklabels()]
+            else:
+                [labl.set_fontsize(5) for labl in ax_.get_xticklabels()]
         
         # For non-categoric factors
         else:
@@ -1692,14 +1707,14 @@ def plot_brownie_bee(
         # Highlight the expected minimum
         ax_.axvline(minimum[n], linestyle="--", color="r", lw=2, zorder=6)
         # Fix formatting of the y-axis with ticks from 0 to our max quality
-        ax_.yaxis.set_major_locator(MaxNLocator(5, integer=True))
+        ax_.yaxis.set_major_locator(MaxNLocator("auto", integer=True))
         ax_.tick_params(axis="y", direction="inout")
         
         if space.dimensions[n].prior == "log-uniform":
             ax_.set_xscale("log")
         else:
             ax_.xaxis.set_major_locator(
-                MaxNLocator(4, prune=None, integer=(is_cat[n] | is_int[n]))
+                MaxNLocator("auto", prune=None, integer=(is_cat[n] | is_int[n]))
             )
             if is_cat[n]:
                 # Axes for categorical dimensions are really integers; 
@@ -1709,6 +1724,9 @@ def plot_brownie_bee(
                         partial(_cat_format, space.dimensions[n])
                     )
                 )
+                # Rotate the labels if we have many of them to help it fit
+                if len(xi) > 3:                    
+                    plt.xticks(rotation=45)
         
         # Add the figure to the output list
         figure_list.append(fig)
@@ -1740,9 +1758,9 @@ def plot_brownie_bee(
     ax_.get_yaxis().set_visible(False)
     ax_.set_ylim(0, max(yi)*1.05)
     # Fix formatting of the x-axis with ticks from 0 to our max quality
-    ax_.set_xlim(0, max_quality)
+    ax_.set_xlim(0, max_quality*1.02)
     ax_.xaxis.set_major_locator(
-        MaxNLocator(5, prune=None, integer=True)
+        MaxNLocator("auto", prune=None, integer=True)
     )
     
     # Add the figure to the output list
