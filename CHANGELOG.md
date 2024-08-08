@@ -4,7 +4,7 @@
 
 ### Changes
 
-- 
+- Added a plotting function that supports the Brownie Bee user interface (see browniebee.io).
 
 ### Bugfixes
 
