@@ -11,7 +11,7 @@ with open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="ProcessOptimizer",
-    version="0.9.4",
+    version="0.9.5",
     description="Sequential model-based optimization toolbox \
     (forked from scikit-optimize)",
     url="https://github.com/novonordisk-research/ProcessOptimizer",
@@ -39,15 +39,14 @@ setup(
     ],
     extras_require={
         "browniebee": [
-            "bokeh==3.1.1",
+            "bokeh==3.4.1",
             "deap==1.4.1",
-            "matplotlib==3.7.2",
-            "numpy==1.24.4",
+            "matplotlib==3.8.4",
+            "numpy==1.26.4",
             "pyYAML==6.0.1",
-            "scikit-learn==1.3.0",
-            "scipy==1.10.1",
+            "scikit-learn==1.4.2",
+            "scipy==1.13.0",
             "six==1.16.0",
-            "tornado==6.3.3",
         ]
     },
     long_description=long_description,
