@@ -219,7 +219,7 @@ def test_plot_objective_1d():
 def test_plot_brownie_bee():
     # Integration test of the plot function for Brownie Bee
     
-    star_bins = 10
+    max_q = 10
     # Helper function to convery y-values to stars
     def star_score(Y, max_stars, scale_min, scale_max):
         # Get the scale of the system
@@ -238,28 +238,32 @@ def test_plot_brownie_bee():
         (70.0, 167.0),
         ["A", "B"],
     ]
-    opt = Optimizer.Optimizer(space, acq_func="EI", n_initial_points=5,)
+    opt = Optimizer.Optimizer(
+        space,
+        acq_func="EI",
+        n_initial_points=5,
+    )
     x = [
-        [18,84,0.042,102.8,"A"],
-        [24,80,0.09,102.8,"B"],
-        [20,76,0.066,102.8,"A"],
-        [16,72,0.111,102.8,"A"],
-        [22,88,0.138,102.8,"B"],
-        [24.5,70,0.145,102.8,"A"],
-        [19,79,0.124,102.8,"B"],
-        [15.5,80,0.100,106,"B"],
-        [24,86,0.111,106,"B"],
-        [18,79,0.124,109,"A"],
-        [16,75,0.145,109,"B"],
-        [17.9,74,0.150,122.9,"A"],
-        [22.6,89,0.075,122.9,"B"],
-        [23,70,0.145,118.6,"A"],
-        [23,84,0.042,118.6,"B"],
+        [18, 84, 0.042, 102.8, "A"],
+        [24, 80, 0.09, 102.8, "B"],
+        [20, 76, 0.066, 102.8, "A"],
+        [16, 72, 0.111, 102.8, "A"],
+        [22, 88, 0.138, 102.8, "B"],
+        [24.5, 70, 0.145, 102.8, "A"],
+        [19, 79, 0.124, 102.8, "B"],
+        [15.5, 80, 0.100, 106, "B"],
+        [24, 86, 0.111, 106, "B"],
+        [18, 79, 0.124, 109, "A"],
+        [16, 75, 0.145, 109, "B"],
+        [17.9, 74, 0.150, 122.9, "A"],
+        [22.6, 89, 0.075, 122.9, "B"],
+        [23, 70, 0.145, 118.6, "A"],
+        [23, 84, 0.042, 118.6, "B"],
     ]
-    y = [54,53,38,30,65,42,60,77,66,75,61,57,87,47,67]
-    y_star = [-star_score(yy, star_bins, 0, 100) for yy in y]
+    y = [54, 53, 38, 30, 65, 42, 60, 77, 66, 75, 61, 57, 87, 47, 67]
+    y_star = [-star_score(yy, max_q, 0, 100) for yy in y]
     res = opt.tell(x, y_star)
-    fig_list = plot_brownie_bee(res, max_quality=star_bins)
+    fig_list = plot_brownie_bee(res, max_quality=max_q)
     
     # Check we built a list of figures
     for fig in fig_list:
@@ -269,7 +273,7 @@ def test_plot_brownie_bee():
    
     # Check that the y-axis uses the correct limits
     limits = fig_list[0].gca().get_ylim()
-    assert (limits[0] == 0) & (limits[1] == star_bins)
+    assert (limits[0] == 0) & (limits[1] == 10.2)
     
     # Check that each x-axis of the factor plots uses the correct limits
     for i, limits in enumerate(space):
@@ -284,7 +288,7 @@ def test_plot_brownie_bee():
     
     # Check that the histogram of expected outputs uses a sensible x-axis
     xlim = fig_list[-1].gca().get_xlim()
-    assert (xlim[0] >= 0) & (xlim[1] <= star_bins)
+    assert (xlim[0] >= 0) & (xlim[1] <= 10.2)
     
 
 
