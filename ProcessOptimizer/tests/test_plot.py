@@ -273,7 +273,7 @@ def test_plot_brownie_bee():
    
     # Check that the y-axis uses the correct limits
     limits = fig_list[0].gca().get_ylim()
-    assert (limits[0] == 0) & (limits[1] == 10.2)
+    assert (limits[0] == 0) & (limits[1] == max_q*1.02)
     
     # Check that each x-axis of the factor plots uses the correct limits
     for i, limits in enumerate(space):
@@ -288,7 +288,7 @@ def test_plot_brownie_bee():
     
     # Check that the histogram of expected outputs uses a sensible x-axis
     xlim = fig_list[-1].gca().get_xlim()
-    assert (xlim[0] >= 0) & (xlim[1] <= 10.2)
+    assert (xlim[0] >= 0) & (xlim[1] <= max_q*1.02)
     
 
 
