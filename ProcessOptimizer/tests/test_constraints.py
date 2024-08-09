@@ -245,6 +245,7 @@ def test_SumEquals():
         n_initial_points=10,
     )
     opt.set_constraints(cons)
+    # Check that we can ask for 10 points
     assert opt.ask(10)
     # We should not be able to ask for 11
     with raises(ValueError):
