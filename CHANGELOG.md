@@ -5,6 +5,7 @@
 ### Changes
 
 - Added a plotting function that supports the Brownie Bee user interface (see browniebee.io).
+- Made small improvements to the plot_objective_1d function, and added it to __init.py__ for ProcessOptimizer.
 
 ### Bugfixes
 
