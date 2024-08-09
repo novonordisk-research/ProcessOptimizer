@@ -13,7 +13,7 @@ from ProcessOptimizer.plots import (
     plot_Pareto_bokeh,
     plot_objective,
     plot_objective_1d,
-    plot_brownie_bee,
+    plot_brownie_bee_frontend,
 )
 from ProcessOptimizer.space import Categorical
 
@@ -263,7 +263,7 @@ def test_plot_brownie_bee():
     y = [54, 53, 38, 30, 65, 42, 60, 77, 66, 75, 61, 57, 87, 47, 67]
     y_star = [-star_score(yy, max_q, 0, 100) for yy in y]
     res = opt.tell(x, y_star)
-    fig_list = plot_brownie_bee(res, max_quality=max_q)
+    fig_list = plot_brownie_bee_frontend(res, max_quality=max_q)
     
     # Check we built a list of figures
     for fig in fig_list:

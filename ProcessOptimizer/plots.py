@@ -1556,7 +1556,7 @@ def plot_objective_1d(
         ax, space, ylabel=ylabel, dim_labels=dimensions
     )
 
-def plot_brownie_bee(
+def plot_brownie_bee_frontend(
     result,
     n_points=60,
     n_samples=250,
@@ -1682,6 +1682,15 @@ def plot_brownie_bee(
                 color="green",
                 edgecolor="green",
             )
+            # Highlight the expected minimum
+            ax_.scatter(
+                minimum[n],
+                -yi[int(minimum[n])],
+                c="r",
+                s=20,
+                marker="D",
+                zorder=6,
+            )
             # Adjust font size according to the number of labesl
             if len(xi) < 3:
                 [labl.set_fontsize(10) for labl in ax_.get_xticklabels()]
@@ -1703,9 +1712,10 @@ def plot_brownie_bee(
                 edgecolor="green",
                 linewidth=0.0,
             )
+            # Highlight the expected minimum
+            ax_.axvline(minimum[n], linestyle="--", color="r", lw=2, zorder=6)
         
-        # Highlight the expected minimum
-        ax_.axvline(minimum[n], linestyle="--", color="r", lw=2, zorder=6)
+        
         # Fix formatting of the y-axis with ticks from 0 to our max quality
         ax_.yaxis.set_major_locator(MaxNLocator("auto", integer=True))
         ax_.tick_params(axis="y", direction="inout")
@@ -1741,7 +1751,7 @@ def plot_brownie_bee(
         left=0.05, right=0.95, bottom=0.2, top=0.95, hspace=0.0, wspace=0.0
     )
     # Plot in the interval between 0 and our max quality
-    xi = np.linspace(0, max_quality, 250)
+    xi = np.linspace(0, max_quality*1.02, 250)
     # Create histogram y-values
     yi = norm.pdf(xi, -res_mean, res_std)
     # Build the plot

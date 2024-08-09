@@ -34,11 +34,11 @@ from .utils import expected_minimum
 from .utils import expected_minimum_random_sampling
 from .utils import load
 from .utils import create_result, y_coverage
-from .plots import plot_objective, plot_objectives
+from .plots import plot_objective, plot_objectives, plot_objective_1d
 from .plots import plot_evaluations, plot_convergence
 from .plots import plot_Pareto, plot_expected_minimum_convergence
 
-__version__ = "0.9.5"
+__version__ = "0.9.6"
 
 
 __all__ = (
@@ -69,6 +69,7 @@ __all__ = (
     "Real",
     "plot_objective",
     "plot_objectives",
+    "plot_objective_1d",
     "plot_evaluations",
     "plot_convergence",
     "plot_Pareto",
