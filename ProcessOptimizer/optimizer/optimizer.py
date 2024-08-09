@@ -471,9 +471,17 @@ class Optimizer(object):
             and strategy in ["stbr_fill", "stbr_full"] 
             and self.get_constraints() is not None):
                 raise ValueError(
-                    "Steinerberger (default setting) sampling can not be used with constraints,\
-                    try using another strategy like 'opt.ask(n,strategy='cl_min')'"
+                    "Steinerberger (default setting) sampling can not be used with constraints, "
+                    + "try using another strategy like 'opt.ask(n,strategy='cl_min')'"
                 )
+        elif (strategy in ["stbr_fill", "stbr_full"]
+              and self.get_constraints() is not None):
+            warnings.warn(
+                "Steinerberger (default setting) sampling can not be used with constraints, "
+                +f"and you will get an error once you ask for more than {self._n_initial_points} new suggestions. "
+                +"Try using another strategy like 'opt.ask(n,strategy='cl_min')'"
+            )
+                
         # Caching the result with n_points not None. If some new parameters
         # are provided to the ask, the cache_ is not used.
         if (n_points, strategy) in self.cache_:
