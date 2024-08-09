@@ -1149,7 +1149,7 @@ def _2d_dependency_plot(data, axes, samples, highlighted, limits, options = {}):
 
 def plot_objective_1d(
     result,
-    n_points=40,
+    n_points=60,
     n_samples=250,
     size=2.5,
     dimensions=None,
@@ -1380,7 +1380,7 @@ def plot_objective_1d(
         yi = plots_data[n][0]["yi"]
         stddevs = plots_data[n][0]["std"]        
         
-        # Set y-axis limits
+        # Set y-axis limits with a small buffer
         ax_.set_ylim(
             val_min_1d-abs(val_min_1d)*.02,
             val_max_1d+abs(val_max_1d)*.02
@@ -1410,10 +1410,10 @@ def plot_objective_1d(
                 ax_.scatter(
                     minimum[n],
                     yi[int(minimum[n])],
-                    c="k",
+                    c="r",
                     s=20,
                     marker="D",
-                    zorder=0,
+                    zorder=6,
                 )
             else:
                 # Show the mean value
@@ -1429,17 +1429,17 @@ def plot_objective_1d(
                 ax_.scatter(
                     minimum[n],
                     yi[int(minimum[n])],
-                    c="k",
+                    c="r",
                     s=20,
                     marker="D",
-                    zorder=0,
+                    zorder=6,
                 )
         
         # For non-categoric factors
         else:
             ax_.set_xlim(np.min(xi), np.max(xi))
             # Highlight the point defined by 'pars'
-            ax_.axvline(minimum[n], linestyle="--", color="k", lw=1)
+            ax_.axvline(minimum[n], linestyle="--", color="r", lw=2, zorder=6)
             if show_confidence:
                 ax_.fill_between(
                     xi,
@@ -1476,14 +1476,14 @@ def plot_objective_1d(
                 [],
                 [],
                 linestyle="--",
-                color="k",
+                color="r",
                 marker="",
-                lw=1,
+                lw=2,
             )
             legend_hp = mpl.lines.Line2D(
                 [],
                 [],
-                color="k",
+                color="r",
                 marker="D",
                 markersize=5,
                 lw=0.0,
