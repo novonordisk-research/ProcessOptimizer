@@ -20,9 +20,11 @@ def score(coordinates: Sequence[float]):
     return gold_found
 
 
-gold_map = ModelSystem(
-    score,
-    space=[(0.0, 15.0), (0.0, 15.0)],
-    noise_model=None,
-    true_min=-3.09,
-)
+def create_gold_map() -> ModelSystem:
+    """Create the gold map model system."""
+    return ModelSystem(
+        score,
+        space=[(0.0, 15.0), (0.0, 15.0)],
+        noise_model=None,
+        true_min=-3.09,
+    )

@@ -17,12 +17,14 @@ from ProcessOptimizer import dummy_minimize
 from ProcessOptimizer import gp_minimize
 from ProcessOptimizer import forest_minimize
 from ProcessOptimizer import gbrt_minimize
-from ProcessOptimizer.model_systems import branin_no_noise
+from ProcessOptimizer.model_systems import get_model_system
 from ProcessOptimizer.model_systems.benchmarks import bench1
 from ProcessOptimizer.model_systems.benchmarks import bench4
 from ProcessOptimizer.model_systems.benchmarks import bench5
 from ProcessOptimizer.callbacks import DeltaXStopper
 from ProcessOptimizer import Space
+
+branin_no_noise = get_model_system("branin_no_noise")
 
 branin = branin_no_noise.get_score
 
