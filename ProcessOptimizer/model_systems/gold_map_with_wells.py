@@ -26,8 +26,9 @@ def score(coordinates: Sequence[float]):
     return gold_found
 
 
-gold_map_with_wells = ModelSystem(
-    score,
-    space=[(0.0, 15.0), (0.0, 15.0)],
-    noise_model=None,
-)
+def create_gold_map_with_wells():
+    return ModelSystem(
+        score,
+        space=[(0.0, 15.0), (0.0, 15.0)],
+        noise_model=None,
+    )

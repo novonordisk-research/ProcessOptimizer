@@ -172,6 +172,15 @@ class ZeroNoise(NoiseModel):
     def get_noise(self, _, Y: float) -> float:
         return 0
 
+    @property
+    def noise_size(self):
+        return 0
+
+    @noise_size.setter
+    def noise_size(self, value):
+        if value != 0:
+            raise ValueError("ZeroNoise should not have a noise size other than 0.")
+
 
 class SumNoise(NoiseModel):
     """
