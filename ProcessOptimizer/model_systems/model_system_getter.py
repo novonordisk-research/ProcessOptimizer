@@ -1,6 +1,6 @@
 from .branin_hoo import create_branin
 from .color_pH import create_color_ph
-from .gold_map import create_gold_map
+from .gold_map import create_gold_map, create_distance_map
 from .gold_map_with_wells import create_gold_map_with_wells
 from .hart3 import create_hart3
 from .hart6 import create_hart6
@@ -31,6 +31,7 @@ def get_model_system(model_system: str) -> ModelSystem:
         "colour_ph": (create_color_ph,),
         "colour_pH": (create_color_ph,),
         "gold_map": (create_gold_map,),
+        "distance_map": (create_distance_map,),
         "gold_map_with_wells": (create_gold_map_with_wells,),
         "hart3": (create_hart3,),
         "hart3_no_noise": (create_hart3, False),

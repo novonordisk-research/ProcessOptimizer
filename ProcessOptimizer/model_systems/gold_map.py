@@ -28,3 +28,17 @@ def create_gold_map() -> ModelSystem:
         noise_model=None,
         true_min=-3.09,
     )
+
+
+def create_distance_map() -> ModelSystem:
+    """Create the mode system that returns the distance from the camp in gold map."""
+    camp = [4, 10]
+
+    def distance(coordinates: Sequence[float]):
+        return np.sqrt((coordinates[0] - camp[0])**2 + (coordinates[1] - camp[1])**2)
+    return ModelSystem(
+        distance,
+        space=[(0.0, 15.0), (0.0, 15.0)],
+        noise_model=None,
+        true_min=0,
+    )
