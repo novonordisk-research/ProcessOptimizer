@@ -42,7 +42,7 @@ setup(
             "bokeh==3.4.1",
             "deap==1.4.1",
             "matplotlib==3.8.4",
-            "numpy==1.26.4",
+            "numpy==2.1.0",
             "pyYAML==6.0.1",
             "scikit-learn==1.4.2",
             "scipy==1.13.0",
