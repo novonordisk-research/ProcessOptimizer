@@ -4,6 +4,7 @@
 
 ### Changes
 
+- Documentation about the features in control parameters and sampling control parameters.
 - ModelSystems moved to creator systems, so they are only created when you ask for them. You now need to use `ProcessOptimizer.model_systems.get_model_system(model_system_name)` to create them. This has two advantages: If you change a model system, it doesn't affect a new instance of it. And ProcessOptimizer should import faster, since fewer objects are created i memory.
 
 ### Bugfixes
