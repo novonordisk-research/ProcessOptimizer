@@ -2237,7 +2237,7 @@ def plot_Pareto_bokeh(
         objective_names = [obj1, obj2]
     
     # Obtain the 'recipe' from the optimizer
-    pop, logbook, front = optimizer.NSGAII(MU=40)
+    pop, logbook, front = optimizer.NSGAII(MU=100)
     pop = np.asarray(pop)
     pop = np.asarray(
         optimizer.space.inverse_transform(
@@ -2299,7 +2299,7 @@ def plot_Pareto_bokeh(
     r1 = p.circle(
             list(data_observed_dict.keys())[0],
             list(data_observed_dict.keys())[1],
-            radius=1,
+            radius=0.2,
             source=source_observed,
             legend_label="Observed datapoints",
             fill_alpha=0.4,
@@ -2317,7 +2317,7 @@ def plot_Pareto_bokeh(
     r2 = p.circle(
             list(data_calculated_dict.keys())[0],
             list(data_calculated_dict.keys())[1],
-            radius=1,
+            radius=0.2,
             source=source_calculated,
             color="red",
             legend_label="Estimated Pareto front",
