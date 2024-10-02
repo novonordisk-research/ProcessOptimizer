@@ -63,6 +63,9 @@ class Optimizer(object):
         - an instance of a `Dimension` object (`Real`, `Integer` or
           `Categorical`).
 
+        Note that the space is always normalised if `base_estimator` is a
+        Gaussian Process regressor.
+
     * `base_estimator` ["GP", "RF", "ET", "GBRT" or sklearn regressor, default="GP"]:
         Should inherit from `sklearn.base.RegressorMixin`.
         In addition the `predict` method, should have an optional `return_std`

@@ -38,7 +38,11 @@ from .plots import plot_objective, plot_objectives, plot_objective_1d
 from .plots import plot_evaluations, plot_convergence
 from .plots import plot_Pareto, plot_expected_minimum_convergence
 
+<<<<<<< HEAD
 __version__ = "0.9.6"
+=======
+__version__ = "1.0.0"
+>>>>>>> 6c85018db95a79fbd479551270474089add3bb2b
 
 
 __all__ = (

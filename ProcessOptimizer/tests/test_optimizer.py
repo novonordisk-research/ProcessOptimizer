@@ -13,7 +13,7 @@ from math import isclose
 
 from ProcessOptimizer import gp_minimize
 from ProcessOptimizer.model_systems.benchmarks import bench1, bench1_with_time
-from ProcessOptimizer.model_systems import branin_no_noise
+from ProcessOptimizer.model_systems import get_model_system
 from ProcessOptimizer.model_systems.model_system import ModelSystem
 from ProcessOptimizer.learning import (
     ExtraTreesRegressor,
@@ -28,6 +28,7 @@ from scipy.optimize import OptimizeResult
 from ..learning.gaussian_process.gpr import _param_for_white_kernel_in_Sum
 
 # Introducing branin function as a test function from the Branin no noise ModelSystem
+branin_no_noise = get_model_system("branin_no_noise")
 branin = branin_no_noise.get_score
 
 

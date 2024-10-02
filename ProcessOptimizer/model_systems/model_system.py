@@ -63,12 +63,12 @@ class ModelSystem:
             scores = [score(point) for point in points]
             true_max = np.max(scores)
         self.true_max = true_max
-        noise_size_is_default = type(noise_model) == str or (
-            type(noise_model) == dict and "noise_size" not in noise_model.keys()
+        noise_size_is_default = isinstance(noise_model, str) or (
+            isinstance(noise_model, dict) and "noise_size" not in noise_model.keys()
         )  # Determining whether the noise size is given, or if it is the default.
-        if type(self.noise_model) == ConstantNoise and noise_size_is_default:
+        if isinstance(self.noise_model, ConstantNoise) and noise_size_is_default:
             # For ConstantNoise models, the noise size is set to 1% of the span of the score.
-            self.noise_size = 0.01 * (self.true_max - self.true_min)
+            self.noise_model.noise_size = 0.01 * (self.true_max - self.true_min)
 
     def result_loss(self, result):
         """
