@@ -1,6 +1,16 @@
 # Release history
 
-## Version 1.0.1 [unpublished]
+## Version 1.0.2 [unpublished]
+
+### Changes
+
+- 
+
+### Bugfixes
+
+-
+
+## Version 1.0.1 (October 2024)
 
 ### Changes
 
