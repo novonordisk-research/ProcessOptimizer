@@ -1406,15 +1406,6 @@ def plot_objective_1d(
                     edgecolor="green",
                     zorder=1,
                 )
-                # Highlight the point defined by 'pars'
-                ax_.scatter(
-                    minimum[n],
-                    yi[int(minimum[n])],
-                    c="r",
-                    s=20,
-                    marker="D",
-                    zorder=6,
-                )
             else:
                 # Show the mean value
                 ax_.scatter(
@@ -1425,21 +1416,11 @@ def plot_objective_1d(
                     marker="_",
                     zorder=1,
                 )
-                # Highlight the point defined by 'pars'
-                ax_.scatter(
-                    minimum[n],
-                    yi[int(minimum[n])],
-                    c="r",
-                    s=20,
-                    marker="D",
-                    zorder=6,
-                )
         
         # For non-categoric factors
         else:
             ax_.set_xlim(np.min(xi), np.max(xi))
-            # Highlight the point defined by 'pars'
-            ax_.axvline(minimum[n], linestyle="--", color="r", lw=2, zorder=6)
+            
             if show_confidence:
                 ax_.fill_between(
                     xi,
@@ -1459,6 +1440,9 @@ def plot_objective_1d(
                     zorder=0,
                 )
         
+        # Highlight the point defined by 'pars'
+        ax_.axvline(minimum[n], linestyle="--", color="r", lw=2, zorder=6)
+        
         # Add a legend to the figure
         if n == 0:
             if isinstance(pars, str):
@@ -1471,7 +1455,7 @@ def plot_objective_1d(
                 elif isinstance(pars, list):
                     # The case where the user specifies [x[0], x[1], ...]
                     highlight_label = "Point: " + str(pars)
-            # Legend icon(s) for the highlighted value
+            # Legend icon for the highlighted value
             legend_hl = mpl.lines.Line2D(
                 [],
                 [],
@@ -1480,14 +1464,7 @@ def plot_objective_1d(
                 marker="",
                 lw=2,
             )
-            legend_hp = mpl.lines.Line2D(
-                [],
-                [],
-                color="r",
-                marker="D",
-                markersize=5,
-                lw=0.0,
-            )
+
             if show_confidence:
                 # Legend icon for the 95 % credibility interval
                 legend_fill = mpl.patches.Patch(
@@ -1498,25 +1475,15 @@ def plot_objective_1d(
                     ci_label = "Est. 95 % credibility interval"
                 else:
                     ci_label = "95 % credibility interval"
-                # Legend changes if we have categorical factors
-                if np.any(is_cat):
-                    ax_.figure.legend(
-                        handles=[(legend_hp, legend_hl), legend_fill],
-                        labels=[highlight_label, ci_label],
-                        title=title,
-                        framealpha=1,
-                        loc="upper center",
-                        handler_map={tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
-                    )
-                else:
-                    ax_.figure.legend(
-                        handles=[legend_hl, legend_fill],
-                        labels=[highlight_label, ci_label],
-                        title=title,
-                        framealpha=1,
-                        loc="upper center",
-                        handler_map={tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
-                    )
+                # Build legend
+                ax_.figure.legend(
+                    handles=[legend_hl, legend_fill],
+                    labels=[highlight_label, ci_label],
+                    title=title,
+                    framealpha=1,
+                    loc="upper center",
+                    handler_map={tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
+                )
             else:
                 # Legend icon for the model mean function
                 legend_mean = mpl.lines.Line2D(
@@ -1527,25 +1494,15 @@ def plot_objective_1d(
                     marker="",
                     lw=1,
                 )
-                # Legend changes if we have categorical factors
-                if np.any(is_cat):
-                    ax_.figure.legend(
-                        handles=[(legend_hp, legend_hl), legend_mean],
-                        labels=[highlight_label, "Model mean function"],
-                        title=title,
-                        framealpha=1,
-                        loc="upper center",
-                        handler_map={tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
-                    )
-                else:
-                    ax_.figure.legend(
-                        handles=[legend_hl, legend_mean],
-                        labels=[highlight_label, "Model mean function"],
-                        title=title,
-                        framealpha=1,
-                        loc="upper center",
-                        handler_map={tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
-                    )        
+                # Build legend
+                ax_.figure.legend(
+                    handles=[legend_hl, legend_mean],
+                    labels=[highlight_label, "Model mean function"],
+                    title=title,
+                    framealpha=1,
+                    loc="upper center",
+                    handler_map={tuple: mpl.legend_handler.HandlerTuple(ndivide=None)},
+                )        
 
     if usepartialdependence:
         ylabel = "Partial dependence"
@@ -1682,15 +1639,7 @@ def plot_brownie_bee_frontend(
                 color="green",
                 edgecolor="green",
             )
-            # Highlight the expected minimum
-            ax_.scatter(
-                minimum[n],
-                -yi[int(minimum[n])],
-                c="r",
-                s=20,
-                marker="D",
-                zorder=6,
-            )
+
             # Adjust font size according to the number of labesl
             if len(xi) < 3:
                 [labl.set_fontsize(10) for labl in ax_.get_xticklabels()]
@@ -1712,9 +1661,9 @@ def plot_brownie_bee_frontend(
                 edgecolor="green",
                 linewidth=0.0,
             )
-            # Highlight the expected minimum
-            ax_.axvline(minimum[n], linestyle="--", color="r", lw=2, zorder=6)
         
+        # Highlight the expected minimum
+        ax_.axvline(minimum[n], linestyle="--", color="r", lw=2, zorder=6)        
         
         # Fix formatting of the y-axis with ticks from 0 to our max quality
         ax_.yaxis.set_major_locator(MaxNLocator("auto", integer=True))
