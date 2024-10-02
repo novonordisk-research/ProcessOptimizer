@@ -11,7 +11,7 @@ with open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="ProcessOptimizer",
-    version="1.0.0",
+    version="1.0.1",
     description="Sequential model-based optimization toolbox \
     (forked from scikit-optimize)",
     url="https://github.com/novonordisk-research/ProcessOptimizer",
