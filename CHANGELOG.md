@@ -1,11 +1,21 @@
 # Release history
 
-## Version 1.0.1 [unpublished]
+## Version 1.0.2 [unpublished]
 
 ### Changes
 
 - 
-- 
+
+### Bugfixes
+
+-
+
+## Version 1.0.1 (October 2024)
+
+### Changes
+
+- Added a plotting function that supports the Brownie Bee user interface (see browniebee.io).
+- Made small improvements to the plot_objective_1d function, and added it to __init.py__ for ProcessOptimizer.
 
 ### Bugfixes
 
