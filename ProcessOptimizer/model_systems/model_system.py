@@ -1,4 +1,4 @@
-from typing import Callable, List, Union
+from typing import Callable, List, Optional, Union
 
 import numpy as np
 from ..space import Space, space_factory
@@ -41,12 +41,13 @@ class ModelSystem:
         score: Callable[..., float],
         space: Union[Space, List],
         noise_model: Union[str, dict, NoiseModel, None],
-        true_min=None,
-        true_max=None,
+        true_min: Optional[float] = None,
+        true_max: Optional[float] = None,
+        seed: Union[int, np.random.RandomState, np.random.Generator, None] = 42,
     ):
         self.score = score
         self.space = space_factory(space)
-        self.noise_model = parse_noise_model(noise_model)
+        self.noise_model = parse_noise_model(noise_model, seed=seed)
         if true_min is None:
             ndims = self.space.n_dims
             points = self.space.lhs(
