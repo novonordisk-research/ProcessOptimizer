@@ -20,6 +20,7 @@ dist/
 
 # python virtual environment
 .env
+.env_pub
 
 # Visual Studio code settings
 .vscode

@@ -4,8 +4,7 @@
 
 ### Changes
 
-- 
-- 
+- Documentation of multiobjective optimization
 
 ### Bugfixes
 
