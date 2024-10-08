@@ -3,6 +3,8 @@ from typing import Callable, List, Union, Optional
 
 import numpy as np
 
+from ProcessOptimizer.utils import get_random_generator
+
 
 class NoiseModel(ABC):
     """
@@ -12,7 +14,7 @@ class NoiseModel(ABC):
     def __init__(
         self,
         noise_size: Optional[float],
-        seed: Optional[int] = 42,
+        seed: Union[int, np.random.RandomState, np.random.Generator, None] = 42,
     ):
         """
         Parameters
@@ -35,8 +37,7 @@ class NoiseModel(ABC):
         # have "size" 1, but as long as it is only set by set_noise_type(), it should be
         # safe.
         self.noise_size = noise_size
-        self._rng = np.random.default_rng(seed)
-        # Change this to ..utils.get_random_genertor once the pull request with that have been merged
+        self._rng = get_random_generator(seed)
         self.set_noise_type("normal")
 
     @abstractmethod
