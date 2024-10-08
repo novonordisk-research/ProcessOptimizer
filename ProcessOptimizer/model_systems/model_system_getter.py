@@ -9,7 +9,7 @@ from .peaks import create_peaks
 from .poly2 import create_poly2
 
 
-def get_model_system(model_system: str) -> ModelSystem:
+def get_model_system(model_system: str, **kwargs) -> ModelSystem:
     """
     Get the model system object for the given model system name.
 
@@ -49,6 +49,6 @@ def get_model_system(model_system: str) -> ModelSystem:
         )
     model_system_tuple = creator_dict[model_system]
     if len(model_system_tuple) == 1:
-        return model_system_tuple[0]()
+        return model_system_tuple[0](**kwargs)
     else:
-        return model_system_tuple[0](noise=model_system_tuple[1])
+        return model_system_tuple[0](noise=model_system_tuple[1], **kwargs)
