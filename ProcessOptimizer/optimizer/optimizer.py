@@ -306,7 +306,7 @@ class Optimizer(object):
 
         self._lhs = lhs
         if lhs:
-            self._lhs_samples = self.space.lhs(n_initial_points)
+            self._lhs_samples = self.space.lhs(n_initial_points, seed=self.rng)
 
         # Default is no constraints
         self._constraints = None
