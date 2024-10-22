@@ -255,7 +255,7 @@ def test_parse_zero():
 
 def test_uniform_noise(long_signal_list):
     noise_model = ConstantNoise()
-    noise_model.set_noise_type("uniform")
+    noise_model.noise_type = "uniform"
     noise_list = [noise_model.get_noise(None, Y) for Y in long_signal_list]
     (start, width) = uniform.fit(noise_list)
     assert np.allclose(start, -1, atol=0.1)
@@ -265,7 +265,7 @@ def test_uniform_noise(long_signal_list):
 def test_unknown_distribution():
     noise_model = ConstantNoise()
     with pytest.raises(ValueError):
-        noise_model.set_noise_type("not_implemented")
+        noise_model.noise_type = "not_implemented"
 
 
 # set_noise_model_list did not reset the list. This test verifies that this bug has been

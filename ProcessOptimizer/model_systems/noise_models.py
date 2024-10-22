@@ -38,7 +38,7 @@ class NoiseModel(ABC):
         # safe.
         self.noise_size = noise_size
         self._rng = get_random_generator(seed)
-        self.set_noise_type("normal")
+        self.noise_type = "normal"
 
     @abstractmethod
     def get_noise(self, X, Y: float) -> float:
@@ -55,11 +55,16 @@ class NoiseModel(ABC):
 
         return self._noise_distribution() * self.noise_size
 
-    def set_noise_type(self, noise_type: str):
-        if noise_type in ["normal", "Gaussian", "norm", "uniform"]:
-            self.noise_type = noise_type
+    @property
+    def noise_type(self) -> str:
+        return self._noise_type
+
+    @noise_type.setter
+    def noise_type(self, value: str):
+        if value in ["normal", "Gaussian", "norm", "uniform"]:
+            self._noise_type = value
         else:
-            raise ValueError(f'Noise distribution "{noise_type}" not recognised.')
+            raise ValueError(f'Noise distribution "{value}" not recognised.')
 
     def set_seed(self, seed: Optional[int]):
         # Instantiate the random number generator again
@@ -73,7 +78,14 @@ class NoiseModel(ABC):
             return lambda: self._rng.uniform(low=-1, high=1)
         else:
             raise ValueError(f'Noise distribution "{self.noise_type}" not recognised.')
-
+        
+    def copy(self) -> "NoiseModel":
+        """
+        Create a copy of the noise model. This is necessary to avoid the same random
+        seed being used in multiple noise models, which would make the noise correlated.
+        """
+        copy = self.__class__(noise_size=self.noise_size, seed = self._rng.spawn(1))
+        copy.set_noise_type(self.noise_type)
 
 class ConstantNoise(NoiseModel):
     """
