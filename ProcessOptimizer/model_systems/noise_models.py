@@ -78,14 +78,17 @@ class NoiseModel(ABC):
             return lambda: self._rng.uniform(low=-1, high=1)
         else:
             raise ValueError(f'Noise distribution "{self.noise_type}" not recognised.')
-        
+
     def copy(self) -> "NoiseModel":
         """
         Create a copy of the noise model. This is necessary to avoid the same random
         seed being used in multiple noise models, which would make the noise correlated.
         """
-        copy = self.__class__(noise_size=self.noise_size, seed = self._rng.spawn(1))
-        copy.set_noise_type(self.noise_type)
+        copy = self.__class__(noise_size=self.noise_size, seed=self._rng.spawn(1))
+        # np.random.Generator.spawn() returns a new generator based on the old one, but
+        # with a different seed. It is deterministic, but not identical to the old one.
+        copy.noise_type = self.noise_type
+
 
 class ConstantNoise(NoiseModel):
     """
