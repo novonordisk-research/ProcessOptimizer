@@ -132,6 +132,21 @@ class ModelSystem:
         """
         self.noise_model = parse_noise_model(noise_model)
 
+    def copy(self):
+        """
+        Returns a copy of the model system.
+        
+        The rng of the copy will a spawn of the original, that is, different in a
+        deterministic way.
+        """
+        return self.__class__(
+            score=self.score,
+            space=self.space,
+            noise_model=self.noise_model.copy(),
+            true_min=self.true_min,
+            true_max=self.true_max,
+        )
+
     @property
     def noise_size(self):
         return self.noise_model.noise_size
