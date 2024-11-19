@@ -621,6 +621,9 @@ class Space(object):
     def __iter__(self):
         return iter(self.dimensions)
 
+    def __len__(self):
+        return len(self.dimensions)
+
     @property
     def is_real(self):
         """

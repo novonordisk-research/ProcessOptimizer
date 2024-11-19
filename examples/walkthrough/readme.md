@@ -26,5 +26,9 @@ a lot more. This is calle [the explore vs. exploit balance](04_explore_vs_exploi
 In the fifth part, we introduce [small areas with a lot of gold](05_narrow_wells.ipynb),
 and see how `ProcessOptimizer` handles that.
 
-And finally, at the last installment of our main storyline, we look at the different
+We also look at the different
 ways we can [plot the result of `ProcessOptimizer`](06_plots.ipynb).
+
+But what if you have two disparate objectives, like cost and quality? We investigate how
+to handle that when we
+[look at multiobjective optimization](07_multibjective.ipynb).

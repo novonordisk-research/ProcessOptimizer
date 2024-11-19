@@ -252,9 +252,9 @@ class Constraints:
             sample_candidate = sample_candidate[0]
             # Check that the candidate is inside the original parameter space
             inspace = [
-                (sample_candidate[i] >= self.space.bounds[i][0]) and
-                (sample_candidate[i] <= self.space.bounds[i][1])
-                for i in range(d)
+                (sample_candidate[i] >= self.space.bounds[dim][0]) and
+                (sample_candidate[i] <= self.space.bounds[dim][1])
+                for i, dim in enumerate(self.sum_equals[0].dimensions)
             ]
             # Only accept the candidate if it is in our space
             if all(inspace):
