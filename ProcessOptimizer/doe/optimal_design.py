@@ -163,10 +163,17 @@ def make_model(factor_names, model_order, include_powers=True):
     License link: https://github.com/statease/dexpy/blob/master/LICENSE
     """
 
-    # MIGHT NEED TO CHANGE THIS TO WORK WITH CATEGORICAL VARIABLES
-    # THEY SHOULD NEVER HAVE A POWER GREATER THAN 1
-    # MAYBE I CAN JUST REMOVE POWER TERMS WITH CATEGORICAL VARIABLES
-    # I NEED THE FACTOR TYPES AS INPUT TO THE FUNCTION TO DO THIS
+    # It should be possible to provide "include_powers" for each factor
+    # This would allow for meaningfull categorical variables with 2 levels
+    # Issues might arise for categorical variables with more than 2 levels
+    # Models could then get really funky. Also with onehot encoding
+
+    if isinstance(include_powers, list) and len(include_powers) != len(
+        factor_names
+    ):
+        raise ValueError(
+            "The length of include_powers must be equal to the number of factors"
+        )
 
     if model_order == 1:
         return "+".join(factor_names)
@@ -175,16 +182,32 @@ def make_model(factor_names, model_order, include_powers=True):
         interaction_model = "({})**2".format("+".join(factor_names))
         if not include_powers:
             return interaction_model
-        squared_terms = "pow({}, 2)".format(",2)+pow(".join(factor_names))
+        if isinstance(include_powers, list):
+            terms = []
+            for factor, include_power in zip(factor_names, include_powers):
+                if include_power:
+                    terms.append(f"pow({factor}, 2)")
+            squared_terms = "+".join(terms)
+        else:  # This is if include_powers is True
+            squared_terms = "pow({}, 2)".format(",2)+pow(".join(factor_names))
         return f"{interaction_model}+{squared_terms}"
 
     elif model_order == 3:
         interaction_model = "({})**3".format("+".join(factor_names))
         if not include_powers:
             return interaction_model
-        squared_terms = "pow({}, 2)".format(",2)+pow(".join(factor_names))
-        cubed_terms = "pow({}, 3)".format(",3)+pow(".join(factor_names))
-        return "+".join([interaction_model, squared_terms, cubed_terms])
+        if isinstance(include_powers, list):
+            terms = []
+            for factor, include_power in zip(factor_names, include_powers):
+                if include_power:
+                    terms.append(f"pow({factor}, 2)")
+                    terms.append(f"pow({factor}, 3)")
+            power_terms = "+".join(terms)
+            return f"{interaction_model}+{power_terms}"
+        else:  # This is if include_powers is True
+            squared_terms = "pow({}, 2)".format(",2)+pow(".join(factor_names))
+            cubed_terms = "pow({}, 3)".format(",3)+pow(".join(factor_names))
+            return "+".join([interaction_model, squared_terms, cubed_terms])
 
     else:
         raise Warning("Model order not supported")
@@ -525,10 +548,13 @@ def get_optimal_DOE(
     categorical_options = 1
 
     for factor in factor_space.dimensions:
-        print(factor)
         if isinstance(factor, Categorical):
             categorical_options *= len(factor.categories)
-            print(categorical_options)
+            # INITIALLY, only allow 2 level categorical factors
+            if len(factor.categories) != 2:
+                raise ValueError(
+                    "Only 2 level categorical factors are supported"
+                )
 
     if budget < categorical_options:
         raise ValueError(
@@ -536,8 +562,19 @@ def get_optimal_DOE(
             "possible combinations of categorical variables categories: "
             f"{categorical_options}"
         )
-    
-    # brute force 
+
+    # INITIALLY, only allow 2 level categorical factors
+    # Pseudo code ideas for implementing for higher level categorical variables than 2 levels
+    # Sort space to have categorical variables at the end
+    # Split the space in two: one with continous and one with categorical
+    # Generate full factorial design for categorical variables
+    # Transform the design to one-hot encoding - ONLY FOR VARIABLES THAT ARE NOT ALREADY ONE-HOT ENCODED
+    # I.E., only have 2 levels
+    # Make a generator that returns lines in the transformed full factorial design
+    # and starts over when it runs out.
+    # Update the factor names to include the one-hot encoded variables
+    # Make a model where the one-hot encoded variables do not have powers
+    # HOW DO I MAKE SURE TO NOT HAVE CROSSTERMS BETWEEN CATEGORICAL VARIABLES THAT ARE JUST ONEHOT SPLITS?
 
     # Checking inputs
     # Making sure that factor names are valid for use in patsy
@@ -567,10 +604,6 @@ def get_optimal_DOE(
     design_points_real_space = doe_to_real_space(design, factor_space)
 
     # Generate replicas and sort the design points
-    design_points_with_reps_and_sort = generate_replicas_and_sort(
-        design_points_real_space, replicates, sorting
-    )
-
     design_points_with_reps_and_sort = generate_replicas_and_sort(
         design_points_real_space, replicates, sorting
     )
