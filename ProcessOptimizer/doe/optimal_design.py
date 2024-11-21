@@ -5,6 +5,7 @@ import numpy as np
 import patsy
 
 from .doe_transform import doe_to_real_space
+from ..space import Categorical, Integer, Real, Space
 
 # Defining a number of helper functions for the optimal design of experiments
 
@@ -161,6 +162,12 @@ def make_model(factor_names, model_order, include_powers=True):
     License: Apache License, Version 2.0
     License link: https://github.com/statease/dexpy/blob/master/LICENSE
     """
+
+    # MIGHT NEED TO CHANGE THIS TO WORK WITH CATEGORICAL VARIABLES
+    # THEY SHOULD NEVER HAVE A POWER GREATER THAN 1
+    # MAYBE I CAN JUST REMOVE POWER TERMS WITH CATEGORICAL VARIABLES
+    # I NEED THE FACTOR TYPES AS INPUT TO THE FUNCTION TO DO THIS
+
     if model_order == 1:
         return "+".join(factor_names)
 
@@ -515,6 +522,23 @@ def get_optimal_DOE(
     get_optimal_DOE(factor_space, 10, design_type='response')
     """
 
+    categorical_options = 1
+
+    for factor in factor_space.dimensions:
+        print(factor)
+        if isinstance(factor, Categorical):
+            categorical_options *= len(factor.categories)
+            print(categorical_options)
+
+    if budget < categorical_options:
+        raise ValueError(
+            "The number of runs in the design must be at least the number of "
+            "possible combinations of categorical variables categories: "
+            f"{categorical_options}"
+        )
+    
+    # brute force 
+
     # Checking inputs
     # Making sure that factor names are valid for use in patsy
     factor_names_raw = factor_space.names
@@ -539,6 +563,7 @@ def get_optimal_DOE(
     )
 
     # Transform the design into real space
+    # This needs to be updated to work with categorical variables
     design_points_real_space = doe_to_real_space(design, factor_space)
 
     # Generate replicas and sort the design points
