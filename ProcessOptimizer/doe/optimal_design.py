@@ -156,6 +156,22 @@ def delta(X, XtXi, row, new_point):
 def make_model(factor_names, model_order, include_powers=True):
     """Creates patsy formula representing a given model order.
 
+    :param factor_names: The names of the factors in the design.
+    :type factor_names: list of str
+
+    :param model_order: The order of the model.
+    :type model_order: int
+
+    :param include_powers: Whether to include squared and cubed terms.
+    :type include_powers: bool, list of bool
+    if True, include squared and cubed terms for all factors
+    if include_powers is a list, it must be the same length as factor_names
+    if include_powers is a list, include squared and cubed terms for factors
+    where include_powers is True
+
+    :return: The patsy formula representing the model.
+    :rtype: str
+
     This function is inspired by similar function in
     https://github.com/statease/dexpy
     Copyright 2016 Stat-Ease, Inc.
@@ -163,16 +179,12 @@ def make_model(factor_names, model_order, include_powers=True):
     License link: https://github.com/statease/dexpy/blob/master/LICENSE
     """
 
-    # It should be possible to provide "include_powers" for each factor
-    # This would allow for meaningfull categorical variables with 2 levels
-    # Issues might arise for categorical variables with more than 2 levels
-    # Models could then get really funky. Also with onehot encoding
-
     if isinstance(include_powers, list) and len(include_powers) != len(
         factor_names
     ):
         raise ValueError(
-            "The length of include_powers must be equal to the number of factors"
+            "The length of include_powers must be equal to the number of "
+            "factors"
         )
 
     if model_order == 1:
@@ -213,6 +225,43 @@ def make_model(factor_names, model_order, include_powers=True):
         raise Warning("Model order not supported")
 
 
+def initial_guess_cat_vars(init_guess, space):
+    """Function that changes initial values for the design points for 
+    categorical variables.
+
+    :param init_guess: The initial guess for the design points.
+    :type init_guess: np.array
+
+    :param space: The space of the factors.
+    :type space: Space object from ProcessOptimizer
+
+    :return: The initial guess for the design points with categorical variables
+        changed to -1 and 1.
+    :rtype: np.array
+    """
+
+    levels = []
+    for factor in space.dimensions:
+        if isinstance(factor, Categorical):
+            if len(factor.categories) != 2:
+                raise ValueError(
+                    "Only 2 level categorical factors are supported"
+                )
+            levels.append(len(factor.categories))
+        else:
+            levels.append(None)
+
+    for i, level in enumerate(levels):
+        if level:
+            if level == 2:
+                init_guess[:, i] = np.where(init_guess[:, i] < 0, -1, 1)
+            else:
+                raise ValueError(
+                    "Only 2 level categorical factors are supported"
+                )
+    return init_guess
+
+
 # Main function for optimal design of experiments
 
 
@@ -235,6 +284,9 @@ def build_optimal_design(factor_names, **kwargs):
         * **run_count** (`integer`) -- \
             The number of runs to use in the design. This must be equal\
             to or greater than the rank of the model.
+        * **space** (:class:`Space <ProcessOptimizer.space.Space>`) -- \
+            The space of the factors. This is used to be more consistent \
+            when using categorical variables.
 
     _______________________________________________________
 
@@ -248,6 +300,7 @@ def build_optimal_design(factor_names, **kwargs):
     model = kwargs.get("model", None)
 
     include_powers = kwargs.get("include_powers", True)
+    space = kwargs.get("space", None)
 
     if model is None:
         order = kwargs.get("order", 2)
@@ -257,6 +310,9 @@ def build_optimal_design(factor_names, **kwargs):
 
     # first generate a valid starting design
     (design, X) = bootstrap(factor_names, model, run_count)
+
+    if space is not None:
+        design = initial_guess_cat_vars(design, space)
 
     # Enable conversion between design points and X matrix
     functions = []
@@ -301,6 +357,10 @@ def build_optimal_design(factor_names, **kwargs):
                 best_step = -1
                 best_point = []
                 best_change = min_change
+
+                # Make some requirements related to have categorical variables can be updated.
+                # Maybe that can be made by a function that changes the number of steps
+                # If it is a categorical variable, there should only be two steps
 
                 for s in range(0, steps):
 
@@ -544,37 +604,25 @@ def get_optimal_DOE(
 
     get_optimal_DOE(factor_space, 10, design_type='response')
     """
-
-    categorical_options = 1
+    # Only relevant if implementing for higher level categorical variables
+    # categorical_options = 1
 
     for factor in factor_space.dimensions:
         if isinstance(factor, Categorical):
-            categorical_options *= len(factor.categories)
+            # categorical_options *= len(factor.categories)
             # INITIALLY, only allow 2 level categorical factors
             if len(factor.categories) != 2:
                 raise ValueError(
                     "Only 2 level categorical factors are supported"
                 )
 
-    if budget < categorical_options:
-        raise ValueError(
-            "The number of runs in the design must be at least the number of "
-            "possible combinations of categorical variables categories: "
-            f"{categorical_options}"
-        )
-
-    # INITIALLY, only allow 2 level categorical factors
-    # Pseudo code ideas for implementing for higher level categorical variables than 2 levels
-    # Sort space to have categorical variables at the end
-    # Split the space in two: one with continous and one with categorical
-    # Generate full factorial design for categorical variables
-    # Transform the design to one-hot encoding - ONLY FOR VARIABLES THAT ARE NOT ALREADY ONE-HOT ENCODED
-    # I.E., only have 2 levels
-    # Make a generator that returns lines in the transformed full factorial design
-    # and starts over when it runs out.
-    # Update the factor names to include the one-hot encoded variables
-    # Make a model where the one-hot encoded variables do not have powers
-    # HOW DO I MAKE SURE TO NOT HAVE CROSSTERMS BETWEEN CATEGORICAL VARIABLES THAT ARE JUST ONEHOT SPLITS?
+    # Only relevant if implementing for higher level categorical variables
+    # if budget < categorical_options:
+    #     raise ValueError(
+    #        "The number of runs in the design must be at least the number of "
+    #        "possible combinations of categorical variables categories: "
+    #        f"{categorical_options}"
+    #     )
 
     # Checking inputs
     # Making sure that factor names are valid for use in patsy
@@ -593,6 +641,7 @@ def get_optimal_DOE(
     # Build the optimal design
     design = build_optimal_design(
         factor_names,
+        space=factor_space,
         run_count=budget,
         order=order,
         model=model,
