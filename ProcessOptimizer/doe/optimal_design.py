@@ -358,14 +358,16 @@ def build_optimal_design(factor_names, **kwargs):
                 best_point = []
                 best_change = min_change
 
-                # Make some requirements related to how categorical variables can be updated.
-                # Maybe that can be made by a function that changes the number of steps
-                # If it is a categorical variable, there should only be two steps
-
+                # If it is a categorical variable, there should only be two
+                # steps. This is to ensure that the design points are always
+                # -1 and 1 in the categorical var. Only 2 level categorical
+                # vars implemented
                 steps = 12
                 if space is not None:
                     for factor in space.dimensions:
-                        if factor.name == f and isinstance(factor, Categorical):
+                        if factor.name == f and isinstance(
+                            factor, Categorical
+                        ):
                             steps = 2
 
                 for s in range(0, steps):
