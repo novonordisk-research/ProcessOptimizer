@@ -5,7 +5,7 @@ import numpy as np
 import patsy
 
 from .doe_transform import doe_to_real_space
-from ..space import Categorical, Integer, Real, Space
+from ..space import Categorical
 
 # Defining a number of helper functions for the optimal design of experiments
 
@@ -226,7 +226,7 @@ def make_model(factor_names, model_order, include_powers=True):
 
 
 def initial_guess_cat_vars(init_guess, space):
-    """Function that changes initial values for the design points for 
+    """Function that changes initial values for the design points for
     categorical variables.
 
     :param init_guess: The initial guess for the design points.
@@ -275,18 +275,22 @@ def build_optimal_design(factor_names, **kwargs):
     :type factor_names: list of str
 
     :Keyword Arguments:
-        * **order** (:class:`ModelOrder <dexpy.model.ModelOrder>`) -- \
-            Builds a design for this order model. \
+        * **order** (:class:`ModelOrder <dexpy.model.ModelOrder>`) --
+            Builds a design for this order model.
             Mutually exclusive with the **model** parameter.
-        * **model** (`patsy formula <https://patsy.readthedocs.io>`_) -- \
-            Builds a design for this model formula. \
+        * **model** (`patsy formula <https://patsy.readthedocs.io>`_) --
+            Builds a design for this model formula.
             Mutually exclusive with the **order** parameter.
-        * **run_count** (`integer`) -- \
-            The number of runs to use in the design. This must be equal\
+        * **run_count** (`integer`) --
+            The number of runs to use in the design. This must be equal
             to or greater than the rank of the model.
-        * **space** (:class:`Space <ProcessOptimizer.space.Space>`) -- \
-            The space of the factors. This is used to be more consistent \
+        * **space** (:class:`Space <ProcessOptimizer.space.Space>`) --
+            The space of the factors. This is used to be more consistent
             when using categorical variables.
+        * **res** (`integer`) --
+            The resolution of the design. This is the sampling resolution used
+            when sampling the design space. The higher the resolution, the
+            more accurate the design will be. The default is 12.
 
     _______________________________________________________
 
@@ -301,6 +305,8 @@ def build_optimal_design(factor_names, **kwargs):
 
     include_powers = kwargs.get("include_powers", True)
     space = kwargs.get("space", None)
+
+    res = kwargs.get("res", 12)
 
     if model is None:
         order = kwargs.get("order", 2)
@@ -334,7 +340,7 @@ def build_optimal_design(factor_names, **kwargs):
     code = compile(full_func, "<string>", "eval")
 
     # set up the algorithm parameters
-    steps = 12
+    steps0 = res
     low = -1
     high = 1
 
@@ -351,24 +357,25 @@ def build_optimal_design(factor_names, **kwargs):
             design_point = {}
             for ii in range(0, factor_count):
                 design_point[factor_names[ii]] = design[i, ii]
+            # This is probably where there should be a change if code should
+            # be able to handle categorical variables with more than 2 levels
             for index_factor, f in enumerate(factor_names):
                 original_value = design_point[f]
                 original_expanded = X[i]
                 best_step = -1
                 best_point = []
                 best_change = min_change
-
                 # If it is a categorical variable, there should only be two
                 # steps. This is to ensure that the design points are always
                 # -1 and 1 in the categorical var. Only 2 level categorical
                 # vars implemented
-                steps = 12
+                steps = steps0
                 if space is not None:
                     for factor in space.dimensions:
                         if factor.name == f and isinstance(
                             factor, Categorical
                         ):
-                            steps = 2
+                            steps = len(factor.categories)
 
                 for s in range(0, steps):
 
@@ -553,6 +560,60 @@ def generate_replicas_and_sort(
     return design_points_rep_and_sort
 
 
+def get_cat_var_levels(factor_space):
+    """
+    Determine the levels of the categorical variables in the factor space.
+    Gives a list of the number of levels for each factor in the factor space.
+    List element will be None if the factor is not categorical
+
+    :param factor_space: The space of the factors
+    :type factor_space: ProcessOptimizer.space.Space
+
+    :return: The levels of the categorical variables in the factor space
+    :rtype: list of int or None
+    """
+
+    var_is_cat = []
+
+    for factor in factor_space.dimensions:
+        if isinstance(factor, Categorical):
+            # categorical_options *= len(factor.categories)
+            # INITIALLY, only allow 2 level categorical factors
+            var_is_cat.append(len(factor.categories))
+            if len(factor.categories) != 2:
+                raise ValueError(
+                    "Only 2 level categorical factors are supported"
+                )
+        else:
+            var_is_cat.append(None)
+    return var_is_cat
+
+
+def include_powers_to_list(include_powers, cat_var_levels):
+    """
+    Convert the include_powers parameter to a list if True and there are
+    categorical variables
+
+    :param include_powers: Whether to include squared and cubed terms
+    :type include_powers: bool, list of bool
+
+    :param cat_var_levels: The levels of the categorical variables in the
+        factor space
+    :type cat_var_levels: list of int or None
+
+    :return: The include_powers parameter as a list
+    :rtype: list of bool
+    """
+
+    if include_powers is True and any(level for level in cat_var_levels):
+        include_powers = [True] * len(cat_var_levels)
+        for i, level in enumerate(cat_var_levels):
+            if level:
+                include_powers[i] = False
+
+    return include_powers
+
+
 def get_optimal_DOE(
     factor_space,
     budget,
@@ -560,6 +621,7 @@ def get_optimal_DOE(
     model=None,
     replicates=1,
     sorting=False,
+    res=12,
 ):
     """
     A function that returns the d-optimal design of experiments
@@ -596,6 +658,9 @@ def get_optimal_DOE(
     Can take False, "ascending", "randomized", "random_but_group_replicates",
     Default is False
 
+    :param res: The resolution of the design sampling. The default is 12.
+    :type res: int
+
     Outputs:
 
     :return: A design of experiments in real space
@@ -612,25 +677,9 @@ def get_optimal_DOE(
 
     get_optimal_DOE(factor_space, 10, design_type='response')
     """
-    # Only relevant if implementing for higher level categorical variables
-    # categorical_options = 1
 
-    for factor in factor_space.dimensions:
-        if isinstance(factor, Categorical):
-            # categorical_options *= len(factor.categories)
-            # INITIALLY, only allow 2 level categorical factors
-            if len(factor.categories) != 2:
-                raise ValueError(
-                    "Only 2 level categorical factors are supported"
-                )
-
-    # Only relevant if implementing for higher level categorical variables
-    # if budget < categorical_options:
-    #     raise ValueError(
-    #        "The number of runs in the design must be at least the number of "
-    #        "possible combinations of categorical variables categories: "
-    #        f"{categorical_options}"
-    #     )
+    # Check if the factor space has any categorical variables
+    cat_var_levels = get_cat_var_levels(factor_space)
 
     # Checking inputs
     # Making sure that factor names are valid for use in patsy
@@ -646,6 +695,8 @@ def get_optimal_DOE(
 
     order, include_powers = model_order_and_include_powers(design_type)
 
+    include_powers = include_powers_to_list(include_powers, cat_var_levels)
+
     # Build the optimal design
     design = build_optimal_design(
         factor_names,
@@ -654,6 +705,7 @@ def get_optimal_DOE(
         order=order,
         model=model,
         include_powers=include_powers,
+        res=res
     )
 
     # Transform the design into real space
