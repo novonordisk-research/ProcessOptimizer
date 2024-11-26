@@ -670,12 +670,13 @@ def get_optimal_DOE(
 
     from ProcessOptimizer.space import Integer, Real, Space
     from ProcessOptimizer.doe import get_optimal_DOE
-    factor_space = Space(dimensions=[Real(10, 40, name='ul_indicator'),
-                                     Integer(20, 100, name='ul_base'),
-                                     Integer(20, 100, name='ul_acid'),
-                                     ])
+    factor_space = Space(dimensions=[Integer(10, 40, name='int_var1'),
+                                     Integer(-40, 520, name='int_var2'),
+                                     Real(0.4, 117.7, name='real_var1'),
+                                     Categorical(['A', 'B'], name='cat_var1'),
+                                    ])
 
-    get_optimal_DOE(factor_space, 10, design_type='response')
+    get_optimal_DOE(factor_space, 14, design_type='response')
     """
 
     # Check if the factor space has any categorical variables
