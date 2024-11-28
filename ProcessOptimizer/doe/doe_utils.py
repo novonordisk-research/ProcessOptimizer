@@ -45,6 +45,7 @@ def generate_replicas_and_sort(
         design_points_mid_reps = np.tile(
             design_points_real_space, (1, n_replicates)
         )
+        np.random.shuffle(design_points_mid_reps)
         design_points_rep_and_sort = np.reshape(
             design_points_mid_reps,
             (
