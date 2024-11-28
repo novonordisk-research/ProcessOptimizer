@@ -339,10 +339,10 @@ def optimize_design(X, design, factor_names, code, **kwargs):
     License link: https://github.com/statease/dexpy/blob/master/LICENSE
     """
 
-    high = kwargs.get('high', 1)
-    low = kwargs.get('low', -1)
-    steps0 = kwargs.get('res', 11)
-    space = kwargs.get('space', None)
+    high = kwargs.get("high", 1)
+    low = kwargs.get("low", -1)
+    steps0 = kwargs.get("res", 11)
+    space = kwargs.get("space", None)
 
     min_change = 1.0 + np.finfo(float).eps
 
@@ -654,7 +654,7 @@ def get_optimal_DOE(
         order=order,
         model=model,
         include_powers=include_powers,
-        res=res
+        res=res,
     )
 
     # Transform the design into real space
