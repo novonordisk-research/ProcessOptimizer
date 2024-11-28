@@ -220,12 +220,11 @@ def make_model(factor_names, model_order, include_powers=True):
             squared_terms = "pow({}, 2)".format(",2)+pow(".join(factor_names))
             cubed_terms = "pow({}, 3)".format(",3)+pow(".join(factor_names))
             return "+".join([interaction_model, squared_terms, cubed_terms])
-
     else:
         raise Warning("Model order not supported")
 
 
-def initial_guess_cat_vars(init_guess, space):
+def initial_values_cat_vars(init_guess, space):
     """Function that changes initial values for the design points for
     categorical variables.
 
@@ -262,6 +261,154 @@ def initial_guess_cat_vars(init_guess, space):
     return init_guess
 
 
+def conversion_design_Xmatrix(X):
+    """Function that enables conversion between design points and X matrix.
+
+    :param X: The X matrix.
+    :type X: patsy dmatrix
+
+    :return: The code that enables conversion between design points and X
+    matrix.
+    :rtype: code object
+
+    This function is adapted from https://github.com/statease/dexpy
+    Copyright 2016 Stat-Ease, Inc.
+    License: Apache License, Version 2.0
+    License link: https://github.com/statease/dexpy/blob/master/LICENSE
+    """
+
+    # Enable conversion between design points and X matrix
+    functions = []
+    for _, subterms in X.design_info.term_codings.items():
+        sub_funcs = []
+        for subterm in subterms:
+            for factor in subterm.factors:
+                factor_info = X.design_info.factor_infos[factor]
+                eval_code = factor_info.state["eval_code"]
+                if eval_code[0] == "I":
+                    eval_code = eval_code[1:]
+                sub_funcs.append(eval_code)
+        if not sub_funcs:
+            functions.append("1")  # intercept
+        else:
+            functions.append("*".join(sub_funcs))
+
+    full_func = "[" + ",".join(functions) + "]"
+    code = compile(full_func, "<string>", "eval")
+    return code
+
+
+def optimize_design(X, design, factor_names, code, **kwargs):
+    """
+    Optimize a design using the Coordinate-Exchange algorithm from Meyer and
+    Nachtsheim 1995 :cite:`MeyerNachtsheim1995`.
+
+    :param X: The X matrix.
+    :type X: patsty dmatrix
+
+    :param design: The design points.
+    :type design: np.array
+
+    :param factor_names: The names of the factors in the design.
+    :type factor_names: list of str
+
+    :param code: The code that enables conversion between design points and X
+        matrix.
+    :type code: code object
+
+    :Keyword Arguments:
+        * **high** (`float`) -- The high value for the design points. The
+            default is 1.
+        * **low** (`float`) -- The low value for the design points. The
+            default is -1.
+        * **res** (`integer`) -- The resolution of the design. This is the
+            sampling resolution used when sampling the design space. The
+            higher the resolution, the more accurate the design will be. The
+            default is 11.
+        * **space** (:class:`Space <ProcessOptimizer.space.Space>`) -- The
+            space of the factors. This is needed when using categorical
+            variables in a good way.
+
+    :return: The optimized design.
+    :rtype: np.array
+
+
+    This function is adapted from https://github.com/statease/dexpy
+    Copyright 2016 Stat-Ease, Inc.
+    License: Apache License, Version 2.0
+    License link: https://github.com/statease/dexpy/blob/master/LICENSE
+    """
+
+    high = kwargs.get('high', 1)
+    low = kwargs.get('low', -1)
+    steps0 = kwargs.get('res', 11)
+    space = kwargs.get('space', None)
+
+    min_change = 1.0 + np.finfo(float).eps
+
+    XtXi = np.linalg.inv(np.dot(np.transpose(X), X))
+    (_, d_optimality) = np.linalg.slogdet(XtXi)
+
+    design_improved = True  # Specified to initiate the while loop
+
+    while design_improved:
+        design_improved = False
+        for i in range(0, len(design)):
+            design_point = {}
+            for ii in range(0, len(factor_names)):
+                design_point[factor_names[ii]] = design[i, ii]
+            # This is probably where there should be a change if code should
+            # be able to handle categorical variables with more than 2 levels
+            for index_factor, f in enumerate(factor_names):
+                original_value = design_point[f]
+                original_expanded = X[i]
+                best_step = -1
+                best_point = []
+                best_change = min_change
+                # If it is a categorical variable, there should only be two
+                # steps. This is to ensure that the design points are always
+                # -1 and 1 in the categorical var. Only 2 level categorical
+                # vars implemented
+                steps = steps0
+                if space is not None:
+                    for factor in space.dimensions:
+                        if factor.name == f and isinstance(
+                            factor, Categorical
+                        ):
+                            steps = len(factor.categories)
+
+                for s in range(0, steps):
+
+                    design_point[f] = low + ((high - low) / (steps - 1)) * s
+                    new_point = expand_point(design_point, code)
+
+                    change_in_d = delta(X, XtXi, i, new_point)
+
+                    if change_in_d - best_change > np.finfo(float).eps:
+                        best_point = new_point
+                        best_step = s
+                        best_change = change_in_d
+
+                if best_step >= 0:
+                    # update X with the best point
+                    design_point[f] = (
+                        low + ((high - low) / (steps - 1)) * best_step
+                    )
+                    design[i, index_factor] = design_point[f]
+                    XtXi = update(XtXi, best_point, X[i])
+                    X[i] = best_point
+
+                    d_optimality -= math.log(best_change)
+                    design_improved = True
+
+                else:
+                    # restore the original design point value
+                    design_point[f] = original_value
+                    X[i] = original_expanded
+
+    return design
+
+
 # Main function for optimal design of experiments
 
 
@@ -290,7 +437,7 @@ def build_optimal_design(factor_names, **kwargs):
         * **res** (`integer`) --
             The resolution of the design. This is the sampling resolution used
             when sampling the design space. The higher the resolution, the
-            more accurate the design will be. The default is 12.
+            more accurate the design will be. The default is 11.
 
     _______________________________________________________
 
@@ -300,13 +447,10 @@ def build_optimal_design(factor_names, **kwargs):
     License link: https://github.com/statease/dexpy/blob/master/LICENSE
     """
 
-    factor_count = len(factor_names)
     model = kwargs.get("model", None)
-
     include_powers = kwargs.get("include_powers", True)
     space = kwargs.get("space", None)
-
-    res = kwargs.get("res", 12)
+    res = kwargs.get("res", 11)
 
     if model is None:
         order = kwargs.get("order", 2)
@@ -318,97 +462,16 @@ def build_optimal_design(factor_names, **kwargs):
     (design, X) = bootstrap(factor_names, model, run_count)
 
     if space is not None:
-        design = initial_guess_cat_vars(design, space)
+        design = initial_values_cat_vars(design, space)
 
     # Enable conversion between design points and X matrix
-    functions = []
-    for _, subterms in X.design_info.term_codings.items():
-        sub_funcs = []
-        for subterm in subterms:
-            for factor in subterm.factors:
-                factor_info = X.design_info.factor_infos[factor]
-                eval_code = factor_info.state["eval_code"]
-                if eval_code[0] == "I":
-                    eval_code = eval_code[1:]
-                sub_funcs.append(eval_code)
-        if not sub_funcs:
-            functions.append("1")  # intercept
-        else:
-            functions.append("*".join(sub_funcs))
+    code = conversion_design_Xmatrix(X)
 
-    full_func = "[" + ",".join(functions) + "]"
-    code = compile(full_func, "<string>", "eval")
+    opt_design = optimize_design(
+        X, design, factor_names, code, res=res, space=space
+    )
 
-    # set up the algorithm parameters
-    steps0 = res
-    low = -1
-    high = 1
-
-    XtXi = np.linalg.inv(np.dot(np.transpose(X), X))
-    (_, d_optimality) = np.linalg.slogdet(XtXi)
-
-    design_improved = True
-    swaps = 0
-    evals = 0
-    min_change = 1.0 + np.finfo(float).eps
-    while design_improved:
-        design_improved = False
-        for i in range(0, len(design)):
-            design_point = {}
-            for ii in range(0, factor_count):
-                design_point[factor_names[ii]] = design[i, ii]
-            # This is probably where there should be a change if code should
-            # be able to handle categorical variables with more than 2 levels
-            for index_factor, f in enumerate(factor_names):
-                original_value = design_point[f]
-                original_expanded = X[i]
-                best_step = -1
-                best_point = []
-                best_change = min_change
-                # If it is a categorical variable, there should only be two
-                # steps. This is to ensure that the design points are always
-                # -1 and 1 in the categorical var. Only 2 level categorical
-                # vars implemented
-                steps = steps0
-                if space is not None:
-                    for factor in space.dimensions:
-                        if factor.name == f and isinstance(
-                            factor, Categorical
-                        ):
-                            steps = len(factor.categories)
-
-                for s in range(0, steps):
-
-                    design_point[f] = low + ((high - low) / (steps - 1)) * s
-                    new_point = expand_point(design_point, code)
-
-                    change_in_d = delta(X, XtXi, i, new_point)
-                    evals += 1
-
-                    if change_in_d - best_change > np.finfo(float).eps:
-                        best_point = new_point
-                        best_step = s
-                        best_change = change_in_d
-
-                if best_step >= 0:
-                    # update X with the best point
-                    design_point[f] = (
-                        low + ((high - low) / (steps - 1)) * best_step
-                    )
-                    design[i, index_factor] = design_point[f]
-                    XtXi = update(XtXi, best_point, X[i])
-                    X[i] = best_point
-
-                    d_optimality -= math.log(best_change)
-                    design_improved = True
-                    swaps += 1
-
-                else:
-                    # restore the original design point value
-                    design_point[f] = original_value
-                    X[i] = original_expanded
-
-    return design
+    return opt_design
 
 
 # Integration with ProcessOptimizer
@@ -621,7 +684,7 @@ def get_optimal_DOE(
     model=None,
     replicates=1,
     sorting=False,
-    res=12,
+    res=11,
 ):
     """
     A function that returns the d-optimal design of experiments
@@ -658,7 +721,7 @@ def get_optimal_DOE(
     Can take False, "ascending", "randomized", "random_but_group_replicates",
     Default is False
 
-    :param res: The resolution of the design sampling. The default is 12.
+    :param res: The resolution of the design sampling. The default is 11.
     :type res: int
 
     Outputs:
