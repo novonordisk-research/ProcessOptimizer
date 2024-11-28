@@ -1,0 +1,11 @@
+ # Pseudo code ideas for implementing higher level categorical variables than 2 levels
+    # Sort space to have categorical variables at the end
+    # Split the space in two: one with continous and one with categorical
+    # Generate full factorial design for categorical variables
+    # Transform the design to one-hot encoding - ONLY FOR VARIABLES THAT ARE NOT ALREADY ONE-HOT ENCODED
+    # I.E., only have 2 levels
+    # Make a generator that returns lines in the transformed full factorial design
+    # and starts over when it runs out.
+    # Update the factor names to include the one-hot encoded variables
+    # Make a model where the one-hot encoded variables do not have powers
+    # HOW DO I MAKE SURE TO NOT HAVE CROSSTERMS BETWEEN CATEGORICAL VARIABLES THAT ARE JUST ONEHOT SPLITS?
