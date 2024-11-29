@@ -4,7 +4,7 @@ import numpy as np
 
 
 def generate_replicas_and_sort(
-    design_points_real_space, n_replicates, sorting
+    design_points_real_space, n_replicates, sorting=False
 ):
     """
     Generate replicas and sort the design points
@@ -31,6 +31,12 @@ def generate_replicas_and_sort(
 
     if sorting not in sorting_options:
         raise ValueError(f"sorting must be one of {sorting_options}")
+
+    # Make sure the design points are an array of objects so that we can avoid
+    # issues with numpy trying to convert the elements to strings when we
+    # categorical variables
+
+    design_points_real_space = np.array(design_points_real_space, dtype=object)
 
     # if sorting is False, just replicate the design points
     if sorting is False:

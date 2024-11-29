@@ -663,7 +663,7 @@ def get_optimal_DOE(
 
     # Generate replicas and sort the design points
     design_points_with_reps_and_sort = generate_replicas_and_sort(
-        design_points_real_space, replicates, sorting
+        design_points_real_space, replicates, sorting=sorting
     )
 
     return (design_points_with_reps_and_sort, factor_names)
