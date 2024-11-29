@@ -6,7 +6,11 @@ from ProcessOptimizer.doe.doe_utils import (
     generate_replicas_and_sort,
     sanitize_names_for_patsy,
 )
-from ProcessOptimizer.space import Space, Real
+from ProcessOptimizer.doe.optimal_design import (
+    build_optimal_design,
+    get_optimal_DOE,
+)
+from ProcessOptimizer.space import Space, Real, Categorical
 
 
 # Tests for doe_to_real_space function
@@ -51,7 +55,6 @@ def test_doe_to_real_space_different_ranges():
 
 @pytest.mark.fast_test
 def test_categorical_doe_to_real_space():
-    from ProcessOptimizer.space import Categorical
     space = Space([Real(-100, 100, name='x1'), Real(0, 1, name='x2'),
                    Categorical(['A', 'B'], name='x3')])
     design = np.array([[0, 0, 0], [1, 1, 1]])
@@ -147,3 +150,57 @@ def test_sanitize_names_for_patsy():
     result = sanitize_names_for_patsy(factor_names)
     assert result == expected
 
+
+# Tests for optimal_design.py
+def test_build_optimal_design_vanilla():
+    factor_names = ['x1', 'x2', 'x3']
+
+    result = build_optimal_design(factor_names, run_count=8)
+
+    assert result.shape == (8, 3)
+    assert np.all(result[:, :2] >= 0) and np.all(result[:, :2] <= 1)
+    assert np.all(np.isin(result[:, 2], [-1, 1]))
+
+
+@pytest.fixture
+def optimal_design_space():
+    return Space([Real(20, 100, name='x1'), Real(0, 1, name='x2'),
+                  Categorical(['A', 'B'], name='x3')])
+
+
+def test_build_optimal_design_with_categorical():
+    factor_names = ['x1', 'x2', 'x3']
+    space = optimal_design_space()
+
+    result = build_optimal_design(factor_names, run_count=12, space=space)
+
+    assert result.shape == (12, 3)
+    assert np.all(np.isin(result[:, 2], [-1, 1]))
+
+
+def test_get_optimal_DOE_without_categorical():
+    space = sample_space()
+    result, factor_names = get_optimal_DOE(
+        space, 12, design_type="optimization", res=7
+    )
+    print(result)
+    assert result.shape == (12, 2)
+    assert np.all(result[:, 0] >= 0) and np.all(result[:, 0] <= 10)
+    assert np.all(result[:, 1] >= -5) and np.all(result[:, 1] <= 5)
+    assert factor_names == ['x1', 'x2']
+
+
+def test_get_optimal_DOE():
+    space = optimal_design_space()
+
+    for design_type in ['linear', 'screening', 'response', 'optimization']:
+
+        design, factor_names = get_optimal_DOE(
+            space, 16, design_type=design_type, res=5
+        )
+
+        assert design.shape == (16, 3)
+        assert np.all(design[:, 0] >= 20) and np.all(design[:, 0] <= 100)
+        assert np.all(design[:, 1] >= 0) and np.all(design[:, 1] <= 1)
+        assert [entry in ['A', 'B'] for entry in design[:, 2]]
+        assert factor_names == ['x1', 'x2', 'x3']
