@@ -108,7 +108,7 @@ def sanitize_names_for_patsy(factor_names):
             if symbol in name:
                 warnings.warn(
                     (
-                        "Warning: Factor names should not contain spaces or "
+                        "Factor names should not contain spaces or "
                         "mathematical symbols. Replacing with underscore"
                     )
                 )
