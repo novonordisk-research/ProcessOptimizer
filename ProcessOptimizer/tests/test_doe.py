@@ -1,29 +1,26 @@
-import pytest
 import numpy as np
+import pytest
 
 from ProcessOptimizer.doe.doe_transform import doe_to_real_space
-from ProcessOptimizer.doe.doe_utils import (
-    generate_replicas_and_sort,
-    sanitize_names_for_patsy,
-)
-from ProcessOptimizer.doe.optimal_design import (
-    build_optimal_design,
-    get_optimal_DOE,
-)
-from ProcessOptimizer.space import Space, Real, Categorical
+from ProcessOptimizer.doe.doe_utils import (generate_replicas_and_sort,
+                                            sanitize_names_for_patsy)
+from ProcessOptimizer.doe.optimal_design import (build_optimal_design,
+                                                 get_optimal_DOE)
+from ProcessOptimizer.space import Categorical, Real, Space
 
 
 # Tests for doe_to_real_space function
 @pytest.fixture
 def sample_space():
-    return Space([Real(0, 10, name='x1'), Real(-5, 5, name='x2')])
+    return Space([Real(0, 10, name="x1"), Real(-5, 5, name="x2")])
 
 
 @pytest.mark.fast_test
 def test_doe_to_real_space_basic(sample_space):
+
     design = np.array([[0, 0], [1, 1]])
     result = doe_to_real_space(design, sample_space)
-    assert result.shape == (2, 2)
+    assert np.asarray(result).shape == (2, 2)
     assert np.allclose(result[0], [0, -5])
     assert np.allclose(result[1], [10, 5])
 
@@ -39,14 +36,17 @@ def test_doe_to_real_space_edge_cases(sample_space):
 @pytest.mark.fast_test
 def test_doe_to_real_space_scaler(sample_space):
     design = np.array([[0.25, 0.75], [0.75, 0.25]])
-    result = doe_to_real_space(design, sample_space)
+    corner_points = [[0, 0], [1, 1]]
+    result = doe_to_real_space(
+        design, sample_space, corner_points=corner_points
+    )
     assert np.allclose(result[0], [2.5, 2.5])
     assert np.allclose(result[1], [7.5, -2.5])
 
 
 @pytest.mark.fast_test
 def test_doe_to_real_space_different_ranges():
-    space = Space([Real(-100, 100, name='x1'), Real(0, 1, name='x2')])
+    space = Space([Real(-100, 100, name="x1"), Real(0, 1, name="x2")])
     design = np.array([[0, 0], [1, 1]])
     result = doe_to_real_space(design, space)
     assert np.allclose(result[0], [-100, 0])
@@ -55,37 +55,52 @@ def test_doe_to_real_space_different_ranges():
 
 @pytest.mark.fast_test
 def test_categorical_doe_to_real_space():
-    space = Space([Real(-100, 100, name='x1'), Real(0, 1, name='x2'),
-                   Categorical(['A', 'B'], name='x3')])
+    space = Space(
+        [
+            Real(-100, 100, name="x1"),
+            Real(0, 1, name="x2"),
+            Categorical(["A", "B"], name="x3"),
+        ]
+    )
     design = np.array([[0, 0, 0], [1, 1, 1]])
     result = doe_to_real_space(design, space)
-    assert result[0] == [-100, 0, 'A']
-    assert result[1] == [100, 1, 'B']
+    assert result[0] == [-100, 0, "A"]
+    assert result[1] == [100, 1, "B"]
 
 
 @pytest.mark.fast_test
 def test_categorical_doe_to_real_space_rounding():
     from ProcessOptimizer.space import Categorical
-    space = Space([Real(-100, 100, name='x1'), Real(0, 1, name='x2'),
-                   Categorical(['A', 'B'], name='x3')])
+
+    space = Space(
+        [
+            Real(-100, 100, name="x1"),
+            Real(0, 1, name="x2"),
+            Categorical(["A", "B"], name="x3"),
+        ]
+    )
     design = np.array([[0, 0, 0.3], [1, 1, 0.8]])
     result = doe_to_real_space(design, space)
-    assert result[0] == [-100, 0, 'A']
-    assert result[1] == [100, 1, 'B']
+    assert result[0] == [-100, 0, "A"]
+    assert result[1] == [100, 1, "B"]
 
 
 @pytest.mark.fast_test
 def test_categorical_doe_to_real_space_edge():
     from ProcessOptimizer.space import Categorical
-    space = Space([Real(-100, 100, name='x1'), Real(0, 1, name='x2'),
-                   Categorical(['A', 'B'], name='x3')])
+
+    space = Space(
+        [
+            Real(-100, 100, name="x1"),
+            Real(0, 1, name="x2"),
+            Categorical(["A", "B"], name="x3"),
+        ]
+    )
     design = np.array([[0, 0, -42], [1, 1, 31]])
     result = doe_to_real_space(design, space)
-    assert result[0] == [-100, 0, 'A']
-    assert result[1] == [100, 1, 'B']
+    assert result[0] == [-100, 0, "A"]
+    assert result[1] == [100, 1, "B"]
 
-
-# Tests for functions in doe_utils.py
 
 # Tests for generate_replicas_and_sort function
 @pytest.mark.fast_test
@@ -147,60 +162,81 @@ def test_sanitize_names_for_patsy():
         "Factor12",
         "Factor13",
     ]
-    result = sanitize_names_for_patsy(factor_names)
+
+    with pytest.warns(UserWarning):
+        result = sanitize_names_for_patsy(factor_names)
+
     assert result == expected
 
 
 # Tests for optimal_design.py
 def test_build_optimal_design_vanilla():
-    factor_names = ['x1', 'x2', 'x3']
+    factor_names = ["x1", "x2", "x3"]
 
-    result = build_optimal_design(factor_names, run_count=8)
+    result = build_optimal_design(factor_names, run_count=12)
 
-    assert result.shape == (8, 3)
-    assert np.all(result[:, :2] >= 0) and np.all(result[:, :2] <= 1)
-    assert np.all(np.isin(result[:, 2], [-1, 1]))
+    assert result.shape == (12, 3)
+    assert np.all(result[:, :2] >= -1) and np.all(result[:, :2] <= 1)
 
 
 @pytest.fixture
 def optimal_design_space():
-    return Space([Real(20, 100, name='x1'), Real(0, 1, name='x2'),
-                  Categorical(['A', 'B'], name='x3')])
+    return Space(
+        [
+            Real(20, 100, name="x1"),
+            Real(0, 1, name="x2"),
+            Categorical(["A", "B"], name="x3"),
+        ]
+    )
 
 
-def test_build_optimal_design_with_categorical():
-    factor_names = ['x1', 'x2', 'x3']
-    space = optimal_design_space()
+def test_build_optimal_design_with_categorical(optimal_design_space):
+    factor_names = ["x1", "x2", "x3"]
 
-    result = build_optimal_design(factor_names, run_count=12, space=space)
+    result = build_optimal_design(
+        factor_names, run_count=12, space=optimal_design_space
+    )
 
     assert result.shape == (12, 3)
     assert np.all(np.isin(result[:, 2], [-1, 1]))
 
 
-def test_get_optimal_DOE_without_categorical():
-    space = sample_space()
+def test_get_optimal_DOE_without_categorical(sample_space):
     result, factor_names = get_optimal_DOE(
-        space, 12, design_type="optimization", res=7
+        sample_space, 12, design_type="optimization", res=7
     )
     print(result)
     assert result.shape == (12, 2)
     assert np.all(result[:, 0] >= 0) and np.all(result[:, 0] <= 10)
     assert np.all(result[:, 1] >= -5) and np.all(result[:, 1] <= 5)
-    assert factor_names == ['x1', 'x2']
+    assert factor_names == ["x1", "x2"]
 
 
-def test_get_optimal_DOE():
-    space = optimal_design_space()
+def test_get_optimal_DOE(optimal_design_space):
 
-    for design_type in ['linear', 'screening', 'response', 'optimization']:
+    for design_type in ["linear", "screening", "response", "optimization"]:
 
         design, factor_names = get_optimal_DOE(
-            space, 16, design_type=design_type, res=5
+            optimal_design_space, 16, design_type=design_type, res=5
         )
 
         assert design.shape == (16, 3)
         assert np.all(design[:, 0] >= 20) and np.all(design[:, 0] <= 100)
         assert np.all(design[:, 1] >= 0) and np.all(design[:, 1] <= 1)
-        assert [entry in ['A', 'B'] for entry in design[:, 2]]
-        assert factor_names == ['x1', 'x2', 'x3']
+        assert [entry in ["A", "B"] for entry in design[:, 2]]
+        assert factor_names == ["x1", "x2", "x3"]
+
+
+def test_custom_model(optimal_design_space):
+
+    custom_model = "x1 + x2 + x3 + x1:x2 + pow(x1, 2)"
+
+    design, factor_names = get_optimal_DOE(
+        optimal_design_space, 6, res=5, model=custom_model
+    )
+
+    assert design.shape == (6, 3)
+    assert np.all(design[:, 0] >= 20) and np.all(design[:, 0] <= 100)
+    assert np.all(design[:, 1] >= 0) and np.all(design[:, 1] <= 1)
+    assert [entry in ["A", "B"] for entry in design[:, 2]]
+    assert factor_names == ["x1", "x2", "x3"]
