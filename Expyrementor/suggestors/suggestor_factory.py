@@ -1,0 +1,90 @@
+import logging
+from typing import Any, Union
+
+import numpy as np
+from ProcessOptimizer.space import Space
+
+from .default_suggestor import DefaultSuggestor
+from .initial_points_suggestor import InitialPointSuggestor
+from .po_suggestor import POSuggestor
+from .random_strategizer import RandomStragegizer
+from .suggestor import Suggestor
+
+logger = logging.getLogger(__name__)
+
+
+def suggestor_factory(
+    space: Space,
+    definition: Union[Suggestor, dict[str, Any], None],
+    n_objectives: int,
+    rng: np.random.Generator,
+) -> Suggestor:
+    """
+    Create a suggestor from a definition dictionary.
+
+    Definition is either a suggestor instance, a dict that specifies the suggestor type
+    and its parameters, or None.
+
+    If definiton is a suggestor instance it is returned as is.
+
+    If definition is a dict, it is used to create a suggestor. The  dictionary must have
+    a 'name' key that specifies the type of suggestor. The other keys depend on the
+    suggestor type. It can be recursive if the suggestor is a strategizer, that is, a
+    suggestor that uses other suggestors.
+
+    If definition is None, a DefaultSuggestor is created. This is useful as a
+    placeholder in strategizers, and should be replaced with a real suggestor before
+    use.
+    """
+    if isinstance(definition, Suggestor):
+        return definition
+    elif not definition:  # If definition is None or empty, return DefaultSuggestor.
+        logger.debug("Creating DefaultSuggestor")
+        return DefaultSuggestor(space, rng)
+    try:
+        suggestor_type = definition.pop("name")
+    except KeyError as e:
+        raise ValueError(
+            f"Missing 'name' key in suggestor definition: {definition}"
+        ) from e
+    if suggestor_type == "Default" or suggestor_type is None:
+        logger.debug("Creating DefaultSuggestor")
+        return DefaultSuggestor(space, rng)
+    elif suggestor_type == "InitialPoint":
+        logger.debug("Creating InitialPointSuggestor")
+        # If either of the necessary keys are missing, the default values are used.
+        initial_suggestor = definition.get("initial_suggestor", None)
+        ultimate_suggestor = definition.get("ultimate_suggestor", None)
+        return InitialPointSuggestor(
+            initial_suggestor=suggestor_factory(
+                space, initial_suggestor, n_objectives, rng
+            ),
+            ultimate_suggestor=suggestor_factory(
+                space, ultimate_suggestor, n_objectives, rng
+            ),
+            n_initial_points=definition["n_initial_points"],
+        )
+    elif suggestor_type == "PO":
+        logger.debug("Creating POSuggestor")
+        return POSuggestor(
+            space=space,
+            rng=rng,
+            n_objectives=n_objectives,
+            **definition,
+        )
+    elif suggestor_type == "RandomStrategizer" or suggestor_type == "Random":
+        logger.debug("Creating RandomStrategizer")
+        suggestors = []
+        for suggestor in definition["suggestors"]:
+            usage_ratio = suggestor.pop("usage_ratio")
+            # Note that we are removing the key usage_ratio from the suggestor
+            # definition. If any suggestor uses this key, it will have to be redefined in
+            # the suggestor definition.
+            suggestors.append((
+                usage_ratio, suggestor_factory(space, suggestor, n_objectives, rng)
+            ))
+        return RandomStragegizer(
+            suggestors=suggestors, n_objectives=n_objectives, rng=rng
+        )
+    else:
+        raise ValueError(f"Unknown suggestor name: {suggestor_type}")
