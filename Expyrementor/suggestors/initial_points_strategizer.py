@@ -65,7 +65,7 @@ class InitialPointStrategizer():
         self.ultimate_suggestor = ultimate_suggestor
 
     def suggest(self, Xi: list[list], Yi: list, n_asked: int = 1) -> list[list]:
-        n_initial_points = max(self.n_initial_points - len(Xi), 0)
+        n_initial_points = min(self.n_initial_points - len(Xi), n_asked)
         n_ultimate_points = n_asked - n_initial_points
         suggestions = []
         if n_initial_points > 0:

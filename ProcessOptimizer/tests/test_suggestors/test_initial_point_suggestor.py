@@ -57,3 +57,14 @@ def test_bridging_the_switch():
     )
     assert suggestor.suggest([], [], n_asked=2) == [[1], [1]]
     assert suggestor.suggest([1], [], n_asked=2) == [[1], [2]]
+
+
+def test_multiple_initial():
+    suggestor = InitialPointStrategizer(
+        initial_suggestor=MockSuggestor([[1], [1]]),
+        ultimate_suggestor=MockSuggestor([[2]]),
+        n_initial_points=2,
+    )
+    assert suggestor.suggest([], []) == [[1]]
+    assert suggestor.suggest([1], []) == [[1]]
+    assert suggestor.suggest([1, 1], []) == [[2]]
