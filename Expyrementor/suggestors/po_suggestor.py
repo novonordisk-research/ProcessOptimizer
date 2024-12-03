@@ -16,13 +16,14 @@ class POSuggestor:
             # the numpy random generator to a numpy random state object.
             **kwargs,
         )
+        self.n_given = 1
 
-    def suggest(self, Xi: list[list], yi: list) -> list[list]:
+    def suggest(self, Xi: list[list], yi: list, n_asked: int = 1) -> list[list]:
         if Xi != self.optimizer.Xi or yi != self.optimizer.yi:
-            self.optimizer.Xi = Xi
-            self.optimizer.yi = yi
+            self.optimizer.Xi = Xi.copy()
+            self.optimizer.yi = yi.copy()
             self.optimizer.update_next()
-        point = self.optimizer.ask()
+        point = self.optimizer.ask(n_asked)
         logger.debug(
             "Given Xi = %s and yi = %s, POSugggestor suggests the point: %s",
             Xi,

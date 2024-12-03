@@ -1,14 +1,15 @@
 import logging
 
+from .caching_strategizer import CachingStrategizer
 from .default_suggestor import DefaultSuggestor
+from .lhs_suggestor import LHSSuggestor
 from .po_suggestor import POSuggestor
 from .suggestor import Suggestor
-from .strategizer import Strategizer
 
 logger = logging.getLogger(__name__)
 
 
-class InitialPointSuggestor(Strategizer):
+class InitialPointStrategizer():
     """
     A strategizer that uses one suggestor for a fixed number of initial points and then
     switches to another suggestor.
@@ -43,16 +44,18 @@ class InitialPointSuggestor(Strategizer):
             # POSuggestor. It should be a much simpler suggestor, e.g. a Latin Hypercube
             # Sampling suggestor. Replace the POSuggestor when available.
             logger.debug(
-                "Initial suggestor is DefaultSuggestor, replacing with POSuggestor"
+                "Initial suggestor is DefaultSuggestor, replacing with "
+                "cached LHSSuggestor."
             )
-            initial_suggestor = POSuggestor(
-                initial_suggestor.space,
-                n_initial_points=n_initial_points,
+            lhs_suggestor = LHSSuggestor(
+                space=initial_suggestor.space,
                 rng=initial_suggestor.rng,
+                n_points=n_initial_points,
             )
+            initial_suggestor = CachingStrategizer(lhs_suggestor)
         if isinstance(ultimate_suggestor, DefaultSuggestor):
             logger.debug(
-                "Ultimate suggestor is DefaultSuggestor, replacing with POSuggestor"
+                "Ultimate suggestor is DefaultSuggestor, replacing with POSuggestor."
             )
             ultimate_suggestor = POSuggestor(
                 ultimate_suggestor.space, n_initial_points=0, rng=ultimate_suggestor.rng
@@ -61,20 +64,14 @@ class InitialPointSuggestor(Strategizer):
         self.initial_suggestor = initial_suggestor
         self.ultimate_suggestor = ultimate_suggestor
 
-    def next_suggestor(self, Xi, yi):
-        remaining_initial_points = self.n_initial_points - len(Xi)
-        if remaining_initial_points > 0:
-            logger.debug("Only %s points told, using initial suggestor", len(Xi))
-            suggestion = self.initial_suggestor.suggest(Xi, yi)
-            if len(suggestion) > remaining_initial_points:
-                raise ValueError(
-                    "Initial suggestor suggested %s points, but since %s points have"
-                    "already been told, it should suggest at most %s points",
-                    len(suggestion),
-                    len(Xi),
-                    remaining_initial_points,
-                )
-            return self.initial_suggestor
-        else:
-            logger.debug("Using ultimate suggestor")
-            return self.ultimate_suggestor
+    def suggest(self, Xi: list[list], Yi: list, n_asked: int = 1) -> list[list]:
+        n_initial_points = max(self.n_initial_points - len(Xi), 0)
+        n_ultimate_points = n_asked - n_initial_points
+        suggestions = []
+        if n_initial_points > 0:
+            suggestions.extend(self.initial_suggestor.suggest(Xi, Yi, n_initial_points))
+        if n_ultimate_points > 0:
+            suggestions.extend(self.ultimate_suggestor.suggest(
+                Xi, Yi, n_ultimate_points)
+            )
+        return suggestions

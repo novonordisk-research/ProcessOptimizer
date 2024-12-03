@@ -4,8 +4,10 @@ from typing import Any, Union
 import numpy as np
 from ProcessOptimizer.space import Space
 
+from .caching_strategizer import CachingStrategizer
 from .default_suggestor import DefaultSuggestor
-from .initial_points_suggestor import InitialPointSuggestor
+from .initial_points_strategizer import InitialPointStrategizer
+from .lhs_suggestor import LHSSuggestor
 from .po_suggestor import POSuggestor
 from .random_strategizer import RandomStragegizer
 from .suggestor import Suggestor
@@ -27,10 +29,10 @@ def suggestor_factory(
 
     If definiton is a suggestor instance it is returned as is.
 
-    If definition is a dict, it is used to create a suggestor. The  dictionary must have
+    If definition is a dict, it is used to create a suggestor. The dictionary must have
     a 'name' key that specifies the type of suggestor. The other keys depend on the
     suggestor type. It can be recursive if the suggestor is a strategizer, that is, a
-    suggestor that uses other suggestors.
+    suggestor that delegates ask() to other suggestors.
 
     If definition is None, a DefaultSuggestor is created. This is useful as a
     placeholder in strategizers, and should be replaced with a real suggestor before
@@ -40,7 +42,7 @@ def suggestor_factory(
         return definition
     elif not definition:  # If definition is None or empty, return DefaultSuggestor.
         logger.debug("Creating DefaultSuggestor")
-        return DefaultSuggestor(space, rng)
+        return DefaultSuggestor(space, n_objectives, rng)
     try:
         suggestor_type = definition.pop("name")
     except KeyError as e:
@@ -49,13 +51,13 @@ def suggestor_factory(
         ) from e
     if suggestor_type == "Default" or suggestor_type is None:
         logger.debug("Creating DefaultSuggestor")
-        return DefaultSuggestor(space, rng)
+        return DefaultSuggestor(space, n_objectives, rng)
     elif suggestor_type == "InitialPoint":
         logger.debug("Creating InitialPointSuggestor")
         # If either of the necessary keys are missing, the default values are used.
         initial_suggestor = definition.get("initial_suggestor", None)
         ultimate_suggestor = definition.get("ultimate_suggestor", None)
-        return InitialPointSuggestor(
+        return InitialPointStrategizer(
             initial_suggestor=suggestor_factory(
                 space, initial_suggestor, n_objectives, rng
             ),
@@ -85,6 +87,14 @@ def suggestor_factory(
             ))
         return RandomStragegizer(
             suggestors=suggestors, n_objectives=n_objectives, rng=rng
+        )
+    elif suggestor_type == "LHS":
+        logger.debug("Creating a cached LHSSuggestor.")
+        return LHSSuggestor(
+            space=space,
+            rng=rng,
+            n_objectives=n_objectives,
+            **definition,
         )
     else:
         raise ValueError(f"Unknown suggestor name: {suggestor_type}")

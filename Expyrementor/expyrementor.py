@@ -1,19 +1,19 @@
 import logging
-import warnings
 from typing import Any, Union
 
 import numpy as np
 from ProcessOptimizer.space import space_factory, Space
+from ProcessOptimizer.utils import is_2Dlistlike
 from ProcessOptimizer.utils.get_rng import get_random_generator
 
-from .suggestors import BatchSuggestor, DefaultSuggestor, Suggestor, suggestor_factory
+from .suggestors import DefaultSuggestor, Suggestor, suggestor_factory
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_SUGGESTOR = {
-    "type": "InitialPoint",
-    "initial_suggestor": {"type": "Default"},
-    "ultimate_suggestor": {"type": "Default"},
+    "name": "InitialPoint",
+    "initial_suggestor": {"name": "Default"},
+    "ultimate_suggestor": {"name": "Default"},
     "n_initial_points": 5
 }
 
@@ -44,9 +44,10 @@ class Expyrementor:
         suggestor = suggestor_factory(space, suggestor, n_objectives, rng)
         if isinstance(suggestor, DefaultSuggestor):
             logger.debug("Replacing DefaultSuggestor with InitialPointSuggestor")
-            suggestor = suggestor_factory(space, DEFAULT_SUGGESTOR, n_objectives, rng=rng)
+            suggestor = suggestor_factory(
+                space, DEFAULT_SUGGESTOR.copy(), n_objectives, rng=rng
+            )
         self.suggestor = suggestor
-        self._suggested_experiments: list[list] = []
         self.Xi: list[list] = []
         # This is a list of points in the search space. Each point is a list of values for
         # each dimension of the search space.
@@ -56,22 +57,23 @@ class Expyrementor:
         pass
 
     def ask(self, n: int = 1):
-        if n > 1 and not isinstance(self.suggestor, BatchSuggestor):
-            warnings.warn(
-                "No batch suggestor is defined. Asking for multiple suggestions might not work."
-            )
-        if len(self._suggested_experiments) < n:
-            if isinstance(self.suggestor, BatchSuggestor):
-                self.suggestor.n_given = n - len(self._suggested_experiments)
-            self._suggested_experiments.extend(self.suggestor.suggest(self.Xi, self.yi))
-        if len(self._suggested_experiments) < n:
-            raise ValueError("The suggestor did not return enough suggestions.")
-        return self._suggested_experiments[:n]
+        """
+        Ask the suggestor for new points to evaluate. The number of points to ask is
+        specified by the argument n. The method returns a list of new points to evaluate.
+        """
+        return self.suggestor.suggest(Xi=self.Xi, Yi=self.yi, n_asked=n)
 
     def tell(self, x: list, y: Any):
-        self.Xi.append(x)
-        self.yi.append(y)
-        if len(x) > len(self._suggested_experiments):
-            self._suggested_experiments = []
+        if is_2Dlistlike(x):
+            # If x is a list of points, we assume that y is a list of scores of the same
+            # length, and we add the members of x and y to the lists Xi and yi.
+            self.Xi.extend(x)
+            self.yi.extend(y)
         else:
-            self._suggested_experiments = self._suggested_experiments[len(x):]
+            # If x is a single point, we assume that y is a single score, and we add x
+            # and y to the lists Xi and yi.
+            self.Xi.append(x)
+            self.yi.append(y)
+
+    def __str__(self):
+        return f"Expyrementor with suggestor {self.suggestor}"

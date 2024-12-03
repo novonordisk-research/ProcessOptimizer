@@ -1,0 +1,34 @@
+import numpy as np
+from ProcessOptimizer.space import Space
+
+
+class LHSSuggestor():
+    def __init__(self, space: Space, rng: np.random.Generator, n_points: int = 5):
+        self.space = space
+        self.rng = rng
+        self.n_points = n_points
+
+    def suggest(self, Xi: list[list], Yi: list, n_asked: int = -1) -> list[list]:
+        if n_asked == -1:
+            n_asked = self.n_points
+        if n_asked != self.n_points:
+            raise ValueError(
+                f"LHSSuggestor can only provide {self.n_points} points. If you need "
+                "them split up, wrap it in a CachingStrategizer."
+            )
+        samples = []
+        # Create a list of evenly distributed points in the range [0, 1] to sample from
+        sample_indices = (np.arange(n_asked) + 0.5) / n_asked
+        for i in range(self.space.n_dims):
+            # Sample the points in the ith dimension
+            lhs_aranged = self.space.dimensions[i].sample(sample_indices)
+            # Shuffle the points in the ith dimension
+            samples.append([lhs_aranged[p] for p in self.rng.permutation(n_asked)])
+        # Now we have a list of lists where each inner list is all the points in one
+        # dimension in random order. We need to transpose this so that we get a list of
+        # points in the space, where each point is a list of values from each dimension.
+        transposed_samples = []
+        for i in range(n_asked):
+            row = [samples[j][i] for j in range(self.space.n_dims)]
+            transposed_samples.append(row)
+        return transposed_samples
