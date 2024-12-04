@@ -1,12 +1,13 @@
 import logging
 from typing import Any, Union
+import warnings
 
 import numpy as np
 from ProcessOptimizer.space import space_factory, Space
 from ProcessOptimizer.utils import is_2Dlistlike
 from ProcessOptimizer.utils.get_rng import get_random_generator
 
-from .suggestors import DefaultSuggestor, Suggestor, suggestor_factory
+from .suggestors import DefaultSuggestor, Suggestor, suggestor_factory, POSuggestor
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,13 @@ class Expyrementor:
             suggestor = suggestor_factory(
                 space, DEFAULT_SUGGESTOR.copy(), n_objectives, rng=rng
             )
+        if isinstance(suggestor, POSuggestor):
+            warnings.warn(
+                "POSuggestor is not recommended for use as a base. Use "
+                "InitialPointSuggestor with a POSuggestor as ultimate_suggestor "
+                "instead. Unless explicitly set, n_initial_points in POSuggestor will "
+                "be set to 0."
+            )
         self.suggestor = suggestor
         self.Xi: list[list] = []
         # This is a list of points in the search space. Each point is a list of values for
@@ -76,4 +84,4 @@ class Expyrementor:
             self.yi.append(y)
 
     def __str__(self):
-        return f"Expyrementor with suggestor {self.suggestor}"
+        return f"Expyrementor with a {self.suggestor.__class__.__name__} suggestor."

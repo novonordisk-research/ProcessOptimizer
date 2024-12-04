@@ -8,10 +8,9 @@ class LHSSuggestor():
     def __init__(
             self,
             space: Space,
-            n_objectives: int,
             rng: np.random.Generator,
             n_points: int = 5
-        ):
+    ):
         self.space = space
         self.rng = rng
         self.n_points = n_points

@@ -39,6 +39,6 @@ class RandomStragegizer():
             selector_indices = [index-weight for index in selector_indices]
             n_suggested = sum(index < 0 for index in selector_indices)
             if n_suggested > 0:
-                suggested_points.extend(suggestor.suggest(Xi, Yi, n_suggested))
+                suggested_points.extend(suggestor.suggest(Xi, Yi, int(n_suggested)))
             selector_indices = [index for index in selector_indices if index >= 0]
         return suggested_points

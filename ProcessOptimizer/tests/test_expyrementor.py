@@ -1,3 +1,4 @@
+import pytest
 from Expyrementor.expyrementor import Expyrementor
 from Expyrementor.suggestors import InitialPointStrategizer, POSuggestor, LHSSuggestor
 
@@ -84,3 +85,8 @@ def test_ask_multiple():
     exp = Expyrementor(space)
     exp.suggestor = MockSuggestor([[0.5, 0.5], [0.6, 0.6]])
     assert exp.ask(2) == [[0.5, 0.5], [0.6, 0.6]]
+
+
+def test_warning_if_raw_POSuggestor():
+    with pytest.warns(UserWarning):
+        Expyrementor([[0, 1], [0, 1]], suggestor={"name": "PO"})

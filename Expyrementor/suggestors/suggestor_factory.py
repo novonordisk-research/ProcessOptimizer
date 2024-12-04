@@ -93,7 +93,6 @@ def suggestor_factory(
         logger.debug("Creating a cached LHSSuggestor.")
         return LHSSuggestor(
             space=space,
-            n_objectives=n_objectives,
             rng=rng,
             **definition,
         )

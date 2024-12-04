@@ -7,7 +7,6 @@ from Expyrementor.suggestors import LHSSuggestor, Suggestor, suggestor_factory, 
 def test_initializaton():
     suggestor = LHSSuggestor(
         space=space_factory([[1, 2], [1, 2]]),
-        n_objectives=1,
         rng=np.random.default_rng(1),
     )
     assert isinstance(suggestor, Suggestor)
@@ -27,7 +26,7 @@ def test_factory():
 def test_suggest():
     space = space_factory([[0, 10], [0.0, 1.0], ["cat", "dog"]])
     suggestor = LHSSuggestor(
-        space, n_objectives=1, rng=np.random.default_rng(1), n_points=5
+        space, rng=np.random.default_rng(1), n_points=5
     )
     suggestions = suggestor.suggest([], [])
     assert len(suggestions) == 1
@@ -43,7 +42,7 @@ def test_suggest():
 def test_suggest_too_many():
     space = space_factory([[0, 10], [0.0, 1.0], ["cat", "dog"]])
     suggestor = LHSSuggestor(
-        space, n_objectives=1, rng=np.random.default_rng(1), n_points=5
+        space, rng=np.random.default_rng(1), n_points=5
     )
     with pytest.raises(IncompatibleNumberAsked):
         suggestor.suggest([], [], n_asked=6)
