@@ -658,8 +658,15 @@ def get_optimal_DOE(
     )
 
     # Transform the design into real space
-    # This needs to be updated to work with categorical variables
-    design_points_real_space = doe_to_real_space(design, factor_space)
+    # This needs to be updated to work with categorical variables with
+    # more than 2 levels
+    corner_neg = [-1] * len(factor_names)
+    corner_pos = [1] * len(factor_names)
+    corner_points_optimal = np.array([corner_neg, corner_pos])
+
+    design_points_real_space = doe_to_real_space(
+        design, factor_space, corner_points=corner_points_optimal
+    )
 
     # Generate replicas and sort the design points
     design_points_with_reps_and_sort = generate_replicas_and_sort(
