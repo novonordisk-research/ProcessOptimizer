@@ -1054,10 +1054,12 @@ class Optimizer(object):
         """Updates the value returned by opt.ask(). Useful if a parameter was updated after ask was called."""
         self.cache_ = {}
         self._n_initial_points = self.n_initial_points_-len(self.Xi)
+        copy = self.copy(random_state=self.rng)
+        self.models = copy.models
         # Ask for a new next_x. Usefull if new constraints have been added or lenght_scale has been tweaked.
         # We only need to overwrite _next_x if it exists.
-        if hasattr(self, "_next_x"):
-            opt = self.copy(random_state=self.rng)
+        if hasattr(copy, "_next_x"):
+            opt = copy
             self._next_x = opt._next_x
 
     def get_result(self):
