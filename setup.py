@@ -36,6 +36,7 @@ setup(
         "six",
         "deap",
         "pyYAML",
+        "patsy",
     ],
     extras_require={
         "browniebee": [
