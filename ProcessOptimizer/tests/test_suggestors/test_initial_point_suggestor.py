@@ -1,12 +1,13 @@
 import numpy as np
-import pytest
 from Expyrementor.suggestors import (
+    suggestor_factory,
     InitialPointStrategizer,
     DefaultSuggestor,
     POSuggestor,
-    CachingStrategizer,
+    Suggestor,
     LHSSuggestor,
 )
+from ProcessOptimizer.space import space_factory
 
 
 class MockSuggestor:
@@ -20,19 +21,33 @@ class MockSuggestor:
 
 
 def test_initialization():
-    space = [[0, 1], [0, 1]]
+    space = space_factory([[0, 1], [0, 1]])
     suggestor = InitialPointStrategizer(
         initial_suggestor=DefaultSuggestor(space, n_objectives=1, rng=np.random.default_rng(1)),
         ultimate_suggestor=DefaultSuggestor(space, n_objectives=1, rng=np.random.default_rng(2)),
     )
+    assert isinstance(suggestor, Suggestor)
     assert suggestor.n_initial_points == 5
     # Initial suggestor is a POSuggestor with more than 5 initial points. This means than
     # we will only use the LHS part of this ProcessOptimizer.
-    assert isinstance(suggestor.initial_suggestor, CachingStrategizer)
-    assert isinstance(suggestor.initial_suggestor.suggestor, LHSSuggestor)
-    assert suggestor.initial_suggestor.suggestor.n_points == 5
+    assert isinstance(suggestor.initial_suggestor, LHSSuggestor)
+    assert suggestor.initial_suggestor.n_points == 5
     # Ultimate suggestor is a POSuggestor with no initial points, since
     # InitialPointSuggestor handles the initial points.
+    assert isinstance(suggestor.ultimate_suggestor, POSuggestor)
+    assert suggestor.ultimate_suggestor.optimizer._n_initial_points == 0
+
+
+def test_factory():
+    space = space_factory([[0, 1], [0, 1]])
+    suggestor = suggestor_factory(
+        space=space,
+        definition={"name": "InitialPoint", "n_initial_points": 10},
+    )
+    assert isinstance(suggestor, InitialPointStrategizer)
+    assert suggestor.n_initial_points == 10
+    assert isinstance(suggestor.initial_suggestor, LHSSuggestor)
+    assert suggestor.initial_suggestor.n_points == 10
     assert isinstance(suggestor.ultimate_suggestor, POSuggestor)
     assert suggestor.ultimate_suggestor.optimizer._n_initial_points == 0
 

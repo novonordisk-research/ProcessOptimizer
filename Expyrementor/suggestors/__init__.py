@@ -1,4 +1,3 @@
-from .caching_strategizer import CachingStrategizer
 from .default_suggestor import DefaultSuggestor
 from .initial_points_strategizer import InitialPointStrategizer
 from .lhs_suggestor import LHSSuggestor
@@ -8,7 +7,6 @@ from .suggestor import IncompatibleNumberAsked, Suggestor
 from .suggestor_factory import suggestor_factory
 
 __all__ = [
-    "CachingStrategizer",
     "DefaultSuggestor",
     "IncompatibleNumberAsked",
     "InitialPointStrategizer",

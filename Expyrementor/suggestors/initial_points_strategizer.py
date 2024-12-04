@@ -1,6 +1,5 @@
 import logging
 
-from .caching_strategizer import CachingStrategizer
 from .default_suggestor import DefaultSuggestor
 from .lhs_suggestor import LHSSuggestor
 from .po_suggestor import POSuggestor
@@ -47,12 +46,11 @@ class InitialPointStrategizer():
                 "Initial suggestor is DefaultSuggestor, replacing with "
                 "cached LHSSuggestor."
             )
-            lhs_suggestor = LHSSuggestor(
+            initial_suggestor = LHSSuggestor(
                 space=initial_suggestor.space,
                 rng=initial_suggestor.rng,
                 n_points=n_initial_points,
             )
-            initial_suggestor = CachingStrategizer(lhs_suggestor)
         if isinstance(ultimate_suggestor, DefaultSuggestor):
             logger.debug(
                 "Ultimate suggestor is DefaultSuggestor, replacing with POSuggestor."
@@ -65,7 +63,8 @@ class InitialPointStrategizer():
         self.ultimate_suggestor = ultimate_suggestor
 
     def suggest(self, Xi: list[list], Yi: list, n_asked: int = 1) -> list[list]:
-        n_initial_points = min(self.n_initial_points - len(Xi), n_asked)
+        initial_points_left = max(self.n_initial_points - len(Xi), 0)
+        n_initial_points = min(n_asked, initial_points_left)
         n_ultimate_points = n_asked - n_initial_points
         suggestions = []
         if n_initial_points > 0:

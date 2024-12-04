@@ -1,5 +1,5 @@
 from Expyrementor.expyrementor import Expyrementor
-from Expyrementor.suggestors import InitialPointStrategizer, POSuggestor, CachingStrategizer, LHSSuggestor
+from Expyrementor.suggestors import InitialPointStrategizer, POSuggestor, LHSSuggestor
 
 
 class MockSuggestor:
@@ -19,9 +19,8 @@ def test_initialization():
     assert exp.yi == []
     assert isinstance(exp.suggestor, InitialPointStrategizer)
     assert exp.suggestor.n_initial_points == 5
-    assert isinstance(exp.suggestor.initial_suggestor, CachingStrategizer)
-    assert isinstance(exp.suggestor.initial_suggestor.suggestor, LHSSuggestor)
-    assert exp.suggestor.initial_suggestor.suggestor.n_points == 5
+    assert isinstance(exp.suggestor.initial_suggestor, LHSSuggestor)
+    assert exp.suggestor.initial_suggestor.n_points == 5
     assert isinstance(exp.suggestor.ultimate_suggestor, POSuggestor)
     assert exp.suggestor.ultimate_suggestor.optimizer._n_initial_points == 0
 

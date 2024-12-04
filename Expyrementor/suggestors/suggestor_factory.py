@@ -1,10 +1,9 @@
 import logging
-from typing import Any, Union
+from typing import Any, Union, Optional
 
 import numpy as np
 from ProcessOptimizer.space import Space
 
-from .caching_strategizer import CachingStrategizer
 from .default_suggestor import DefaultSuggestor
 from .initial_points_strategizer import InitialPointStrategizer
 from .lhs_suggestor import LHSSuggestor
@@ -18,8 +17,8 @@ logger = logging.getLogger(__name__)
 def suggestor_factory(
     space: Space,
     definition: Union[Suggestor, dict[str, Any], None],
-    n_objectives: int,
-    rng: np.random.Generator,
+    n_objectives: int = 1,
+    rng: Optional[np.random.Generator] = None,
 ) -> Suggestor:
     """
     Create a suggestor from a definition dictionary.
@@ -40,6 +39,8 @@ def suggestor_factory(
     """
     if isinstance(definition, Suggestor):
         return definition
+    if rng is None:
+        rng = np.random.default_rng(1)
     elif not definition:  # If definition is None or empty, return DefaultSuggestor.
         logger.debug("Creating DefaultSuggestor")
         return DefaultSuggestor(space, n_objectives, rng)
@@ -70,8 +71,8 @@ def suggestor_factory(
         logger.debug("Creating POSuggestor")
         return POSuggestor(
             space=space,
-            rng=rng,
             n_objectives=n_objectives,
+            rng=rng,
             **definition,
         )
     elif suggestor_type == "RandomStrategizer" or suggestor_type == "Random":
@@ -92,8 +93,8 @@ def suggestor_factory(
         logger.debug("Creating a cached LHSSuggestor.")
         return LHSSuggestor(
             space=space,
-            rng=rng,
             n_objectives=n_objectives,
+            rng=rng,
             **definition,
         )
     else:

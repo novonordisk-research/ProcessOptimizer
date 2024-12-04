@@ -1,5 +1,16 @@
 import numpy as np
-from Expyrementor.suggestors import RandomStragegizer, Suggestor
+import pytest
+import warnings
+from Expyrementor.suggestors import (
+    RandomStragegizer,
+    Suggestor,
+    suggestor_factory,
+    POSuggestor,
+    LHSSuggestor,
+    DefaultSuggestor
+)
+from Expyrementor.suggestors.default_suggestor import NoDefaultSuggestorError
+from ProcessOptimizer.space import space_factory
 
 
 class MockSuggestor:
@@ -27,6 +38,22 @@ def test_random_strategizer():
     assert suggestor.suggest([], []) == [[1]]
 
 
+def test_factory():
+    space = space_factory([[0, 1], [0, 1]])
+    suggestor = suggestor_factory(
+        space=space,
+        definition={"name": "Random", "suggestors": [
+            {"usage_ratio": 0.8, "name": "PO"},
+            {"usage_ratio": 0.2, "name": "LHS"},]},
+    )
+    assert isinstance(suggestor, RandomStragegizer)
+    assert len(suggestor.suggestors) == 2
+    assert suggestor.suggestors[0][0] == 0.8
+    assert suggestor.suggestors[1][0] == 0.2
+    assert isinstance(suggestor.suggestors[0][1], POSuggestor)
+    assert isinstance(suggestor.suggestors[1][1], LHSSuggestor)
+
+
 def test_random_multiple_ask():
     suggestor = RandomStragegizer(
         suggestors=[(0.8, MockSuggestor([[1]])), (0.2, MockSuggestor([[2]]))],
@@ -35,3 +62,39 @@ def test_random_multiple_ask():
     )
     assert suggestor.suggest([], [], n_asked=2) == [[1], [2]]
     assert suggestor.suggest([], [], n_asked=3) == [[1], [1], [2]]
+
+
+def test_default_suggestor():
+    with pytest.raises(NoDefaultSuggestorError):
+        RandomStragegizer(
+            suggestors=[
+                (0.8, MockSuggestor([[1]])),
+                (0.2, DefaultSuggestor(space=[], n_objectives=1, rng=None))
+            ],
+            n_objectives=1,
+            rng=np.random.default_rng(1)
+        )
+
+
+def test_wrong_sum():
+    with pytest.warns(UserWarning):
+        # Warning if the sum of usage ratios is not 1 or 100
+        RandomStragegizer(
+            suggestors=[(0.8, MockSuggestor([[1]])), (0.3, MockSuggestor([[2]]))],
+            n_objectives=1,
+            rng=np.random.default_rng(1)
+        )
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        # No warnings if the sum of usage ratios is 1
+        RandomStragegizer(
+            suggestors=[(0.8, MockSuggestor([[1]])), (0.2, MockSuggestor([[2]]))],
+            n_objectives=1,
+            rng=np.random.default_rng(1)
+        )
+        # No warnings if the sum of usage ratios is 100
+        RandomStragegizer(
+            suggestors=[(80, MockSuggestor([[1]])), (20, MockSuggestor([[2]]))],
+            n_objectives=1,
+            rng=np.random.default_rng(1)
+        )
