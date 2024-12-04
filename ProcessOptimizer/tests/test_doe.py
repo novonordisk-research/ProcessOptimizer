@@ -126,9 +126,10 @@ def test_generate_replicas_and_sort_random_but_group_replicates():
         design_points, 2, "random_but_group_replicates"
     )
     assert result.shape == (4, 2)
-    assert result[0] == result[1]
-    assert result[2] == result[3]
-    assert result[0] != result[2]
+    assert result[0][0] == result[1][0]
+    assert result[0][1] == result[1][1]
+    assert result[2][0] == result[3][0]
+    assert result[0][0] != result[2][0]
 
 
 # Tests for sanitize_names_for_patsy function
