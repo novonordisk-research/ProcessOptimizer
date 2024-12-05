@@ -99,9 +99,7 @@ def suggestor_factory(
             suggestors.append((
                 usage_ratio, suggestor_factory(space, suggestor, n_objectives, rng)
             ))
-        return RandomStragegizer(
-            suggestors=suggestors, n_objectives=n_objectives, rng=rng
-        )
+        return RandomStragegizer(suggestors=suggestors, rng=rng)
     elif suggestor_type == "LHS":
         logger.debug("Creating a cached LHSSuggestor.")
         return LHSSuggestor(

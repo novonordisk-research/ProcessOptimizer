@@ -57,7 +57,6 @@ def test_factory():
 def test_random_multiple_ask():
     suggestor = RandomStragegizer(
         suggestors=[(0.8, MockSuggestor([[1]])), (0.2, MockSuggestor([[2]]))],
-        n_objectives=1,
         rng=np.random.default_rng(1)
     )
     assert all(suggestor.suggest([], [], n_asked=2) == [[1], [2]])
@@ -71,7 +70,6 @@ def test_default_suggestor():
                 (0.8, MockSuggestor([[1]])),
                 (0.2, DefaultSuggestor(space=[], n_objectives=1, rng=None))
             ],
-            n_objectives=1,
             rng=np.random.default_rng(1)
         )
 
@@ -81,7 +79,6 @@ def test_wrong_sum():
         # Warning if the sum of usage ratios is not 1 or 100
         RandomStragegizer(
             suggestors=[(0.8, MockSuggestor([[1]])), (0.3, MockSuggestor([[2]]))],
-            n_objectives=1,
             rng=np.random.default_rng(1)
         )
     with warnings.catch_warnings():
@@ -89,13 +86,11 @@ def test_wrong_sum():
         # No warnings if the sum of usage ratios is 1
         RandomStragegizer(
             suggestors=[(0.8, MockSuggestor([[1]])), (0.2, MockSuggestor([[2]]))],
-            n_objectives=1,
             rng=np.random.default_rng(1)
         )
         # No warnings if the sum of usage ratios is 100
         RandomStragegizer(
             suggestors=[(80, MockSuggestor([[1]])), (20, MockSuggestor([[2]]))],
-            n_objectives=1,
             rng=np.random.default_rng(1)
         )
 
