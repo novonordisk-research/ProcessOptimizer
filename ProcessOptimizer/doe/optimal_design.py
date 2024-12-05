@@ -565,7 +565,7 @@ def include_powers_to_list(include_powers, cat_var_levels):
 def get_optimal_DOE(
     factor_space,
     budget,
-    design_type=None,
+    design_type='screening',
     model=None,
     replicates=1,
     sorting=False,
