@@ -83,6 +83,15 @@ def suggestor_factory(
             # Note that we are removing the key usage_ratio from the suggestor
             # definition. If any suggestor uses this key, it will have to be redefined in
             # the suggestor definition.
+            if "suggestor" in suggestor:
+                if len(suggestor) > 1:
+                    raise ValueError(
+                        "If a suggestor definition for a RandomStrategizer has a "
+                        "'suggestor' key, it should only have that key and "
+                        "'usage_ratio', but it has the keys `usage_ratio`, "
+                        f"{suggestor.keys()}."
+                    )
+                suggestor = suggestor["suggestor"]
             suggestors.append((
                 usage_ratio, suggestor_factory(space, suggestor, n_objectives, rng)
             ))

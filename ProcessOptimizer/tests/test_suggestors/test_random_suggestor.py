@@ -98,3 +98,34 @@ def test_wrong_sum():
             n_objectives=1,
             rng=np.random.default_rng(1)
         )
+
+
+def test_random_with_suggestor_given():
+    space = space_factory([[0, 1], [0, 1]])
+    suggestor = suggestor_factory(
+        space=space,
+        definition={"name": "Random", "suggestors": [
+            {"usage_ratio": 0.8, "suggestor": MockSuggestor([[1]])},
+            {"usage_ratio": 0.2, "suggestor": MockSuggestor([[2]])},]},
+    )
+    assert isinstance(suggestor, RandomStragegizer)
+    assert len(suggestor.suggestors) == 2
+    assert suggestor.suggestors[0][0] == 0.8
+    assert suggestor.suggestors[1][0] == 0.2
+    assert isinstance(suggestor.suggestors[0][1], MockSuggestor)
+    assert isinstance(suggestor.suggestors[1][1], MockSuggestor)
+
+
+def test_random_with_suggestor_given_wrong_keys():
+    space = space_factory([[0, 1], [0, 1]])
+    with pytest.raises(ValueError):
+        suggestor_factory(
+            space=space,
+            definition={"name": "Random", "suggestors": [
+                {"usage_ratio": 0.8, "suggestor": MockSuggestor([[1]])},
+                {
+                    "usage_ratio": 0.2,
+                    "suggestor": MockSuggestor([[2]]),
+                    "additional_key": "Can't have this key",
+                },]},
+        )
