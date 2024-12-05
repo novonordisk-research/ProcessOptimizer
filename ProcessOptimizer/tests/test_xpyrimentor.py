@@ -1,5 +1,5 @@
 import pytest
-from XpyriMentor.XpyriMentor import XpyriMentor
+from XpyriMentor.xpyrimentor import XpyriMentor
 from XpyriMentor.suggestors import InitialPointStrategizer, POSuggestor, LHSSuggestor
 
 
