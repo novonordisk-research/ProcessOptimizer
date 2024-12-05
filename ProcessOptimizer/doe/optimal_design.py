@@ -565,7 +565,7 @@ def include_powers_to_list(include_powers, cat_var_levels):
 def get_optimal_DOE(
     factor_space,
     budget,
-    design_type='screening',
+    design_type=None,
     model=None,
     replicates=1,
     sorting=False,
@@ -635,6 +635,9 @@ def get_optimal_DOE(
     factor_names_raw = factor_space.names
 
     factor_names = sanitize_names_for_patsy(factor_names_raw)
+
+    if design_type is None and model is None:
+        design_type = 'screening'
 
     if design_type is not None and model is not None:
         raise ValueError(
