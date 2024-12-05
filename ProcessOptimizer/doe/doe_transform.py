@@ -32,7 +32,7 @@ def doe_to_real_space(design, factor_space, corner_points=None):
     # expressed
     # E.g., with values from 0 to 1 or from -1 to 1.
     scaler = MinMaxScaler(feature_range=(0., 1.))
-    
+
     if corner_points is not None:
         corner_points = np.asarray(corner_points)
         scaler.fit_transform(corner_points)
