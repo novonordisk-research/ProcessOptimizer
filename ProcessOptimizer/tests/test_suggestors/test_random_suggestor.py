@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 import warnings
-from Expyrementor.suggestors import (
+from XpyriMentor.suggestors import (
     RandomStragegizer,
     Suggestor,
     suggestor_factory,
@@ -9,7 +9,7 @@ from Expyrementor.suggestors import (
     LHSSuggestor,
     DefaultSuggestor
 )
-from Expyrementor.suggestors.default_suggestor import NoDefaultSuggestorError
+from XpyriMentor.suggestors.default_suggestor import NoDefaultSuggestorError
 from ProcessOptimizer.space import space_factory
 
 

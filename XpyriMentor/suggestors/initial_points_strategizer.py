@@ -81,7 +81,7 @@ class InitialPointStrategizer():
         return (
             f"InitialPointStrategizer with a {self.initial_suggestor.__class__.__name__} "
             f"as inital suggestor and a {self.ultimate_suggestor.__class__.__name__} as "
-            "ultimate suggestor."
+            "ultimate suggestor"
         )
 
     def __repr__(self):

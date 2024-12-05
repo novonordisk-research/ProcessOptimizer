@@ -1,6 +1,6 @@
 import pytest
-from Expyrementor.expyrementor import Expyrementor
-from Expyrementor.suggestors import InitialPointStrategizer, POSuggestor, LHSSuggestor
+from XpyriMentor.XpyriMentor import XpyriMentor
+from XpyriMentor.suggestors import InitialPointStrategizer, POSuggestor, LHSSuggestor
 
 
 class MockSuggestor:
@@ -15,7 +15,7 @@ class MockSuggestor:
 
 def test_initialization():
     space = [[0, 1], [0, 1]]
-    exp = Expyrementor(space)
+    exp = XpyriMentor(space)
     assert exp.Xi == []
     assert exp.yi == []
     assert isinstance(exp.suggestor, InitialPointStrategizer)
@@ -28,7 +28,7 @@ def test_initialization():
 
 def test_tell_single_objective():
     space = [[0, 1], [0, 1]]
-    exp = Expyrementor(space)
+    exp = XpyriMentor(space)
     exp.tell([0.5, 0.5], 1)
     assert exp.Xi == [[0.5, 0.5]]
     assert exp.yi == [1]
@@ -39,7 +39,7 @@ def test_tell_single_objective():
 
 def test_tell_multiple_objectives():
     space = [[0, 1], [0, 1]]
-    exp = Expyrementor(space)
+    exp = XpyriMentor(space)
     exp.tell([0.5, 0.5], [1, 2])
     assert exp.Xi == [[0.5, 0.5]]
     assert exp.yi == [[1, 2]]
@@ -50,14 +50,14 @@ def test_tell_multiple_objectives():
 
 def test_ask_single_return():
     space = [[0, 1], [0, 1]]
-    exp = Expyrementor(space)
+    exp = XpyriMentor(space)
     exp.suggestor = MockSuggestor([[0.5, 0.5]])
     assert exp.ask() == [[0.5, 0.5]]
 
 
 def test_ask_multiple_returns():
     space = [[0, 1], [0, 1]]
-    exp = Expyrementor(space)
+    exp = XpyriMentor(space)
     exp.suggestor = MockSuggestor([[0.5, 0.5], [0.6, 0.6]])
     # exp will now get two suggestions from the suggestor, and only return the first one
     assert exp.ask() == [[0.5, 0.5]]
@@ -70,7 +70,7 @@ def test_ask_multiple_returns():
 
 def test_ask_passes_on_values():
     space = [[0, 1], [0, 1]]
-    exp = Expyrementor(space)
+    exp = XpyriMentor(space)
     exp.suggestor = MockSuggestor([[0.5, 0.5]])
     exp.tell([0.6, 0.6], 2)
     exp.ask()
@@ -82,11 +82,11 @@ def test_ask_passes_on_values():
 
 def test_ask_multiple():
     space = [[0, 1], [0, 1]]
-    exp = Expyrementor(space)
+    exp = XpyriMentor(space)
     exp.suggestor = MockSuggestor([[0.5, 0.5], [0.6, 0.6]])
     assert exp.ask(2) == [[0.5, 0.5], [0.6, 0.6]]
 
 
 def test_warning_if_raw_POSuggestor():
     with pytest.warns(UserWarning):
-        Expyrementor([[0, 1], [0, 1]], suggestor={"name": "PO"})
+        XpyriMentor([[0, 1], [0, 1]], suggestor={"name": "PO"})

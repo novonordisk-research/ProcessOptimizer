@@ -1,5 +1,5 @@
 import numpy as np
-from Expyrementor.suggestors import (
+from XpyriMentor.suggestors import (
     suggestor_factory,
     InitialPointStrategizer,
     DefaultSuggestor,

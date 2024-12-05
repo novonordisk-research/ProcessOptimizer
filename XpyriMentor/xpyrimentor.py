@@ -19,12 +19,12 @@ DEFAULT_SUGGESTOR = {
 }
 
 
-class Expyrementor:
+class XpyriMentor:
     """
-    Expyrementor class for optimization experiments. This class is used to manage the
+    XpyriMentor class for optimization experiments. This class is used to manage the
     optimization process, including the search space, the suggestor, and the already
     evaluated points. The ask-tell interface is used to interact with the optimization
-    process. The Expyrementor class is stateful and keeps track of the already evaluated
+    process. The XpyriMentor class is stateful and keeps track of the already evaluated
     points and scores.
     """
     def __init__(
@@ -35,7 +35,7 @@ class Expyrementor:
         seed: Union[int, np.random.RandomState, np.random.Generator, None] = 42
     ):
         """
-        Initialize the Expyrementor with the search space and the suggestor. The suggestor
+        Initialize the XpyriMentor with the search space and the suggestor. The suggestor
         can be a Suggestor object, a dictionary with the suggestor configuration, or None.
         If the suggestor is None, the default suggestor is used. The seed is used to
         initialize the random number generator.
@@ -84,4 +84,4 @@ class Expyrementor:
             self.yi.append(y)
 
     def __str__(self):
-        return f"Expyrementor with a {self.suggestor.__class__.__name__} suggestor."
+        return f"XpyriMentor with a {self.suggestor.__class__.__name__} suggestor"
