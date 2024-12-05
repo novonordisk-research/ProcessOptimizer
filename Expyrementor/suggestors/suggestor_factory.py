@@ -36,6 +36,10 @@ def suggestor_factory(
     If definition is None, a DefaultSuggestor is created. This is useful as a
     placeholder in strategizers, and should be replaced with a real suggestor before
     use.
+
+    The keys `name`, `usage_ratio`, and `suggestor` are reserved and should not be used
+    in __init__ of suggestors. They might be removed from the definition dict before
+    passing it to the suggestor.
     """
     if isinstance(definition, Suggestor):
         return definition
