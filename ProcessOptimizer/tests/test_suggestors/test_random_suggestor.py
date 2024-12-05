@@ -60,8 +60,8 @@ def test_random_multiple_ask():
         n_objectives=1,
         rng=np.random.default_rng(1)
     )
-    assert suggestor.suggest([], [], n_asked=2) == [[1], [2]]
-    assert suggestor.suggest([], [], n_asked=3) == [[1], [1], [2]]
+    assert all(suggestor.suggest([], [], n_asked=2) == [[1], [2]])
+    assert all(suggestor.suggest([], [], n_asked=3) == [[1], [1], [2]])
 
 
 def test_default_suggestor():

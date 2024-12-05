@@ -37,10 +37,16 @@ class LHSSuggestor():
             transposed_samples.append(row)
         return transposed_samples
 
-    def suggest(self, Xi: list[list], Yi: list, n_asked: int = 1) -> list[list]:
+    def suggest(self, Xi: list[list], Yi: list, n_asked: int = 1) -> np.ndarray:
         if n_asked + len(Xi) > self.n_points:
             raise IncompatibleNumberAsked(
                 "The number of points requested is greater than the number of points "
                 "in the LHS cache."
             )
         return self.cache[len(Xi):len(Xi) + n_asked]
+
+    def __str__(self):
+        return f"Latin Hypercube Suggestor with {self.n_points} points"
+
+    def __repr__(self):
+        return f"LHSSuggestor(space={self.space}, rng={self.rng}, n_points={self.n_points})"

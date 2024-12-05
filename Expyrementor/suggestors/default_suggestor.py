@@ -15,7 +15,7 @@ class DefaultSuggestor():
         self.n_objectives = n_objectives
         self.rng = rng
 
-    def suggest(self, Xi: list[list], Yi: list, n_asked: int = -1) -> list[list]:
+    def suggest(self, Xi: list[list], Yi: list, n_asked: int = -1) -> np.ndarray:
         raise NoDefaultSuggestorError("Default suggestor should not be used.")
 
 

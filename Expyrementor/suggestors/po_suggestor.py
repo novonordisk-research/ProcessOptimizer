@@ -26,7 +26,7 @@ class POSuggestor:
             **kwargs,
         )
 
-    def suggest(self, Xi: list[list], yi: list, n_asked: int = 1) -> list[list]:
+    def suggest(self, Xi: list[list], yi: list, n_asked: int = 1) -> np.ndarray:
         if Xi != self.optimizer.Xi or yi != self.optimizer.yi:
             self.optimizer.Xi = Xi.copy()
             self.optimizer.yi = yi.copy()
@@ -39,6 +39,18 @@ class POSuggestor:
             point,
         )
         if n_asked == 1:
+            # PO returns a singe point as a list, so we wrap it in another list to
+            # maintain the same interface as the other suggestors.
             return [point]
         else:
             return point
+
+    def __str__(self):
+        return "ProcessOptimizer Suggestor"
+
+    def __repr__(self):
+        return (
+            f"POSuggestor(space={self.optimizer.space}, "
+            f"rng=..., "
+            f"n_initial_points={self.optimizer.n_initial_points_})"
+            )

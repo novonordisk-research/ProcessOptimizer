@@ -70,8 +70,8 @@ def test_bridging_the_switch():
         ultimate_suggestor=MockSuggestor([[2]]),
         n_initial_points=2,
     )
-    assert suggestor.suggest([], [], n_asked=2) == [[1], [1]]
-    assert suggestor.suggest([1], [], n_asked=2) == [[1], [2]]
+    assert all(suggestor.suggest([], [], n_asked=2) == [[1], [1]])
+    assert all(suggestor.suggest([1], [], n_asked=2) == [[1], [2]])
 
 
 def test_multiple_initial():

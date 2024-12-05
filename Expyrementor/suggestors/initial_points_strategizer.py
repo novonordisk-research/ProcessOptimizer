@@ -1,5 +1,7 @@
 import logging
 
+import numpy as np
+
 from .default_suggestor import DefaultSuggestor
 from .lhs_suggestor import LHSSuggestor
 from .po_suggestor import POSuggestor
@@ -62,7 +64,7 @@ class InitialPointStrategizer():
         self.initial_suggestor = initial_suggestor
         self.ultimate_suggestor = ultimate_suggestor
 
-    def suggest(self, Xi: list[list], Yi: list, n_asked: int = 1) -> list[list]:
+    def suggest(self, Xi: list[list], Yi: list, n_asked: int = 1) -> np.ndarray:
         initial_points_left = max(self.n_initial_points - len(Xi), 0)
         n_initial_points = min(n_asked, initial_points_left)
         n_ultimate_points = n_asked - n_initial_points
@@ -73,4 +75,19 @@ class InitialPointStrategizer():
             suggestions.extend(self.ultimate_suggestor.suggest(
                 Xi, Yi, n_ultimate_points)
             )
-        return suggestions
+        return np.array(suggestions, dtype=object)
+
+    def __str__(self):
+        return (
+            f"InitialPointStrategizer with a {self.initial_suggestor.__class__.__name__} "
+            f"as inital suggestor and a {self.ultimate_suggestor.__class__.__name__} as "
+            "ultimate suggestor."
+        )
+
+    def __repr__(self):
+        return (
+            f"InitialPointStrategizer("
+            f"initial_suggestor={self.initial_suggestor.__class__.__name__}(...), "
+            f"ultimate_suggestor={self.ultimate_suggestor.__class__.__name__}(...), "
+            f"n_initial_points={self.n_initial_points})"
+        )

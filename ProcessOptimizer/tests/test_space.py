@@ -87,14 +87,14 @@ def test_real_bounds():
 @pytest.mark.parametrize(
     "dimension, ismember, point_type",
     [
-        (Real(1, 10), lambda x: 1 <= x <= 10, np.float64),
+        (Real(1, 10), lambda x: 1 <= x <= 10, float),
         (
             Real(10**-5, 10**5, prior="log-uniform"),
             lambda x: 10**-5 <= x <= 10**5,
-            np.float64,
+            float,
         ),
-        (Integer(1, 10), lambda x: 1 <= x <= 10, np.integer),
-        (Integer(1, 10, transform="normalize"), lambda x: 0 <= x <= 10, np.integer),
+        (Integer(1, 10), lambda x: 1 <= x <= 10, int),
+        (Integer(1, 10, transform="normalize"), lambda x: 0 <= x <= 10, int),
         (Categorical(["cat", "dog", "rat"]), lambda x: x in ["cat", "dog", "rat"], str),
     ],
 )

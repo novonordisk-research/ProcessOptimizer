@@ -1,3 +1,4 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Iterable, List, Union
 
@@ -11,7 +12,7 @@ from .transformers import Normalize
 from .transformers import Identity
 from .transformers import Log10
 from .transformers import Pipeline
-from ..utils import get_random_generator
+from ..utils import get_random_generator, is_2Dlistlike
 
 # helper class to be able to print [1, ..., 4] instead of [1, '...', 4]
 
@@ -39,7 +40,7 @@ def space_factory(input: Union["Space", List]) -> "Space":
         return Space(input)
 
 
-def check_dimension(dimension, transform=None):
+def check_dimension(dimension, transform=None) -> Dimension:
     """Turn a provided dimension description into a dimension object.
 
     Checks that the provided dimension falls into one of the
@@ -201,7 +202,7 @@ class Dimension(ABC):
                     unique_points.append(point)
                     seen.add(point)
             sampled_points = unique_points
-        return np.array(sampled_points)
+        return np.array(sampled_points, dtype=object)
 
     @abstractmethod
     def _sample(self, points: Iterable[float]) -> np.array:
@@ -816,6 +817,26 @@ class Space(object):
             rows.append(r)
 
         return rows
+
+    def sample(self, points: Iterable[Union[float, Iterable[float]]]) -> np.ndarray:
+        """Draw points from the space.
+
+        Parameters
+        ----------
+        * `points` [float or list[float]]:
+            A single point or a list of points to sample. All must be between 0 and 1.
+
+        Returns
+        -------
+        * `sampled_points` [np.ndarray]:
+            The sampled points.
+        """
+        if not is_2Dlistlike(points):
+            points = [points]
+        sampled_points = []
+        for dim in self.dimensions:
+            sampled_points.append(dim.sample([p[0] for p in points]))
+        return np.array(sampled_points, dtype = object).transpose()
 
     @property
     def n_dims(self):

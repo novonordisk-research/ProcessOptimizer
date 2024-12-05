@@ -17,7 +17,7 @@ class Suggestor(Protocol):
         """
         pass
 
-    def suggest(self, Xi: list[list], Yi: list, n_asked: int) -> list[list]:
+    def suggest(self, Xi: list[list], Yi: list, n_asked: int) -> np.ndarray:
         """
         Suggest a new point to evaluate. The input is a list of already evaluated points
         and their corresponding scores. The output is a list of new points to evaluate.
