@@ -1,3 +1,5 @@
+from typing import Iterable
+
 import numpy as np
 from ProcessOptimizer.space import Space
 
@@ -16,7 +18,7 @@ class LHSSuggestor():
         self.n_points = n_points
         self.cache = self.find_lhs_points()
 
-    def find_lhs_points(self):
+    def find_lhs_points(self) -> np.ndarray:
         # Create a list of evenly distributed points in the range [0, 1] to sample from
         sample_indices = (np.arange(self.n_points) + 0.5) / self.n_points
         permuted_sample_indices = np.array(
@@ -29,7 +31,9 @@ class LHSSuggestor():
         samples_indexed = permuted_sample_indices.T
         return self.space.sample(samples_indexed)
 
-    def suggest(self, Xi: list[list], Yi: list, n_asked: int = 1) -> np.ndarray:
+    def suggest(
+        self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = 1
+    ) -> np.ndarray:
         if n_asked + len(Xi) > self.n_points:
             raise IncompatibleNumberAsked(
                 "The number of points requested is greater than the number of points "

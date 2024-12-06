@@ -1,4 +1,5 @@
 import logging
+from typing import Iterable
 
 import numpy as np
 
@@ -64,7 +65,7 @@ class InitialPointStrategizer():
         self.initial_suggestor = initial_suggestor
         self.ultimate_suggestor = ultimate_suggestor
 
-    def suggest(self, Xi: list[list], Yi: list, n_asked: int = 1) -> np.ndarray:
+    def suggest(self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = 1) -> np.ndarray:
         initial_points_left = max(self.n_initial_points - len(Xi), 0)
         n_initial_points = min(n_asked, initial_points_left)
         n_ultimate_points = n_asked - n_initial_points

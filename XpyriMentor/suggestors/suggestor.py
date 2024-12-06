@@ -1,6 +1,6 @@
-import numpy as np
-from typing import Protocol, runtime_checkable
+from typing import Iterable, Protocol, runtime_checkable
 
+import numpy as np
 
 @runtime_checkable  # Need to be runtime checkable for the factory to work
 class Suggestor(Protocol):
@@ -18,7 +18,7 @@ class Suggestor(Protocol):
         """
         pass
 
-    def suggest(self, Xi: list[list], Yi: list, n_asked: int) -> np.ndarray:
+    def suggest(self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int) -> np.ndarray:
         """
         Suggest a new point to evaluate. The input is a list of already evaluated points
         and their corresponding scores. The output is a list of new points to evaluate.

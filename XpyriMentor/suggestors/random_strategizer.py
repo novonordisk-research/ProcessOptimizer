@@ -1,4 +1,5 @@
 import warnings
+from typing import Iterable
 
 import numpy as np
 
@@ -24,7 +25,7 @@ class RandomStragegizer():
         self.suggestors = suggestors
         self.rng = rng
 
-    def suggest(self, Xi: list[list], Yi: list, n_asked: int = 1) -> np.ndarray:
+    def suggest(self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = 1) -> np.ndarray:
         # Creating n_asked random indices in the range [0, total)
         selector_indices = [
             relative_index*self.total for relative_index in self.rng.random(size=n_asked)

@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Union
+from typing import Any, Iterable, Union
 import warnings
 
 import numpy as np
@@ -56,7 +56,7 @@ class XpyriMentor:
                 "be set to 0."
             )
         self.suggestor = suggestor
-        self.Xi: list[list] = []
+        self.Xi: list[np.ndarray] = []
         # This is a list of points in the search space. Each point is a list of values for
         # each dimension of the search space.
         self.yi: list = []
@@ -64,14 +64,14 @@ class XpyriMentor:
         # objective optimization or a list of floats for multiobjective optimization.
         pass
 
-    def ask(self, n: int = 1):
+    def ask(self, n: int = 1) -> np.ndarray:
         """
         Ask the suggestor for new points to evaluate. The number of points to ask is
         specified by the argument n. The method returns a list of new points to evaluate.
         """
         return self.suggestor.suggest(Xi=self.Xi, Yi=self.yi, n_asked=n)
 
-    def tell(self, x: list, y: Any):
+    def tell(self, x: Iterable, y: Any) -> None:
         if is_2Dlistlike(x):
             # If x is a list of points, we assume that y is a list of scores of the same
             # length, and we add the members of x and y to the lists Xi and yi.

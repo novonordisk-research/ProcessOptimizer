@@ -1,4 +1,5 @@
 import logging
+from typing import Iterable
 
 import numpy as np
 from ProcessOptimizer import Optimizer
@@ -26,7 +27,9 @@ class POSuggestor:
             **kwargs,
         )
 
-    def suggest(self, Xi: list[list], yi: list, n_asked: int = 1) -> np.ndarray:
+    def suggest(
+        self, Xi: Iterable[Iterable], yi: Iterable, n_asked: int = 1
+    ) -> np.ndarray:
         if Xi != self.optimizer.Xi or yi != self.optimizer.yi:
             self.optimizer.Xi = Xi.copy()
             self.optimizer.yi = yi.copy()
