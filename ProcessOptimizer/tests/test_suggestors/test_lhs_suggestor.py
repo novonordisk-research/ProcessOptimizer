@@ -11,6 +11,7 @@ def test_initializaton():
     )
     assert isinstance(suggestor, Suggestor)
     assert suggestor.n_points == 5
+    assert len(suggestor.cache) == 5
 
 
 def test_factory():
@@ -44,7 +45,18 @@ def test_suggest_too_many():
     suggestor = LHSSuggestor(
         space, rng=np.random.default_rng(1), n_points=5
     )
+    for n_told in range(1, 5):
+        told = suggestor.suggest([], [], n_asked=n_told)
+        suggestor.suggest(told, [0]*n_told, n_asked=1)
     with pytest.raises(IncompatibleNumberAsked):
         suggestor.suggest([], [], n_asked=6)
     with pytest.raises(IncompatibleNumberAsked):
         suggestor.suggest([[1, 0.0, "cat"]], [1], n_asked=5)
+
+
+def test_n():
+    space = space_factory([[0, 10], [0.0, 1.0], ["cat", "dog"]])
+    for n in range(1, 10):
+        suggestor = LHSSuggestor(space, rng=np.random.default_rng(1), n_points=n)
+        assert suggestor.n_points == n
+        assert len(suggestor.cache) == n

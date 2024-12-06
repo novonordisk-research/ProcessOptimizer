@@ -19,23 +19,15 @@ class LHSSuggestor():
     def find_lhs_points(self):
         # Create a list of evenly distributed points in the range [0, 1] to sample from
         sample_indices = (np.arange(self.n_points) + 0.5) / self.n_points
-        samples = []
-        for i in range(self.space.n_dims):
-            # Sample the points in the ith dimension
-            lhs_aranged = self.space.dimensions[i].sample(sample_indices)
-            # Shuffle the points in the ith dimension
-            samples.append(
-                [lhs_aranged[p] for p in self.rng.permutation(self.n_points)]
-            )
-        # Now we have a list of lists where each inner list is all the points in one
-        # dimension in random order. We need to transpose this so that we get a list of
-        # points in the space, where each point is a list of values from each
-        # dimension.
-        transposed_samples = []
-        for i in range(self.n_points):
-            row = [samples[j][i] for j in range(self.space.n_dims)]
-            transposed_samples.append(row)
-        return transposed_samples
+        permuted_sample_indices = np.array(
+            [self.rng.permutation(sample_indices) for _ in range(self.space.n_dims)],
+            dtype=object,
+        )
+        # Permuted sample indices are now a list of n_dims arrays, each containing the
+        # same n_points indices in a different order. We need to transpose this list to
+        # get an array of n_points arrays, each containing the indices for one point.
+        samples_indexed = permuted_sample_indices.T
+        return self.space.sample(samples_indexed)
 
     def suggest(self, Xi: list[list], Yi: list, n_asked: int = 1) -> np.ndarray:
         if n_asked + len(Xi) > self.n_points:
