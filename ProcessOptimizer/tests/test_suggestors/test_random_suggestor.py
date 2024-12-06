@@ -26,7 +26,6 @@ class MockSuggestor:
 def test_random_strategizer():
     suggestor = RandomStragegizer(
         suggestors=[(0.8, MockSuggestor([[1]])), (0.2, MockSuggestor([[2]]))],
-        n_objectives=1,
         rng=np.random.default_rng(1)
     )
     assert isinstance(suggestor, Suggestor)
