@@ -833,6 +833,11 @@ class Space(object):
         """
         if not is_2Dlistlike(points):
             points = [points]
+        if any(len(point) != len(self) for point in points):
+            raise ValueError(
+                "One or more points does not have the same length as the space " +
+                str(({len(self)}))
+            )
         sampled_points = []
         for dim in self.dimensions:
             sampled_points.append(dim.sample([p[0] for p in points]))

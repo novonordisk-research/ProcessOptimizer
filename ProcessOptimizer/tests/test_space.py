@@ -744,3 +744,55 @@ def test_lhs():
     # Asserting the the values are the same for both the lhs, even though the order is different
     for i in range(4):
         assert set([x[i] for x in lhs_one]) == set([x[i] for x in lhs_two])
+
+
+def test_sample():
+    SPACE = Space(
+        [
+            Integer(1, 6),
+            Real(1, 7),
+            Real(10**-3, 10**3, prior="log-uniform"),
+            Categorical(list("abc")),
+        ]
+    )
+    # Getting one sample
+    samples = SPACE.sample([0.5]*len(SPACE))
+    assert len(samples) == 1
+    assert isinstance(samples, np.ndarray)
+    assert len(samples[0]) == 4
+    values = samples[0]
+    assert isinstance(values, np.ndarray)
+    assert isinstance(values[0], int)
+    assert isinstance(values[1], float)
+    assert isinstance(values[2], float)
+    assert isinstance(values[3], str)
+    # Getting multiple samples
+    samples = SPACE.sample([[0.5]*len(SPACE)]*5)
+    assert len(samples) == 5
+    assert len(samples[0]) == 4
+    assert isinstance(samples, np.ndarray)
+    for sample in samples:
+        assert isinstance(sample, np.ndarray)
+        assert isinstance(sample[0], int)
+        assert isinstance(sample[1], float)
+        assert isinstance(sample[2], float)
+        assert isinstance(sample[3], str)
+
+
+def test_sample_wrong_size():
+    SPACE = Space(
+        [
+            Integer(1, 6),
+            Real(1, 7),
+            Real(10**-3, 10**3, prior="log-uniform"),
+            Categorical(list("abc")),
+        ]
+    )
+    with pytest.raises(ValueError):
+        SPACE.sample([0.5]*3)
+    with pytest.raises(ValueError):
+        SPACE.sample([0.5]*5)
+    with pytest.raises(ValueError):
+        SPACE.sample([[0.5]*3]*5)
+    with pytest.raises(ValueError):
+        SPACE.sample([[0.5]*5]*3)
