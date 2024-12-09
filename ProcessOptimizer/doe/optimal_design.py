@@ -4,7 +4,11 @@ import numpy as np
 import patsy
 
 from .doe_transform import doe_to_real_space
-from .doe_utils import generate_replicas_and_sort, sanitize_names_for_patsy
+from .doe_utils import (
+    generate_replicas_and_sort,
+    round_design_point_values,
+    sanitize_names_for_patsy,
+)
 from ..space import Categorical
 
 # Defining a number of helper functions for the optimal design of experiments
@@ -54,7 +58,7 @@ def hit_and_run(x0, constraint_matrix, bounds, n_samples, thin=1):
     return out_samples
 
 
-def bootstrap(factor_names, model, run_count):
+def bootstrap(factor_names, model, n_exp):
     """Create a minimal starting design that is non-singular.
 
     This function is modified from https://github.com/statease/dexpy
@@ -64,13 +68,13 @@ def bootstrap(factor_names, model, run_count):
     """
     md = patsy.ModelDesc.from_formula(model)
     model_size = len(md.rhs_termlist)
-    if run_count == 0:
-        run_count = model_size
-    if model_size > run_count:
+    if n_exp == 0:
+        n_exp = model_size
+    if model_size > n_exp:
         raise ValueError(
             "Can't build a design of size {} "
             "for a model of rank {}. "
-            "Model: '{}'".format(run_count, model_size, model)
+            "Model: '{}'".format(n_exp, model_size, model)
         )
 
     factor_count = len(factor_names)
@@ -87,7 +91,7 @@ def bootstrap(factor_names, model, run_count):
         bounds[c] = 1
         c += 1
 
-    start_points = hit_and_run(x0, constraint_matrix, bounds, run_count)
+    start_points = hit_and_run(x0, constraint_matrix, bounds, n_exp)
 
     d = start_points
 
@@ -428,7 +432,7 @@ def build_optimal_design(factor_names, **kwargs):
         * **model** (`patsy formula <https://patsy.readthedocs.io>`_) --
             Builds a design for this model formula.
             Mutually exclusive with the **order** parameter.
-        * **run_count** (`integer`) --
+        * **n_exp** (`integer`) --
             The number of runs to use in the design. This must be equal
             to or greater than the rank of the model.
         * **space** (:class:`Space <ProcessOptimizer.space.Space>`) --
@@ -456,13 +460,18 @@ def build_optimal_design(factor_names, **kwargs):
         order = kwargs.get("order", 2)
         model = make_model(factor_names, order, include_powers=include_powers)
 
-    run_count = kwargs.get("run_count", 0)
+    n_exp = kwargs.get("n_exp", 0)
 
     # first generate a valid starting design
-    (design, X) = bootstrap(factor_names, model, run_count)
+    (design, X) = bootstrap(factor_names, model, n_exp)
 
+    # The numbers in the design representing categorical factors should
+    # initially be exactly at one of the levels
     if space is not None:
         design = initial_values_cat_vars(design, space)
+
+    # Make sure that design point values are rounded to the resolution
+    design = round_design_point_values(design, res)
 
     # Enable conversion between design points and X matrix
     code = conversion_design_Xmatrix(X)
@@ -653,7 +662,7 @@ def get_optimal_DOE(
     design = build_optimal_design(
         factor_names,
         space=factor_space,
-        run_count=budget,
+        n_exp=budget,
         order=order,
         model=model,
         include_powers=include_powers,

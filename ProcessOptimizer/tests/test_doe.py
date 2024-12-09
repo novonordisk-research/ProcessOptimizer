@@ -3,6 +3,7 @@ import pytest
 
 from ProcessOptimizer.doe.doe_transform import doe_to_real_space
 from ProcessOptimizer.doe.doe_utils import (generate_replicas_and_sort,
+                                            round_design_point_values,
                                             sanitize_names_for_patsy)
 from ProcessOptimizer.doe.optimal_design import (build_optimal_design,
                                                  get_optimal_DOE)
@@ -13,6 +14,17 @@ from ProcessOptimizer.space import Categorical, Real, Space
 @pytest.fixture
 def sample_space():
     return Space([Real(0, 10, name="x1"), Real(-5, 5, name="x2")])
+
+
+@pytest.fixture
+def optimal_design_space():
+    return Space(
+        [
+            Real(20, 100, name="x1"),
+            Real(0, 1, name="x2"),
+            Categorical(["A", "B"], name="x3"),
+        ]
+    )
 
 
 @pytest.mark.fast_test
@@ -54,51 +66,26 @@ def test_doe_to_real_space_different_ranges():
 
 
 @pytest.mark.fast_test
-def test_categorical_doe_to_real_space():
-    space = Space(
-        [
-            Real(-100, 100, name="x1"),
-            Real(0, 1, name="x2"),
-            Categorical(["A", "B"], name="x3"),
-        ]
-    )
+def test_categorical_doe_to_real_space(optimal_design_space):
     design = np.array([[0, 0, 0], [1, 1, 1]])
-    result = doe_to_real_space(design, space)
-    assert result[0] == [-100, 0, "A"]
+    result = doe_to_real_space(design, optimal_design_space)
+    assert result[0] == [20, 0, "A"]
     assert result[1] == [100, 1, "B"]
 
 
 @pytest.mark.fast_test
-def test_categorical_doe_to_real_space_rounding():
-    from ProcessOptimizer.space import Categorical
-
-    space = Space(
-        [
-            Real(-100, 100, name="x1"),
-            Real(0, 1, name="x2"),
-            Categorical(["A", "B"], name="x3"),
-        ]
-    )
+def test_categorical_doe_to_real_space_rounding(optimal_design_space):
     design = np.array([[0, 0, 0.3], [1, 1, 0.8]])
-    result = doe_to_real_space(design, space)
-    assert result[0] == [-100, 0, "A"]
+    result = doe_to_real_space(design, optimal_design_space)
+    assert result[0] == [20, 0, "A"]
     assert result[1] == [100, 1, "B"]
 
 
 @pytest.mark.fast_test
-def test_categorical_doe_to_real_space_edge():
-    from ProcessOptimizer.space import Categorical
-
-    space = Space(
-        [
-            Real(-100, 100, name="x1"),
-            Real(0, 1, name="x2"),
-            Categorical(["A", "B"], name="x3"),
-        ]
-    )
+def test_categorical_doe_to_real_space_edge(optimal_design_space):
     design = np.array([[0, 0, -42], [1, 1, 31]])
-    result = doe_to_real_space(design, space)
-    assert result[0] == [-100, 0, "A"]
+    result = doe_to_real_space(design, optimal_design_space)
+    assert result[0] == [20, 0, "A"]
     assert result[1] == [100, 1, "B"]
 
 
@@ -172,32 +159,30 @@ def test_sanitize_names_for_patsy():
     assert result == expected
 
 
+# Test that the design points are rounded according to resolution
+def test_round_design_point_values():
+    res = 5
+    design_points = np.array([[-1.1, 0, 0.9], [0.4431, 0.2, -0.3]])
+    rounded_points = round_design_point_values(design_points, res)
+    expected_points = np.array([[-1, 0, 1], [0.5, 0, -0.5]])
+    np.testing.assert_array_equal(rounded_points, expected_points)
+
+
 # Tests for optimal_design.py
 def test_build_optimal_design_vanilla():
     factor_names = ["x1", "x2", "x3"]
 
-    result = build_optimal_design(factor_names, run_count=12)
+    result = build_optimal_design(factor_names, n_exp=12)
 
     assert result.shape == (12, 3)
     assert np.all(result[:, :2] >= -1) and np.all(result[:, :2] <= 1)
-
-
-@pytest.fixture
-def optimal_design_space():
-    return Space(
-        [
-            Real(20, 100, name="x1"),
-            Real(0, 1, name="x2"),
-            Categorical(["A", "B"], name="x3"),
-        ]
-    )
 
 
 def test_build_optimal_design_with_categorical(optimal_design_space):
     factor_names = ["x1", "x2", "x3"]
 
     result = build_optimal_design(
-        factor_names, run_count=12, space=optimal_design_space
+        factor_names, n_exp=12, space=optimal_design_space
     )
 
     assert result.shape == (12, 3)

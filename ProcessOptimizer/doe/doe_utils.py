@@ -120,3 +120,27 @@ def sanitize_names_for_patsy(factor_names):
                 name = factor_names[i]
 
     return factor_names
+
+
+def round_design_point_values(design_points, res):
+    """
+    Round the design points to the resolution specified
+
+    :param design_points: The design points to round
+    :type design_points: np.array
+
+    :param res: The resolution to round the design points to
+    Specifies the number of bins.
+    :type res: float
+
+    :return: The rounded design points
+    :rtype: np.array
+
+    If the resolution is 3, the design points will be rounded to -1, 0, or 1.
+
+    """
+
+    points_res_scaled = (design_points + 1) / 2 * (res-1)
+    rounded_points_res_scaled = np.round(points_res_scaled)
+    rounded_points = rounded_points_res_scaled / (res-1) * 2 - 1
+    return rounded_points
