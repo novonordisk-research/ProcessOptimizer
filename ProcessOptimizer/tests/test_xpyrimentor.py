@@ -1,6 +1,6 @@
 import pytest
 from XpyriMentor.xpyrimentor import XpyriMentor
-from XpyriMentor.suggestors import InitialPointStrategizer, POSuggestor, LHSSuggestor
+from XpyriMentor.suggestors import POSuggestor, LHSSuggestor, SequentialStrategizer
 
 
 class MockSuggestor:
@@ -18,12 +18,11 @@ def test_initialization():
     exp = XpyriMentor(space)
     assert exp.Xi == []
     assert exp.yi == []
-    assert isinstance(exp.suggestor, InitialPointStrategizer)
-    assert exp.suggestor.n_initial_points == 5
-    assert isinstance(exp.suggestor.initial_suggestor, LHSSuggestor)
-    assert exp.suggestor.initial_suggestor.n_points == 5
-    assert isinstance(exp.suggestor.ultimate_suggestor, POSuggestor)
-    assert exp.suggestor.ultimate_suggestor.optimizer._n_initial_points == 0
+    assert isinstance(exp.suggestor, SequentialStrategizer)
+    assert isinstance(exp.suggestor.suggestors[0][1], LHSSuggestor)
+    assert exp.suggestor.suggestors[0][0] == 5
+    assert isinstance(exp.suggestor.suggestors[1][1], POSuggestor)
+    assert exp.suggestor.suggestors[1][0] == float("inf")
 
 
 def test_tell_single_objective():

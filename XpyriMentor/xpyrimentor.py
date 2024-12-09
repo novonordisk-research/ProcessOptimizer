@@ -1,3 +1,4 @@
+import copy
 import logging
 from typing import Any, Iterable, Union
 import warnings
@@ -12,10 +13,11 @@ from .suggestors import DefaultSuggestor, Suggestor, suggestor_factory, POSugges
 logger = logging.getLogger(__name__)
 
 DEFAULT_SUGGESTOR = {
-    "name": "InitialPoint",
-    "initial_suggestor": {"name": "Default"},
-    "ultimate_suggestor": {"name": "Default"},
-    "n_initial_points": 5
+    "name": "Sequential",
+    "suggestors": [
+        {"suggestor_budget": 5, "name": "Default"},
+        {"suggestor_budget": -1, "name": "Default"},
+    ],
 }
 
 
@@ -46,7 +48,7 @@ class XpyriMentor:
         if isinstance(suggestor, DefaultSuggestor):
             logger.debug("Replacing DefaultSuggestor with InitialPointSuggestor")
             suggestor = suggestor_factory(
-                space, DEFAULT_SUGGESTOR.copy(), n_objectives, rng=rng
+                space, copy.deepcopy(DEFAULT_SUGGESTOR), n_objectives, rng=rng
             )
         if isinstance(suggestor, POSuggestor):
             warnings.warn(

@@ -42,7 +42,7 @@ class POSuggestor:
             point,
         )
         if n_asked == 1:
-            # PO returns a singe point as a list, so we wrap it in another list to
+            # PO returns a single point as a list, so we wrap it in another list to
             # maintain the same interface as the other suggestors.
             return [point]
         else:

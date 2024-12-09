@@ -5,10 +5,10 @@ import numpy as np
 from ProcessOptimizer.space import Space
 
 from .default_suggestor import DefaultSuggestor
-from .initial_points_strategizer import InitialPointStrategizer
 from .lhs_suggestor import LHSSuggestor
 from .po_suggestor import POSuggestor
 from .random_strategizer import RandomStragegizer
+from .sequential_strategizer import SequentialStrategizer
 from .suggestor import Suggestor
 
 logger = logging.getLogger(__name__)
@@ -57,20 +57,6 @@ def suggestor_factory(
     if suggestor_type == "Default" or suggestor_type is None:
         logger.debug("Creating DefaultSuggestor")
         return DefaultSuggestor(space, n_objectives, rng)
-    elif suggestor_type == "InitialPoint":
-        logger.debug("Creating InitialPointSuggestor")
-        # If either of the necessary keys are missing, the default values are used.
-        initial_suggestor = definition.get("initial_suggestor", None)
-        ultimate_suggestor = definition.get("ultimate_suggestor", None)
-        return InitialPointStrategizer(
-            initial_suggestor=suggestor_factory(
-                space, initial_suggestor, n_objectives, rng
-            ),
-            ultimate_suggestor=suggestor_factory(
-                space, ultimate_suggestor, n_objectives, rng
-            ),
-            n_initial_points=definition["n_initial_points"],
-        )
     elif suggestor_type == "PO":
         logger.debug("Creating POSuggestor")
         return POSuggestor(
@@ -101,11 +87,27 @@ def suggestor_factory(
             ))
         return RandomStragegizer(suggestors=suggestors, rng=rng)
     elif suggestor_type == "LHS":
-        logger.debug("Creating a cached LHSSuggestor.")
+        logger.debug("Creating a LHSSuggestor.")
         return LHSSuggestor(
             space=space,
             rng=rng,
             **definition,
         )
+    elif suggestor_type == "Sequential":
+        logger.debug("Creating SequentialStrategizer")
+        suggestors = []
+        for suggestor in definition["suggestors"]:
+            n = suggestor.pop("suggestor_budget")
+            if "suggestor" in suggestor:
+                if len(suggestor) > 1:
+                    raise ValueError(
+                        "If a suggestor definition for a SequentialStrategizer has a "
+                        "'suggestor' key, it should only have that key and "
+                        "'suggestor_budget', but it has the keys `suggestor_budget`, "
+                        f"{', '.join(suggestor.keys())}."
+                    )
+                suggestor = suggestor["suggestor"]
+            suggestors.append((n, suggestor_factory(space, suggestor, n_objectives, rng)))
+        return SequentialStrategizer(suggestors)
     else:
         raise ValueError(f"Unknown suggestor name: {suggestor_type}")
