@@ -42,8 +42,8 @@ def test_factory():
     suggestor = suggestor_factory(
         space=space,
         definition={"name": "Random", "suggestors": [
-            {"usage_ratio": 0.8, "name": "PO"},
-            {"usage_ratio": 0.2, "name": "LHS"},]},
+            {"suggestor_usage_ratio": 0.8, "name": "PO"},
+            {"suggestor_usage_ratio": 0.2, "name": "LHS"},]},
     )
     assert isinstance(suggestor, RandomStragegizer)
     assert len(suggestor.suggestors) == 2
@@ -99,8 +99,8 @@ def test_random_with_suggestor_given():
     suggestor = suggestor_factory(
         space=space,
         definition={"name": "Random", "suggestors": [
-            {"usage_ratio": 0.8, "suggestor": MockSuggestor([[1]])},
-            {"usage_ratio": 0.2, "suggestor": MockSuggestor([[2]])},]},
+            {"suggestor_usage_ratio": 0.8, "suggestor": MockSuggestor([[1]])},
+            {"suggestor_usage_ratio": 0.2, "suggestor": MockSuggestor([[2]])},]},
     )
     assert isinstance(suggestor, RandomStragegizer)
     assert len(suggestor.suggestors) == 2
@@ -116,9 +116,9 @@ def test_random_with_suggestor_given_wrong_keys():
         suggestor_factory(
             space=space,
             definition={"name": "Random", "suggestors": [
-                {"usage_ratio": 0.8, "suggestor": MockSuggestor([[1]])},
+                {"suggestor_usage_ratio": 0.8, "suggestor": MockSuggestor([[1]])},
                 {
-                    "usage_ratio": 0.2,
+                    "suggestor_usage_ratio": 0.2,
                     "suggestor": MockSuggestor([[2]]),
                     "additional_key": "Can't have this key",
                 },]},

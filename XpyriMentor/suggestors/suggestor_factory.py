@@ -37,9 +37,9 @@ def suggestor_factory(
     placeholder in strategizers, and should be replaced with a real suggestor before
     use.
 
-    The keys `name`, `usage_ratio`, and `suggestor` are reserved and should not be used
-    in __init__ of suggestors. They might be removed from the definition dict before
-    passing it to the suggestor.
+    The keys `name`, `suggestor` and any keyword starting with `suggestor_` are reserved
+    and should not be used in __init__ of suggestors. They might be removed from the
+    definition dict before passing it to the suggestor.
     """
     if isinstance(definition, Suggestor):
         return definition
@@ -69,7 +69,7 @@ def suggestor_factory(
         logger.debug("Creating RandomStrategizer")
         suggestors = []
         for suggestor in definition["suggestors"]:
-            usage_ratio = suggestor.pop("usage_ratio")
+            usage_ratio = suggestor.pop("suggestor_usage_ratio")
             # Note that we are removing the key usage_ratio from the suggestor
             # definition. If any suggestor uses this key, it will have to be redefined in
             # the suggestor definition.
