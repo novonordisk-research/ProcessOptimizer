@@ -32,7 +32,7 @@ setup(
         "matplotlib",
         "scipy",
         "bokeh",
-        "scikit-learn==1.4.2",
+        "scikit-learn>=0.24.2",
         "six",
         "deap",
         "pyYAML",
