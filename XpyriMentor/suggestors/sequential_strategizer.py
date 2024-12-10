@@ -72,15 +72,22 @@ class SequentialStrategizer():
         suggestions = []
         for budget, suggestor in self.suggestors:
             if number_left_to_find == 0:
+                # If we have already found all the points we need, we can stop.
                 break
             if number_to_skip >= budget:
+                # If we have been told enough points, we have to skip this suggestor.
                 number_to_skip -= budget
                 continue
             if number_to_skip + number_left_to_find >= budget:
-                suggestions.extend(suggestor.suggest(Xi, Yi, budget - number_to_skip))
-                number_left_to_find -= budget - number_to_skip
+                # If we need more points than the suggestor can give us, we take all the
+                # points the suggestor can give us and continue with the next suggestor.
+                number_from_this_suggestor = budget - number_to_skip
+                suggestions.extend(suggestor.suggest(Xi, Yi, number_from_this_suggestor))
+                number_left_to_find -= number_from_this_suggestor
                 number_to_skip = 0
             else:
+                # If we need fewer points than the suggestor can give us, we take the
+                # points we need and stop.
                 suggestions.extend(suggestor.suggest(Xi, Yi, number_left_to_find))
                 number_left_to_find = 0
 
