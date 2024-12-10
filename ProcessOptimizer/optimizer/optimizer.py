@@ -254,7 +254,10 @@ class Optimizer(object):
             )
 
         # check if regressor
-        if not is_regressor(base_estimator) and base_estimator is not None:
+        #if not is_regressor(base_estimator) and base_estimator is not None:
+        #    raise ValueError("%s has to be a regressor." % base_estimator)
+
+        if not is_regressor(base_estimator):
             raise ValueError("%s has to be a regressor." % base_estimator)
 
         # treat per second acqusition function specially
