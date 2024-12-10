@@ -48,9 +48,8 @@ class GradientBoostingQuantileRegressor(BaseEstimator, RegressorMixin):
 
     def __sklearn_tags__(self):
         tags = super().__sklearn_tags__()
-        tags.estimator_type = "regressor"
-        #tags.target_tags.single_output = False
-        #tags.non_deterministic = True
+        tags.target_tags.single_output = False
+        tags.non_deterministic = True
         return tags
 
     def fit(self, X, y):
