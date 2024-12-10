@@ -41,12 +41,7 @@ class POSuggestor:
             yi,
             point,
         )
-        if n_asked == 1:
-            # PO returns a single point as a list, so we wrap it in another list to
-            # maintain the same interface as the other suggestors.
-            return [point]
-        else:
-            return point
+        return np.array(point, dtype = object).reshape(n_asked,-1)
 
     def __str__(self):
         return "ProcessOptimizer Suggestor"
