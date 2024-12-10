@@ -122,3 +122,16 @@ def test_incompatible_n_points():
             return [[self.n_points]]*n_asked
     with pytest.warns(UserWarning):
         SequentialStrategizer(suggestors=[(5, NPointsSuggestor(10))])
+
+
+def test_default_n_points():
+    space = space_factory([[0, 1], [0, 1]])
+    suggestor_definition = {
+        "name": "Sequential",
+        "suggestors": [{"suggestor_budget": 7, "name": "LHS"}],
+    }
+    suggestor = suggestor_factory(
+        space=space,
+        definition=suggestor_definition,
+    )
+    assert suggestor.suggestors[0][1].n_points == 7

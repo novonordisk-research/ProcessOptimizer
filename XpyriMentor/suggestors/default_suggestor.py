@@ -1,3 +1,5 @@
+from typing import Iterable
+
 import numpy as np
 from ProcessOptimizer.space import Space
 
@@ -15,7 +17,16 @@ class DefaultSuggestor():
         self.n_objectives = n_objectives
         self.rng = rng
 
-    def suggest(self, Xi: list[list], Yi: list, n_asked: int = -1) -> np.ndarray:
+    def suggest(
+        self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = -1
+    ) -> np.ndarray:
+        """
+        SHOULD NOT BE CALLED!
+
+        DefaultSuggestor only exists to act as a placeholder to be replaced with the
+        appropriate Suggestor. If its suggest method is called, this has not happened,
+        which is an error.
+        """
         raise NoDefaultSuggestorError("Default suggestor should not be used.")
 
 

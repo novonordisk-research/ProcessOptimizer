@@ -15,6 +15,10 @@ class Suggestor(Protocol):
         """
         Initialize the suggestor with the search space. Suggestors can take other input
         arguments as needed.
+
+        The input keys `name`, `suggestor` and any keyword starting with `suggestor_`
+        are reserved and should not be used in __init__ of suggestors. They might be
+        removed from the definition dict before passing it to the suggestor.
         """
         pass
 

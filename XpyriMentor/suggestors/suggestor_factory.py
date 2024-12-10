@@ -19,6 +19,7 @@ def suggestor_factory(
     definition: Union[Suggestor, dict[str, Any], None],
     n_objectives: int = 1,
     rng: Optional[np.random.Generator] = None,
+    n_points: Optional[int] = None
 ) -> Suggestor:
     """
     Create a suggestor from a definition dictionary.
@@ -36,10 +37,6 @@ def suggestor_factory(
     If definition is None, a DefaultSuggestor is created. This is useful as a
     placeholder in strategizers, and should be replaced with a real suggestor before
     use.
-
-    The keys `name`, `suggestor` and any keyword starting with `suggestor_` are reserved
-    and should not be used in __init__ of suggestors. They might be removed from the
-    definition dict before passing it to the suggestor.
     """
     if isinstance(definition, Suggestor):
         return definition
@@ -87,6 +84,8 @@ def suggestor_factory(
             ))
         return RandomStragegizer(suggestors=suggestors, rng=rng)
     elif suggestor_type == "LHS":
+        if "n_points" not in definition and n_points is not None:
+            definition["n_points"] = n_points
         logger.debug("Creating a LHSSuggestor.")
         return LHSSuggestor(
             space=space,
@@ -107,7 +106,10 @@ def suggestor_factory(
                         f"{', '.join(suggestor.keys())}."
                     )
                 suggestor = suggestor["suggestor"]
-            suggestors.append((n, suggestor_factory(space, suggestor, n_objectives, rng)))
+            suggestors.append((
+                n,
+                suggestor_factory(space, suggestor, n_objectives, rng, n_points = n)
+            ))
         return SequentialStrategizer(suggestors)
     else:
         raise ValueError(f"Unknown suggestor name: {suggestor_type}")
