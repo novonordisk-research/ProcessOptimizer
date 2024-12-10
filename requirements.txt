@@ -1,6 +1,6 @@
 numpy
 scipy
-scikit-learn >= 0.24.2, <1.6 #To avoid issues with normalize_y
+scikit-learn >= 0.24.2, # <1.6 #To avoid issues with normalize_y
 matplotlib
 pytest
 nose
