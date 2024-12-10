@@ -45,7 +45,7 @@ class GradientBoostingQuantileRegressor(BaseEstimator, RegressorMixin):
         self.random_state = random_state
         self.base_estimator = base_estimator
         self.n_jobs = n_jobs
-        self.estimator_type = "regressor"
+        self._estimator_type = 'regressor'
 
     def fit(self, X, y):
         """Fit one regressor for each quantile.
