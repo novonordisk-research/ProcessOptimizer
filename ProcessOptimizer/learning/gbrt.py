@@ -12,7 +12,7 @@ def _parallel_fit(regressor, X, y):
     return regressor.fit(X, y)
 
 
-class GradientBoostingQuantileRegressor(BaseEstimator, RegressorMixin):
+class GradientBoostingQuantileRegressor(RegressorMixin, BaseEstimator):
     """Predict several quantiles with one estimator.
 
     This is a wrapper around `GradientBoostingRegressor`'s quantile
