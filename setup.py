@@ -26,6 +26,8 @@ setup(
         "ProcessOptimizer.space",
         "ProcessOptimizer.utils",
         "ProcessOptimizer.learning.gaussian_process",
+        "XpyriMentor",
+        "XpyriMentor.suggestors",
     ],
     install_requires=[
         "numpy",
