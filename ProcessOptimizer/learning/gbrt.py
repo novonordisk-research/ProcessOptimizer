@@ -12,7 +12,7 @@ def _parallel_fit(regressor, X, y):
     return regressor.fit(X, y)
 
 
-class GradientBoostingQuantileRegressor(BaseEstimator, RegressorMixin):
+class GradientBoostingQuantileRegressor(RegressorMixin, BaseEstimator):
     """Predict several quantiles with one estimator.
 
     This is a wrapper around `GradientBoostingRegressor`'s quantile
@@ -45,11 +45,6 @@ class GradientBoostingQuantileRegressor(BaseEstimator, RegressorMixin):
         self.random_state = random_state
         self.base_estimator = base_estimator
         self.n_jobs = n_jobs
-
-    def __sklearn_tags__(self):
-        tags = super().__sklearn_tags__()
-        tags.estimator_type = "regressor"
-        return tags
 
     def fit(self, X, y):
         """Fit one regressor for each quantile.
