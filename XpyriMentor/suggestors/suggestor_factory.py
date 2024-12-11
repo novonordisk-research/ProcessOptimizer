@@ -46,10 +46,10 @@ def suggestor_factory(
         logger.debug("Creating DefaultSuggestor")
         return DefaultSuggestor(space, n_objectives, rng)
     try:
-        suggestor_type = definition.pop("name")
+        suggestor_type = definition.pop("suggestor_name")
     except KeyError as e:
         raise ValueError(
-            f"Missing 'name' key in suggestor definition: {definition}"
+            f"Missing 'suggestor_name' key in suggestor definition: {definition}"
         ) from e
     if suggestor_type == "Default" or suggestor_type is None:
         logger.debug("Creating DefaultSuggestor")

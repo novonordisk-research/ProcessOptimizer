@@ -18,7 +18,7 @@ def test_factory():
     space = space_factory([[0, 1], [0, 1]])
     suggestor = suggestor_factory(
         space=space,
-        definition={"name": "PO"},
+        definition={"suggestor_name": "PO"},
     )
     assert isinstance(suggestor, POSuggestor)
     assert suggestor.optimizer._n_initial_points == 0

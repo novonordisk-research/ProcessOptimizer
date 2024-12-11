@@ -41,9 +41,9 @@ def test_factory():
     space = space_factory([[0, 1], [0, 1]])
     suggestor = suggestor_factory(
         space=space,
-        definition={"name": "Random", "suggestors": [
-            {"suggestor_usage_ratio": 0.8, "name": "PO"},
-            {"suggestor_usage_ratio": 0.2, "name": "LHS"},]},
+        definition={"suggestor_name": "Random", "suggestors": [
+            {"suggestor_usage_ratio": 0.8, "suggestor_name": "PO"},
+            {"suggestor_usage_ratio": 0.2, "suggestor_name": "LHS"},]},
     )
     assert isinstance(suggestor, RandomStragegizer)
     assert len(suggestor.suggestors) == 2
@@ -98,7 +98,7 @@ def test_random_with_suggestor_given():
     space = space_factory([[0, 1], [0, 1]])
     suggestor = suggestor_factory(
         space=space,
-        definition={"name": "Random", "suggestors": [
+        definition={"suggestor_name": "Random", "suggestors": [
             {"suggestor_usage_ratio": 0.8, "suggestor": MockSuggestor([[1]])},
             {"suggestor_usage_ratio": 0.2, "suggestor": MockSuggestor([[2]])},]},
     )

@@ -40,7 +40,7 @@ def test_protocol():
 
 def test_factory():
     suggestor = {
-        "name": "Sequential",
+        "suggestor_name": "Sequential",
         "suggestors": [
             {"suggestor_budget": 5, "suggestor": MockSuggestor([[1]])},
             {"suggestor_budget": -1, "suggestor": MockSuggestor([[2]])},
@@ -127,8 +127,8 @@ def test_incompatible_n_points():
 def test_default_n_points():
     space = space_factory([[0, 1], [0, 1]])
     suggestor_definition = {
-        "name": "Sequential",
-        "suggestors": [{"suggestor_budget": 7, "name": "LHS"}],
+        "suggestor_name": "Sequential",
+        "suggestors": [{"suggestor_budget": 7, "suggestor_name": "LHS"}],
     }
     suggestor = suggestor_factory(
         space=space,

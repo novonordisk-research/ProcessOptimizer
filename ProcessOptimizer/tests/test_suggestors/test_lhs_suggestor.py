@@ -18,7 +18,7 @@ def test_factory():
     space = space_factory([[1, 2], [1, 2]])
     suggestor = suggestor_factory(
         space=space,
-        definition={"name": "LHS", "n_points": 10},
+        definition={"suggestor_name": "LHS", "n_points": 10},
     )
     assert isinstance(suggestor, LHSSuggestor)
     assert suggestor.n_points == 10

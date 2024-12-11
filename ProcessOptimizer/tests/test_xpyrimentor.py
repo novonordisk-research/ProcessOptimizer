@@ -88,4 +88,4 @@ def test_ask_multiple():
 
 def test_warning_if_raw_POSuggestor():
     with pytest.warns(UserWarning):
-        XpyriMentor([[0, 1], [0, 1]], suggestor={"name": "PO"})
+        XpyriMentor([[0, 1], [0, 1]], suggestor={"suggestor_name": "PO"})

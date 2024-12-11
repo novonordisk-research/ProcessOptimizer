@@ -13,10 +13,10 @@ from .suggestors import DefaultSuggestor, Suggestor, suggestor_factory, POSugges
 logger = logging.getLogger(__name__)
 
 DEFAULT_SUGGESTOR = {
-    "name": "Sequential",
+    "suggestor_name": "Sequential",
     "suggestors": [
-        {"suggestor_budget": 5, "name": "Default"},
-        {"suggestor_budget": -1, "name": "Default"},
+        {"suggestor_budget": 5, "suggestor_name": "Default"},
+        {"suggestor_budget": -1, "suggestor_name": "Default"},
     ],
 }
 
