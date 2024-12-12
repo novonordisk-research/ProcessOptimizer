@@ -26,9 +26,9 @@ class SequentialStrategizer():
         ----------
         * suggestors [`list[tuple[int, Suggestor]]`]:
             A list of tuples where the first element is the number of suggestions the
-            suggestor can make and the second element is the suggestor. A negative number
-            of suggestions is interpreted as infinity, aand can only be used as the last
-            budget.
+            suggestor can make (its budget) and the second element is the suggestor. A
+            negative number of suggestions is interpreted as infinity, and can only be
+            used as budget for the last suggestor.
 
             If the first suggestor is a DefaultSuggestor, it will be replaced with a
             LHSSuggestor with the same budget. If any other suggestor is a
@@ -51,7 +51,7 @@ class SequentialStrategizer():
                             rng=suggestor.rng,
                             n_objectives=suggestor.n_objectives,
                         ))
-            if budget <= 0:
+            if budget < 0:
                 # Interpret negative budgets as infinity
                 suggestors[n] = (float("inf"), suggestors[n][1])
             if hasattr(suggestors[n][1], "n_points"):
@@ -63,37 +63,39 @@ class SequentialStrategizer():
                     )
             if math.isinf(suggestors[n][0]):
                 if n < len(suggestors) - 1:
-                    raise ValueError("Infinite budget must be the last budget")
+                    raise ValueError(
+                        "Only the last suggestor can have an infinite budget."
+                    )
         self.suggestors = suggestors
 
     def suggest(self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = 1):
-        number_to_skip = len(Xi)
-        number_left_to_find = n_asked
+        # We will skip as many points as we have already been told about.
+        number_left_to_skip = len(Xi)  # Running tally of points to skip.
+        number_left_to_find = n_asked  # Running tally of points to find.
+        # Both of these will be decremented as we go through the suggestors.
         suggestions = []
         for budget, suggestor in self.suggestors:
-            if number_left_to_find == 0:
-                # If we have already found all the points we need, we can stop.
-                break
-            if number_to_skip >= budget:
+            if number_left_to_skip >= budget:
                 # If we have been told enough points, we have to skip this suggestor.
-                number_to_skip -= budget
+                number_left_to_skip -= budget
                 continue
-            if number_to_skip + number_left_to_find >= budget:
+            elif number_left_to_skip + number_left_to_find >= budget:
                 # If we need more points than the suggestor can give us, we take all the
                 # points the suggestor can give us and continue with the next suggestor.
-                number_from_this_suggestor = budget - number_to_skip
-                suggestions.extend(suggestor.suggest(Xi, Yi, number_from_this_suggestor))
-                number_left_to_find -= number_from_this_suggestor
-                number_to_skip = 0
+                number_from_this_suggestor = budget - number_left_to_skip
+                number_left_to_skip = 0
             else:
                 # If we need fewer points than the suggestor can give us, we take the
                 # points we need and stop.
-                suggestions.extend(suggestor.suggest(Xi, Yi, number_left_to_find))
-                number_left_to_find = 0
-
+                number_from_this_suggestor = number_left_to_find
+            suggestions.extend(suggestor.suggest(Xi, Yi, number_from_this_suggestor))
+            number_left_to_find -= number_from_this_suggestor
+            if number_left_to_find == 0:
+                # If we have already found all the points we need, we can stop.
+                break
         if len(suggestions) < n_asked:
             raise IncompatibleNumberAsked("Not enough suggestions")
-        return np.array(suggestions, dtype = object)
+        return np.array(suggestions, dtype=object)
 
     def __str__(self):
         return "Sequential Strategizer with suggestors: " + ", ".join(
