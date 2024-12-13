@@ -3,7 +3,7 @@ import math
 import numpy as np
 import patsy
 
-from ..space import Categorical
+from ...space import Categorical
 from .doe_transform import doe_to_real_space
 from .doe_utils import (generate_replicas_and_sort, round_design_point_values,
                         sanitize_names_for_patsy)

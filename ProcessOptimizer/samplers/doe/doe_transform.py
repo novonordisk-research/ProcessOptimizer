@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 
-from ..space import normalize_dimensions
+from ...space import normalize_dimensions
 
 
 def doe_to_real_space(design, factor_space, corner_points=None):

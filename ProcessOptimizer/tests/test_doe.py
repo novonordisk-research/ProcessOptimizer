@@ -1,12 +1,12 @@
 import numpy as np
 import pytest
 
-from ProcessOptimizer.doe.doe_transform import doe_to_real_space
-from ProcessOptimizer.doe.doe_utils import (generate_replicas_and_sort,
-                                            round_design_point_values,
-                                            sanitize_names_for_patsy)
-from ProcessOptimizer.doe.optimal_design import (build_optimal_design,
-                                                 get_optimal_DOE)
+from ProcessOptimizer.samplers.doe import (build_optimal_design,
+                                           doe_to_real_space,
+                                           generate_replicas_and_sort,
+                                           get_optimal_DOE,
+                                           round_design_point_values,
+                                           sanitize_names_for_patsy)
 from ProcessOptimizer.space import Categorical, Real, Space
 
 
