@@ -3,7 +3,7 @@ import math
 import numpy as np
 import patsy
 
-from ...space import Categorical
+from ProcessOptimizer.space import Categorical
 from .doe_transform import doe_to_real_space
 from .doe_utils import (generate_replicas_and_sort, round_design_point_values,
                         sanitize_names_for_patsy)
@@ -377,7 +377,7 @@ def optimize_design(X, design, factor_names, code, **kwargs):
                             factor, Categorical
                         ):
                             steps = len(factor.categories)
-
+                # Brute force sampling
                 for s in range(0, steps):
 
                     design_point[f] = low + ((high - low) / (steps - 1)) * s
@@ -411,8 +411,6 @@ def optimize_design(X, design, factor_names, code, **kwargs):
 
 
 # Main function for optimal design of experiments
-
-
 def build_optimal_design(factor_names, **kwargs):
     """Builds an optimal design.
 

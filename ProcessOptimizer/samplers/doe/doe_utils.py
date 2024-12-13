@@ -7,7 +7,7 @@ def generate_replicas_and_sort(
     design_points_real_space, n_replicates, sorting=False
 ):
     """
-    Generate replicas and sort the design points
+    Generate replicas and sort the design points.
 
     :param design_points_real_space: The design points in real space
     :type design_points_real_space: np.array
@@ -45,7 +45,7 @@ def generate_replicas_and_sort(
         )
     # if sorting is "random_but_group_replicates", replicate the design points
     # and group the replicas
-    # do this by extending the design points in the first dimension and
+    # Do this by extending the design points in the first dimension and
     # reshaping
     elif sorting == "random_but_group_replicates":
         design_points_mid_reps = np.tile(
@@ -124,7 +124,7 @@ def sanitize_names_for_patsy(factor_names):
 
 def round_design_point_values(design_points, res):
     """
-    Round the design points to the resolution specified
+    Round the design points to the resolution specified.
 
     :param design_points: The design points to round
     :type design_points: np.array
@@ -140,7 +140,7 @@ def round_design_point_values(design_points, res):
 
     """
 
-    points_res_scaled = (design_points + 1) / 2 * (res-1)
+    points_res_scaled = (design_points + 1) / 2 * (res - 1)
     rounded_points_res_scaled = np.round(points_res_scaled)
-    rounded_points = rounded_points_res_scaled / (res-1) * 2 - 1
+    rounded_points = rounded_points_res_scaled / (res - 1) * 2 - 1
     return rounded_points

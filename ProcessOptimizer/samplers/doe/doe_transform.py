@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 
-from ...space import normalize_dimensions
+from ProcessOptimizer.space import normalize_dimensions
 
 
 def doe_to_real_space(design, factor_space, corner_points=None):
@@ -10,11 +10,11 @@ def doe_to_real_space(design, factor_space, corner_points=None):
 
     Parameters:
     -----------
-    design: np.array
+    design: np.ndarray
         The design to transform.
-    space: Space object from ProcessOptimizer
+    factor_space: Space object from ProcessOptimizer
         The space object used to transform the design.
-    corner_points: np.array or 2D list, optional
+    corner_points: np.ndarray or 2D list, optional
         The corner points of the design space. If not provided, the design
         will be transformed under the assumption that min and max values of
         each dimension in the design space are represented in the design
@@ -24,7 +24,7 @@ def doe_to_real_space(design, factor_space, corner_points=None):
 
     Returns:
     --------
-    design_points_real_space: np.array
+    np.ndarray
         The design points in real space.
     """
 
