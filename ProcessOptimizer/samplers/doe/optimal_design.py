@@ -11,7 +11,7 @@ from .doe_utils import (generate_replicas_and_sort, round_design_point_values,
 # Defining a number of helper functions for the optimal design of experiments
 
 
-def hit_and_run(x0, constraint_matrix, bounds, n_samples, thin=1):
+def hit_and_run(x0, constraint_matrix, bounds, n_samples, thin=1, seed=None):
     """A basic implementation of the hit and run sampler
 
     :param x0: The starting value of sampler.
@@ -20,14 +20,18 @@ def hit_and_run(x0, constraint_matrix, bounds, n_samples, thin=1):
     :param n_samples: The numbers of samples to return.
     :param thin: The thinning factor. Retain every 'thin' sample
         (e.g. if thin=2, retain every 2nd sample)
+    :param seed: possibility to specify a seed for random generator
 
-    This function is from https://github.com/statease/dexpy
+    This function is adapted from https://github.com/statease/dexpy
     Copyright 2016 Stat-Ease, Inc.
     License: Apache License, Version 2.0
     License link: https://github.com/statease/dexpy/blob/master/LICENSE
     """
     x = np.copy(x0)
     p = len(x)
+
+    if seed:
+        np.random.seed(seed)
 
     out_samples = np.zeros((n_samples, p))
 
@@ -55,7 +59,7 @@ def hit_and_run(x0, constraint_matrix, bounds, n_samples, thin=1):
     return out_samples
 
 
-def bootstrap(factor_names, model, n_exp):
+def bootstrap(factor_names, model, n_exp, **kwargs):
     """Create a minimal starting design that is non-singular.
 
     This function is modified from https://github.com/statease/dexpy
@@ -88,7 +92,7 @@ def bootstrap(factor_names, model, n_exp):
         bounds[c] = 1
         c += 1
 
-    start_points = hit_and_run(x0, constraint_matrix, bounds, n_exp)
+    start_points = hit_and_run(x0, constraint_matrix, bounds, n_exp, **kwargs)
 
     d = start_points
 
@@ -437,6 +441,9 @@ def build_optimal_design(factor_names, **kwargs):
             The resolution of the design. This is the sampling resolution used
             when sampling the design space. The higher the resolution, the
             more accurate the design will be. The default is 11.
+        * **seed** (`integer`) --
+            The seed to use for the random number generator. This is useful if
+            you want to reproduce the same design multiple times.
 
     _______________________________________________________
 
@@ -456,9 +463,10 @@ def build_optimal_design(factor_names, **kwargs):
         model = make_model(factor_names, order, include_powers=include_powers)
 
     n_exp = kwargs.get("n_exp", 0)
+    nseed = kwargs.get("seed", None)
 
     # first generate a valid starting design
-    (design, X) = bootstrap(factor_names, model, n_exp)
+    (design, X) = bootstrap(factor_names, model, n_exp, seed=nseed)
 
     # The numbers in the design representing categorical factors should
     # initially be exactly at one of the levels
@@ -574,6 +582,7 @@ def get_optimal_DOE(
     replicates=1,
     sorting=False,
     res=11,
+    **kwargs,
 ):
     """
     A function that returns the d-optimal design of experiments
@@ -662,6 +671,7 @@ def get_optimal_DOE(
         model=model,
         include_powers=include_powers,
         res=res,
+        **kwargs,
     )
 
     # Transform the design into real space
