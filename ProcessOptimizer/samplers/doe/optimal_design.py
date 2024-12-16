@@ -31,7 +31,12 @@ def hit_and_run(x0, constraint_matrix, bounds, n_samples, thin=1, seed=None):
     p = len(x)
 
     if seed:
-        np.random.seed(seed)
+        #np.random.seed(seed)
+        rng = np.random.RandomState(seed)
+    else:
+        rng = np.random.RandomState()
+        #np.random.RandomState(seed)
+        #np.random.default_rng(seed)
 
     out_samples = np.zeros((n_samples, p))
 
