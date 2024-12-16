@@ -46,7 +46,8 @@ def hit_and_run(x0, constraint_matrix, bounds, n_samples, thin=1, seed=None):
         while thin_count < thin:
             thin_count = thin_count + 1
 
-            random_dir = np.random.normal(0.0, 1.0, p)
+            #random_dir = np.random.normal(0.0, 1.0, p)
+            random_dir = rng.normal(0.0, 1.0, p)
             random_dir = random_dir / np.linalg.norm(random_dir)
 
             denom = constraint_matrix.dot(random_dir)
@@ -54,7 +55,8 @@ def hit_and_run(x0, constraint_matrix, bounds, n_samples, thin=1, seed=None):
             t_low = np.max(intersections[denom < 0])
             t_high = np.min(intersections[denom > 0])
 
-            u = np.random.uniform(0, 1)
+            #u = np.random.uniform(0, 1)
+            u = rng.uniform(0, 1)
             random_distance = t_low + u * (t_high - t_low)
             x_new = x + random_distance * random_dir
 
