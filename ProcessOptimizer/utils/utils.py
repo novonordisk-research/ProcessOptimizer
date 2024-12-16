@@ -192,7 +192,7 @@ def load(filename, **kwargs):
 
 
 def is_listlike(x):
-    return isinstance(x, (list, tuple))
+    return isinstance(x, (list, tuple, np.ndarray))
 
 
 def is_2Dlistlike(x):
