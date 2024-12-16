@@ -32,11 +32,13 @@ def hit_and_run(x0, constraint_matrix, bounds, n_samples, thin=1, seed=None):
 
     if seed:
         #np.random.seed(seed)
-        #rng = np.random.RandomState(seed)
-        rng = np.random.default_rng(seed)
+        rng = np.random.RandomState(seed)
+        rng2 = np.random.RandomState(seed)
+        #rng = np.random.default_rng(seed)
     else:
-        #rng = np.random.RandomState()
-        rng = np.random.default_rng()
+        rng = np.random.RandomState()
+        rng2 = np.random.RandomState()
+        #rng = np.random.default_rng()
         #np.random.RandomState(seed)
         #np.random.default_rng(seed)
 
@@ -58,7 +60,7 @@ def hit_and_run(x0, constraint_matrix, bounds, n_samples, thin=1, seed=None):
             t_high = np.min(intersections[denom > 0])
 
             #u = np.random.uniform(0, 1)
-            u = rng.uniform(0, 1)
+            u = rng2.uniform(0, 1)
             random_distance = t_low + u * (t_high - t_low)
             x_new = x + random_distance * random_dir
 
