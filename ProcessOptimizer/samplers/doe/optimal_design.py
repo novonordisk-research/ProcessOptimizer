@@ -31,16 +31,9 @@ def hit_and_run(x0, constraint_matrix, bounds, n_samples, thin=1, seed=None):
     p = len(x)
 
     if seed:
-        #np.random.seed(seed)
         rng = np.random.RandomState(seed)
-        rng2 = np.random.RandomState(seed)
-        #rng = np.random.default_rng(seed)
     else:
         rng = np.random.RandomState()
-        rng2 = np.random.RandomState()
-        #rng = np.random.default_rng()
-        #np.random.RandomState(seed)
-        #np.random.default_rng(seed)
 
     out_samples = np.zeros((n_samples, p))
 
@@ -50,7 +43,6 @@ def hit_and_run(x0, constraint_matrix, bounds, n_samples, thin=1, seed=None):
         while thin_count < thin:
             thin_count = thin_count + 1
 
-            #random_dir = np.random.normal(0.0, 1.0, p)
             random_dir = rng.normal(0.0, 1.0, p)
             random_dir = random_dir / np.linalg.norm(random_dir)
 
@@ -59,13 +51,14 @@ def hit_and_run(x0, constraint_matrix, bounds, n_samples, thin=1, seed=None):
             t_low = np.max(intersections[denom < 0])
             t_high = np.min(intersections[denom > 0])
 
-            #u = np.random.uniform(0, 1)
-            u = rng2.uniform(0, 1)
+            u = rng.uniform(0, 1)
             random_distance = t_low + u * (t_high - t_low)
             x_new = x + random_distance * random_dir
 
         out_samples[i,] = x_new
         x = x_new
+
+    print(out_samples)
 
     return out_samples
 
@@ -112,6 +105,9 @@ def bootstrap(factor_names, model, n_exp, **kwargs):
         d_dict[factor_names[i]] = start_points[:, i]
 
     X = patsy.dmatrix(model, d_dict, return_type="matrix")
+
+    print(d)
+    print(X)
 
     return (d, X)
 
