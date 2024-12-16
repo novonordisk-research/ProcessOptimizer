@@ -32,9 +32,11 @@ def hit_and_run(x0, constraint_matrix, bounds, n_samples, thin=1, seed=None):
 
     if seed:
         #np.random.seed(seed)
-        rng = np.random.RandomState(seed)
+        #rng = np.random.RandomState(seed)
+        rng = np.random.default_rng(seed)
     else:
-        rng = np.random.RandomState()
+        #rng = np.random.RandomState()
+        rng = np.random.default_rng()
         #np.random.RandomState(seed)
         #np.random.default_rng(seed)
 
