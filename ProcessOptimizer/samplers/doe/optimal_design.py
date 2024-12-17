@@ -2,6 +2,7 @@ import math
 
 import numpy as np
 import patsy
+import scipy
 
 from ProcessOptimizer.space import Categorical
 from .doe_transform import doe_to_real_space
@@ -122,7 +123,7 @@ def update(XtXi, new_point, old_point):
     F1[:, 1] *= -1
     FD = np.dot(F2, XtXi)
     I2x2 = np.identity(2) + np.dot(FD, F1)
-    Inverse2x2 = np.linalg.inv(I2x2)
+    Inverse2x2 = scipy.linalg.inv(I2x2)
     F2x2FD = np.dot(np.dot(F1, Inverse2x2), FD)
     return XtXi - np.dot(XtXi, F2x2FD)
 
@@ -353,7 +354,7 @@ def optimize_design(X, design, factor_names, code, **kwargs):
 
     min_change = 1.0 + np.finfo(float).eps
 
-    XtXi = np.linalg.inv(np.dot(np.transpose(X), X))
+    XtXi = scipy.linalg.inv(np.dot(np.transpose(X), X))
     (_, d_optimality) = np.linalg.slogdet(XtXi)
 
     design_improved = True  # Specified to initiate the while loop
@@ -473,8 +474,8 @@ def build_optimal_design(factor_names, **kwargs):
     # The numbers in the design representing categorical factors should
     # initially be exactly at one of the levels
 
-    # if space is not None:
-    #    design = initial_values_cat_vars(design, space)
+    if space is not None:
+        design = initial_values_cat_vars(design, space)
 
     # Make sure that design point values are rounded to the resolution
     design = round_design_point_values(design, res)

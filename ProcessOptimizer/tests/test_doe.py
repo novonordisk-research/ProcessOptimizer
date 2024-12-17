@@ -291,23 +291,23 @@ def test_get_optimal_DOE_with_categorical(optimal_design_space):
 
     exptected_int = np.asarray(
         [
-            [100.0, 0.0],
-            [100.0, 0.8],
-            [100.0, 0.0],
-            [100.0, 1.0],
-            [28.0, 0.8],
-            [44.0, 0.3],
-            [20.0, 0.0],
-            [20.0, 1.0],
-            [44.0, 1.0],
-            [76.0, 0.8],
-            [28.0, 0.0],
-            [84.0, 1.0],
+            [1.0e02, 0.0e00],
+            [5.2e01, 2.0e-01],
+            [2.0e01, 1.0e-01],
+            [1.0e02, 1.0e00],
+            [1.0e02, 1.0e00],
+            [3.6e01, 7.0e-01],
+            [2.0e01, 0.0e00],
+            [2.0e01, 1.0e00],
+            [2.0e01, 1.0e00],
+            [7.6e01, 0.0e00],
+            [8.4e01, 6.0e-01],
+            [1.0e02, 2.0e-01],
         ],
         dtype=float,
     )
     expected_str = np.array(
-        ['A', 'B', 'B', 'A', 'A', 'B', 'B', 'B', 'A', 'A', 'A', 'B']
+        ['B', 'B', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', 'B', 'A']
     )
 
     assert result.shape == (12, 3)
@@ -354,13 +354,13 @@ def test_custom_model(optimal_design_space):
         [
             [20, 0],
             [20, 1],
+            [60, 1],
             [100, 0],
-            [100, 1],
             [100, 1],
             [60, 0],
         ]
     )
-    expected_str = np.array(['A', 'B', 'A', 'B', 'A', 'A'])
+    expected_str = np.array(['B', 'A', 'B', 'B', 'A', 'A'])
 
     assert design.shape == (6, 3)
     assert np.all(design[:, 0] >= 20) and np.all(design[:, 0] <= 100)
