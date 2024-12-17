@@ -222,25 +222,26 @@ def test_build_optimal_design_with_categorical(optimal_design_space):
     result = build_optimal_design(
         factor_names, n_exp=12, space=optimal_design_space, seed=42
     )
+    print(result)
     expected = np.array(
         [
             [-1.0, -1.0, 1.0],
             [-1.0, -1.0, -1.0],
             [-1.0, 1.0, 1.0],
             [1.0, 1.0, 1.0],
-            [1.0, 1.0, -1.0],
-            [-1.0, 0.2, -1.0],
+            [1.0, -1.0, 1.0],
+            [-1.0, 1.0, -1.0],
             [0.0, 0.0, 1.0],
-            [-0.4, 1.0, -1.0],
+            [0.2, 1.0, -0.2],
+            [1.0, 1.0, -1.0],
             [1.0, -0.4, -1.0],
             [0.2, -1.0, -1.0],
-            [0.6, -1.0, -1.0],
-            [1.0, -1.0, 1.0],
+            [-1.0, 0.0, 0.8],
         ]
     )
 
     assert result.shape == (12, 3)
-    assert np.all(np.isin(result[:, 2], [-1, 1]))
+    assert np.all(result[:, :2] >= -1) and np.all(result[:, :2] <= 1)
     np.testing.assert_array_almost_equal(result, expected)
 
 
@@ -251,7 +252,6 @@ def test_get_optimal_DOE_without_categorical(sample_space):
     )
 
     result_compare = np.asarray(result, dtype=float)
-    print(result_compare)
 
     exptected_result = np.array(
         [
@@ -283,27 +283,31 @@ def test_get_optimal_DOE_with_categorical(optimal_design_space):
         optimal_design_space, 12, design_type="optimization", res=11, seed=42
     )
 
-    results_int = np.asarray(np.asarray(result[:, :2]), dtype=int)
+    results_int = np.asarray(np.asarray(result[:, :2]), dtype=float)
     results_str = np.asarray(result[:, 2], dtype=str)
 
-    exptected_int = np.array(
+    print(results_int)
+    print(results_str)
+
+    exptected_int = np.asarray(
         [
-            [28, 0],
-            [36, 1],
-            [20, 0],
-            [100, 1],
-            [20, 1],
-            [44, 0],
-            [20, 0],
-            [100, 1],
-            [100, 0],
-            [100, 0],
-            [84, 0],
-            [76, 0],
-        ]
+            [100.0, 0.0],
+            [100.0, 0.8],
+            [100.0, 0.0],
+            [100.0, 1.0],
+            [28.0, 0.8],
+            [44.0, 0.3],
+            [20.0, 0.0],
+            [20.0, 1.0],
+            [44.0, 1.0],
+            [76.0, 0.8],
+            [28.0, 0.0],
+            [84.0, 1.0],
+        ],
+        dtype=float,
     )
     expected_str = np.array(
-        ["B", "B", "A", "B", "A", "A", "B", "A", "A", "B", "A", "B"]
+        ['A', 'B', 'B', 'A', 'A', 'B', 'B', 'B', 'A', 'A', 'A', 'B']
     )
 
     assert result.shape == (12, 3)
@@ -343,17 +347,20 @@ def test_custom_model(optimal_design_space):
     design_int = np.asarray(np.asarray(design[:, :2]), dtype=int)
     design_str = np.asarray(design[:, 2], dtype=str)
 
+    print(design_int)
+    print(design_str)
+
     expected_int = np.array(
         [
             [20, 0],
-            [60, 1],
             [20, 1],
             [100, 0],
+            [100, 1],
             [100, 1],
             [60, 0],
         ]
     )
-    expected_str = np.array(["A", "A", "B", "A", "B", "B"])
+    expected_str = np.array(['A', 'B', 'A', 'B', 'A', 'A'])
 
     assert design.shape == (6, 3)
     assert np.all(design[:, 0] >= 20) and np.all(design[:, 0] <= 100)

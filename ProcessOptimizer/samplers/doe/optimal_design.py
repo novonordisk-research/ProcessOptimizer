@@ -58,8 +58,6 @@ def hit_and_run(x0, constraint_matrix, bounds, n_samples, thin=1, seed=None):
         out_samples[i,] = x_new
         x = x_new
 
-    print(out_samples)
-
     return out_samples
 
 
@@ -105,9 +103,6 @@ def bootstrap(factor_names, model, n_exp, **kwargs):
         d_dict[factor_names[i]] = start_points[:, i]
 
     X = patsy.dmatrix(model, d_dict, return_type="matrix")
-
-    print(d)
-    print(X)
 
     return (d, X)
 
@@ -477,8 +472,9 @@ def build_optimal_design(factor_names, **kwargs):
 
     # The numbers in the design representing categorical factors should
     # initially be exactly at one of the levels
-    if space is not None:
-        design = initial_values_cat_vars(design, space)
+
+    # if space is not None:
+    #    design = initial_values_cat_vars(design, space)
 
     # Make sure that design point values are rounded to the resolution
     design = round_design_point_values(design, res)
