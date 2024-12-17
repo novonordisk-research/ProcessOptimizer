@@ -23,7 +23,7 @@ setup(
         "ProcessOptimizer.model_systems",
         "ProcessOptimizer.model_systems.data",
         "ProcessOptimizer.optimizer",
-        "ProcessOptimizer.samples.doe"
+        "ProcessOptimizer.samples.doe",
         "ProcessOptimizer.space",
         "ProcessOptimizer.utils",
         "ProcessOptimizer.learning.gaussian_process",
