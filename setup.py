@@ -51,6 +51,7 @@ setup(
             "scikit-learn==1.4.2",
             "scipy==1.13.0",
             "six==1.16.0",
+            "patsy==1.0.1",
         ]
     },
     long_description=long_description,
