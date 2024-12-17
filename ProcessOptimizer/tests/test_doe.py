@@ -222,7 +222,7 @@ def test_build_optimal_design_with_categorical(optimal_design_space):
     result = build_optimal_design(
         factor_names, n_exp=12, space=optimal_design_space, seed=42
     )
-    print(result)
+
     expected = np.array(
         [
             [-1.0, -1.0, 1.0],
@@ -286,9 +286,6 @@ def test_get_optimal_DOE_with_categorical(optimal_design_space):
     results_int = np.asarray(np.asarray(result[:, :2]), dtype=float)
     results_str = np.asarray(result[:, 2], dtype=str)
 
-    print(results_int)
-    print(results_str)
-
     exptected_int = np.asarray(
         [
             [1.0e02, 0.0e00],
@@ -346,9 +343,6 @@ def test_custom_model(optimal_design_space):
     )
     design_int = np.asarray(np.asarray(design[:, :2]), dtype=int)
     design_str = np.asarray(design[:, 2], dtype=str)
-
-    print(design_int)
-    print(design_str)
 
     expected_int = np.array(
         [
