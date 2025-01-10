@@ -1,6 +1,7 @@
 from re import M
 import pytest
 import tempfile
+import warnings
 
 from numpy.testing import assert_array_equal
 from numpy.testing import assert_equal
@@ -10,6 +11,7 @@ from ProcessOptimizer import gp_minimize
 from ProcessOptimizer import load
 from ProcessOptimizer import dump
 from ProcessOptimizer import expected_minimum
+from ProcessOptimizer import Optimizer
 from ProcessOptimizer.model_systems.benchmarks import bench1
 from ProcessOptimizer.model_systems.benchmarks import bench3
 from ProcessOptimizer.learning import (
@@ -26,7 +28,7 @@ from ProcessOptimizer.utils import (
     dimensions_aslist,
 )
 from ProcessOptimizer.space import normalize_dimensions
-from ProcessOptimizer.space.constraints import SumEquals
+from ProcessOptimizer.space.constraints import Single, SumEquals
 
 
 def check_optimization_results_equality(res_1, res_2):
@@ -130,6 +132,22 @@ def test_expected_minimum_min():
     assert f_min <= res.fun  # true since noise ~= 0.0
     assert x_min == x_min2
     assert f_min == f_min2
+
+
+@pytest.mark.fast_test
+def test_expected_minimum_other_constraint():
+    opt = Optimizer([[0, 1], [0, 1]], n_initial_points=2)
+    opt.tell([0, 0], 1)
+    opt.tell([1, 1], 0)
+    opt.set_constraints([Single(1, 1, "integer")])
+    res = opt.get_result()
+    # Note that this test is not thread-safe If it starts failing intermittenetly, it may
+    # be due to some other running in parallel raising a warning. This can be fixed by
+    # mocking the warnings module, but as we don't have separate test requirements, we
+    # don't want to add a dependency on the mock module.
+    with warnings.catch_warnings(record=True) as w:
+        expected_minimum(res, random_state=1)
+        assert len(w) == 1
 
 
 @pytest.mark.fast_test
