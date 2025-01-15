@@ -51,7 +51,7 @@ def test_doe_to_real_space_edge_cases(sample_space):
 
 @pytest.mark.fast_test
 def test_doe_to_real_space_scaler(sample_space):
-    """Test the doe_to_real_space function with a corner points specified."""
+    """Test the doe_to_real_space function with corner points specified."""
     design = np.array([[0.25, 0.75], [0.75, 0.25]])
     corner_points = [[0, 0], [1, 1]]
     result = doe_to_real_space(
@@ -69,6 +69,29 @@ def test_doe_to_real_space_different_ranges():
     result = doe_to_real_space(design, space)
     assert np.allclose(result[0], [-100, 0])
     assert np.allclose(result[1], [100, 1])
+
+
+@pytest.mark.fast_test
+def test_doe_to_real_space_non_unit_box(sample_space):
+    """Test the doe_to_real_space function with non-unit corner points
+    specified."""
+    design = np.array([[0.25, 1.5], [0.75, 0.5]])
+    corner_points = [[0, 0], [1, 2]]
+    result = doe_to_real_space(
+        design, sample_space, corner_points=corner_points
+    )
+    assert np.allclose(result[0], [2.5, 2.5])
+    assert np.allclose(result[1], [7.5, -2.5])
+
+
+@pytest.mark.fast_test
+def test_doe_to_real_space_outside_box(sample_space):
+    """Test the doe_to_real_space function fails when a point is outside the
+    corner points."""
+    design = np.array([[0., 1.5], [0., 0.]])
+    corner_points = [[0, 0], [1, 1]]
+    with pytest.raises(ValueError):
+        doe_to_real_space(design, sample_space, corner_points=corner_points)
 
 
 @pytest.mark.fast_test
@@ -173,6 +196,15 @@ def test_sanitize_names_for_patsy():
         result = sanitize_names_for_patsy(factor_names)
 
     assert result == expected
+
+
+@pytest.mark.fast_test
+def test_sanitize_names_for_patsy_duplicate_name():
+    """Test the sanitize_names_for_patsy function with duplicate names."""
+    factor_names = ["Factor_1", "Factor_1",]
+
+    with pytest.raises(ValueError):
+        sanitize_names_for_patsy(factor_names)
 
 
 # Test that the design points are rounded according to resolution

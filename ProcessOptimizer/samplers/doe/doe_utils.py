@@ -120,8 +120,8 @@ def sanitize_names_for_patsy(factor_names):
                 name = factor_names[i]
 
     if len(factor_names) != len(set(factor_names)):
-        raise ValueError("Duplicate factor names found. Factor names must be",
-                         "unique.")
+        raise ValueError("Duplicate factor names found after sanitation."
+                         " Factor names must be unique.")
 
     return factor_names
 
