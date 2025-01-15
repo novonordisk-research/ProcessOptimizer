@@ -119,6 +119,10 @@ def sanitize_names_for_patsy(factor_names):
                 factor_names[i] = name.replace(symbol_rm, "")
                 name = factor_names[i]
 
+    if len(factor_names) != len(set(factor_names)):
+        raise ValueError("Duplicate factor names found. Factor names must be",
+                         "unique.")
+
     return factor_names
 
 
