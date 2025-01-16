@@ -652,6 +652,10 @@ def get_optimal_DOE(
     get_optimal_DOE(factor_space, 14, design_type='response')
     """
 
+    # Check that "res" is an int and at least 2
+    if not isinstance(res, int) or res < 2:
+        raise ValueError("'res' must be an integer and at least 2")
+
     # Check if the factor space has any categorical variables
     cat_var_levels = get_cat_var_levels(factor_space)
 
