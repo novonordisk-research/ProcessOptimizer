@@ -6,34 +6,33 @@ from ProcessOptimizer.space import normalize_dimensions
 
 def doe_to_real_space(design, factor_space, corner_points=None):
     """
-    Transform the design into real space
+    Transform the design into real space.
 
-    Parameters:
-    -----------
-    design: np.ndarray
-        The design to transform.
-    factor_space: Space object from ProcessOptimizer
-        The space object used to transform the design.
-    corner_points: np.ndarray or 2D list, optional
-        The corner points of the design space, given as a list of two lists.
-        The two lists should each have length len(factor_space), and contain
-        the minimum and maxium values for each dimension. If not provided, the
-        design will be transformed under the assumption that min and max
-        values of each dimension in the design space are represented in the
-        design points.
+    :param design: The design to transform.
+    :type design: np.ndarray
 
-        Example: np.array([[-1, -1], [1, 1]])
+    :param factor_space: The space object used to transform the design.
+    :type factor_space: Space
 
-    Returns:
-    --------
-    np.ndarray
-        The design points in real space.
+    :param corner_points: The corner points of the design space, given as a
+                          list of two lists. The two lists should each have
+                          length len(factor_space), and contain the minimum
+                          and maximum values for each dimension. If not
+                          provided, the design will be transformed under the
+                          assumption that min and max values of each dimension
+                          in the design space are represented in the design
+                          points.
+                          Example: np.array([[-1, -1], [1, 1]])
+    :type corner_points: np.ndarray or list of list, optional
+
+    :return: The design points in real space.
+    :rtype: np.ndarray
     """
 
     # This ensure that the transformation works no matter how the design is
     # expressed
     # E.g., with values from 0 to 1 or from -1 to 1.
-    scaler = MinMaxScaler(feature_range=(0., 1.))
+    scaler = MinMaxScaler(feature_range=(0.0, 1.0))
 
     if corner_points is not None:
         corner_points = np.asarray(corner_points)
