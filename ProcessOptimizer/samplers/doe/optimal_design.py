@@ -175,7 +175,8 @@ def make_model(factor_names, model_order, include_powers=True):
 
     :param include_powers: Whether to include squared and cubed terms.
     :type include_powers: bool, list of bool
-    if True, include squared and cubed terms for all factors
+    if True, include higher order terms (squared if `model_order` is 2,
+        squared and cubed if it is 3) for all factors
     if include_powers is a list, it must be the same length as factor_names
     if include_powers is a list, include squared and cubed terms for factors
     where include_powers is True
