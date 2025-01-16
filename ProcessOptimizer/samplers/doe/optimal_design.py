@@ -233,7 +233,7 @@ def make_model(factor_names, model_order, include_powers=True):
             cubed_terms = "pow({}, 3)".format(",3)+pow(".join(factor_names))
             return "+".join([interaction_model, squared_terms, cubed_terms])
     else:
-        raise Warning("Model order not supported")
+        raise Warning(f"Model order {model_order} not supported")
 
 
 def initial_values_cat_vars(init_guess, space):
