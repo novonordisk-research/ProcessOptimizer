@@ -23,7 +23,8 @@ def hit_and_run(x0, constraint_matrix, bounds, n_samples, thin=1, seed=None):
         (e.g. if thin=2, retain every 2nd sample)
     :param seed: possibility to specify a seed for random generator
 
-    This function is adapted from https://github.com/statease/dexpy
+    This function is modified from
+    https://github.com/statease/dexpy -  Version 0.12
     Copyright 2016 Stat-Ease, Inc.
     License: Apache License, Version 2.0
     License link: https://github.com/statease/dexpy/blob/master/LICENSE
@@ -65,7 +66,8 @@ def hit_and_run(x0, constraint_matrix, bounds, n_samples, thin=1, seed=None):
 def bootstrap(factor_names, model, n_exp, **kwargs):
     """Create a minimal starting design that is non-singular.
 
-    This function is modified from https://github.com/statease/dexpy
+    This function is adapted from
+    https://github.com/statease/dexpy -  Version 0.12
     Copyright 2016 Stat-Ease, Inc.
     License: Apache License, Version 2.0
     License link: https://github.com/statease/dexpy/blob/master/LICENSE
@@ -113,7 +115,8 @@ def update(XtXi, new_point, old_point):
 
     Equation (6) from Meyer and Nachtsheim :cite:`MeyerNachtsheim1995`.
 
-    This function is from https://github.com/statease/dexpy
+    This function is adapted from
+    https://github.com/statease/dexpy -  Version 0.12
     Copyright 2016 Stat-Ease, Inc.
     License: Apache License, Version 2.0
     License link: https://github.com/statease/dexpy/blob/master/LICENSE
@@ -131,7 +134,8 @@ def update(XtXi, new_point, old_point):
 def expand_point(design_point, code):
     """Converts a point in factor space to conform with the X matrix.
 
-    This function is from https://github.com/statease/dexpy
+    This function is from
+    https://github.com/statease/dexpy -  Version 0.12
     Copyright 2016 Stat-Ease, Inc.
     License: Apache License, Version 2.0
     License link: https://github.com/statease/dexpy/blob/master/LICENSE
@@ -144,7 +148,7 @@ def delta(X, XtXi, row, new_point):
 
     This is equation (1) in Meyer and Nachtsheim :cite:`MeyerNachtsheim1995`.
 
-    This function is from https://github.com/statease/dexpy
+    This function is from https://github.com/statease/dexpy -  Version 0.12
     Copyright 2016 Stat-Ease, Inc.
     License: Apache License, Version 2.0
     License link: https://github.com/statease/dexpy/blob/master/LICENSE
@@ -181,7 +185,7 @@ def make_model(factor_names, model_order, include_powers=True):
     :rtype: str
 
     This function is inspired by similar function in
-    https://github.com/statease/dexpy
+    https://github.com/statease/dexpy -  Version 0.12
     Copyright 2016 Stat-Ease, Inc.
     License: Apache License, Version 2.0
     License link: https://github.com/statease/dexpy/blob/master/LICENSE
@@ -279,7 +283,8 @@ def conversion_design_Xmatrix(X):
     matrix.
     :rtype: code object
 
-    This function is adapted from https://github.com/statease/dexpy
+    This function is adapted from
+    https://github.com/statease/dexpy -  Version 0.12
     Copyright 2016 Stat-Ease, Inc.
     License: Apache License, Version 2.0
     License link: https://github.com/statease/dexpy/blob/master/LICENSE
@@ -341,7 +346,8 @@ def optimize_design(X, design, factor_names, code, **kwargs):
     :rtype: np.array
 
 
-    This function is adapted from https://github.com/statease/dexpy
+    This function is adapted from
+    https://github.com/statease/dexpy -  Version 0.12
     Copyright 2016 Stat-Ease, Inc.
     License: Apache License, Version 2.0
     License link: https://github.com/statease/dexpy/blob/master/LICENSE
@@ -428,7 +434,7 @@ def build_optimal_design(factor_names, **kwargs):
     :type factor_names: list of str
 
     :Keyword Arguments:
-        * **order** (:class:`ModelOrder <dexpy.model.ModelOrder>`) --
+        * **order** (`integer`) --
             Builds a design for this order model.
             Mutually exclusive with the **model** parameter.
         * **model** (`patsy formula <https://patsy.readthedocs.io>`_) --
@@ -450,7 +456,8 @@ def build_optimal_design(factor_names, **kwargs):
 
     _______________________________________________________
 
-    This function is adapted from https://github.com/statease/dexpy
+    This function is adapted from
+    https://github.com/statease/dexpy -  Version 0.12
     Copyright 2016 Stat-Ease, Inc.
     License: Apache License, Version 2.0
     License link: https://github.com/statease/dexpy/blob/master/LICENSE
@@ -597,7 +604,7 @@ def get_optimal_DOE(
 
     :param factor_space: The space of the factors
     :type factor_space: dict
-    Generated from the Space class in the ProcessOptimizer library
+    Generated from the Space class
 
     :param budget: The number of runs in the design
     :type budget: int
@@ -650,7 +657,6 @@ def get_optimal_DOE(
     # Checking inputs
     # Making sure that factor names are valid for use in patsy
     factor_names_raw = factor_space.names
-
     factor_names = sanitize_names_for_patsy(factor_names_raw)
 
     if design_type is None and model is None:
