@@ -5,6 +5,8 @@ import patsy
 import scipy
 
 from ProcessOptimizer.space import Categorical
+from ProcessOptimizer.utils.get_rng import get_random_generator
+
 from .doe_transform import doe_to_real_space
 from .doe_utils import (generate_replicas_and_sort, round_design_point_values,
                         sanitize_names_for_patsy)
@@ -33,9 +35,9 @@ def hit_and_run(x0, constraint_matrix, bounds, n_samples, thin=1, seed=None):
     p = len(x)
 
     if isinstance(seed, int):
-        rng = np.random.RandomState(seed)
+        rng = get_random_generator(seed)
     else:
-        rng = np.random.RandomState()
+        rng = get_random_generator()
 
     out_samples = np.zeros((n_samples, p))
 
