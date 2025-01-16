@@ -73,7 +73,7 @@ def bootstrap(factor_names, model, n_exp, **kwargs):
     """
     md = patsy.ModelDesc.from_formula(model)
     model_size = len(md.rhs_termlist)
-    if n_exp == 0:
+    if n_exp == 'Min':
         n_exp = model_size
     if model_size > n_exp:
         raise ValueError(
@@ -472,7 +472,7 @@ def build_optimal_design(factor_names, **kwargs):
         order = kwargs.get("order", 2)
         model = make_model(factor_names, order, include_powers=include_powers)
 
-    n_exp = kwargs.get("n_exp", 0)
+    n_exp = kwargs.get("n_exp", 'Min')
     nseed = kwargs.get("seed", None)
 
     # first generate a valid starting design
@@ -570,7 +570,7 @@ def include_powers_to_list(include_powers, cat_var_levels):
     :type cat_var_levels: list of int or None
 
     :return: The include_powers parameter as a list
-    :rtype: list of bool
+    :rtype: list of bool or bool
     """
 
     if include_powers is True and any(level for level in cat_var_levels):
@@ -584,12 +584,13 @@ def include_powers_to_list(include_powers, cat_var_levels):
 
 def get_optimal_DOE(
     factor_space,
-    budget,
+    budget='Min',
     design_type=None,
     model=None,
     replicates=1,
     sorting=False,
     res=11,
+    seed=None,
     **kwargs,
 ):
     """
@@ -630,10 +631,13 @@ def get_optimal_DOE(
     :param res: The resolution of the design sampling. The default is 11.
     :type res: int
 
+    :param seed: The seed to use for randomization
+    :type seed: int, None or True (True=1)
+
     Outputs:
 
-    :return: A design of experiments in real space
-    :rtype: np.array
+    :return: A design of experiments in real space and the factor names
+    :rtype: (np.ndarray, list of str)
 
     Example:
 
@@ -678,6 +682,7 @@ def get_optimal_DOE(
         model=model,
         include_powers=include_powers,
         res=res,
+        seed=seed,
         **kwargs,
     )
 
@@ -694,7 +699,7 @@ def get_optimal_DOE(
 
     # Generate replicas and sort the design points
     design_points_with_reps_and_sort = generate_replicas_and_sort(
-        design_points_real_space, replicates, sorting=sorting
+        design_points_real_space, replicates, sorting=sorting, seed=seed
     )
 
     return (design_points_with_reps_and_sort, factor_names)
