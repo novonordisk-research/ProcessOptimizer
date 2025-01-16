@@ -32,7 +32,7 @@ def hit_and_run(x0, constraint_matrix, bounds, n_samples, thin=1, seed=None):
     x = np.copy(x0)
     p = len(x)
 
-    if seed:
+    if isinstance(seed, int):
         rng = np.random.RandomState(seed)
     else:
         rng = np.random.RandomState()
