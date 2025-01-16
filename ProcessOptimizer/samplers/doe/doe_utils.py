@@ -2,9 +2,11 @@ import warnings
 
 import numpy as np
 
+from ProcessOptimizer.utils.get_rng import get_random_generator
+
 
 def generate_replicas_and_sort(
-    design_points_real_space, n_replicates, sorting=False
+    design_points_real_space, n_replicates, sorting=False, seed=None
 ):
     """
     Generate replicas and sort the design points.
@@ -19,6 +21,9 @@ def generate_replicas_and_sort(
     :type sorting: False, or str
     :options: False, "ascending", "randomized", "random_but_group_replicates"
 
+    :param seed: The seed to use for randomization
+    :type seed: int, None or True (True=1)
+
     :return: The design points with replicas and sorted
     :rtype: np.array
     """
@@ -31,6 +36,8 @@ def generate_replicas_and_sort(
 
     if sorting not in sorting_options:
         raise ValueError(f"sorting must be one of {sorting_options}")
+
+    rng = get_random_generator(seed)
 
     # Make sure the design points are an array of objects so that we can avoid
     # issues with numpy trying to convert the elements to strings when we
@@ -51,7 +58,7 @@ def generate_replicas_and_sort(
         design_points_mid_reps = np.tile(
             design_points_real_space, (1, n_replicates)
         )
-        np.random.shuffle(design_points_mid_reps)
+        rng.shuffle(design_points_mid_reps)
         design_points_rep_and_sort = np.reshape(
             design_points_mid_reps,
             (
@@ -70,7 +77,7 @@ def generate_replicas_and_sort(
                 np.lexsort(np.fliplr(design_points_mid_reps).T)
             ]
         elif sorting == "randomized":
-            np.random.shuffle(design_points_mid_reps)
+            rng.shuffle(design_points_mid_reps)
             design_points_rep_and_sort = design_points_mid_reps
 
     return design_points_rep_and_sort
@@ -120,8 +127,10 @@ def sanitize_names_for_patsy(factor_names):
                 name = factor_names[i]
 
     if len(factor_names) != len(set(factor_names)):
-        raise ValueError("Duplicate factor names found after sanitation."
-                         " Factor names must be unique.")
+        raise ValueError(
+            "Duplicate factor names found after sanitation."
+            " Factor names must be unique."
+        )
 
     return factor_names
 
