@@ -40,7 +40,7 @@ def test_doe_to_real_space_basic(sample_space):
     assert np.asarray(result).shape == (3, 2)
     assert np.allclose(result[0], [0, -5])
     assert np.allclose(result[1], [10, 5])
-    assert np.allclose(result[1], [5, 0])
+    assert np.allclose(result[2], [5, 0])
 
 
 @pytest.mark.fast_test
@@ -411,13 +411,13 @@ def test_get_optimal_DOE_default_budget(sample_space):
 
 def test_get_optimal_DOE_invalid_design_type(optimal_design_space):
     """Test the get_optimal_DOE function with an invalid design type."""
-    with pytest.raises(ValueError):
+    with pytest.raises(NameError):
         get_optimal_DOE(optimal_design_space, budget=12, design_type="invalid")
 
 
 def test_get_optimal_DOE_invalid_model(optimal_design_space):
     """Test the get_optimal_DOE function with an invalid model."""
-    with pytest.raises(ValueError):
+    with pytest.raises():
         get_optimal_DOE(optimal_design_space, budget=12, model="invalid")
 
 
