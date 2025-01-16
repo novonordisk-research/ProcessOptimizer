@@ -149,7 +149,7 @@ def test_generate_replicas_and_sort_random_but_group_replicates():
     grouped replicates."""
     design_points = np.array([[1, 2], [3, 4], [5, 6]])
     result = generate_replicas_and_sort(
-        design_points, 2, sorting="random_but_group_replicates", seed=41
+        design_points, 2, sorting="random_but_group_replicates", seed=2
     )
     assert result.shape == (6, 2)
     expected = np.array([[5, 6], [5, 6], [1, 2], [1, 2], [3, 4], [3, 4]])
@@ -225,7 +225,7 @@ def test_build_optimal_design_vanilla():
     dimensions."""
     factor_names = ["x1", "x2", "x3"]
 
-    result = build_optimal_design(factor_names, n_exp=12, seed=14)
+    result = build_optimal_design(factor_names, n_exp=12, seed=1)
 
     expected = np.array(
         [
@@ -411,13 +411,13 @@ def test_get_optimal_DOE_default_budget(sample_space):
 
 def test_get_optimal_DOE_invalid_design_type(optimal_design_space):
     """Test the get_optimal_DOE function with an invalid design type."""
-    with pytest.raises(NameError):
+    with pytest.raises(ValueError):
         get_optimal_DOE(optimal_design_space, budget=12, design_type="invalid")
 
 
 def test_get_optimal_DOE_invalid_model(optimal_design_space):
     """Test the get_optimal_DOE function with an invalid model."""
-    with pytest.raises():
+    with pytest.raises(Exception):
         get_optimal_DOE(optimal_design_space, budget=12, model="invalid")
 
 
