@@ -15,10 +15,12 @@ def doe_to_real_space(design, factor_space, corner_points=None):
     factor_space: Space object from ProcessOptimizer
         The space object used to transform the design.
     corner_points: np.ndarray or 2D list, optional
-        The corner points of the design space. If not provided, the design
-        will be transformed under the assumption that min and max values of
-        each dimension in the design space are represented in the design
-        points.
+        The corner points of the design space, given as a list of two lists.
+        The two lists should each have length len(factor_space), and contain
+        the minimum and maxium values for each dimension. If not provided, the
+        design will be transformed under the assumption that min and max
+        values of each dimension in the design space are represented in the
+        design points.
 
         Example: np.array([[-1, -1], [1, 1]])
 
@@ -35,7 +37,7 @@ def doe_to_real_space(design, factor_space, corner_points=None):
 
     if corner_points is not None:
         corner_points = np.asarray(corner_points)
-        scaler.fit_transform(corner_points)
+        scaler.fit(corner_points)
         transformed_design = scaler.transform(design)
     else:
         transformed_design = scaler.fit_transform(design)
