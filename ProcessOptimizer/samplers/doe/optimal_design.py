@@ -511,7 +511,12 @@ def model_order_and_include_powers(design_type):
     """
 
     # Specify options for the design types
-    design_types = ["linear", "screening", "response", "optimization"]
+    design_types = {"linear": (1, None), "screening": (2, False), "response": (2, True), "optimization": (3, True), None: (None, None)}
+    # Key is design type, value[0] is order, value[1] is include powers
+    if design_type not in design_types:
+        raise ValueError(f"design_type must be one of {design_types.keys()}")
+   order = design_types[design_type][0]
+   include_powers = desing_types[design_type][1]
     model_orders = [1, 2, 2, 3]
     model_include_powers = [None, False, True, True]
 
