@@ -64,14 +64,18 @@ Below is an image of the Booth function.
 
 Suppose you are given the task of minimizing the function on the domain only using empirical observations and without any analytical function. <br/>
 Working with the ProcessOptimizer package you simply define the `Space` and create an `Optimizer` object.<br/>
-The `Space` object takes a list of dimensions which can either be `Real`, `Integer` or `Categorical`. `Real` dimensions are defined by the maximum and minimum values.<br/>
-The `Optimizer` object initialized below uses GP (Gaussian Process). This means that after each step a Gaussian Process is fitted to the observations, which is used as a posterior distribution. Combined with an acquisition function the next point that should be explored can be determined. Notice that this process only takes place once n_initial_points of initial data has been aqcuired. In this case `LHS = True` (latin hypercube sampling) has been used as the initial sampling strategy for the first 6 points.
+The `Space` object takes a list of dimensions which can either be `Real`, `Integer` or `Categorical`. `Real` dimensions are defined by the maximum and minimum values. Another way to initialize a `Real` dimension is to pass a list of two `float`s to the `Space` constructor.<br/>
 ```python
 import ProcessOptimizer as po
 
-SPACE = po.Space([Real(0,5), Real(0,5)])   
-
-opt = po.Optimizer(SPACE, base_estimator = "GP", n_initial_points = 6, lhs = True)
+SPACE = po.Space([[0.0, 5.0], [0.0, 5.0]])   
+print(SPACE)
+>>>Space([Real(low=0.0, high=5.0, prior='uniform', transform='identity'),
+       Real(low=0.0, high=5.0, prior='uniform', transform='identity')])
+```
+The `Optimizer` object initialized below uses `"GP"` (Gaussian Process). This means that after each step a Gaussian Process is fitted to the observations, which is used as a posterior distribution. Combined with an acquisition function the next point that should be explored can be determined. Notice that this process only takes place once n_initial_points of initial data has been aqcuired.
+```python
+opt = po.Optimizer(SPACE, base_estimator = "GP", n_initial_points = 6)
 ```
 The optimizer can now be used in steps by calling the `.ask()` function, evaluating the function at the given point and use `.tell()` the `Optimizer` the result. In practise it would work like this. First ask the optimizer for the next point to perform an experiment:
 ```python
