@@ -34,10 +34,7 @@ def hit_and_run(x0, constraint_matrix, bounds, n_samples, thin=1, seed=None):
     x = np.copy(x0)
     p = len(x)
 
-    if isinstance(seed, int):
-        rng = get_random_generator(seed)
-    else:
-        rng = get_random_generator()
+    rng = get_random_generator(seed)
 
     out_samples = np.zeros((n_samples, p))
 
