@@ -1,12 +1,14 @@
 import numpy as np
 import pytest
 
-from ProcessOptimizer.samplers.doe import (build_optimal_design,
-                                           doe_to_real_space,
-                                           generate_replicas_and_sort,
-                                           get_optimal_DOE,
-                                           round_design_point_values,
-                                           sanitize_names_for_patsy)
+from ProcessOptimizer.samplers.doe import (
+    build_optimal_design,
+    doe_to_real_space,
+    generate_replicas_and_sort,
+    get_optimal_DOE,
+    round_design_point_values,
+    sanitize_names_for_patsy,
+)
 from ProcessOptimizer.space import Categorical, Real, Space
 
 
@@ -33,11 +35,12 @@ def optimal_design_space():
 @pytest.mark.fast_test
 def test_doe_to_real_space_basic(sample_space):
     """Test the doe_to_real_space function with a basic example."""
-    design = np.array([[0, 0], [1, 1]])
+    design = np.array([[0, 0], [1, 1], [0.5, 0.5]])
     result = doe_to_real_space(design, sample_space)
-    assert np.asarray(result).shape == (2, 2)
+    assert np.asarray(result).shape == (3, 2)
     assert np.allclose(result[0], [0, -5])
     assert np.allclose(result[1], [10, 5])
+    assert np.allclose(result[1], [5, 0])
 
 
 @pytest.mark.fast_test
@@ -54,9 +57,8 @@ def test_doe_to_real_space_scaler(sample_space):
     """Test the doe_to_real_space function with corner points specified."""
     design = np.array([[0.25, 0.75], [0.75, 0.25]])
     corner_points = [[0, 0], [1, 1]]
-    result = doe_to_real_space(
-        design, sample_space, corner_points=corner_points
-    )
+    result = doe_to_real_space(design, sample_space,
+                               corner_points=corner_points)
     assert np.allclose(result[0], [2.5, 2.5])
     assert np.allclose(result[1], [7.5, -2.5])
 
@@ -77,9 +79,8 @@ def test_doe_to_real_space_non_unit_box(sample_space):
     specified."""
     design = np.array([[0.25, 1.5], [0.75, 0.5]])
     corner_points = [[0, 0], [1, 2]]
-    result = doe_to_real_space(
-        design, sample_space, corner_points=corner_points
-    )
+    result = doe_to_real_space(design, sample_space,
+                               corner_points=corner_points)
     assert np.allclose(result[0], [2.5, 2.5])
     assert np.allclose(result[1], [7.5, -2.5])
 
@@ -88,7 +89,7 @@ def test_doe_to_real_space_non_unit_box(sample_space):
 def test_doe_to_real_space_outside_box(sample_space):
     """Test the doe_to_real_space function fails when a point is outside the
     corner points."""
-    design = np.array([[0., 1.5], [0., 0.]])
+    design = np.array([[0.0, 1.5], [0.0, 0.0]])
     corner_points = [[0, 0], [1, 1]]
     with pytest.raises(ValueError):
         doe_to_real_space(design, sample_space, corner_points=corner_points)
@@ -146,15 +147,13 @@ def test_generate_replicas_and_sort_ascending():
 def test_generate_replicas_and_sort_random_but_group_replicates():
     """Test the generate_replicas_and_sort function with random sorting but
     grouped replicates."""
-    design_points = np.array([[1, 2], [3, 4]])
+    design_points = np.array([[1, 2], [3, 4], [5, 6]])
     result = generate_replicas_and_sort(
-        design_points, 2, "random_but_group_replicates"
+        design_points, 2, sorting="random_but_group_replicates", seed=41
     )
-    assert result.shape == (4, 2)
-    assert result[0][0] == result[1][0]
-    assert result[0][1] == result[1][1]
-    assert result[2][0] == result[3][0]
-    assert result[0][0] != result[2][0]
+    assert result.shape == (6, 2)
+    expected = np.array([[5, 6], [5, 6], [1, 2], [1, 2], [3, 4], [3, 4]])
+    np.testing.assert_array_almost_equal(result, expected)
 
 
 # Tests for sanitize_names_for_patsy function
@@ -201,7 +200,10 @@ def test_sanitize_names_for_patsy():
 @pytest.mark.fast_test
 def test_sanitize_names_for_patsy_duplicate_name():
     """Test the sanitize_names_for_patsy function with duplicate names."""
-    factor_names = ["Factor_1", "Factor_1",]
+    factor_names = [
+        "Factor_1",
+        "Factor_1",
+    ]
 
     with pytest.raises(ValueError):
         sanitize_names_for_patsy(factor_names)
@@ -227,18 +229,18 @@ def test_build_optimal_design_vanilla():
 
     expected = np.array(
         [
-            [-1.0, 0.0, 1.0],
-            [1.0, -1.0, 1.0],
-            [-1.0, 1.0, 0.2],
-            [1.0, 1.0, 1.0],
-            [1.0, -1.0, -1.0],
-            [-1.0, -1.0, 0.2],
-            [-1.0, -1.0, -1.0],
-            [0.2, 0.0, -0.2],
             [-1.0, 1.0, -1.0],
             [1.0, 1.0, -1.0],
-            [-0.2, 1.0, 1.0],
-            [-0.2, -1.0, 1.0],
+            [1.0, -1.0, 1.0],
+            [-1.0, 1.0, 1.0],
+            [1.0, 1.0, 1.0],
+            [-1.0, -1.0, 1.0],
+            [0.0, 0.0, 1.0],
+            [1.0, -0.2, -1.0],
+            [-0.4, -1.0, -1.0],
+            [0.0, 1.0, 0.0],
+            [-1.0, -0.2, -0.2],
+            [1.0, -1.0, -0.2],
         ]
     )
 
@@ -257,18 +259,18 @@ def test_build_optimal_design_with_categorical(optimal_design_space):
 
     expected = np.array(
         [
-            [-1.0, -1.0, 1.0],
+            [0.4, -1.0, 1.0],
+            [1.0, -0.2, 1.0],
+            [-1.0, 0.4, 1.0],
+            [-0.2, 1.0, 1.0],
             [-1.0, -1.0, -1.0],
-            [-1.0, 1.0, 1.0],
-            [1.0, 1.0, 1.0],
+            [-1.0, -1.0, 1.0],
+            [0.0, 0.0, -1.0],
             [1.0, 1.0, -1.0],
-            [-1.0, 0.2, -1.0],
-            [0.0, 0.0, 1.0],
-            [-0.4, 1.0, -1.0],
-            [1.0, -0.4, -1.0],
-            [0.2, -1.0, -1.0],
-            [0.6, -1.0, -1.0],
-            [1.0, -1.0, 1.0],
+            [1.0, 1.0, 1.0],
+            [1.0, -1.0, -1.0],
+            [0.8, -0.2, -1.0],
+            [-1.0, 1.0, -1.0],
         ]
     )
 
@@ -280,25 +282,25 @@ def test_build_optimal_design_with_categorical(optimal_design_space):
 def test_get_optimal_DOE_without_categorical(sample_space):
     """Test the get_optimal_DOE function without categorical dimensions."""
     result, factor_names = get_optimal_DOE(
-        sample_space, 12, design_type="optimization", res=11, seed=42
+        sample_space, budget=12, design_type="optimization", res=11, seed=42
     )
 
     result_compare = np.asarray(result, dtype=float)
 
     exptected_result = np.array(
         [
-            [0.0, 5.0],
-            [10.0, -5.0],
             [0.0, -5.0],
-            [0.0, 2.0],
-            [10.0, 5.0],
             [3.0, -5.0],
-            [10.0, -2.0],
-            [8.0, 2.0],
-            [3.0, 3.0],
-            [7.0, 5.0],
-            [7.0, -3.0],
+            [10.0, 5.0],
+            [0.0, 5.0],
             [2.0, -2.0],
+            [10.0, -5.0],
+            [7.0, 5.0],
+            [10.0, 2.0],
+            [0.0, 2.0],
+            [7.0, -5.0],
+            [3.0, 3.0],
+            [8.0, -2.0],
         ]
     )
 
@@ -312,7 +314,8 @@ def test_get_optimal_DOE_without_categorical(sample_space):
 def test_get_optimal_DOE_with_categorical(optimal_design_space):
     """Test the get_optimal_DOE function with a categorical dimension."""
     result, factor_names = get_optimal_DOE(
-        optimal_design_space, 12, design_type="optimization", res=11, seed=42
+        optimal_design_space, budget=12, design_type="optimization", res=11,
+        seed=42
     )
 
     results_int = np.asarray(np.asarray(result[:, :2]), dtype=float)
@@ -320,23 +323,23 @@ def test_get_optimal_DOE_with_categorical(optimal_design_space):
 
     exptected_int = np.asarray(
         [
-            [100, 0],
-            [52, 0.2],
-            [20, 0.1],
-            [100, 1],
-            [100, 1],
-            [36, 0.7],
-            [20, 0],
-            [20, 1],
-            [20, 1],
-            [76, 0],
-            [84, 0.6],
-            [100, 0.2],
+            [20.0, 1.0],
+            [100.0, 0.0],
+            [20.0, 0.0],
+            [20.0, 0.0],
+            [20.0, 0.3],
+            [36.0, 0.7],
+            [44.0, 1.0],
+            [20.0, 0.8],
+            [100.0, 1.0],
+            [100.0, 1.0],
+            [76.0, 0.7],
+            [100.0, 0.0],
         ],
         dtype=float,
     )
     expected_str = np.array(
-        ['B', 'B', 'A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', 'B', 'A']
+        ["B", "B", "A", "B", "A", "B", "A", "A", "B", "A", "B", "A"]
     )
 
     assert result.shape == (12, 3)
@@ -355,7 +358,7 @@ def test_get_optimal_DOE(optimal_design_space, design_type):
     """Test the get_optimal_DOE function with a categorical dimension."""
 
     design, factor_names = get_optimal_DOE(
-        optimal_design_space, 16, design_type=design_type, res=5
+        optimal_design_space, budget=16, design_type=design_type, res=5
     )
 
     assert design.shape == (16, 3)
@@ -376,17 +379,13 @@ def test_custom_model(optimal_design_space):
     design_int = np.asarray(np.asarray(design[:, :2]), dtype=int)
     design_str = np.asarray(design[:, 2], dtype=str)
 
-    expected_int = np.array(
-        [
-            [20, 0],
-            [20, 1],
-            [60, 1],
-            [100, 0],
-            [100, 1],
-            [60, 0],
-        ]
-    )
-    expected_str = np.array(['B', 'A', 'B', 'B', 'A', 'A'])
+    expected_int = np.array([[60, 1],
+                             [100, 1],
+                             [100, 0],
+                             [20, 1],
+                             [20, 0],
+                             [60, 0]])
+    expected_str = np.array(["A", "B", "A", "B", "A", "B"])
 
     assert design.shape == (6, 3)
     assert np.all(design[:, 0] >= 20) and np.all(design[:, 0] <= 100)
@@ -395,3 +394,46 @@ def test_custom_model(optimal_design_space):
     assert factor_names == ["x1", "x2", "x3"]
     np.testing.assert_array_almost_equal(design_int, expected_int)
     np.testing.assert_array_equal(design_str, expected_str)
+
+
+def test_get_optimal_DOE_default_budget(sample_space):
+    """Test the get_optimal_DOE function with the default budget."""
+    result, _ = get_optimal_DOE(sample_space, seed=42)
+    result_compare = np.asarray(result, dtype=float)
+
+    exptected_result = np.array([[0.0, -5.0],
+                                 [10.0, -5.0],
+                                 [10.0, 5.0],
+                                 [0.0, 5.0]])
+
+    np.testing.assert_array_almost_equal(result_compare, exptected_result)
+
+
+def test_get_optimal_DOE_invalid_design_type(optimal_design_space):
+    """Test the get_optimal_DOE function with an invalid design type."""
+    with pytest.raises(ValueError):
+        get_optimal_DOE(optimal_design_space, budget=12, design_type="invalid")
+
+
+def test_get_optimal_DOE_invalid_model(optimal_design_space):
+    """Test the get_optimal_DOE function with an invalid model."""
+    with pytest.raises(ValueError):
+        get_optimal_DOE(optimal_design_space, budget=12, model="invalid")
+
+
+def test_get_optimal_DOE_invalid_res(optimal_design_space):
+    """Test the get_optimal_DOE function with an invalid resolution."""
+    with pytest.raises(ValueError):
+        get_optimal_DOE(optimal_design_space, budget=12, res=-1)
+
+
+def test_get_optimal_DOE_too_small_budget(optimal_design_space):
+    """Test the get_optimal_DOE function with a budget that is too small."""
+    with pytest.raises(ValueError):
+        get_optimal_DOE(optimal_design_space, budget=2)
+
+
+def test_get_optimal_DOE_zero_budget(optimal_design_space):
+    """Test the get_optimal_DOE function with a budget of zero."""
+    with pytest.raises(ValueError):
+        get_optimal_DOE(optimal_design_space, budget=0)
