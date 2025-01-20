@@ -6,6 +6,7 @@ from ProcessOptimizer.space import Space
 
 from .default_suggestor import DefaultSuggestor
 from .lhs_suggestor import LHSSuggestor
+from .minmaxlhs_suggestor import MinMaxLHSSuggestor
 from .po_suggestor import POSuggestor
 from .random_strategizer import RandomStragegizer
 from .sequential_strategizer import SequentialStrategizer
@@ -88,6 +89,15 @@ def suggestor_factory(
             definition["n_points"] = n_points
         logger.debug("Creating a LHSSuggestor.")
         return LHSSuggestor(
+            space=space,
+            rng=rng,
+            **definition,
+        )
+    elif suggestor_type == "MinMaxLHS":
+        if "n_points" not in definition and n_points is not None:
+            definition["n_points"] = n_points
+        logger.debug("Creating a LHSSuggestor.")
+        return MinMaxLHSSuggestor(
             space=space,
             rng=rng,
             **definition,
