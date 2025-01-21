@@ -11,6 +11,7 @@ from .po_suggestor import POSuggestor
 from .random_strategizer import RandomStragegizer
 from .sequential_strategizer import SequentialStrategizer
 from .suggestor import Suggestor
+from .botorch_suggestor import BoTorch_qLogNoisyEI, BoTorch_LogEI
 
 logger = logging.getLogger(__name__)
 
@@ -121,5 +122,11 @@ def suggestor_factory(
                 suggestor_factory(space, suggestor, n_objectives, rng, n_points = n)
             ))
         return SequentialStrategizer(suggestors)
+    elif suggestor_type == "BoTorch_qLogNoisyEI":
+        logger.debug ("Creating BoTorch_qLogNoisyEI")
+        return BoTorch_qLogNoisyEI(space, 1, rng, **definition)
+    elif suggestor_type == "BoTorch_LogEI":
+        logger.debug ("Creating BoTorch_LogEI")
+        return BoTorch_LogEI(space, 1, rng, **definition)
     else:
         raise ValueError(f"Unknown suggestor name: {suggestor_type}")
