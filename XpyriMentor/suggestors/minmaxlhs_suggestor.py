@@ -21,7 +21,8 @@ class MinMaxLHSSuggestor():
 
     def find_lhs_points(self) -> np.ndarray:
         lhs = Lhs(criterion="maximin", iterations=10000)
-        x = lhs.generate(self.space.bounds, self.n_points)
+        seed = self.rng.integers(0, 2**32 - 1)
+        x = lhs.generate(self.space.bounds, self.n_points, random_state=seed)
         return x
 
     def suggest(
