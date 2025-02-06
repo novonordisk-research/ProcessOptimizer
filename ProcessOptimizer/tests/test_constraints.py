@@ -234,6 +234,48 @@ def test_SumEquals():
     # Check that the other dimensions have correct type
     assert isinstance(samples[0][3], str)
     assert not isinstance(samples[0][2], str)
+    
+    # Test that the constraint works, irrespective of which dimensions we use
+    dimensions = [
+        (200.0, 450.0),
+        (50.0, 450.0),
+        (0.0, 450.0),
+        (10.0, 60.0),
+    ]
+    # Build optimizer
+    opt = Optimizer(
+        dimensions=dimensions,
+        lhs=False,
+        acq_func="EI",
+        n_initial_points=5,
+        random_state=42,
+    )
+    # Constrain the first three dimensions, and leave out the fourth
+    constraints = [SumEquals(dimensions=[0, 1, 2], value=450)]
+    opt.set_constraints(constraints)    
+    x1 = opt.ask(1)
+    # Change the order of the dimensions
+    dimensions = [
+        (10.0, 60.0),
+        (200.0, 450.0),
+        (50.0, 450.0),
+        (0.0, 450.0),        
+    ]
+    # Build optimizer
+    opt = Optimizer(
+        dimensions=dimensions,
+        lhs=False,
+        acq_func="EI",
+        n_initial_points=5,
+        random_state=42,
+    )
+    # Constrain the same dimensions, that are now second to fourth
+    constraints = [SumEquals(dimensions=[1, 2, 3], value=450)]
+    opt.set_constraints(constraints)    
+    x2 = opt.ask()
+    # The values suggested for the constrained dimensions should be the same 
+    # irrespective of their order in the dimension list
+    assert x1[:3] == x2[1:]
 
 @pytest.mark.fast_test
 def test_Conditional():

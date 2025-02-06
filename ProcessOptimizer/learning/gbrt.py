@@ -12,7 +12,7 @@ def _parallel_fit(regressor, X, y):
     return regressor.fit(X, y)
 
 
-class GradientBoostingQuantileRegressor(BaseEstimator, RegressorMixin):
+class GradientBoostingQuantileRegressor(RegressorMixin, BaseEstimator):
     """Predict several quantiles with one estimator.
 
     This is a wrapper around `GradientBoostingRegressor`'s quantile
@@ -110,7 +110,7 @@ class GradientBoostingQuantileRegressor(BaseEstimator, RegressorMixin):
 
         elif return_std:
             std_quantiles = [0.16, 0.5, 0.84]
-            is_present_mask = np.in1d(std_quantiles, self.quantiles)
+            is_present_mask = np.isin(std_quantiles, self.quantiles)
             if not np.all(is_present_mask):
                 raise ValueError(
                     "return_std works only if the quantiles during "

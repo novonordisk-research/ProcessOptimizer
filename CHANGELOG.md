@@ -1,10 +1,35 @@
 # Release history
 
-## Version 1.0.1 [unpublished]
+## Version 1.0.3 [unpublished]
 
 ### Changes
 
-- Documentation of multiobjective optimization
+- 
+
+### Bugfixes
+
+-  
+
+## Version 1.0.2
+
+### Changes
+
+- 
+
+### Bugfixes
+
+- Fixed a bug where sum_equals constraints would break if used with dimensions other than 
+  an increasing list from 0. E.g. constraining dimensions [0, 1, 2] would work, but 
+  constraining [1, 2, 3] would not. 
+  
+
+## Version 1.0.1 (October 2024)
+
+### Changes
+
+- Added a plotting function that supports the Brownie Bee user interface (see browniebee.io).
+- Made small improvements to the plot_objective_1d function, and added it to __init.py__ for ProcessOptimizer.
+- Added documentation for multiobjective optimization
 
 ### Bugfixes
 
