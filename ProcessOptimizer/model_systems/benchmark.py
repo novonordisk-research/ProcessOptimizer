@@ -1,40 +1,32 @@
-from typing import Union
+from __future__ import annotations
+from dataclasses import dataclass
+
 
 from . import get_model_system
-from ProcessOptimizer import Optimizer
+from ...XpyriMentor import XpyriMentor
 
-
-def run_test_optimization(
-        test: dict[str, Union[str, float, int]]
-) -> tuple[dict, int, bool]:
+def run_test_optimization(test: TestResult) -> None:
     """
-    Run an optimization test and return the number of evaluations done and whether the
-    optimization was successful
+    Run an optimization test and modifies the input object with the number of evaluations
+    done and whether the optimization was successful
 
     Parameters
     ----------
-    test : dict
-        A dictionary containing the test parameters.
-
-    Returns
-    -------
-    tuple
-        A tuple containing the input test (for reference), the number of evaluations
-        done and whether the optimization was successful.
+    test : TestResult
+        The test to run
     """
     model_system = get_model_system(test["model_system_name"], seed=test["seed"])
     model_system.noise_size = model_system.noise_size*test["noise_level"]
     objective_range = model_system.true_max - model_system.true_min
     target = model_system.true_min + test["target_level"] * objective_range
-    optimizer = Optimizer(
-        dimensions=model_system.space,
-        n_initial_points=test["n_initial_points"],
-        random_state=test["seed"],
+    optimizer = XpyriMentor(
+        model_system.space,test.xpyrimentor_definition,seed=test["seed"]
     )
+    finished = False
     for _ in range(test["experiment_budget"]):
-        finished = False
+
         x = optimizer.ask()
-        y = model_system.get_score(x)
+        y = model_system.get_score(x) # include model noise
         if y < target:
             # We have found a point that is close enough to the true minimum
             # There should be some more logic here, to check if the point is acutally
@@ -42,4 +34,23 @@ def run_test_optimization(
             finished = True
             break
         optimizer.tell(x, y)
-    return (test, len(optimizer.Xi), finished)
+    TestResult.number_of_evaluations = len(optimizer.Xi)
+    TestResult.success = finished
+
+@dataclass
+class TestResult:
+    model_system_name: str
+    expected_random_runtime: float
+    success_chance: float # What the chance of being under the target is in a successful point
+    noise_level: float
+    target_level: float
+    experimental_budget: int
+    xpyrimentor_definition: dict
+    seed: int
+    validate: bool
+    number_of_evaluations: int | None = None
+    success: bool | None = None
+
+    def __init__(self, **kwargs):
+        success_level = find_limits(model_system_name)
+        self.__dict__.update(kwargs)
