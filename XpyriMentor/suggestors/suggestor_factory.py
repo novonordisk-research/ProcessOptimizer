@@ -5,6 +5,7 @@ import numpy as np
 from ProcessOptimizer.space import Space
 
 from .default_suggestor import DefaultSuggestor
+from .golden_ratio_suggestor import GoldenRatioSuggestor
 from .lhs_suggestor import LHSSuggestor
 from .po_suggestor import POSuggestor
 from .random_strategizer import RandomStragegizer
@@ -111,5 +112,12 @@ def suggestor_factory(
                 suggestor_factory(space, suggestor, n_objectives, rng, n_points = n)
             ))
         return SequentialStrategizer(suggestors)
+    elif suggestor_type == "GoldenRatio":
+        logger.debug("Creating GoldenRatioSuggestor")
+        return GoldenRatioSuggestor(
+            space=space,
+            rng=rng,
+            **definition,
+        )
     else:
         raise ValueError(f"Unknown suggestor name: {suggestor_type}")
