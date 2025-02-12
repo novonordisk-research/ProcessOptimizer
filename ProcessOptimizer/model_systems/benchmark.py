@@ -87,11 +87,11 @@ class BenchmarkInstance:
             self.xpyrimentor.tell(x, [y])
             # We could restrict testing to only if the point is considered good, but it
             # doesn't seem to matter much for the runtime.
-            minimum_location, minimum_value = self.find_optimum_estimate_pesimistic_value(x)
+            minimum_location, minimum_value = self.find_estimated_optimum()
             if minimum_value<self.success_level and self.validate:
                 result = self.model.get_score(minimum_location)
                 self.xpyrimentor.tell(minimum_location, result)
-                minimum_location, minimum_value = self.find_optimum_estimate_pesimistic_value(x)
+                minimum_location, minimum_value = self.find_estimated_optimum()
             if minimum_value<self.success_level:
                 # Insert validation here
                 true_quality = find_pesimistic_value(self.model, minimum_location)
@@ -102,7 +102,7 @@ class BenchmarkInstance:
         self.success = success
         return self
     
-    def find_optimum_estimate_pesimistic_value(self, x: Iterable) -> float:
+    def find_estimated_optimum(self) -> float:
         """
         Find the parameter set that is estimated to be the optimum, and the value that is
         2 standard deviations above the true value at that point.

@@ -77,7 +77,7 @@ class NoiseModel(ABC):
         elif self.noise_type == "uniform":
             return lambda: self._rng.uniform(low=-1, high=1)
         elif self.noise_type == "constant":
-            return lambda: 0 # Return a value corresponding to two standard deviations of a normal distribution
+            return lambda: 2 # Return a value corresponding to two standard deviations of a normal distribution
         else:
             raise ValueError(f'Noise distribution "{self.noise_type}" not recognised.')
 
