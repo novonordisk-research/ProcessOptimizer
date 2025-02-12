@@ -77,7 +77,7 @@ class NoiseModel(ABC):
         elif self.noise_type == "uniform":
             return lambda: self._rng.uniform(low=-1, high=1)
         elif self.noise_type == "constant":
-            return lambda: 2 # Return a value corresponding to two standard deviations of a normal distribution
+            return lambda: 0 # Return a value corresponding to two standard deviations of a normal distribution
         else:
             raise ValueError(f'Noise distribution "{self.noise_type}" not recognised.')
 
@@ -90,6 +90,7 @@ class NoiseModel(ABC):
         # np.random.Generator.spawn() returns a new generator based on the old one, but
         # with a different seed. It is deterministic, but not identical to the old one.
         copy.noise_type = self.noise_type
+        return copy
 
 
 class ConstantNoise(NoiseModel):

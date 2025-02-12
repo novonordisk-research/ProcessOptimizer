@@ -47,6 +47,7 @@ def suggestor_factory(
         logger.debug("Creating DefaultSuggestor")
         return DefaultSuggestor(space, n_objectives, rng)
     try:
+        definition = definition.copy()
         suggestor_type = definition.pop("suggestor_name")
     except KeyError as e:
         raise ValueError(
@@ -97,6 +98,7 @@ def suggestor_factory(
         logger.debug("Creating SequentialStrategizer")
         suggestors = []
         for suggestor in definition["suggestors"]:
+            suggestor: dict = suggestor.copy()
             n = suggestor.pop("suggestor_budget")
             if "suggestor" in suggestor:
                 if len(suggestor) > 1:
