@@ -22,7 +22,7 @@ class GoldenRatioSuggestor():
         return x
 
     def suggest(
-            self, Xi: Iterable[Iterable], _: Iterable, n_asked: int = 1
+            self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = 1
     ) -> np.ndarray:
         d = self.space.n_dims
         g = self.phi(d)

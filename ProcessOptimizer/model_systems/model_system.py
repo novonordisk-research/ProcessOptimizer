@@ -11,29 +11,19 @@ class ModelSystem:
     Model System for testing ProcessOptimizer. Instances of this class are used
     in benchmarks and the example notebooks.
 
-    Parameters
+    Attributes
     ----------
-    * `score` [Callable]:
-        Function for calculating the noiseless score of the system at a given
-        point in the parameter space.
-
-    * `space` [List or Space]:
+    * `space` [Space]:
         A list of dimension defintions or the parameter space as a Space object.
 
     * `true_min` [float]:
         The true minimum value of the score function within the parameter space.
 
-    * `noise_model` [str, dict, or NoiseModel]:
-        Noise model to apply to the score.
-        If str, it should be the name of the noise model type. In this case,
-            further arguments can be given (e.g. `noise_size`).
-        If dict, one key should be `model_type`.
-        If NoiseModel, this NoiseModel will be used.
+    * `true_max` [float]:
+        The true maximum value of the score function within the parameter space.
 
-        Possible model type strings are:
-            "constant": The noise level is constant.
-            "proportional": Tne noise level is proportional to the score.
-            "zero": No noise is applied.
+    * `noise_model` [NoiseModel]:
+        Noise model to apply to the score.
     """
 
     def __init__(
@@ -45,6 +35,45 @@ class ModelSystem:
         true_max: Optional[float] = None,
         seed: Union[int, np.random.RandomState, np.random.Generator, None] = 42,
     ):
+        """
+        Initialize the model system.
+
+        Parameters
+        ----------
+        * `score` [Callable]:
+            Function for calculating the noiseless score of the system at a given
+            point in the parameter space.
+
+        * `space` [List or Space]:
+            A list of dimension defintions or the parameter space as a Space object.
+
+        * `noise_model` [str, dict, or NoiseModel]:
+            Noise model to apply to the score.
+            If str, it should be the name of the noise model type. In this case,
+                further arguments can be given (e.g. `noise_size`).
+            If dict, one key should be `model_type`.
+            If NoiseModel, this NoiseModel will be used.
+
+            Possible model type strings are:
+                "constant": The noise level is constant.
+                "proportional": Tne noise level is proportional to the score.
+                "zero": No noise is applied.
+
+        * `true_min` [float]:
+            The true minimum value of the score function within the parameter space. If
+            not given, it will be estimated by evaluating the score function at a set of
+            points in the parameter space.
+
+        * `true_max` [float]:
+            The true maximum value of the score function within the parameter space. If
+            not given, it will be estimated by evaluating the score function at a set of
+            points in the parameter space.
+
+        * `seed` [int, RandomState, Generator, or None]:
+            Seed for the random number generator. If None, the ModelSystem will give
+            random results, otherwise the results will be deterministic. Default behavior
+            is deterministic.
+        """
         self.score = score
         self.space = space_factory(space)
         self.noise_model = parse_noise_model(noise_model, seed=seed)

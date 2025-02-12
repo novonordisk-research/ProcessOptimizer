@@ -61,7 +61,7 @@ class NoiseModel(ABC):
 
     @noise_type.setter
     def noise_type(self, value: str):
-        if value in ["normal", "Gaussian", "norm", "uniform"]:
+        if value in ["normal", "Gaussian", "norm", "uniform", "constant"]:
             self._noise_type = value
         else:
             raise ValueError(f'Noise distribution "{value}" not recognised.')
@@ -76,6 +76,8 @@ class NoiseModel(ABC):
             return self._rng.normal
         elif self.noise_type == "uniform":
             return lambda: self._rng.uniform(low=-1, high=1)
+        elif self.noise_type == "constant":
+            return lambda: 2 # Return a value corresponding to two standard deviations of a normal distribution
         else:
             raise ValueError(f'Noise distribution "{self.noise_type}" not recognised.')
 
@@ -84,7 +86,7 @@ class NoiseModel(ABC):
         Create a copy of the noise model. This is necessary to avoid the same random
         seed being used in multiple noise models, which would make the noise correlated.
         """
-        copy = self.__class__(noise_size=self.noise_size, seed=self._rng.spawn(1))
+        copy = self.__class__(noise_size=self.noise_size, seed=self._rng.spawn(1)[0])
         # np.random.Generator.spawn() returns a new generator based on the old one, but
         # with a different seed. It is deterministic, but not identical to the old one.
         copy.noise_type = self.noise_type
