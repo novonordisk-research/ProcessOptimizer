@@ -4,7 +4,13 @@ import numpy as np
 from ProcessOptimizer.space import Space
 
 class GoldenRatioSuggestor():
-    def __init__(self,space: Space,rng: np.random.Generator):
+    """
+    A quasi-random, low-discrepancy sequence suggestor based on the generalized golden
+    ratio.
+
+    From https://extremelearning.com.au/unreasonable-effectiveness-of-quasirandom-sequences/
+    """
+    def __init__(self,space: Space, rng: np.random.Generator):
         self.space = space
         self.rng = rng
         self.offset = self.rng.random()
@@ -14,7 +20,8 @@ class GoldenRatioSuggestor():
         """
         Calculate the generalized golden ratio for a given dimensionality d.
 
-        It holds that phi(d)**(d+1) = 1 + phi(d).
+        phi(d) is the unique positive real root of the polynomial equation
+        x**(d+1) = 1 + x. If follows that phi(d)**(d+1) = 1 + phi(d).
         """
         x = 2.0
         for _ in range(10): 
