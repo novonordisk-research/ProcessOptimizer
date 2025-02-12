@@ -1,3 +1,4 @@
+from .constant_suggestor import ConstantSuggestor
 from .default_suggestor import DefaultSuggestor
 from .golden_ratio_suggestor import GoldenRatioSuggestor
 from .lhs_suggestor import LHSSuggestor
@@ -8,6 +9,7 @@ from .suggestor import IncompatibleNumberAsked, Suggestor
 from .suggestor_factory import suggestor_factory
 
 __all__ = [
+    "ConstantSuggestor",
     "DefaultSuggestor",
     "GoldenRatioSuggestor",
     "IncompatibleNumberAsked",

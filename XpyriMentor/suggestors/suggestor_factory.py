@@ -4,6 +4,7 @@ from typing import Any, Union, Optional
 import numpy as np
 from ProcessOptimizer.space import Space
 
+from .constant_suggestor import ConstantSuggestor
 from .default_suggestor import DefaultSuggestor
 from .golden_ratio_suggestor import GoldenRatioSuggestor
 from .lhs_suggestor import LHSSuggestor
@@ -121,5 +122,8 @@ def suggestor_factory(
             rng=rng,
             **definition,
         )
+    elif suggestor_type == "Constant":
+        logger.debug("Creating ConstantSuggestor")
+        return ConstantSuggestor(space=space,**definition)
     else:
         raise ValueError(f"Unknown suggestor name: {suggestor_type}")
