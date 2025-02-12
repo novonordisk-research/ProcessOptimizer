@@ -30,6 +30,10 @@ def hart3_score(x):
         The score of the system at x.
     """
     # Define the constants that are canonically used with this function.
+    if isinstance(x, np.ndarray):
+        x=x.astype(dtype=float) # Ensure that x is an array of floats to support the math.
+    else:
+        x = np.asarray(x, dtype=float)
     alpha = np.asarray([1.0, 1.2, 3.0, 3.2])
     P = 10**-4 * np.asarray(
         [[3689, 1170, 2673], [4699, 4387, 7470], [1091, 8732, 5547], [381, 5743, 8828]]
