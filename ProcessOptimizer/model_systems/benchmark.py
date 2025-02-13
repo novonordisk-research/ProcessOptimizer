@@ -150,5 +150,6 @@ def find_pesimistic_value(model_system: ModelSystem, x: Iterable):
     model_system = model_system.copy() # Copy to avoid changing the original
     # Set the noise model to be constant, which means always return two standard deviations
     # above the true value.
+    model_system.noise_model.noise_types["constant"] = lambda: 2
     model_system.noise_model.noise_type = "constant"
     return model_system.get_score(x)
