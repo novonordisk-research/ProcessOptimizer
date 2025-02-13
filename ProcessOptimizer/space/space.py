@@ -839,8 +839,8 @@ class Space(object):
                 str(({len(self)}))
             )
         sampled_points = []
-        for dim in self.dimensions:
-            sampled_points.append(dim.sample([p[0] for p in points]))
+        for i, dim in enumerate(self.dimensions):
+            sampled_points.append(dim.sample([p[i] for p in points]))
         return np.array(sampled_points, dtype = object).transpose()
 
     @property
