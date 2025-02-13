@@ -283,6 +283,14 @@ def test_unknown_distribution():
     with pytest.raises(ValueError):
         noise_model.noise_type = "not_implemented"
 
+def test_new_distribution():
+    noise_model = ConstantNoise()
+    noise_model.noise_types["new_distribution"] = lambda : 2
+    noise_model.noise_type = "new_distribution"
+    assert noise_model.get_noise(None, 0) == 2
+    noise_model.noise_size = 10
+    assert noise_model.get_noise(None, 0) == 20
+
 
 # set_noise_model_list did not reset the list. This test verifies that this bug has been
 # fixed.
@@ -327,10 +335,3 @@ def test_zero_noise_size():
     noise_model.noise_size = 0
     with pytest.raises(ValueError):
         noise_model.noise_size = 1
-
-def test_constant_noise_type():
-    noise_model = ConstantNoise()
-    noise_model.noise_type = "constant"
-    assert noise_model.get_noise(None, 0) == 2
-    noise_model.noise_size = 10
-    assert noise_model.get_noise(None, 0) == 20

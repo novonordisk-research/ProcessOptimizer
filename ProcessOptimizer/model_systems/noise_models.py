@@ -38,6 +38,12 @@ class NoiseModel(ABC):
         # safe.
         self.noise_size = noise_size
         self._rng = get_random_generator(seed)
+        self.noise_types = {
+            "normal": lambda: self._rng.normal(),
+            "Gaussian": lambda: self._rng.normal(),
+            "norm": lambda: self._rng.normal(),
+            "uniform": lambda: self._rng.uniform(low=-1, high=1),
+        }
         self.noise_type = "normal"
 
     @abstractmethod
@@ -53,7 +59,7 @@ class NoiseModel(ABC):
                 f"{self.__class__.__name__} is not supposed to be called."
             )
 
-        return self._noise_distribution() * self.noise_size
+        return self.noise_types[self.noise_type]() * self.noise_size
 
     @property
     def noise_type(self) -> str:
@@ -61,7 +67,7 @@ class NoiseModel(ABC):
 
     @noise_type.setter
     def noise_type(self, value: str):
-        if value in ["normal", "Gaussian", "norm", "uniform", "constant"]:
+        if value in self.noise_types:
             self._noise_type = value
         else:
             raise ValueError(f'Noise distribution "{value}" not recognised.')
