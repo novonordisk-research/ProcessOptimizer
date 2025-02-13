@@ -34,8 +34,8 @@ class NoiseModel(ABC):
         # directly set the size is more intuitive, and that would be complicated if it
         # was just one variable.
         # Note that this has the potential for problems if _noise_distribution does not
-        # have "size" 1, but as long as it is only set by set_noise_type(), it should be
-        # safe.
+        # have "size" 1, but as long as it is only use the ones defined here, you should
+        # be fine.
         self.noise_size = noise_size
         self._rng = get_random_generator(seed)
         self.noise_types = {
@@ -43,7 +43,10 @@ class NoiseModel(ABC):
             "Gaussian": lambda: self._rng.normal(),
             "norm": lambda: self._rng.normal(),
             "uniform": lambda: self._rng.uniform(low=-1, high=1),
-        }
+        }  # These needs to be defined as lambda functions so that changing self._rng
+            # later will affect the noise generation. Otherwise, Strategizers overwriting
+            # the random number generator will not work, and they will always return the
+            # same noise value.
         self.noise_type = "normal"
 
     @abstractmethod
