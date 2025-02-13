@@ -148,7 +148,8 @@ def find_pesimistic_value(model_system: ModelSystem, x: Iterable):
     Find the value that is 2 standard deviations above the true value at `x`.
     """
     model_system = model_system.copy() # Copy to avoid changing the original
-    # Set the noise model to be constant, which means always return two standard deviations
-    # above the true value.
+    # Set the noise model so that we always return two standard deviations above the true
+    # value.
+    model_system.noise_model.noise_types["constant"] = lambda: 2
     model_system.noise_model.noise_type = "constant"
     return model_system.get_score(x)
