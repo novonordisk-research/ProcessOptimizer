@@ -796,3 +796,10 @@ def test_sample_wrong_size():
         SPACE.sample([[0.5]*3]*5)
     with pytest.raises(ValueError):
         SPACE.sample([[0.5]*5]*3)
+
+def test_sample_multiple():
+    space = Space([Real(0, 1), Real(0, 1)])
+    samples = space.sample([[0.7, 0.3]]*5)
+    for sample in samples:
+        assert sample[0] == 0.7
+        assert sample[1] == 0.3

@@ -841,7 +841,7 @@ class Space(object):
             )
         sampled_points = []
         for i, dim in enumerate(self.dimensions):
-            sampled_points.append(dim.sample([p[i] for p in points])) # Consider points[:,i] instead of [p[i] for p in points]. But it only works if points is a numpy array
+            sampled_points.append(dim.sample([p[i] for p in points]))
         return np.array(sampled_points, dtype = object).transpose()
 
     @property
