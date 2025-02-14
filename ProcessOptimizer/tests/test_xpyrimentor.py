@@ -1,6 +1,6 @@
 import pytest
-from XpyriMentor.xpyrimentor import XpyriMentor
-from XpyriMentor.suggestors import POSuggestor, LHSSuggestor, SequentialStrategizer
+from ProcessOptimizer import XpyriMentor
+from ProcessOptimizer.XpyriMentor.suggestors import POSuggestor, LHSSuggestor, SequentialStrategizer
 
 
 class MockSuggestor:
