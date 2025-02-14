@@ -39,19 +39,20 @@ class NoiseModel(ABC):
         self.noise_size = noise_size
         self._rng = get_random_generator(seed)
         self.noise_types = {
-            "normal": lambda: self._rng.normal(),
-            "Gaussian": lambda: self._rng.normal(),
-            "norm": lambda: self._rng.normal(),
+            "normal": self.normal,
+            "Gaussian": self.normal,
+            "norm": self.normal,
             "uniform": lambda: self._rng.uniform(low=-1, high=1),
-        }  # These needs to be defined as lambda functions so that changing self._rng
-            # later will affect the noise generation. Otherwise, Strategizers overwriting
-            # the random number generator will not work, and they will always return the
-            # same noise value.
+        }
         self.noise_type = "normal"
 
     @abstractmethod
     def get_noise(self, X, Y: float) -> float:
         pass
+
+    def normal(self):
+        """Convinience function to get a normal distributed noise value."""
+        return self._rng.normal()
 
     @property
     def _sample_noise(self) -> float:
