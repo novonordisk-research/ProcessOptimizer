@@ -1,6 +1,6 @@
 # Release history
 
-## Version 1.0.3 [unpublished]
+## Version 1.1.1 [unpublished]
 
 ### Changes
 
@@ -8,7 +8,23 @@
 
 ### Bugfixes
 
--  
+- 
+
+
+## Version 1.1.0 [unpublished]
+
+### Changes
+
+- D-optimal designs in get_optimal_DOE.
+- Director and support for using disparate backends with XpyriMentor.
+- Warning for re-visiting a point changed to be less severe - It is just a piece of information.
+- 
+
+### Bugfixes
+
+- LHS doesn't only produce diagonal points any more.
+- expected_minimum runs even with constraints, but still doesn't respect constraints.
+
 
 ## Version 1.0.2
 
