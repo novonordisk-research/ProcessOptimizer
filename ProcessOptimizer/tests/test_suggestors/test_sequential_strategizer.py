@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 from ProcessOptimizer.space import space_factory
-from XpyriMentor.suggestors import (
+from ProcessOptimizer.XpyriMentor.suggestors import (
     DefaultSuggestor,
     IncompatibleNumberAsked,
     LHSSuggestor,

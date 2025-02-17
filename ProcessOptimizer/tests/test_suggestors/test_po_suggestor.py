@@ -1,5 +1,5 @@
 import numpy as np
-from XpyriMentor.suggestors import POSuggestor, suggestor_factory
+from ProcessOptimizer.XpyriMentor.suggestors import POSuggestor, suggestor_factory
 from ProcessOptimizer.space import space_factory
 
 
