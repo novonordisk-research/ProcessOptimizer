@@ -42,13 +42,17 @@ class NoiseModel(ABC):
             "normal": self.normal,
             "Gaussian": self.normal,
             "norm": self.normal,
-            "uniform": lambda: self._rng.uniform(low=-1, high=1),
+            "uniform": self.uniform,
         }
         self.noise_type = "normal"
 
     @abstractmethod
     def get_noise(self, X, Y: float) -> float:
         pass
+
+    def uniform(self):
+        """Convinience function to get a uniform distributed noise value."""
+        return self._rng.uniform(low=-1, high=1)
 
     def normal(self):
         """Convinience function to get a normal distributed noise value."""
@@ -79,17 +83,6 @@ class NoiseModel(ABC):
     def set_seed(self, seed: Optional[int]):
         # Instantiate the random number generator again
         self._rng = np.random.default_rng(seed)
-
-    @property
-    def _noise_distribution(self) -> Callable[[], float]:
-        if self.noise_type in ["normal", "Gaussian", "norm"]:
-            return self._rng.normal
-        elif self.noise_type == "uniform":
-            return lambda: self._rng.uniform(low=-1, high=1)
-        elif self.noise_type == "constant":
-            return lambda: 2 # Return a value corresponding to two standard deviations of a normal distribution
-        else:
-            raise ValueError(f'Noise distribution "{self.noise_type}" not recognised.')
 
     def copy(self) -> "NoiseModel":
         """
