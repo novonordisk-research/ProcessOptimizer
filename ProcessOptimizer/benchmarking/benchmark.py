@@ -5,7 +5,7 @@ from typing import Iterable
 
 import numpy as np
 
-from . import get_model_system, ModelSystem
+from ..model_systems import get_model_system, ModelSystem
 from ProcessOptimizer import Optimizer
 from ProcessOptimizer.utils import expected_minimum
 from XpyriMentor import XpyriMentor

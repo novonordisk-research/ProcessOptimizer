@@ -1,6 +1,6 @@
 import numpy as np
 from ProcessOptimizer.space import space_factory
-from XpyriMentor.suggestors import GoldenRatioSuggestor, Suggestor, suggestor_factory
+from ProcessOptimizer.XpyriMentor.suggestors import GoldenRatioSuggestor, Suggestor, suggestor_factory
 
 def test_initializaton():
     suggestor = GoldenRatioSuggestor(

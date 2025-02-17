@@ -1,7 +1,7 @@
 import numpy as np
 
 from ProcessOptimizer.space import space_factory
-from XpyriMentor.suggestors import ConstantSuggestor, Suggestor, suggestor_factory
+from ProcessOptimizer.XpyriMentor.suggestors import ConstantSuggestor, Suggestor, suggestor_factory
 
 def test_initializaton():
     suggestor = ConstantSuggestor(space=space_factory([[1, 2], [1, 2]]))
