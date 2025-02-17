@@ -3,12 +3,9 @@ import functools
 from dataclasses import dataclass, field
 from typing import Iterable
 
-import numpy as np
-
 from ..model_systems import get_model_system, ModelSystem
-from ProcessOptimizer import Optimizer
+from ProcessOptimizer import Optimizer, XpyriMentor
 from ProcessOptimizer.utils import expected_minimum
-from XpyriMentor import XpyriMentor
 
 
 @dataclass
@@ -74,42 +71,15 @@ class BenchmarkInstance:
         model_system = get_model_system(self.model_system_name, seed=self.seed)
         model_system.noise_size = model_system.noise_size*self.noise_level
         return model_system
-
-    def run(self) -> BenchmarkInstance:
-        """
-        Run the benchmark instance, save the number of evaluations and whether the
-        success level was reached, and return the instance.
-        """
-        success = False
-        while len(self.xpyrimentor.Xi) < self.experimental_budget:
-            x = self.xpyrimentor.ask()
-            y = self.model.get_score(x)
-            self.xpyrimentor.tell(x, [y])
-            # We could restrict testing to only if the point is considered good, but it
-            # doesn't seem to matter much for the runtime.
-            minimum_location, minimum_value = self.find_estimated_optimum()
-            if minimum_value<self.success_level and self.validate:
-                result = self.model.get_score(minimum_location)
-                self.xpyrimentor.tell(minimum_location, result)
-                minimum_location, minimum_value = self.find_estimated_optimum()
-            if minimum_value<self.success_level:
-                # Insert validation here
-                true_quality = find_pesimistic_value(self.model, minimum_location)
-                if true_quality<self.success_level:
-                    success = True
-                break
-        self.number_of_evaluations = len(self.xpyrimentor.Xi)
-        self.success = success
-        return self
     
     def find_estimated_optimum(self) -> float:
         """
         Find the parameter set that is estimated to be the optimum, and the value that is
         2 standard deviations above the true value at that point.
         """
-        # This is a bit of a hack, but it works for now. The optimizer is the second
+        # This is a bit of a hack, but it works for now. The optimizer is the last
         # suggestor in the suggestor list of the sequential strategizer. We need the
-        # optimizer since we need to know the expected minimum and the model uncertainty
+        # optimizer since we need to find the expected minimum and the model uncertainty
         # there.
         optimizer: Optimizer = self.xpyrimentor.suggestor.suggestors[-1][1].optimizer
         optimizer.Xi = self.xpyrimentor.Xi
@@ -119,6 +89,32 @@ class BenchmarkInstance:
         result_location, [result_value, result_std] = expected_minimum(result, return_std=True)
         return (result_location, result_value + 2*result_std)
 
+def run_benchmark(benchmark_instance: BenchmarkInstance) -> BenchmarkInstance:
+    """
+    Run the benchmark instance, save the number of evaluations and whether the
+    success level was reached, and return the instance.
+    """
+    success = False
+    while len(benchmark_instance.xpyrimentor.Xi) < benchmark_instance.experimental_budget:
+        x = benchmark_instance.xpyrimentor.ask()
+        y = benchmark_instance.model.get_score(x)
+        benchmark_instance.xpyrimentor.tell(x, [y])
+        # We could restrict testing to only if the point is considered good, but it
+        # doesn't seem to matter much for the runtime.
+        minimum_location, minimum_value = benchmark_instance.find_estimated_optimum()
+        if minimum_value<benchmark_instance.success_level and benchmark_instance.validate:
+            result = benchmark_instance.model.get_score(minimum_location)
+            benchmark_instance.xpyrimentor.tell(minimum_location, result)
+            minimum_location, minimum_value = benchmark_instance.find_estimated_optimum()
+        if minimum_value<benchmark_instance.success_level:
+            # Insert validation here
+            true_quality = find_pesimistic_value(benchmark_instance.model, minimum_location)
+            if true_quality<benchmark_instance.success_level:
+                success = True
+            break
+    benchmark_instance.number_of_evaluations = len(benchmark_instance.xpyrimentor.Xi)
+    benchmark_instance.success = success
+    return benchmark_instance
 
 @functools.cache
 def find_limits(
