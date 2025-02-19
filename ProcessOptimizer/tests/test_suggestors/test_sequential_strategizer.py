@@ -5,7 +5,7 @@ from ProcessOptimizer.XpyriMentor.suggestors import (
     DefaultSuggestor,
     IncompatibleNumberAsked,
     LHSSuggestor,
-    POSuggestor,
+    OptimizerSuggestor,
     SequentialStrategizer,
     Suggestor,
     suggestor_factory
@@ -107,9 +107,9 @@ def test_default_suggestors():
     )
     assert isinstance(suggestor.suggestors[0][1], LHSSuggestor)
     assert suggestor.suggestors[0][1].n_points == 3
-    assert isinstance(suggestor.suggestors[1][1], POSuggestor)
+    assert isinstance(suggestor.suggestors[1][1], OptimizerSuggestor)
     assert suggestor.suggestors[1][1].optimizer.n_objectives == 1
-    assert isinstance(suggestor.suggestors[2][1], POSuggestor)
+    assert isinstance(suggestor.suggestors[2][1], OptimizerSuggestor)
     assert suggestor.suggestors[2][1].optimizer.n_objectives == 2
 
 

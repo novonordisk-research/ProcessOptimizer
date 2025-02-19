@@ -6,7 +6,7 @@ import numpy as np
 
 from .default_suggestor import DefaultSuggestor
 from .lhs_suggestor import LHSSuggestor
-from .po_suggestor import POSuggestor
+from .po_suggestor import OptimizerSuggestor
 from .suggestor import IncompatibleNumberAsked, Suggestor
 
 
@@ -46,7 +46,7 @@ class SequentialStrategizer():
                 else:
                     suggestors[n] = (
                         budget,
-                        POSuggestor(
+                        OptimizerSuggestor(
                             space=suggestor.space,
                             rng=suggestor.rng,
                             n_objectives=suggestor.n_objectives,
