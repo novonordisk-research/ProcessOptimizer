@@ -85,8 +85,10 @@ class BenchmarkInstance:
         optimizer.Xi = self.xpyrimentor.Xi
         optimizer.yi = self.xpyrimentor.yi
         optimizer.update_next()
+        optimizer.add_observational_noise()
         result = optimizer.get_result()
         result_location, [result_value, result_std] = expected_minimum(result, return_std=True)
+        optimizer.remove_observational_noise()
         return (result_location, result_value + 2*result_std)
 
 def run_benchmark(benchmark_instance: BenchmarkInstance) -> BenchmarkInstance:
