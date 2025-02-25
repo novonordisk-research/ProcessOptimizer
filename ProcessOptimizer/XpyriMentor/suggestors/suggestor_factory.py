@@ -8,7 +8,7 @@ from .constant_suggestor import ConstantSuggestor
 from .default_suggestor import DefaultSuggestor
 from .golden_ratio_suggestor import GoldenRatioSuggestor
 from .lhs_suggestor import LHSSuggestor
-from .po_suggestor import POSuggestor
+from .po_suggestor import OptimizerSuggestor
 from .random_strategizer import RandomStragegizer
 from .sequential_strategizer import SequentialStrategizer
 from .suggestor import Suggestor
@@ -57,9 +57,9 @@ def suggestor_factory(
     if suggestor_type == "Default" or suggestor_type is None:
         logger.debug("Creating DefaultSuggestor")
         return DefaultSuggestor(space, n_objectives, rng)
-    elif suggestor_type == "PO":
-        logger.debug("Creating POSuggestor")
-        return POSuggestor(
+    elif suggestor_type in ["PO", "Optimizer"]:
+        logger.debug("Creating OptimizerSuggestor")
+        return OptimizerSuggestor(
             space=space,
             n_objectives=n_objectives,
             rng=rng,
