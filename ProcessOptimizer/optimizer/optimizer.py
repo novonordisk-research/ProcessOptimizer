@@ -238,6 +238,7 @@ class Optimizer(object):
         self.n_points = acq_optimizer_kwargs.get("n_points", 10000)
         self.n_restarts_optimizer = acq_optimizer_kwargs.get("n_restarts_optimizer", 5)
         n_jobs = acq_optimizer_kwargs.get("n_jobs", 1)
+        noise_level_bounds = acq_optimizer_kwargs.get("noise_level_bounds", (1e-5, 1e5)) # Note that this overwrites the default in our own GaussianProcessRegressor
         self.n_jobs = n_jobs
         self.acq_optimizer_kwargs = acq_optimizer_kwargs
 
@@ -251,6 +252,7 @@ class Optimizer(object):
                 random_state=self.rng.randint(0, np.iinfo(np.int32).max),
                 length_scale_bounds=self._length_scale_bounds,
                 length_scale=self._length_scale,
+                noise_level_bounds=noise_level_bounds,
             )
 
         # check if regressor
