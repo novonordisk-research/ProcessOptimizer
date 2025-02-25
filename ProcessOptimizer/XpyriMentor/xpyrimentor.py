@@ -8,7 +8,7 @@ from ProcessOptimizer.space import space_factory, Space
 from ProcessOptimizer.utils import is_2Dlistlike
 from ProcessOptimizer.utils.get_rng import get_random_generator
 
-from .suggestors import DefaultSuggestor, Suggestor, suggestor_factory, POSuggestor
+from .suggestors import DefaultSuggestor, Suggestor, suggestor_factory, OptimizerSuggestor
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class XpyriMentor:
             suggestor = suggestor_factory(
                 space, copy.deepcopy(DEFAULT_SUGGESTOR), n_objectives, rng=rng
             )
-        if isinstance(suggestor, POSuggestor):
+        if isinstance(suggestor, OptimizerSuggestor):
             warnings.warn(
                 "POSuggestor is not recommended for use as a base. Use "
                 "InitialPointSuggestor with a POSuggestor as ultimate_suggestor "

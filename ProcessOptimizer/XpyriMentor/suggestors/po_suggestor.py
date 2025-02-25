@@ -8,7 +8,7 @@ from ProcessOptimizer.space import Space
 logger = logging.getLogger(__name__)
 
 
-class POSuggestor:
+class OptimizerSuggestor:
     def __init__(
             self,
             space: Space,
@@ -22,7 +22,7 @@ class POSuggestor:
             dimensions=space,
             n_initial_points=n_initial_points,
             random_state=np.random.RandomState(int(rng.random() * (2**32 - 1))),
-            # ProcessOptimizer uses a legacy random state object, so we need to convert
+            # Optimizer uses a legacy random state object, so we need to convert
             # the numpy random generator to a numpy random state object.
             **kwargs,
         )
@@ -36,7 +36,7 @@ class POSuggestor:
             self.optimizer.update_next()
         point = self.optimizer.ask(n_asked)
         logger.debug(
-            "Given Xi = %s and yi = %s, POSugggestor suggests the point: %s",
+            "Given Xi = %s and yi = %s, OptimizerSugggestor suggests the point: %s",
             Xi,
             yi,
             point,
@@ -44,11 +44,11 @@ class POSuggestor:
         return np.array(point, dtype = object).reshape(n_asked,-1)
 
     def __str__(self):
-        return "ProcessOptimizer Suggestor"
+        return "Optimizer Suggestor"
 
     def __repr__(self):
         return (
-            f"POSuggestor(space={self.optimizer.space}, "
+            f"OptimizerSuggestor(space={self.optimizer.space}, "
             f"rng=..., "
             f"n_initial_points={self.optimizer.n_initial_points_})"
             )
