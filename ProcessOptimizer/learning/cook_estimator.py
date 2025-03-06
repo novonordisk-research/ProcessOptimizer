@@ -84,6 +84,14 @@ def cook_estimator(
                 length_scale_bounds_transformed.append(length_scale_bounds[i])
                 length_scale_transformed.append(length_scale[i])
 
+        if not kwargs.get("noise_level_bounds", None):
+            kwargs["noise_level_bounds"] = (1e-5, 1e5)
+        # Note that this overwrites the (identical) default in our own
+        # GaussianProcessRegressor.
+        # Also note that this represents the variance of the noise, not the standard
+        # deviation. So the default represents an experimental noise between 300 and
+        # 0.003. 
+
         # only special if *all* dimensions are categorical
         if is_cat:
             other_kernel = HammingKernel(length_scale=length_scale_transformed)

@@ -238,7 +238,7 @@ class Optimizer(object):
         self.n_points = acq_optimizer_kwargs.get("n_points", 10000)
         self.n_restarts_optimizer = acq_optimizer_kwargs.get("n_restarts_optimizer", 5)
         n_jobs = acq_optimizer_kwargs.get("n_jobs", 1)
-        noise_level_bounds = acq_optimizer_kwargs.get("noise_level_bounds", (1e-5, 1e5)) # Note that this overwrites the default in our own GaussianProcessRegressor
+        noise_level_bounds = acq_optimizer_kwargs.get("noise_level_bounds", None)
         self.n_jobs = n_jobs
         self.acq_optimizer_kwargs = acq_optimizer_kwargs
 
