@@ -64,6 +64,7 @@ class BenchmarkInstance:
             model_system_name, expected_random_runtime, self.noise_level
         )
         self.model = get_model_system(model_system_name, seed=seed)
+        self.model.noise_size *= noise_level
         self.xpyrimentor = XpyriMentor(self.model.space, self.xpyrimentor_definition, seed=seed)
 
     @property
