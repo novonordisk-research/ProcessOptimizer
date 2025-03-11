@@ -7,7 +7,6 @@ from ..space import Real
 # from ProcessOptimizer.model_systems import ModelSystem
 # from ProcessOptimizer.space import Real
 
-
 class GPExperiment:
     """Base Class for 1D Gaussian Process experiment."""
     def __init__(
@@ -92,11 +91,11 @@ class GPExperiment:
             # TODO: raise error
 
     def get_sample(self, size, noise_scale=0.1):
-        indices = np.random.choice(self.experiment['domain'], size, replace=False)
-        x = torch.Tensor(self.experiment['domain'])
-        y = torch.Tensor( self.experiment['f_values'][indices]) + noise_scale * torch.randn(
-            self.experiment['f_values'][indices].size())  # sigma * N(0, 1) + m = N(m, sigma^2)
-        return x, y
+        indices = np.random.choice(range(self.experiment['domain'].shape[0]), size, replace=False)
+        x = torch.Tensor(self.experiment['domain'][indices])
+        y = torch.Tensor( self.experiment['f_values'][indices,:]) + noise_scale * torch.randn(
+            self.experiment['f_values'][indices,:].size())  # sigma * N(0, 1) + m = N(m, sigma^2)
+        return indices, x, y
 
     @property
     def max(self):
@@ -113,17 +112,3 @@ def create_gp_experiment(lower_bound, upper_bound, tasks, signal_variance, lengt
         noise_model=None,
         true_max=gp_experiment.max,
         true_min=gp_experiment.min)
-
-
-
-
-# def main():
-#     gp1 = GPExperiment(-1.5, 1.5,100, 4, 1.5, 0.5)
-#     exp1 = gp1.get_domain(100)
-#     print(gp1.score(exp1[0], 0))
-#     print(gp1.get_sample(10))
-#     print(gp1.max)
-#     create_gp_experiment(-1.5, 1.5, 4, 1.5, 0.5)
-#
-# if __name__ == '__main__':
-#     main()
