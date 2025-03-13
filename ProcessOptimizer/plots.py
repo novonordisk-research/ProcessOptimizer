@@ -11,6 +11,7 @@ from scipy.optimize import OptimizeResult
 from scipy.stats.mstats import mquantiles
 from scipy.stats import norm
 from scipy.ndimage import gaussian_filter1d
+from warnings import warn
 from ProcessOptimizer import expected_minimum, expected_minimum_random_sampling
 from .space import Categorical, Integer
 from .optimizer import Optimizer
@@ -2237,7 +2238,10 @@ def plot_Pareto(
         )
 
     if optimizer.n_objectives == 3:
-
+        warn(
+            "3D Pareto plot is deprecated and has a known bug in "
+            "the hover function if the view is rotated."
+        )
         fig = plt.figure(figsize=figsize)
         ax = fig.add_subplot(projection="3d")
         plt.title("Pareto Front in Objective Space")
@@ -2315,13 +2319,13 @@ def plot_Pareto(
         )
 
 def plot_Pareto_bokeh(
-    optimizer,
+    optimizer: Optimizer,
     objective_names=None,
     dimensions=None,
-    return_data=False,
-    show_browser=False,
-    return_type_bokeh = None,
-    filename='ParetoPlot',
+    return_data: bool=False,
+    show_browser: bool=False,
+    return_type_bokeh=None,
+    filename: str='ParetoPlot',
 ):
     """Interactive bokeh plot of the Pareto front implemented in two dimensions
 
@@ -2352,20 +2356,21 @@ def plot_Pareto_bokeh(
         Whether to open the new plot in the browser or not. If True new
         HTML-file is opened in the default browser.
 
-    * `return_type_bokeh` ["file", "htmlString", "embed", or "json", default="file"]
+    * `return_type_bokeh` ["file", "htmlString", "embed", "json", or None, default=None]
         Determine how the bokeh plot is returned. Can be either
         
-        - '"file"' for a HTML-file returned to the present working directory
-          with the name 'filename'.html
-        - '"htmlString"' for a string containing the HTML code
-        - '"embed"' for <script> and <div> components for embeding. See
+        - `"file"` for a HTML-file returned to the present working directory
+          with the name `filename`.html
+        - `"htmlString"` for a string containing the HTML code
+        - `"embed"` for <script> and <div> components for embeding. See
         https://docs.bokeh.org/en/latest/_modules/bokeh/embed/standalone.html#components
         for more information.
-        - '"json"' for a json-item that can be supplied to BokehJS that
+        - `"json"` for a json-item that can be supplied to BokehJS that
         https://docs.bokeh.org/en/latest/docs/user_guide/embed.html#json-items
         for more information.
+        - `None` for returning the data as a python object.
         
-    * `filename` [str, default='ParetoPlot']
+    * `filename` [str, default="ParetoPlot"]
         The filename to apply to the generated HTML-file.
 
 
@@ -2395,7 +2400,9 @@ def plot_Pareto_bokeh(
     """
     if not optimizer.models:
         raise ValueError("No models have been fitted yet.")
-    
+    if optimizer.n_objectives > 2:
+        raise ValueError("plot_Pareto_bokeh does not support >2 objectives.")
+
     if dimensions == None:
         dimensions = [
             "X_(%i)" % i if d.name is None else d.name
