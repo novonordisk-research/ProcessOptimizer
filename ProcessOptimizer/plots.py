@@ -988,6 +988,7 @@ def plot_objective(
                         label="Score",
                     )
                     cb.ax.locator_params(nbins=8)
+                    cb.ax.tick_params(axis="x", rotation=45)
                     
                     # Add a legend for the various figure contents
                     if isinstance(pars, str):
