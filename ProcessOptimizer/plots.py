@@ -6,7 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib.pyplot import cm
-from matplotlib.ticker import LogLocator
 from matplotlib.ticker import MaxNLocator, FuncFormatter
 from scipy.optimize import OptimizeResult
 from scipy.stats.mstats import mquantiles
@@ -1074,7 +1073,7 @@ def plot_objective(
 def _2d_dependency_plot(data, axes, samples, highlighted, limits, options = {}):
     if "zscale" in options.keys():
         if options["zscale"] == "log":
-            locator = LogLocator()
+            raise NotImplementedError("zscale='log' is not yet implemented.")
         elif options["zscale"] == "linear":
             locator = None
         else:
