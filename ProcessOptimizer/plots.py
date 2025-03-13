@@ -619,7 +619,7 @@ def plot_objective(
 
     * `zscale` [str, default='linear']
         Scale to use for the z axis of the contour plots. Either 'linear'
-        or 'log'.
+        or 'log'. 'log' is not fully implemented yet.
 
     * `dimensions` [list of str, default=None] Labels of the dimension
         variables. `None` defaults to `space.dimensions[i].name`, or
