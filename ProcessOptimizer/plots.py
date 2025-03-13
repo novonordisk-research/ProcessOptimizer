@@ -2356,7 +2356,7 @@ def plot_Pareto_bokeh(
         Whether to open the new plot in the browser or not. If True new
         HTML-file is opened in the default browser.
 
-    * `return_type_bokeh` ["file", "htmlString", "embed", "json" or None, default=None]
+    * `return_type_bokeh` ["file", "htmlString", "embed", "json", or None, default=None]
         Determine how the bokeh plot is returned. Can be either
         
         - `"file"` for a HTML-file returned to the present working directory
@@ -2401,7 +2401,7 @@ def plot_Pareto_bokeh(
     if not optimizer.models:
         raise ValueError("No models have been fitted yet.")
     if optimizer.n_objectives > 2:
-        raise ValueError("plot_Pareto_bokeh does not upport >2 objectives.")
+        raise ValueError("plot_Pareto_bokeh does not support >2 objectives.")
 
     if dimensions == None:
         dimensions = [
