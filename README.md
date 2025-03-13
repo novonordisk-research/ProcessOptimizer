@@ -25,87 +25,118 @@
 ## Table of Contents
  * [ProcessOptimizer](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#processoptimizer)
  * [Installation](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#installation)
- * [How does it work?](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#how-does-it-work?)
- * [Citation](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#Citation)
+ * [How to get started](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#how-to-get-started)
+ * [Examples](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#examples)
  * [Contributions](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#contributions)
  * [Related work](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#related-work)
- * [PyPi](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#pypi)
+ * [Citation](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#Citation)
  
 
 ## ProcessOptimizer
 
-ProcessOptimizer is a fork of scikit-optimize. ProcessOptimizer will fundamentally function like scikit-optimize, 
-yet developments are focussed on bringing improvements to help optimizing real world processes, like chemistry or baking.
-For examples on use, checkout https://github.com/novonordisk-research/ProcessOptimizer/tree/develop/examples.
+ProcessOptimizer is intended and tailored for optimization of real world processes. This could e.g. be some complex chemical reaction where no reliable analytical model mapping input variables to the output is readily available. Functionality includes Bayesian optimization, space filling, Design of Experiment algorithms, multi-objective optimization, and more. <br/>
+<br/> 
+ProcessOptimizer is tailored to perform well when observables have non-neglible noise but where the underlying relations between factors and responses follow regular real world behavior. 
+ <br/>
 
 ## Installation
 
-ProcessOptimizer can be installed using `pip install ProcessOptimizer`
-The repository and examples can be found at https://github.com/novonordisk-research/ProcessOptimizer
+ProcessOptimizer can be installed using `pip install ProcessOptimizer`<br/>
+The repository and examples can be found at https://github.com/novonordisk-research/ProcessOptimizer<br/>
 ProcessOptimizer can also be installed by running `pip install -e .` in top directory of the cloned repository.
 
-## How does it work?
-
-This package is intended for real world process optimization problems of black-box functions. This could e.g. be some complex chemical reaction where no reliable analytical model mapping input variables to the output is readily available. <br/>
-Bayesian optimization is a great tool for optimizing black-box functions where the input space has many dimensions and the function is expensive to evaluate in terms of time and/or resources.<br/>
-**Notice that this tool is designed to solve minimization problems.** It is therefore important to define the scoring function such that it turns into a minimization problem. <br/>
-Below is an illustrative example of minimization of the Booth function in 2 dimensions using the `ProcessOptimizer` package. Notice that in real world applications the function would be black box (and typically the input space would have more than 2 dimensions). However, it would still be possible to evaluate the function given a set of input values and thus use the same framework for optimization. <br/>
-The Booth function is a 2-dimensional function defined by [Booth Function (sfu.ca)](https://www.sfu.ca/~ssurjano/booth.html). In this example uniformly distributed random noise between 0-5% of the function value is added using `np.random`.
+## How to get started
+Below is an illustrative example of minimization of the 2-dimensional [Booth function](https://www.sfu.ca/~ssurjano/booth.html) using the `ProcessOptimizer` package. Notice that in real world applications, we would not know this function beforehand, i.e., it would be "black-box" (and typically we would also have more than 2 input factors). <br/>
+In this example, uniformly distributed random noise between 0-5% of the function value is added using `np.random`. The function is defined as follows:
 ```python
 import numpy as np
 
 def Booth(x0, x1):
-    return ((x0 + 2 * x1 - 7)**2 + (2 * x0 + x1 - 5)**2) * (1 + 0.05 * np.random.rand())
+    booth = (x0 + 2 * x1 - 7)**2 + (2 * x0 + x1 - 5)**2
+    noise = 1 + 0.05 * (2 * np.random.rand() - 1)
+    return (booth * noise)
 ```
+<!--
 Below is an image of the Booth function.
 
-
 ![Model for "unknown" truth](/media/Booth_function.png?raw=True)
+-->
 
-Suppose you are given the task of minimizing the function on the domain only using empirical observations and without any analytical function. <br/>
-Working with the ProcessOptimizer package you simply define the `Space` and create an `Optimizer` object.<br/>
-The `Space` object takes a list of dimensions which can either be `Real`, `Integer` or `Categorical`. `Real` dimensions are defined by the maximum and minimum values. Another way to initialize a `Real` dimension is to pass a list of two `float`s to the `Space` constructor.<br/>
+You are given the task of finding the minimum of the function without knowing its analytical form. You can perform "experiments", where you provide `x0` and `x1` and obtain the noisy value of the function. You want to do as few experiments as possible.
+<br/>
+Working with the ProcessOptimizer package, you define the experimental `Space` and create an `Optimizer` object. In this specific case, we have two continous numerical dimensions both ranging from 0.0 to 5.0. <br/>
+
 ```python
 import ProcessOptimizer as po
 
 SPACE = po.Space([[0.0, 5.0], [0.0, 5.0]])   
-print(SPACE)
->>>Space([Real(low=0.0, high=5.0, prior='uniform', transform='identity'),
-       Real(low=0.0, high=5.0, prior='uniform', transform='identity')])
+
 ```
-The `Optimizer` object initialized below uses `"GP"` (Gaussian Process). This means that after each step a Gaussian Process is fitted to the observations, which is used as a posterior distribution. Combined with an acquisition function the next point that should be explored can be determined. Notice that this process only takes place once n_initial_points of initial data has been aqcuired.
+The `Optimizer` defined below uses `"GP"` (Gaussian Process) for Bayesian optimization. Before the Bayesian part of the optimization begins, of number of initial "experiments" (`n_initial_points`) is run to obtain some initial data. After these initial "experiments" and every time new data is added afterwards, a Gaussian Process regression model is fitted to the data we have obtained so far. Based on this model (and an acquisition function that determines our search strategy), the optimizer suggests the next point to evaluate.
+
 ```python
-opt = po.Optimizer(SPACE, base_estimator = "GP", n_initial_points = 6)
+opt = po.Optimizer(SPACE, base_estimator = "GP", n_initial_points = 2)
 ```
-The optimizer can now be used in steps by calling the `.ask()` function, evaluating the function at the given point and use `.tell()` the `Optimizer` the result. In practise it would work like this. First ask the optimizer for the next point to perform an experiment:
+The optimizer can be used in steps by calling the `.ask()` function, evaluating the function at the given point and using `.tell()` to feed back the result to the `Optimizer`. In practise it would work like this. First ask the optimizer for the next point to perform an experiment:
 ```python
 opt.ask()
 >>> [3.75, 3.75]
 ```
-Now go to the laboratory or wherever the experiment can be performed and use the values above. In this example the experiment can simply be performed by evaluating the Booth function using the values above:
+Now go to the laboratory or wherever the experiment can be performed and use the values obtained when calling `ask()`. In this example the experiment can simply be performed by evaluating the Booth function using the values above:
 ```python
 Booth(3.75, 3.75)
 >>> 59.313996676981354
 ```
 When a result has been obtained the user needs to tell the output to the `Optimizer`. This is done using the `.tell()` function:
 ```python
-res = opt.tell([3.75, 3.75], 59.313996676981354)
+opt.tell([3.75, 3.75], 59.313996676981354)
+result = opt.get_result()
+
+po.plot_objective(result)
 ```
-The `res` object returned by tell contains a model of the Gaussian Process predicted mean. This model can be plotted using `plot_objective(res)`. Below is a gif of how the Gaussian Process predicted mean evolves after the first 6 initial points and until 20 points have been sampled in total. The orange dots visualise each evaluation of the function and the red dot shows the position of the expected minimum. In the diagonal of the figure dependence plots are shown. These show how the function depend on each input variable with other input variables kept constant at the expected minimum.
+The `result` returned by `tell` contains a model of the Gaussian Process predicted mean. This model can be plotted using `plot_objective(result)`. Below is a gif of the search after 6 initial points and until 20 points have been sampled in total. The orange dots visualise each evaluation of the function and the red dot shows the position of the expected minimum. Besides the 2D color plot, there are also 1D plots for each input variable. These show how the function depend on each input variable with other input variables kept constant at the expected minimum.
 
 ![Progression of several ask and tells to processoptimizer](/media/BO_GIF.gif?raw=True?width="500" "Finding the minimum in the Booth function")
 
- 
-Notice that this is an optimization tool and not a modelling tool. This means that the optimizer finds an approximate solution for the global minimum quickly however it does not guarantee that the Gaussian Process predicted mean is an accurate model on the entire domain.<br/>
+Notice that this is an optimization tool and not a modelling tool. This means that the optimizer finds an approximate solution for the global minimum quickly. It does, however, not guarantee that the obtained model is accurate on the entire domain.<br/>
+<!--
+The best observation against the number of observations can be plotted with `plot_convergence(result)`:
 
-The best observation against the number of observations can be plotted with `plot_convergence(res)`:
- 
+```python
+po.plot_convergence(result)
+```
+
 ![BayesianOptimization in action](/media/Convergence_plot.png?raw=True)
+-->
 
-## Citation
+A full minimal example of use can be found below:
 
-If you use the package in relation to a citation, please cite: https://doi.org/10.5281/zenodo.5155295.<br>
-Please also cite the underlaying package (scikit-optimize).
+```python
+import numpy as np
+import ProcessOptimizer as po
+
+def Booth(x0, x1):
+    booth = (x0 + 2 * x1 - 7)**2 + (2 * x0 + x1 - 5)**2
+    noise = 1 + 0.05 * (2 * np.random.rand() - 1)
+    return (booth * noise)
+
+SPACE = po.Space([[0.0, 5.0], [0.0, 5.0]])
+opt = po.Optimizer(SPACE,
+                   base_estimator = "GP",
+                   n_initial_points = 2)
+
+for i in range(20):
+    x = opt.ask()
+    y = Booth(*x)
+    opt.tell(x, y)
+
+result = opt.get_result()
+po.plot_objective(result)
+```
+
+## Examples
+An introductory walkthough of the package can be found [here](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/examples/walkthrough/readme.md)<br>
+Various examples on use and functionality can be found [here](https://github.com/novonordisk-research/ProcessOptimizer/tree/develop/examples).
 
 ## Contributions
 
@@ -119,13 +150,23 @@ To help solve the issues, please: <br>
 
 If you would like to contribute by making anything from documentation to feature-additions, THANK YOU. Please open a pull request 
 marked as *WIP* as early as possible and describe the issue you seek to solve and outline your planned solution. <br>
-Pull requests to the develop branch will be automatically tested using pytest and flake8. We'll be happy to help solving potential
+<!-- Pull requests to the develop branch will be automatically tested using pytest and flake8. We'll be happy to help solving potential
 issues that could arise here.
+-->
 
 ## Related work
 
-We are currently building a GUI to offer the power of Bayesian Process Optimization to non-coders. Stay tuned. (Sneak-peak at https://www.browniebee.dk/uk/)
+ProcessOptimizer is a fork of [scikit-optimize](/https://scikit-optimize.github.io/stable/). ProcessOptimizer will fundamentally function like scikit-optimize, 
+yet developments are focussed on bringing improvements to help optimizing real world processes, like chemistry or baking. 
 
+[Brownie Bee](https://browniebee.io/) is a web-based platform for Bayesian process optimization intended for non-coders. It uses ProcessOptimizer as the underlying optimization engine.
+
+## Citation
+
+If you use the package in relation to published works, please cite: https://doi.org/10.5281/zenodo.5155295 and https://pubs.acs.org/doi/full/10.1021/acs.jcim.4c02240<br>
+Please also cite the underlaying package (scikit-optimize).
+
+<!--
 ## PyPi
 
 If you have not packaged before check out https://packaging.python.org/tutorials/packaging-projects/
@@ -138,3 +179,4 @@ To upload a new version to PyPi do the following in the root folder of the proje
 - Run `python setup.py sdist bdist_wheel`
 - Run `python -m twine upload dist/*` (make sure that /dist only contains relevant version)
 - (Remember that pypi has changed the way it handles credentials, you might have to state username: [dunderscore]token[dunderscore] and then use your token value (incl pypi-prefix) as password. As stated here https://pypi.org/help/#apitoken
+-->
