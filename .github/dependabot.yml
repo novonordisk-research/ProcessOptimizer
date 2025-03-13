@@ -1,0 +1,37 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+updates:
+  - package-ecosystem: "pip" # See documentation for possible values
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "monthly"
+    reviewers:
+    # I can't get groups to work, so I'm just listing all the maintainers here. Not ideal, but it should work.
+      - "SRFU-NN"
+      - "sqbl"
+      - "dk-teknologisk-mon"
+    commit-message:
+      # Prefix all commit messages with "[pip] " (no colon, but a trailing whitespace)
+      prefix: "[pip] "
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-patch", "version-update:semver-minor"] # Ignore everything except major updates with semantic versioning
+
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    # Workflow files stored in the default location of `.github/workflows`. (You don't need to specify `/.github/workflows` for `directory`. You can use `directory: "/"`.)
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    reviewers:
+    # I can't get groups to work, so I'm just listing all the maintainers here. Not ideal, but it should work.
+      - "SRFU-NN"
+      - "sqbl"
+      - "dk-teknologisk-mon"
+    commit-message:
+      # Prefix all commit messages with "[github-actions] " (no colon, but a trailing whitespace)
+      prefix: "[github-actions] "

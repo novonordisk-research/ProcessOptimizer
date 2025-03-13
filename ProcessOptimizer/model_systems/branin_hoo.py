@@ -46,18 +46,34 @@ def branin_score(x):
 
 
 # Create model system
-branin = ModelSystem(
-    branin_score,
-    [Real(-5, 10, name="x1"), Real(0, 15, name="x2")],
-    noise_model={"model_type": "proportional", "noise_size": 0.1},
-    true_max=308.13,
-    true_min=0.397887,
-)
 
-branin_no_noise = ModelSystem(
-    branin_score,
-    [Real(-5, 10, name="x1"), Real(0, 15, name="x2")],
-    noise_model=None,
-    true_max=308.13,
-    true_min=0.397887,
-)
+def create_branin(noise: bool = True) -> ModelSystem:
+    """
+    Create the Branin-Hoo model system.
+
+    Parameters
+    ----------
+    * `noise` [bool]:
+        Whether to add noise to the system.
+
+    Returns
+    -------
+    * `branin` [ModelSystem]:
+        The Branin-Hoo model
+    """
+    if noise:
+        return ModelSystem(
+            branin_score,
+            [Real(-5, 10, name="x1"), Real(0, 15, name="x2")],
+            noise_model={"model_type": "proportional", "noise_size": 0.1},
+            true_max=308.13,
+            true_min=0.397887,
+        )
+    else:
+        return ModelSystem(
+            branin_score,
+            [Real(-5, 10, name="x1"), Real(0, 15, name="x2")],
+            noise_model=None,
+            true_max=308.13,
+            true_min=0.397887,
+        )

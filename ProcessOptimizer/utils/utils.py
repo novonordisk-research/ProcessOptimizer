@@ -192,7 +192,7 @@ def load(filename, **kwargs):
 
 
 def is_listlike(x):
-    return isinstance(x, (list, tuple))
+    return isinstance(x, (list, tuple, np.ndarray))
 
 
 def is_2Dlistlike(x):
@@ -273,17 +273,19 @@ def expected_minimum(
 
     xs = [res.x]
     if n_random_starts > 0:
-        if hasattr(res.constraints, "sum_equals"):
-           # If we have a SumEquals constraint, create samples that respect it
-           xs = []
-           xs.extend(
-               res.constraints.sumequal_sampling(
-                   n_samples=n_random_starts, random_state=random_state
-                   )
-               )
+        if res.constraints:
+            if len(res.constraints.sum_equals) > 0:
+                # If we have a SumEquals constraint, create samples that respect it
+                xs = []
+                xs.extend(
+                    res.constraints.sumequal_sampling(
+                        n_samples=n_random_starts, random_state=random_state
+                        )
+                    )
+            else:
+                warn("Optimizer has constraints which expected_minimum() does not necessarily respect.")
+
         else:
-            if res.constraints:
-                warn.warning("Optimizer has constraints which expected_minimum() does not necessarily respect.")
             # For all other cases (and constraints) we use random sampling
             xs.extend(res.space.rvs(n_random_starts, random_state=random_state))
     xs = res.space.transform(xs)
@@ -293,8 +295,8 @@ def expected_minimum(
     
     cons = None
     # Prepare a linear constraint, if applicable
-    if hasattr(res.constraints, "sum_equals"):
-        A = np.zeros((1, res.space.n_dims))
+    if res.constraints and len(res.constraints.sum_equals) > 0:
+        A = np.zeros((1, res.space.transformed_n_dims))
         value = res.constraints.sum_equals[0].value
         for dim in res.constraints.sum_equals[0].dimensions:
             # Normalization rescales the ratio that the constrained dimensions 

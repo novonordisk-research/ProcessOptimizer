@@ -322,13 +322,18 @@ def score(coordinates: List[int], evaluation_target: str='F8') -> float:
     data_lookup_position = find_closest_match(file_name, coordinates, 'percent_acid', 'Indicator')[0]
     evaluation = color_difference(file_name, data_lookup_position, evaluation_target)
     return evaluation
-    
-#Create model system
-color_pH = ModelSystem(
-    score,
-    space = [Integer(30, 85, name='percent_acid'),
-             Integer(5, 40, name='Indicator'),
-            ],
-    noise_model = None,
-    true_min = 0,
-)
+
+
+# Create model system
+def create_color_ph() -> ModelSystem:
+    """
+    Create the color_pH model system.
+    """
+    return ModelSystem(
+        score,
+        space=[Integer(30, 85, name='percent_acid'),
+               Integer(5, 40, name='Indicator'),
+               ],
+        noise_model=None,
+        true_min=0,
+    )

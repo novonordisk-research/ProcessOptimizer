@@ -1,9 +1,0 @@
-numpy
-scipy
-scikit-learn >= 0.24.2 #To avoid issues with normalize_y
-matplotlib
-pytest
-nose
-bokeh
-six
-deap

@@ -1,6 +1,86 @@
 # Release history
 
-## Version 0.9.4 [unpublished]
+## Version 1.1.1 [unpublished]
+
+### Changes
+
+- 
+
+### Bugfixes
+
+- 
+
+
+## Version 1.1.0 [unpublished]
+
+### Changes
+
+- D-optimal designs in get_optimal_DOE.
+- Director and support for using disparate backends with XpyriMentor.
+- Warning for re-visiting a point changed to be less severe - It is just a piece of information.
+- 
+
+### Bugfixes
+
+- LHS doesn't only produce diagonal points any more.
+- expected_minimum runs even with constraints, but still doesn't respect constraints.
+
+
+## Version 1.0.2
+
+### Changes
+
+- 
+
+### Bugfixes
+
+- Fixed a bug where sum_equals constraints would break if used with dimensions other than 
+  an increasing list from 0. E.g. constraining dimensions [0, 1, 2] would work, but 
+  constraining [1, 2, 3] would not. 
+  
+
+## Version 1.0.1 (October 2024)
+
+### Changes
+
+- Added a plotting function that supports the Brownie Bee user interface (see browniebee.io).
+- Made small improvements to the plot_objective_1d function, and added it to __init.py__ for ProcessOptimizer.
+- Added documentation for multiobjective optimization
+
+### Bugfixes
+
+-
+
+## Version 1.0.0 (September 2024)
+
+### Changes
+
+- Documentation about the features in control parameters and sampling control parameters.
+- ModelSystems moved to creator systems, so they are only created when you ask for them. You now need to use `ProcessOptimizer.model_systems.get_model_system(model_system_name)` to create them. This has two advantages: If you change a model system, it doesn't affect a new instance of it. And ProcessOptimizer should import faster, since fewer objects are created i memory.
+- Radius changed in certain Bokeh plots
+- Default Pareto plot has more points on Pareto-front (40 -> 100)
+
+### Bugfixes
+
+- Setting noise-size in zero-noise models will now raise an error
+- Multible imports of a model system will now provide separate instances
+
+## Version 0.9.5 (May 2024)
+
+### Changes
+
+- Updated package requirements for Brownie Bee user interface.
+- Examples reworked.
+- opt.estimate() implemented - Works in non-transformed space and on all objectives.
+
+### Bugfixes
+
+- Fix that categorical dimensions with more than two levels induces error when used 
+  together with SumEqual constraint.
+- Fix that Bokeh has changed naming convention related to sizes of circles in their
+  plots from "size" to "radius".
+
+## Version 0.9.4
 
 ### Changes
 
@@ -8,7 +88,9 @@
 
 ### Bugfixes
 
--
+- Fix dependency on deprecated Matrix from scipy in favour of a numpy solution
+- Ensure prober warning/Errors when users try to combine constraints with operations that
+  doesn't support constraints.
 
 ## Version 0.9.3
 

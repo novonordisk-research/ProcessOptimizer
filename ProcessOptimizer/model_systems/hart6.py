@@ -51,18 +51,12 @@ def hart6_score(x):
     return -np.sum(alpha * np.exp(-np.sum(A * (np.array(x) - P) ** 2, axis=1)))
 
 
-hart6 = ModelSystem(
-    hart6_score,
-    [(0.0, 1.0) for _ in range(6)],
-    noise_model="constant",
-    true_max=0.0,
-    true_min=-3.3224,
-)
-
-hart6_no_noise = ModelSystem(
-    hart6_score,
-    [(0.0, 1.0) for _ in range(6)],
-    noise_model=None,
-    true_max=0.0,
-    true_min=-3.3224,
-)
+def create_hart6(noise: bool = True) -> ModelSystem:
+    noise_model = "constant" if noise else None
+    return ModelSystem(
+        hart6_score,
+        [(0.0, 1.0) for _ in range(6)],
+        noise_model=noise_model,
+        true_max=0.0,
+        true_min=-3.3224,
+    )

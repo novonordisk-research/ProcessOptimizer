@@ -35,18 +35,12 @@ def peaks_score(x):
     return score
 
 
-peaks = ModelSystem(
-    peaks_score,
-    [(-3.0, 3.0), (-3.0, 3.0)],
-    noise_model="constant",
-    true_max=8.106,
-    true_min=-6.5511,
-)
-
-peaks_no_noise = ModelSystem(
-    peaks_score,
-    [(-3.0, 3.0), (-3.0, 3.0)],
-    noise_model=None,
-    true_max=8.106,
-    true_min=-6.5511,
-)
+def create_peaks(noise: bool = True) -> ModelSystem:
+    noise_model = "constant" if noise else None
+    return ModelSystem(
+        peaks_score,
+        [(-3.0, 3.0), (-3.0, 3.0)],
+        noise_model=noise_model,
+        true_max=8.106,
+        true_min=-6.5511,
+    )

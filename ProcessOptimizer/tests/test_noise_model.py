@@ -303,3 +303,11 @@ def test_noise_seed_reset():
     reset_noise = noise_model.get_noise(None, 0)
     assert first_noise == reset_noise
     assert first_noise != second_noise
+
+
+def test_zero_noise_size():
+    noise_model = ZeroNoise()
+    assert noise_model.noise_size == 0
+    noise_model.noise_size = 0
+    with pytest.raises(ValueError):
+        noise_model.noise_size = 1

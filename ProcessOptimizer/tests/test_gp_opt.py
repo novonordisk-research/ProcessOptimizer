@@ -7,9 +7,10 @@ from ProcessOptimizer.model_systems.benchmarks import bench1
 from ProcessOptimizer.model_systems.benchmarks import bench2
 from ProcessOptimizer.model_systems.benchmarks import bench3
 from ProcessOptimizer.model_systems.benchmarks import bench4
-from ProcessOptimizer.model_systems import branin_no_noise
+from ProcessOptimizer.model_systems import get_model_system
 from ProcessOptimizer.learning import cook_estimator
 
+branin_no_noise = get_model_system("branin_no_noise")
 
 branin = branin_no_noise.get_score
 

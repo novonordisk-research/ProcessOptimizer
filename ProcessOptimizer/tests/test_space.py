@@ -87,14 +87,14 @@ def test_real_bounds():
 @pytest.mark.parametrize(
     "dimension, ismember, point_type",
     [
-        (Real(1, 10), lambda x: 1 <= x <= 10, np.float64),
+        (Real(1, 10), lambda x: 1 <= x <= 10, float),
         (
             Real(10**-5, 10**5, prior="log-uniform"),
             lambda x: 10**-5 <= x <= 10**5,
-            np.float64,
+            float,
         ),
-        (Integer(1, 10), lambda x: 1 <= x <= 10, np.integer),
-        (Integer(1, 10, transform="normalize"), lambda x: 0 <= x <= 10, np.integer),
+        (Integer(1, 10), lambda x: 1 <= x <= 10, int),
+        (Integer(1, 10, transform="normalize"), lambda x: 0 <= x <= 10, int),
         (Categorical(["cat", "dog", "rat"]), lambda x: x in ["cat", "dog", "rat"], str),
     ],
 )
@@ -744,3 +744,62 @@ def test_lhs():
     # Asserting the the values are the same for both the lhs, even though the order is different
     for i in range(4):
         assert set([x[i] for x in lhs_one]) == set([x[i] for x in lhs_two])
+
+
+def test_sample():
+    SPACE = Space(
+        [
+            Integer(1, 6),
+            Real(1, 7),
+            Real(10**-3, 10**3, prior="log-uniform"),
+            Categorical(list("abc")),
+        ]
+    )
+    # Getting one sample
+    samples = SPACE.sample([0.5]*len(SPACE))
+    assert len(samples) == 1
+    assert isinstance(samples, np.ndarray)
+    assert len(samples[0]) == 4
+    values = samples[0]
+    assert isinstance(values, np.ndarray)
+    assert isinstance(values[0], int)
+    assert isinstance(values[1], float)
+    assert isinstance(values[2], float)
+    assert isinstance(values[3], str)
+    # Getting multiple samples
+    samples = SPACE.sample([[0.5]*len(SPACE)]*5)
+    assert len(samples) == 5
+    assert len(samples[0]) == 4
+    assert isinstance(samples, np.ndarray)
+    for sample in samples:
+        assert isinstance(sample, np.ndarray)
+        assert isinstance(sample[0], int)
+        assert isinstance(sample[1], float)
+        assert isinstance(sample[2], float)
+        assert isinstance(sample[3], str)
+
+
+def test_sample_wrong_size():
+    SPACE = Space(
+        [
+            Integer(1, 6),
+            Real(1, 7),
+            Real(10**-3, 10**3, prior="log-uniform"),
+            Categorical(list("abc")),
+        ]
+    )
+    with pytest.raises(ValueError):
+        SPACE.sample([0.5]*3)
+    with pytest.raises(ValueError):
+        SPACE.sample([0.5]*5)
+    with pytest.raises(ValueError):
+        SPACE.sample([[0.5]*3]*5)
+    with pytest.raises(ValueError):
+        SPACE.sample([[0.5]*5]*3)
+
+def test_sample_multiple():
+    space = Space([Real(0, 1), Real(0, 1)])
+    samples = space.sample([[0.7, 0.3]]*5)
+    for sample in samples:
+        assert sample[0] == 0.7
+        assert sample[1] == 0.3

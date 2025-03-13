@@ -2,12 +2,7 @@ import unittest
 
 import numpy as np
 from ProcessOptimizer.model_systems import (
-    branin,
-    branin_no_noise,
-    hart3_no_noise,
-    hart6_no_noise,
-    poly2_no_noise,
-    peaks_no_noise,
+    get_model_system,
     ProportionalNoise,
 )
 from ProcessOptimizer import Real
@@ -16,8 +11,10 @@ from ProcessOptimizer import Real
 class TestIndividualModelSystem(unittest.TestCase):
     # Make a test for the branin ModelSystem
     def test_branin(self):
+        branin = get_model_system("branin_hoo")
+        branin_no_noise = get_model_system("branin_no_noise")
         assert branin.noise_size == 0.1
-        assert type(branin.noise_model) == ProportionalNoise
+        assert type(branin.noise_model) is ProportionalNoise
         assert len(branin.space.dimensions) == 2
         assert branin.space.dimensions[0].name == "x1"
         assert branin.space.dimensions[1].name == "x2"
@@ -33,10 +30,12 @@ class TestIndividualModelSystem(unittest.TestCase):
             self.assertAlmostEqual(value, 0.397887, places=5)
 
     def test_hart3(self):
+        hart3_no_noise = get_model_system("hart3_no_noise")
         assert hart3_no_noise.noise_size == 0
         assert hart3_no_noise.space.bounds == [(0, 1), (0, 1), (0, 1)]
 
     def test_hart6(self):
+        hart6_no_noise = get_model_system("hart6_no_noise")
         assert hart6_no_noise.noise_size == 0
         assert hart6_no_noise.space.bounds == [
             (0, 1),
@@ -50,6 +49,7 @@ class TestIndividualModelSystem(unittest.TestCase):
         self.assertAlmostEqual(hart6_no_noise.get_score(x_test), -3.32237, places=5)
 
     def test_poly2(self):
+        poly2_no_noise = get_model_system("poly2_no_noise")
         assert poly2_no_noise.noise_size == 0
         assert poly2_no_noise.space.bounds == [(-1, 1), (-1, 1)]
         x_test = np.asarray((0.6667, -0.4833))
@@ -58,6 +58,7 @@ class TestIndividualModelSystem(unittest.TestCase):
         self.assertAlmostEqual(poly2_no_noise.get_score(x_test_max), -1.270, places=3)
 
     def test_peaks(self):
+        peaks_no_noise = get_model_system("peaks_no_noise")
         assert peaks_no_noise.noise_size == 0
         assert peaks_no_noise.space.bounds == [(-3.0, 3.0), (-3.0, 3.0)]
         x_test = np.asarray((0.228, -1.626))
