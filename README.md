@@ -41,8 +41,8 @@ ProcessOptimizer is tailored to perform well when observables have non-neglible 
 
 ## Installation
 
-ProcessOptimizer can be installed using `pip install ProcessOptimizer`
-The repository and examples can be found at https://github.com/novonordisk-research/ProcessOptimizer
+ProcessOptimizer can be installed using `pip install ProcessOptimizer`<br/>
+The repository and examples can be found at https://github.com/novonordisk-research/ProcessOptimizer<br/>
 ProcessOptimizer can also be installed by running `pip install -e .` in top directory of the cloned repository.
 
 ## How to get started
@@ -72,7 +72,7 @@ import ProcessOptimizer as po
 SPACE = po.Space([[0.0, 5.0], [0.0, 5.0]])   
 
 ```
-The `Optimizer` below uses `"GP"` (Gaussian Process) for Bayesian optimization. Before the Bayesian part of the optimization begins, of number of initial "experiments" (`n_initial_points`) is run to obtain some initial data. After these initial "experiments" and every time new data is added afterwards, a Gaussian Process regression model is fitted to the data we have obtained so far. Based on this model (and an acquisition function that determines our search strategy), the optimizer suggests the next point to evaluate.
+The `Optimizer` defined below uses `"GP"` (Gaussian Process) for Bayesian optimization. Before the Bayesian part of the optimization begins, of number of initial "experiments" (`n_initial_points`) is run to obtain some initial data. After these initial "experiments" and every time new data is added afterwards, a Gaussian Process regression model is fitted to the data we have obtained so far. Based on this model (and an acquisition function that determines our search strategy), the optimizer suggests the next point to evaluate.
 
 ```python
 opt = po.Optimizer(SPACE, base_estimator = "GP", n_initial_points = 2)
