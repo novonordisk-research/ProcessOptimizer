@@ -299,8 +299,9 @@ class Optimizer(object):
             and self.space.is_categorical
         ):
             raise ValueError(
-                "GaussianProcessRegressor on a purely categorical space"
-                " is not supported. Please use another base estimator"
+                "GaussianProcessRegressor on a purely categorical space is not "
+                "supported. Please use another base estimator, e.g. a random forest "
+                "regressor by initialising Optimizer with the `base_estimator='RF'`."
             )
         # Latin hypercube sampling
 
