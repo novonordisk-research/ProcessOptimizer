@@ -1,6 +1,6 @@
 # Release history
 
-## Version 1.1.1 [unpublished]
+## Version 1.1.2 [unpublished]
 
 ### Changes
 
@@ -10,8 +10,23 @@
 
 - 
 
+## Version 1.1.1 [published]
 
-## Version 1.1.0 [unpublished]
+### Changes
+
+- Move to pyproject.toml (delete setup.py+requirements.txt)
+- Add classifiers to pyproject.toml
+- Rotate colorbar-ticks to 45 degrees
+- Deprecation warning for 3d Pareto plot
+- log axis on y (or z scale) not implemented error
+- Update Readme.md
+
+### Bugfixes
+
+- 
+
+
+## Version 1.1.0
 
 ### Changes
 
