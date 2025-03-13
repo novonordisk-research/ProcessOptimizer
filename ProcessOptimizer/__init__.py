@@ -40,8 +40,6 @@ from .plots import plot_Pareto, plot_expected_minimum_convergence
 from .samplers.doe import get_optimal_DOE
 from .XpyriMentor import XpyriMentor
 
-from .model_systems.test_data import test_data
-
 __version__ = "1.1.0"
 
 
