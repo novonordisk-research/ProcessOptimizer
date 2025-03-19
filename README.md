@@ -72,7 +72,7 @@ import ProcessOptimizer as po
 SPACE = po.Space([[0.0, 5.0], [0.0, 5.0]])   
 
 ```
-The `Optimizer` defined below uses `"GP"` (Gaussian Process) for Bayesian optimization. Before the Bayesian part of the optimization begins, of number of initial "experiments" (`n_initial_points`) is run to obtain some initial data. After these initial "experiments" and every time new data is added afterwards, a Gaussian Process regression model is fitted to the data we have obtained so far. Based on this model (and an acquisition function that determines our search strategy), the optimizer suggests the next point to evaluate.
+The `Optimizer` defined below uses `"GP"` (Gaussian Process) for Bayesian optimization. Before the Bayesian part of the optimization begins, a number of initial "experiments" (`n_initial_points`) is run to obtain some initial data. After these initial "experiments" and every time new data is added afterwards, a Gaussian Process regression model is fitted to the data we have obtained so far. Based on this model (and an acquisition function that determines our search strategy), the optimizer suggests the next point to evaluate.
 
 ```python
 opt = po.Optimizer(SPACE, base_estimator = "GP", n_initial_points = 2)
@@ -94,9 +94,9 @@ result = opt.get_result()
 
 po.plot_objective(result)
 ```
-The `result` returned by `tell` contains a model of the Gaussian Process predicted mean. This model can be plotted using `plot_objective(result)`. Below is a gif of the search after 6 initial points and until 20 points have been sampled in total. The orange dots visualise each evaluation of the function and the red dot shows the position of the expected minimum. Besides the 2D color plot, there are also 1D plots for each input variable. These show how the function depend on each input variable with other input variables kept constant at the expected minimum.
+The `result` returned by `tell` contains a model of the Gaussian Process predicted mean. This model can be plotted using `plot_objective(result)`. Below is a gif of the search after 2 initial points and until 20 points have been sampled in total. The orange dots visualise each evaluation of the function. Besides the 2D color plot, there are also 1D plots for each input variable. These show how the function depend on each input variable with other input variables kept constant at the best sampled data point.
 
-![Progression of several ask and tells to processoptimizer](/media/BO_GIF.gif?raw=True?width="500" "Finding the minimum in the Booth function")
+![Progression of several ask and tells to processoptimizer](/media/optimization.gif?raw=True?width="500" "Finding the minimum in the Booth function")
 
 Notice that this is an optimization tool and not a modelling tool. This means that the optimizer finds an approximate solution for the global minimum quickly. It does, however, not guarantee that the obtained model is accurate on the entire domain.<br/>
 <!--
