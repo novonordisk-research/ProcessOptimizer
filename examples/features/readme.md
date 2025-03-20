@@ -18,3 +18,7 @@ demonstrate how the control parameter settings are defined.
 
 Control parameter settings can be [sampled](sampling_control_parameters.ipynb)
 in different ways.
+
+## Optimal Design Of Experiment
+
+[This notebook](optimal_design_of_experiment.ipynb) demonstrates how to use the `ProcessOptimizer` package to find the optimal design of experiment for a given set of experiments.
