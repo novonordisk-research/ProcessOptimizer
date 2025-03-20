@@ -12,11 +12,11 @@ The feature examples demonstrate how to use specific features of the `ProcessOpt
 
 ## Design Qualifications
 
-Some notebooks placed in the [design_qualifications](design_qualifications/readme.md) folder demonstrate very specific niche that are highly relevant to developers and potentially users working with those very specific problems.
+Some notebooks placed in the [design_qualifications](design_qualifications/readme.md) folder exemplify very specific often niche cases that are highly relevant to developers and potentially users working with those specific problems.
 
 ## Old examples
 
-The old examples folder contains examples that are outdated and not maintained. They are kept for historical reasons and may be useful for understanding how the package has evolved over time.
+The old examples folder contains examples that are outdated and not maintained. They are kept for historical reasons and may be useful for understanding how the package has evolved over time. The plan is to eventually delete this folder.
 
 ## This folder
 
