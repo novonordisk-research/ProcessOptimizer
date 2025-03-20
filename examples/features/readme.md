@@ -21,4 +21,4 @@ in different ways.
 
 ## Optimal Design Of Experiment
 
-[This notebook](optimal_design_of_experiment.ipynb) demonstrates how to use the `ProcessOptimizer` package to find the optimal design of experiment for a given set of experiments.
+[This notebook](optimal_doe.ipynb) demonstrates how to use the `ProcessOptimizer` package to find the optimal design of experiment for a given set of experiments.
