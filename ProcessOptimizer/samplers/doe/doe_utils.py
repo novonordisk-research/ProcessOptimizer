@@ -110,7 +110,8 @@ def sanitize_names_for_patsy(factor_names):
     ]
     chars_to_remove = ["$", "(", ")", "[", "]", "{", "}"]
 
-    for i, name in enumerate(factor_names):
+    sanitized_factor_names = factor_names[:]
+    for i, name in enumerate(sanitized_factor_names):
         for symbol in chars_to_replace_with_underscore:
             if symbol in name:
                 warnings.warn(
@@ -119,20 +120,18 @@ def sanitize_names_for_patsy(factor_names):
                         "mathematical symbols. Replacing with underscore"
                     )
                 )
-                factor_names[i] = name.replace(symbol, "_")
-                name = factor_names[i]
+                sanitized_factor_names[i] = name.replace(symbol, "_")
+                name = sanitized_factor_names[i]
         for symbol_rm in chars_to_remove:
             if symbol_rm in name:
-                factor_names[i] = name.replace(symbol_rm, "")
-                name = factor_names[i]
-
-    if len(factor_names) != len(set(factor_names)):
+                sanitized_factor_names[i] = name.replace(symbol_rm, "")
+                name = sanitized_factor_names[i]
+    if len(sanitized_factor_names) != len(set(sanitized_factor_names)):
         raise ValueError(
             "Duplicate factor names found after sanitation."
             " Factor names must be unique."
         )
-
-    return factor_names
+    return sanitized_factor_names
 
 
 def round_design_point_values(design_points, res):
