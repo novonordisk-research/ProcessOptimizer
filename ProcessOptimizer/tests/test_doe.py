@@ -312,6 +312,45 @@ def test_get_optimal_DOE_without_categorical(sample_space):
     np.testing.assert_array_almost_equal(result_compare, exptected_result)
 
 
+def test_get_optimal_DOE_and_sanitize_names():
+    """Test the get_optimal_DOE function without categorical dimensions.
+    Use some bad names to ensure this works together.
+    """
+
+    sample_space_bad_names = Space([Real(0, 10, name="x$1"),
+                                    Real(-5, 5, name="x+2*]")])
+    with pytest.warns(UserWarning):
+        result, factor_names = get_optimal_DOE(
+            sample_space_bad_names, budget=12, design_type="optimization",
+            res=11, seed=42
+        )
+
+    result_compare = np.asarray(result, dtype=float)
+
+    exptected_result = np.array(
+        [
+            [0.0, -5.0],
+            [3.0, -5.0],
+            [10.0, 5.0],
+            [0.0, 5.0],
+            [2.0, -2.0],
+            [10.0, -5.0],
+            [7.0, 5.0],
+            [10.0, 2.0],
+            [0.0, 2.0],
+            [7.0, -5.0],
+            [3.0, 3.0],
+            [8.0, -2.0],
+        ]
+    )
+
+    assert result.shape == (12, 2)
+    assert np.all(result[:, 0] >= 0) and np.all(result[:, 0] <= 10)
+    assert np.all(result[:, 1] >= -5) and np.all(result[:, 1] <= 5)
+    assert factor_names == ["x1", "x_2_"]
+    np.testing.assert_array_almost_equal(result_compare, exptected_result)
+
+
 def test_get_optimal_DOE_with_categorical(optimal_design_space):
     """Test the get_optimal_DOE function with a categorical dimension."""
     result, factor_names = get_optimal_DOE(
