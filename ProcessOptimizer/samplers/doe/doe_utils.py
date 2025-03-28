@@ -109,8 +109,8 @@ def sanitize_names_for_patsy(factor_names):
         "~",
     ]
     chars_to_remove = ["$", "(", ")", "[", "]", "{", "}"]
-
-    sanitized_factor_names = factor_names[:]
+    # Copy the list to avoid changing the input
+    sanitized_factor_names = factor_names.copy()
     for i, name in enumerate(sanitized_factor_names):
         for symbol in chars_to_replace_with_underscore:
             if symbol in name:
