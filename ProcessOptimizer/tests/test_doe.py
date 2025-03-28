@@ -195,6 +195,7 @@ def test_sanitize_names_for_patsy():
         result = sanitize_names_for_patsy(factor_names)
 
     assert result == expected
+    assert factor_names != result
 
 
 @pytest.mark.fast_test
