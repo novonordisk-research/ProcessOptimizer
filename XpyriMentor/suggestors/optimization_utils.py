@@ -23,6 +23,7 @@ class EarlyStopper:
 
 FitGPyTorchMLL = Dispatcher("fit_gpytorch_mll_wth_stopper", encoder=type_bypassing_encoder)
 def fit_gpytorch_mll_wth_stopper(
+        # TODO: implemnt the stopper withing the optimisation loop
     mll: MarginalLogLikelihood,
     closure: Callable[[], tuple[Tensor, Sequence[Tensor | None]]] | None = None,
     optimizer: Callable | None = None,

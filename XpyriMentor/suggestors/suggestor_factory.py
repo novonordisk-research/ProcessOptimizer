@@ -12,9 +12,9 @@ from .random_strategizer import RandomStragegizer
 from .sequential_strategizer import SequentialStrategizer
 from .suggestor import Suggestor
 from .botorch_suggestor import BoTorch_qLogNoisyEI, BoTorch_LogEI
+from .mulittaks_suggestor import BoTorchMTSuggestor
 
 logger = logging.getLogger(__name__)
-
 
 def suggestor_factory(
     space: Space,
@@ -128,5 +128,7 @@ def suggestor_factory(
     elif suggestor_type == "BoTorch_LogEI":
         logger.debug ("Creating BoTorch_LogEI")
         return BoTorch_LogEI(space, 1, rng, **definition)
+    elif suggestor_type == "BoTorchMT":
+        return BoTorch_MTSuggestor(space, 1, rng, **definition)
     else:
         raise ValueError(f"Unknown suggestor name: {suggestor_type}")

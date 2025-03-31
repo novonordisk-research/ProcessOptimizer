@@ -3,26 +3,26 @@ from typing import Iterable, Any
 
 import numpy as np
 import torch
+
 import botorch
 from botorch.models import MultiTaskGP
-from botorch.acquisition import qLogNoisyExpectedImprovement
 from botorch.acquisition.analytic import LogExpectedImprovement
 from botorch import fit_gpytorch_mll
 from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.optim import optimize_acqf
 from botorch.models.transforms.input import Normalize
+
 from gpytorch.likelihoods import Likelihood, _GaussianLikelihoodBase, _MultitaskGaussianLikelihoodBase, GaussianLikelihood, MultitaskGaussianLikelihood,
+from gpytorch.likelihoods.noise_models import MultitaskHomoskedasticNoise
 from gpytorch.kernels import RBFKernel, IndexKernel, MultitaskKernel
 from gpytorch.means import ZeroMean, ConstantMean, MultitaskMean
 from gpytorch.mlls import ExactMarginalLogLikelihood
 from gpytorch.models import GP
-from XpiryMentor.suggestors.optimization_utils import fit_gpytorch_mll_wth_stopper
-from ProcessOptimizer.space import Space
-
-
+from gpytorch.module import Module
 from gpytorch.distributions import base_distributions, MultivariateNormal
-from gpytorch.likelihoods import _GaussianLikelihoodBase
-from gpytorch.likelihoods.noise_models import MultitaskHomoskedasticNoise
+
+from XpyriMentor.suggestors.optimization_utils import fit_gpytorch_mll_wth_stopper
+from ProcessOptimizer.space import Space
 
 botorch.settings.debug(state=True)
 
@@ -31,7 +31,7 @@ BATCH_SIZE = 1
 NUM_RESTARTS = 10
 RAW_SAMPLES = 512
 
-class BoTorchSuggestor(ABC):
+class BoTorchMTSuggestor(ABC):
     """
     Base suggestor class for BoTorch acquisition functions.
     Subclasses must implement the acquisition_function method with their specific parameters.
@@ -42,6 +42,8 @@ class BoTorchSuggestor(ABC):
         self.n_objectives = n_objectives
         self.rng = rng
         self.kwargs = kwargs
+
+        self.tasks = 1 if self.kwargs.get('model').get('tasks') is None else self.kwargs.get('model').get('tasks')
 
     @abstractmethod
     def acquisition_function(self, model: GP, **kwargs) -> Any:
@@ -61,10 +63,9 @@ class BoTorchSuggestor(ABC):
         Xi = self.space.transform(Xi)
         Yi = - np.array(Yi)
 
-        # Fit the models --> re-write this design such that it accommodates for the model
-        mll, model = self.initialize_model(Xi, Yi)
-        # TODO: extend the optimisation loop
-        fit_gpytorch_mll(mll)
+        # Fit the models
+        mll, model = self.initialise_model(Xi, Yi)
+        fit_gpytorch_mll_wth_stopper(mll)
 
         # Create acquisition function with all necessary parameters
         acq_func = self.acquisition_function(
@@ -77,28 +78,65 @@ class BoTorchSuggestor(ABC):
         candidates = self.optimize_acqf_and_get_observation(acq_func).numpy()
         candidates = self.space.inverse_transform(candidates)
         return candidates
+    def initialise_model(
+            self,
+            Xi: Iterable[Iterable],
+            Yi: Iterable)
 
-    def initialize_model(self, Xi: Iterable[Iterable], Yi: Iterable, likelihood: Likelihood) -> GP:
-        # Convert Xi to torch tensor and float64
-        Xi = torch.tensor(Xi, dtype=torch.float64)
-        Yi = torch.tensor(Yi, dtype=torch.float64).reshape(-1, 1)
-        # extend to consider different types
-        if likelihood is None:
-            likelihood = GaussianLikelihood()
+        train_x = torch.tensor(Xi, dtype=torch.float64)
+        train_y = torch.tensor(Yi, dtype=torch.float64).reshape(-1, 1)
 
-        model = MultiTaskGP(
-            train_X=torch.Tensor(Xi),
-            train_Y=torch.Tensor(Yi),
-            likelihood=likelihood,
-            mean_module=ZeroMean(),
-            covar_module=RBFKernel()
-        )
+        # define likelihood
+        likelihood = self.kwargs.get('model').get('likelihood')
+        # define kernel parameters
+        mean_module = self.kwargs.get('model').get('mean_module')
+        covar_module = self.kwargs.get('model').get('covar_module')
+        task_module = self.kwargs.get('model').get('task_module')
+
+        if self.tasks == 1:
+            model = SingleTaskGP(
+                train_X=train_x,
+                train_Y=train_y,
+                likelihood=likelihood,
+                mean_module=mean_module,
+                covar_module=covar_module
+            )
+        else:
+            if self.kwargs.get('model').get('type') == 'multioutput':
+                if isinstance(likelihood, MultitaskGaussianLikelihood):
+                    raise ValueError('Only MultitaskGaussianLikelihood is supported with this type of model.' +
+                                     'Use 'likelihood: None' in suggestor factory')
+                model = KroneckerMultiTaskGP(
+                    train_X=train_x,
+                    train_Y=train_y,
+                    data_covar_module = covar_module,
+                    )
+
+            elif self.kwargs.get('model').get('type') == 'multitask':
+                train_indices = torch.arange(0, self.tasks).expand(train_y.shape)
+                train_indices = train_indices.T.flatten()
+                train_x = torch.cat([train_x, train_indices], -1)
+                train_y = train_y.T.flatten()
+
+                if self.kwargs.get('model').get('likelihood') == 'hadamard':
+                    likelihood = HadamardGaussianLikelihood()
+                model = MultiTaskGP(
+                    train_X = train_x,
+                    train_Y = train_y,
+                    task_feature = self.kwargs.get('model').get('task_feature'),
+                    likelihood = likelihood,
+                    mean_module = mean_module,
+                    covar_module = covar_module,
+                    )
+            else:
+                raise ValueError('Unsupported model type.')
+
+
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
         return mll, model
 
     def optimize_acqf_and_get_observation(self, acq_func):
         """Optimizes the acquisition function, and returns a new candidate and a noisy observation.
-
         Note: assumes that the input space has been normalized to [0, 1]^d.
         """
 
@@ -113,43 +151,6 @@ class BoTorchSuggestor(ABC):
             options={"batch_limit": 5, "maxiter": 200},
         )
         return candidates.detach()
-
-
-class BoTorch_qLogNoisyEI(BoTorchSuggestor):
-    """
-    Implementation of qLogNoisyExpectedImprovement acquisition function.
-    """
-
-    def acquisition_function(
-            self,
-            model: MultiTaskGP,
-            X_baseline: torch.Tensor,
-            sampler: SobolQMCNormalSampler,
-            **kwargs
-    ) -> qLogNoisyExpectedImprovement:
-        eta = self.kwargs.get('acq_func_kwargs').get("xi")
-        if eta is None:
-            eta = 0.01
-
-        return qLogNoisyExpectedImprovement(
-            model=model,
-            X_baseline=X_baseline,
-            sampler=sampler,
-            eta=eta
-        )
-
-
-class BoTorch_LogEI(BoTorchSuggestor):
-    """
-    Implementation of LogExpectedImprovement acquisition function.
-    """
-
-    def acquisition_function(self, model: SingleTaskGP, **kwargs) -> LogExpectedImprovement:
-        best_f = torch.max(model.train_targets)
-        return LogExpectedImprovement(
-            model=model,
-            best_f=best_f,
-        )
 
 class MTMeanGPModel(gpytorch.models.ExactGP):
     " multi-output regressor --> corresponds to the KroneckerMultiTasksGP in Botorch
