@@ -56,6 +56,10 @@ browniebee = [
 release = [
     "build==1.2.2.post1"
 ]
+dev = [
+    "flake8==7.1.2",
+    "pytest"
+]
 
 [tool.setuptools.packages.find]
 include = [
