@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=40.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ProcessOptimizer"
+version = "1.1.1"
+description = "Sequential model-based optimization toolbox (forked from scikit-optimize)"
+license = { text = "BSD" }
+authors = [
+    { name = "Novo Nordisk, Research & Early Development" }
+]
+readme = "README.md"
+requires-python = ">=3.6"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: BSD License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Software Development :: Libraries :: Python Modules"
+]
+dependencies = [
+    "numpy",
+    "matplotlib",
+    "scipy",
+    "bokeh",
+    "scikit-learn>=0.24.2",
+    "six",
+    "deap",
+    "pyYAML",
+    "patsy",
+]
+[project.urls]
+homepage = "https://github.com/novonordisk-research/ProcessOptimizer"
+
+[project.optional-dependencies]
+browniebee = [
+    "bokeh==3.4.1",
+    "deap==1.4.1",
+    "matplotlib==3.8.4",
+    "numpy==1.26.4",
+    "pyYAML==6.0.1",
+    "scikit-learn==1.4.2",
+    "scipy==1.13.0",
+    "six==1.16.0",
+    "patsy==1.0.1",
+]
+release = [
+    "build==1.2.2.post1"
+]
+dev = [
+    "flake8==7.1.2",
+    "pytest"
+]
+
+[tool.setuptools.packages.find]
+include = [
+    "ProcessOptimizer",
+    "ProcessOptimizer.learning",
+    "ProcessOptimizer.model_systems",
+    "ProcessOptimizer.model_systems.data",
+    "ProcessOptimizer.optimizer",
+    "ProcessOptimizer.samplers.doe",
+    "ProcessOptimizer.space",
+    "ProcessOptimizer.utils",
+    "ProcessOptimizer.learning.gaussian_process",
+    "ProcessOptimizer.XpyriMentor",
+    "ProcessOptimizer.XpyriMentor.suggestors",
+]
+
+[tool.setuptools]
+include-package-data = true

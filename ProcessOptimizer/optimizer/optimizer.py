@@ -19,7 +19,7 @@ from sklearn.utils import check_random_state
 from ..acquisition import _gaussian_acquisition
 from ..acquisition import gaussian_acquisition_1D
 from ..learning import cook_estimator, GaussianProcessRegressor, has_gradients
-from ..space import Categorical
+from ..space import Categorical, Integer
 from ..space import Space, normalize_dimensions
 from ..space.constraints import Constraints, SumEquals
 from ..utils import check_x_in_space
@@ -186,6 +186,18 @@ class Optimizer(object):
         # Set the number of objectives
         self.n_objectives = n_objectives
 
+        # Warning to close issue # 326
+        if n_objectives > 1:
+            n_dim_int = len(
+                [dim for dim in dimensions if isinstance(dim, Integer)]
+            )
+            if n_dim_int > 4:
+                warnings.warn(
+                    f"The number of integer dimensions is {n_dim_int}. This"
+                    " may impact performance. Performance could be improved by"
+                    " changing to Float dimensions where possible"
+                )
+
         # Configure acquisition function
 
         # Store and creat acquisition function set
@@ -299,8 +311,9 @@ class Optimizer(object):
             and self.space.is_categorical
         ):
             raise ValueError(
-                "GaussianProcessRegressor on a purely categorical space"
-                " is not supported. Please use another base estimator"
+                "GaussianProcessRegressor on a purely categorical space is not "
+                "supported. Please use another base estimator, e.g. a random forest "
+                "regressor by initialising Optimizer with the `base_estimator='RF'`."
             )
         # Latin hypercube sampling
 

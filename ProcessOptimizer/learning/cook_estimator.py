@@ -86,6 +86,7 @@ def cook_estimator(
 
         # only special if *all* dimensions are categorical
         if is_cat:
+            # This is deprecated
             other_kernel = HammingKernel(length_scale=length_scale_transformed)
         else:
             other_kernel = Matern(

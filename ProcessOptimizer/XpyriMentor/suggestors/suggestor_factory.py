@@ -6,15 +6,13 @@ from ProcessOptimizer.space import Space
 
 from .default_suggestor import DefaultSuggestor
 from .lhs_suggestor import LHSSuggestor
-from .minmaxlhs_suggestor import MinMaxLHSSuggestor
-from .po_suggestor import POSuggestor
+from .po_suggestor import OptimizerSuggestor
 from .random_strategizer import RandomStragegizer
 from .sequential_strategizer import SequentialStrategizer
 from .suggestor import Suggestor
-from .botorch_suggestor import BoTorch_qLogNoisyEI, BoTorch_LogEI
-from .mulittaks_suggestor import BoTorchMTSuggestor
 
 logger = logging.getLogger(__name__)
+
 
 def suggestor_factory(
     space: Space,
@@ -56,9 +54,9 @@ def suggestor_factory(
     if suggestor_type == "Default" or suggestor_type is None:
         logger.debug("Creating DefaultSuggestor")
         return DefaultSuggestor(space, n_objectives, rng)
-    elif suggestor_type == "PO":
-        logger.debug("Creating POSuggestor")
-        return POSuggestor(
+    elif suggestor_type in ["PO", "Optimizer"]:
+        logger.debug("Creating OptimizerSuggestor")
+        return OptimizerSuggestor(
             space=space,
             n_objectives=n_objectives,
             rng=rng,
@@ -94,15 +92,6 @@ def suggestor_factory(
             rng=rng,
             **definition,
         )
-    elif suggestor_type == "MinMaxLHS":
-        if "n_points" not in definition and n_points is not None:
-            definition["n_points"] = n_points
-        logger.debug("Creating a LHSSuggestor.")
-        return MinMaxLHSSuggestor(
-            space=space,
-            rng=rng,
-            **definition,
-        )
     elif suggestor_type == "Sequential":
         logger.debug("Creating SequentialStrategizer")
         suggestors = []
@@ -122,14 +111,5 @@ def suggestor_factory(
                 suggestor_factory(space, suggestor, n_objectives, rng, n_points = n)
             ))
         return SequentialStrategizer(suggestors)
-    elif suggestor_type == "BoTorch_qLogNoisyEI":
-        logger.debug ("Creating BoTorch_qLogNoisyEI")
-        return BoTorch_qLogNoisyEI(space, 1, rng, **definition)
-    elif suggestor_type == "BoTorch_LogEI":
-        logger.debug ("Creating BoTorch_LogEI")
-        return BoTorch_LogEI(space, 1, rng, **definition)
-    elif suggestor_type == "BoTorchMT":
-        logger.debug("Creating BoTorchMT")
-        return BoTorch_MTSuggestor(space, 1, rng, **definition)
     else:
         raise ValueError(f"Unknown suggestor name: {suggestor_type}")

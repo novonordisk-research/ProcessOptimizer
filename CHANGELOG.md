@@ -1,6 +1,6 @@
 # Release history
 
-## Version 1.0.3 [unpublished]
+## Version 1.1.2 [unpublished]
 
 ### Changes
 
@@ -8,7 +8,38 @@
 
 ### Bugfixes
 
--  
+- 
+
+## Version 1.1.1 [published]
+
+### Changes
+
+- Move to pyproject.toml (delete setup.py+requirements.txt)
+- Add classifiers to pyproject.toml
+- Rotate colorbar-ticks to 45 degrees
+- Deprecation warning for 3d Pareto plot
+- log axis on y (or z scale) not implemented error
+- Update Readme.md
+
+### Bugfixes
+
+- 
+
+
+## Version 1.1.0
+
+### Changes
+
+- D-optimal designs in get_optimal_DOE.
+- Director and support for using disparate backends with XpyriMentor.
+- Warning for re-visiting a point changed to be less severe - It is just a piece of information.
+- 
+
+### Bugfixes
+
+- LHS doesn't only produce diagonal points any more.
+- expected_minimum runs even with constraints, but still doesn't respect constraints.
+
 
 ## Version 1.0.2
 

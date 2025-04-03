@@ -1,6 +1,6 @@
 import pytest
-from XpyriMentor.xpyrimentor import XpyriMentor
-from XpyriMentor.suggestors import POSuggestor, LHSSuggestor, SequentialStrategizer
+from ProcessOptimizer import XpyriMentor
+from ProcessOptimizer.XpyriMentor.suggestors import OptimizerSuggestor, LHSSuggestor, SequentialStrategizer
 
 
 class MockSuggestor:
@@ -21,7 +21,7 @@ def test_initialization():
     assert isinstance(exp.suggestor, SequentialStrategizer)
     assert isinstance(exp.suggestor.suggestors[0][1], LHSSuggestor)
     assert exp.suggestor.suggestors[0][0] == 5
-    assert isinstance(exp.suggestor.suggestors[1][1], POSuggestor)
+    assert isinstance(exp.suggestor.suggestors[1][1], OptimizerSuggestor)
     assert exp.suggestor.suggestors[1][0] == float("inf")
 
 
@@ -88,4 +88,4 @@ def test_ask_multiple():
 
 def test_warning_if_raw_POSuggestor():
     with pytest.warns(UserWarning):
-        XpyriMentor([[0, 1], [0, 1]], suggestor={"suggestor_name": "PO"})
+        XpyriMentor([[0, 1], [0, 1]], suggestor={"suggestor_name": "Optimizer"})

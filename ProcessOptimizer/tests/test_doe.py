@@ -195,6 +195,7 @@ def test_sanitize_names_for_patsy():
         result = sanitize_names_for_patsy(factor_names)
 
     assert result == expected
+    assert factor_names != result
 
 
 @pytest.mark.fast_test
@@ -311,6 +312,45 @@ def test_get_optimal_DOE_without_categorical(sample_space):
     np.testing.assert_array_almost_equal(result_compare, exptected_result)
 
 
+def test_get_optimal_DOE_and_sanitize_names():
+    """Test the get_optimal_DOE function without categorical dimensions.
+    Use some bad names to ensure this works together.
+    """
+
+    sample_space_bad_names = Space([Real(0, 10, name="x$1"),
+                                    Real(-5, 5, name="x+2*]")])
+    with pytest.warns(UserWarning):
+        result, factor_names = get_optimal_DOE(
+            sample_space_bad_names, budget=12, design_type="optimization",
+            res=11, seed=42
+        )
+
+    result_compare = np.asarray(result, dtype=float)
+
+    exptected_result = np.array(
+        [
+            [0.0, -5.0],
+            [3.0, -5.0],
+            [10.0, 5.0],
+            [0.0, 5.0],
+            [2.0, -2.0],
+            [10.0, -5.0],
+            [7.0, 5.0],
+            [10.0, 2.0],
+            [0.0, 2.0],
+            [7.0, -5.0],
+            [3.0, 3.0],
+            [8.0, -2.0],
+        ]
+    )
+
+    assert result.shape == (12, 2)
+    assert np.all(result[:, 0] >= 0) and np.all(result[:, 0] <= 10)
+    assert np.all(result[:, 1] >= -5) and np.all(result[:, 1] <= 5)
+    assert factor_names == ["x1", "x_2_"]
+    np.testing.assert_array_almost_equal(result_compare, exptected_result)
+
+
 def test_get_optimal_DOE_with_categorical(optimal_design_space):
     """Test the get_optimal_DOE function with a categorical dimension."""
     result, factor_names = get_optimal_DOE(
@@ -368,32 +408,24 @@ def test_get_optimal_DOE(optimal_design_space, design_type):
     assert factor_names == ["x1", "x2", "x3"]
 
 
-def test_custom_model(optimal_design_space):
+def test_custom_model(sample_space):
     """Test the get_optimal_DOE function with a custom model."""
 
-    custom_model = "x1 + x2 + x3 + x1:x2 + pow(x1, 2)"
+    custom_model = "x1 + x2 + x1:x2 + pow(x1, 2)"
 
     design, factor_names = get_optimal_DOE(
-        optimal_design_space, 6, res=5, model=custom_model, seed=42
+        sample_space, 5, res=5, model=custom_model, seed=42
     )
-    design_int = np.asarray(np.asarray(design[:, :2]), dtype=int)
-    design_str = np.asarray(design[:, 2], dtype=str)
 
-    expected_int = np.array([[60, 1],
-                             [100, 1],
-                             [100, 0],
-                             [20, 1],
-                             [20, 0],
-                             [60, 0]])
-    expected_str = np.array(["A", "B", "A", "B", "A", "B"])
+    design = np.asarray(np.asarray(design[:, :2]), dtype=int)
 
-    assert design.shape == (6, 3)
-    assert np.all(design[:, 0] >= 20) and np.all(design[:, 0] <= 100)
-    assert np.all(design[:, 1] >= 0) and np.all(design[:, 1] <= 1)
-    assert [entry in ["A", "B"] for entry in design[:, 2]]
-    assert factor_names == ["x1", "x2", "x3"]
-    np.testing.assert_array_almost_equal(design_int, expected_int)
-    np.testing.assert_array_equal(design_str, expected_str)
+    expected = np.array([[10, 5], [10, -5], [0, 5], [5, -5], [0, -5]])
+
+    assert design.shape == (5, 2)
+    assert np.all(design[:, 0] >= 0) and np.all(design[:, 0] <= 10)
+    assert np.all(design[:, 1] >= -5) and np.all(design[:, 1] <= 5)
+    assert factor_names == ["x1", "x2"]
+    np.testing.assert_array_almost_equal(design, expected)
 
 
 def test_get_optimal_DOE_default_budget(sample_space):
