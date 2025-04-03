@@ -43,7 +43,9 @@ class BoTorchMTSuggestor(ABC):
         self.rng = rng
         self.kwargs = kwargs
 
+        # SingleTask learner is set when no 'tasks' parameter is provided
         self.tasks = 1 if self.kwargs.get('model').get('tasks') is None else self.kwargs.get('model').get('tasks')
+
 
     @abstractmethod
     def acquisition_function(self, model: GP, **kwargs) -> Any:
@@ -93,6 +95,7 @@ class BoTorchMTSuggestor(ABC):
         covar_module = self.kwargs.get('model').get('covar_module')
         task_module = self.kwargs.get('model').get('task_module')
 
+        # edge case for single task
         if self.tasks == 1:
             model = SingleTaskGP(
                 train_X=train_x,
@@ -101,6 +104,7 @@ class BoTorchMTSuggestor(ABC):
                 mean_module=mean_module,
                 covar_module=covar_module
             )
+
         else:
             if self.kwargs.get('model').get('type') == 'multioutput':
                 if isinstance(likelihood, MultitaskGaussianLikelihood):

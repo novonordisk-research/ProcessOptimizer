@@ -51,7 +51,7 @@ class ModelSystem:
             ndims = self.space.n_dims
             points = self.space.lhs(
                 ndims * 10
-            )  # TODO: This should be many more and shouldnt use LHS
+            )  # TODO: This should be many more and should not use LHS
             scores = [score(point) for point in points]
             true_min = np.min(scores)
         self.true_min = true_min
@@ -59,7 +59,7 @@ class ModelSystem:
             ndims = self.space.n_dims
             points = self.space.lhs(
                 ndims * 10
-            )  # TODO: This should be many more and shouldnt use LHS
+            )  # TODO: This should be many more and should not use LHS
             scores = [score(point) for point in points]
             true_max = np.max(scores)
         self.true_max = true_max

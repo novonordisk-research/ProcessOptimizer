@@ -129,6 +129,7 @@ def suggestor_factory(
         logger.debug ("Creating BoTorch_LogEI")
         return BoTorch_LogEI(space, 1, rng, **definition)
     elif suggestor_type == "BoTorchMT":
+        logger.debug("Creating BoTorchMT")
         return BoTorch_MTSuggestor(space, 1, rng, **definition)
     else:
         raise ValueError(f"Unknown suggestor name: {suggestor_type}")
