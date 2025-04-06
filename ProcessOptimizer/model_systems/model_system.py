@@ -20,7 +20,7 @@ class ModelSystem:
     * `space` [List or Space]:
         A list of dimension defintions or the parameter space as a Space object.
 
-    * `true_min` [float]:
+    * `true_min` [List or float]:
         The true minimum value of the score function within the parameter space.
 
     * `noise_model` [str, dict, or NoiseModel]:
@@ -34,6 +34,9 @@ class ModelSystem:
             "constant": The noise level is constant.
             "proportional": Tne noise level is proportional to the score.
             "zero": No noise is applied.
+
+    * 'multitask' [bool]:
+        Indicator whether the model supports multiple outputs. If true, the 'true_min' is List of minimum values per task.
     """
 
     def __init__(
@@ -43,6 +46,7 @@ class ModelSystem:
         noise_model: Union[str, dict, NoiseModel, None],
         true_min=None,
         true_max=None,
+        multitask: bool = False,
     ):
         self.score = score
         self.space = space_factory(space)
@@ -89,7 +93,7 @@ class ModelSystem:
         # Get the location of the expected minimum
         model_x, _ = expected_minimum(result)
         # Calculate the difference between the score at model_x and the true minimum value
-        loss = self.score(model_x) - self.true_min
+        loss = self.score(model_x) - self.true_min # add some check to cover multitask case
         return loss
 
     def get_score(self, X) -> float:
