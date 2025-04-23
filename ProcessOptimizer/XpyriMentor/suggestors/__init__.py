@@ -4,6 +4,7 @@ from .po_suggestor import OptimizerSuggestor
 from .random_strategizer import RandomStragegizer
 from .sequential_strategizer import SequentialStrategizer
 from .suggestor import IncompatibleNumberAsked, Suggestor
+from .multitask_suggestor import MTSuggestor
 from .suggestor_factory import suggestor_factory
 
 __all__ = [
@@ -13,6 +14,7 @@ __all__ = [
     "OptimizerSuggestor",
     "RandomStragegizer",
     "SequentialStrategizer",
+    "MTSuggestor",
     "Suggestor",
     "suggestor_factory",
 ]

@@ -1,4 +1,4 @@
-from . import Space, Categorical, Integer, Real, Dimension
+from . import Space, Categorical, Task, Integer, Real, Dimension
 
 
 def normalize_dimensions(dimensions):
@@ -18,6 +18,7 @@ def normalize_dimensions(dimensions):
         - a `(lower_bound, upper_bound, "prior")` tuple (for `Real`
           dimensions),
         - as a list of categories (for `Categorical` dimensions), or
+        - as a list of tasks (for `Task` dimensions), or
         - an instance of a `Dimension` object (`Real`, `Integer` or
           `Categorical`).
 
@@ -38,12 +39,26 @@ def normalize_dimensions(dimensions):
                     transform="identity",
                 )
             )
+    # elif space.is_task:
+    #     # recreate the space and explicitly set transform to "identity"
+    #     # this is a special case for GP based regressors
+    #     for dimension in space:
+    #         transformed_dimensions.append(
+    #             Task(
+    #                 dimension.tasks,
+    #                 dimension.prior,
+    #                 name=dimension.name,
+    #                 transform="identity",
+    #             )
+    #         )
 
     else:
         for dimension in space.dimensions:
             if isinstance(dimension, Categorical):
                 transformed_dimensions.append(dimension)
             # To make sure that GP operates in the [0, 1] space
+            elif isinstance(dimension, Task):
+                transformed_dimensions.append(dimension)
             elif isinstance(dimension, Real):
                 transformed_dimensions.append(
                     Real(

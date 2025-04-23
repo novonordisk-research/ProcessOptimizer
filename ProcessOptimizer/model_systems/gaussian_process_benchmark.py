@@ -124,7 +124,7 @@ class GPExperiment:
         closest_candidate = self.experiment['domain'][closest_candidate_idx]
 
         is_smaller = closest_candidate < x
-        is_lower_boundary = closest_candidate == lower_bound
+        is_lower_boundary = closest_candidate == self.lower_bound
 
         if is_lower_boundary or is_smaller:
             return (closest_candidate_idx, closest_candidate_idx + 1)

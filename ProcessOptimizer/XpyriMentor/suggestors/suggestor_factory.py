@@ -9,6 +9,7 @@ from .lhs_suggestor import LHSSuggestor
 from .po_suggestor import OptimizerSuggestor
 from .random_strategizer import RandomStragegizer
 from .sequential_strategizer import SequentialStrategizer
+from .multitask_suggestor import MTSuggestor
 from .suggestor import Suggestor
 
 logger = logging.getLogger(__name__)
