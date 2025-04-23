@@ -20,7 +20,8 @@ def suggestor_factory(
     definition: Union[Suggestor, dict[str, Any], None],
     n_objectives: int = 1,
     rng: Optional[np.random.Generator] = None,
-    n_points: Optional[int] = None
+    n_points: Optional[int] = None,
+    active_task: Optional[bool] = None,
 ) -> Suggestor:
     """
     Create a suggestor from a definition dictionary.

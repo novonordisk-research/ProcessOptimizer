@@ -33,9 +33,6 @@ NUM_RESTARTS = 10
 RAW_SAMPLES = 512
 
 class MTSuggestor():
-    """
-    """
-
     def __init__(self, space: Space, n_objectives: int, rng: np.random.Generator, **kwargs):
         self.space = space
         self.n_objectives = n_objectives

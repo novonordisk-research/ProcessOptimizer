@@ -34,7 +34,8 @@ class XpyriMentor:
         space: Union[Space, list],
         suggestor: Union[Suggestor, dict, None] = None,
         n_objectives: int = 1,
-        seed: Union[int, np.random.RandomState, np.random.Generator, None] = 42
+        seed: Union[int, np.random.RandomState, np.random.Generator, None] = 42,
+        active_task: bool = False
     ):
         """
         Initialize the XpyriMentor with the search space and the suggestor. The suggestor
@@ -44,11 +45,11 @@ class XpyriMentor:
         """
         space = space_factory(space)
         rng = get_random_generator(seed)
-        suggestor = suggestor_factory(space, suggestor, n_objectives, rng)
+        suggestor = suggestor_factory(space, suggestor, n_objectives, rng, active_task)
         if isinstance(suggestor, DefaultSuggestor):
             logger.debug("Replacing DefaultSuggestor with InitialPointSuggestor")
             suggestor = suggestor_factory(
-                space, copy.deepcopy(DEFAULT_SUGGESTOR), n_objectives, rng=rng
+                space, copy.deepcopy(DEFAULT_SUGGESTOR), n_objectives, rng=rng, active_task=active_task
             )
         if isinstance(suggestor, OptimizerSuggestor):
             warnings.warn(
@@ -58,6 +59,7 @@ class XpyriMentor:
                 "be set to 0."
             )
         self.suggestor = suggestor
+        self.active_task_flag = active_task
         self.Xi: list[np.ndarray] = []
         # This is a list of points in the search space. Each point is a list of values for
         # each dimension of the search space.
@@ -66,12 +68,12 @@ class XpyriMentor:
         # objective optimization or a list of floats for multiobjective optimization.
         pass
 
-    def ask(self, n: int = 1) -> np.ndarray:
+    def ask(self, n: int = 1, active_task: bool=False) -> np.ndarray:
         """
         Ask the suggestor for new points to evaluate. The number of points to ask is
         specified by the argument n. The method returns a list of new points to evaluate.
         """
-        return self.suggestor.suggest(Xi=self.Xi, Yi=self.yi, n_asked=n)
+        return self.suggestor.suggest(Xi=self.Xi, Yi=self.yi, n_asked=n, active_task=active_task)
 
     def tell(self, x: Iterable, y: Any) -> None:
         if is_2Dlistlike(x):

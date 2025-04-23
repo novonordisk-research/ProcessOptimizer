@@ -22,7 +22,7 @@ class Suggestor(Protocol):
         """
         pass
 
-    def suggest(self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int) -> np.ndarray:
+    def suggest(self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int, active_task: bool=False) -> np.ndarray:
         """
         Suggest a new point to evaluate.
 
