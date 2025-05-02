@@ -33,12 +33,11 @@ def create_gold_map() -> ModelSystem:
         true_min=-3.09,
     )
 
-
 def create_distance_map(
         camp_coordinates: Sequence[Number] = (4, 10)
 ) -> ModelSystem:
     """
-    Create the mode system that returns the distance from the camp in gold map.
+    Create the model system that returns the distance from the camp in gold map.
 
     Parameters
     ----------
@@ -55,4 +54,29 @@ def create_distance_map(
         space=[(0.0, 15.0), (0.0, 15.0)],
         noise_model=None,
         true_min=0,
+    )
+
+def create_candidate_gold_map(
+        rotate: float = 1.0,
+        shift: float = 0.0
+) -> ModelSystem:
+    """
+    Create the model system that returns linearly transformed gold map.
+
+    Parameters
+    ----------
+    * `rotate` Number[float]:
+    * `shift` Number[float]:
+
+    """
+    def candidate_score(coordinates: Sequence[float]):
+        score_ = rotate * score(coordinates) + shift
+        return score_
+    candidate_min =  -3.09 * rotate + shift
+
+    return ModelSystem(
+        candidate_score,
+        space=[(0.0, 15.0), (0.0, 15.0), ['explored', 'candidate', {'candidate'}]],
+        noise_model=None,
+        true_min= candidate_min,
     )

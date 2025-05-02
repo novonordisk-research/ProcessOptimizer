@@ -1,7 +1,7 @@
 from .branin_hoo import create_branin
 from .color_pH import create_color_ph
 from .gaussian_process_benchmark import create_gp_experiment
-from .gold_map import create_gold_map, create_distance_map
+from .gold_map import create_gold_map, create_distance_map, create_candidate_gold_map
 from .gold_map_with_wells import create_gold_map_with_wells
 from .hart3 import create_hart3
 from .hart6 import create_hart6
@@ -35,6 +35,7 @@ def get_model_system(model_system: str, **kwargs) -> ModelSystem:
         "gold_map": (create_gold_map,),
         "distance_map": (create_distance_map,),
         "gold_map_with_wells": (create_gold_map_with_wells,),
+        "candidate_gold_map": (create_candidate_gold_map,),
         "hart3": (create_hart3,),
         "hart3_no_noise": (create_hart3, False),
         "hart6": (create_hart6,),
