@@ -1091,13 +1091,55 @@ class Space(object):
 
     @property
     def is_task(self):
-        """Space contains exclusively categorical dimensions"""
+        """Space contains exclusively categorical 'Task' dimensions"""
         return all([isinstance(dim, Task) for dim in self.dimensions])
 
     @property
     def is_partly_task(self):
-        """Space contains any categorical dimensions"""
+        """Space contains any categorical 'Task' dimensions"""
         return any([isinstance(dim, Task) for dim in self.dimensions])
+
+    @property
+    def num_task_dims(self):
+        """Number of categorical 'Task' dimensions"""
+        return sum([isinstance(dim, Task) for dim in self.dimensions])
+
+    @property
+    def task_feature(self):
+        """Position of the 'Task' dimension, provided there is exactly one"""
+        if sum([isinstance(dim, Task) for dim in self.dimensions]) == 1:
+            return [isinstance(dim, Task) for dim in self.dimensions].index(True)
+        else: 
+            return None
+
+    @property
+    def num_tasks(self):
+        """Number of tasks, provided there is exactly one 'Task' dimension"""
+        num_task_dims = sum([isinstance(dim, Task) for dim in self.dimensions])
+        if num_task_dims == 1:
+            task_feature = [isinstance(dim, Task) for dim in self.dimensions].index(True)
+            return len(self.dimensions[task_feature].tasks)
+        else: 
+            return None
+
+    @property
+    def all_tasks(self):
+        """Every value of task, provided there is exactly one 'Task' dimension"""
+        num_task_dims = sum([isinstance(dim, Task) for dim in self.dimensions])
+        if num_task_dims == 1:
+            task_feature = [isinstance(dim, Task) for dim in self.dimensions].index(True)
+            return self.dimensions[task_feature].tasks
+        else: 
+            return None
+
+    @property
+    def active_task(self):
+        """"Provided there is one 'Task' dimension, give the test task"""
+        if sum([isinstance(dim, Task) for dim in self.dimensions]) == 1:
+            task_feature = [isinstance(dim, Task) for dim in self.dimensions].index(True)
+            return self.dimensions[task_feature].active_task
+        else: 
+            return None
 
     def distance(self, point_a, point_b):
         """Compute the L1 (Manhattan or taxicab) distance between two points in this space.

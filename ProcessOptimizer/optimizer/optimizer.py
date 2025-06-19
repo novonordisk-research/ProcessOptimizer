@@ -176,7 +176,7 @@ class Optimizer(object):
         lhs=True,
         acq_func="EI",
         acq_optimizer="auto",
-        random_state=None,
+        random_state=42,
         acq_func_kwargs=None,
         acq_optimizer_kwargs=None,
         n_objectives=1,
@@ -187,6 +187,8 @@ class Optimizer(object):
 
         # Set the number of objectives
         self.n_objectives = n_objectives
+
+        self.random_state = random_state
 
         self.active_task_flag = active_task
 
@@ -338,7 +340,7 @@ class Optimizer(object):
 
         self._lhs = lhs
         if lhs:
-            self._lhs_samples = self.space.lhs(n_initial_points, active_task=self.active_task_flag)
+            self._lhs_samples = self.space.lhs(n_initial_points, seed=self.random_state, active_task=self.active_task_flag)
 
         # Default is no constraints
         self._constraints = None
@@ -400,7 +402,7 @@ class Optimizer(object):
             acq_optimizer=self.acq_optimizer,
             acq_func_kwargs=self.acq_func_kwargs,
             acq_optimizer_kwargs=self.acq_optimizer_kwargs,
-            random_state=random_state,
+            random_state=self.random_state,
             n_objectives=self.n_objectives,
             active_task=self.active_task_flag,
         )
@@ -1178,7 +1180,7 @@ class Optimizer(object):
             loc_min = []
             fun_val = []
             # We use 20 lhs point as initial guesses for minimization
-            x0 = copy.space.lhs(20, active_task=self.active_task_flag)
+            x0 = copy.space.lhs(20, self.random_state, active_task=self.active_task_flag)
             x0 = copy.space.transform(x0)
 
             # Loop over each initial guess and find a local minimum

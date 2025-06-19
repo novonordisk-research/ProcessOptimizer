@@ -57,22 +57,30 @@ def create_distance_map(
     )
 
 def create_candidate_gold_map(
-        rotate: float = 1.0,
-        shift: float = 0.0
+        rotate: float = 0.0,
+        shift: Sequence[float] = [0.0, 0.0]
 ) -> ModelSystem:
     """
-    Create the model system that returns linearly transformed gold map.
+    Create the model system that returns linearly transformed gold map, with an anticlockwise rotation and a 2D shift vector.
 
     Parameters
     ----------
-    * `rotate` Number[float]:
-    * `shift` Number[float]:
+    * `rotate` Number[float] representing an anticlockwise rotation angle:
+    * `shift` 2D Sequence[float]:
 
     """
+    if not hasattr(shift, '__len__'):
+        raise ValueError("Expected a sequence of length 2 for 'shift', got no length")
+    elif len(shift) != 2:
+        raise ValueError(f"Expected sequence of length 2 for 'shift', got {len(shift)}")
+    
     def candidate_score(coordinates: Sequence[float]):
-        score_ = rotate * score(coordinates) + shift
+        x_transformed = coordinates[0] * np.cos(rotate) - coordinates[1] * np.sin(rotate) + shift[0]
+        y_transformed = coordinates[0] * np.sin(rotate) + coordinates[1] * np.cos(rotate) + shift[1]
+        
+        score_ = score([x_transformed, y_transformed])
         return score_
-    candidate_min =  -3.09 * rotate + shift
+    candidate_min =  -3.09
 
     return ModelSystem(
         candidate_score,
