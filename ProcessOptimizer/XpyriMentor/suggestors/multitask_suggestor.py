@@ -6,40 +6,31 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import torch
 import warnings
-from botorch.exceptions.warnings import OptimizationWarning
 # from botorch.exceptions import OptimizationWarning as MasterOptimizationWarning
 
-import botorch
 from botorch.models import MultiTaskGP
-from botorch.acquisition.analytic import LogExpectedImprovement
 from botorch.acquisition.monte_carlo import qExpectedImprovement
 from botorch import fit_gpytorch_mll
 from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.optim import optimize_acqf
-from botorch.models.transforms.input import Normalize
-from botorch.acquisition import qLogExpectedImprovement, AcquisitionFunction
-from botorch.fit import fit_gpytorch_mll
+from botorch.models.multitask import KroneckerMultiTaskGP
+from botorch.models.gp_regression import SingleTaskGP
+from botorch.acquisition import qLogExpectedImprovement
 
-from gpytorch.likelihoods import Likelihood, _GaussianLikelihoodBase, _MultitaskGaussianLikelihoodBase, GaussianLikelihood, MultitaskGaussianLikelihood
+from gpytorch.likelihoods import _GaussianLikelihoodBase, GaussianLikelihood, MultitaskGaussianLikelihood
 from gpytorch.likelihoods.noise_models import MultitaskHomoskedasticNoise
 from gpytorch.kernels import RBFKernel, IndexKernel, MultitaskKernel, ScaleKernel
-from gpytorch.means import ZeroMean, ConstantMean, MultitaskMean
+from gpytorch.means import ConstantMean, MultitaskMean
 from gpytorch.mlls import ExactMarginalLogLikelihood
 from gpytorch.models import GP, ExactGP
-from gpytorch.module import Module
-from gpytorch.distributions import base_distributions, MultivariateNormal
+from gpytorch.distributions import base_distributions, MultivariateNormal, MultitaskMultivariateNormal
 
 # Adding this temporarily to see whether acquisition for TLBO is defined and optimized properly by default IdentityMCObjective.
 # ~~~~~~ Seems we need GenericMCObjective to only optimize the acquisition function wrt to the test objective ~~~~~~
 from botorch.acquisition.objective import (
-    ConstrainedMCObjective,
-    IdentityMCObjective,
-    MCAcquisitionObjective,
-    PosteriorTransform,
     GenericMCObjective
 )
 
-from .optimization_utils import fit_gpytorch_mll_wth_stopper
 from ProcessOptimizer.space import Space
 
 #botorch.settings.debug(state=True)
@@ -361,7 +352,7 @@ class MTSuggestor():
                 
             if not task is None: 
                 all_tasks_equal = np.all(x[:, task_feature] == task)
-                if not all_equal_task:
+                if not all_tasks_equal:
                     if is_x_tasks_unique:
                         warnings.warn(f"Task feature value is different in column {task_feature} of x and 'task' argument. Defaulting to value in x.")
                     else:
@@ -572,11 +563,11 @@ class MTMeanGPModel(ExactGP):
 
     def __init__(self, train_x, train_y, likelihood, num_tasks_):
         super().__init__(train_x, train_y, likelihood)
-        self.mean_module = gpytorch.means.MultitaskMean(
-            gpytorch.means.ConstantMean(), num_tasks=num_tasks_
+        self.mean_module = MultitaskMean(
+            ConstantMean(), num_tasks=num_tasks_
         )
-        self.covar_module = gpytorch.kernels.MultitaskKernel(
-            gpytorch.kernels.RBFKernel(), num_tasks=num_tasks_, rank=1
+        self.covar_module = MultitaskKernel(
+            RBFKernel(), num_tasks=num_tasks_, rank=1
         )
 
     def forward(self, x):
