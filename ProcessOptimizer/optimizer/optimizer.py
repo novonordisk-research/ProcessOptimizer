@@ -340,7 +340,7 @@ class Optimizer(object):
 
         self._lhs = lhs
         if lhs:
-            self._lhs_samples = self.space.lhs(n_initial_points, seed=self.random_state, active_task=self.active_task_flag)
+            self._lhs_samples = self.space.lhs(n_initial_points, seed=self.rng, active_task=self.active_task_flag)
 
         # Default is no constraints
         self._constraints = None
@@ -1180,7 +1180,7 @@ class Optimizer(object):
             loc_min = []
             fun_val = []
             # We use 20 lhs point as initial guesses for minimization
-            x0 = copy.space.lhs(20, self.random_state, active_task=self.active_task_flag)
+            x0 = copy.space.lhs(20, self.rng, active_task=self.active_task_flag)
             x0 = copy.space.transform(x0)
 
             # Loop over each initial guess and find a local minimum
