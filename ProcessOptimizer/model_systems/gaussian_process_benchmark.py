@@ -112,7 +112,7 @@ class GPExperiment:
             score = torch.lerp(self.experiment['f_values'][l], self.experiment['f_values'][u], weight)
             return score.tolist()
 
-    def _find_closest_pair_idx(self, x) -> Tuple[int, int]:
+    def _find_closest_pair_idx(self, x) -> tuple[int, int]:
         closest_candidate_idx = torch.argmin(torch.abs(self.experiment['domain'] - x))
         closest_candidate = self.experiment['domain'][closest_candidate_idx]
 
