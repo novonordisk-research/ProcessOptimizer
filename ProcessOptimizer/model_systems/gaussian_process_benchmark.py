@@ -5,13 +5,6 @@ from typing import List, Optional, Union, Dict
 from .model_system import ModelSystem
 from ..space import Real
 
-import torch
-import numpy as np
-
-from typing import List, Optional, Union, Dict, Tuple
-from .model_system import ModelSystem
-from ..space import Real
-
 
 class GPExperiment:
     """Base Class for 1D Gaussian Process experiment."""
