@@ -37,7 +37,7 @@ dependencies = [
     "deap",
     "pyYAML",
     "patsy",
-    "pytorch",
+    "torch",
 ]
 [project.urls]
 homepage = "https://github.com/novonordisk-research/ProcessOptimizer"
