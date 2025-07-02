@@ -28,7 +28,7 @@ from .optimizer import gbrt_minimize
 from .optimizer import gp_minimize
 from .optimizer import Optimizer
 from .searchcv import BayesSearchCV
-from .space import Categorical, Integer, Space, space_factory, Real
+from .space import Categorical, Integer, Space, space_factory, Real, Task
 from .utils import dump
 from .utils import expected_minimum
 from .utils import expected_minimum_random_sampling
@@ -66,6 +66,7 @@ __all__ = (
     "BayesSearchCV",
     "Categorical",
     "Integer",
+    "Task",
     "Space",
     "space_factory",
     "Real",

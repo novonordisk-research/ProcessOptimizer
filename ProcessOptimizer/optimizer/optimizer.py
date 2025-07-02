@@ -15,11 +15,12 @@ from sklearn.base import clone
 from sklearn.base import is_regressor
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.utils import check_random_state
+from sympy import Ordinal
 
 from ..acquisition import _gaussian_acquisition
 from ..acquisition import gaussian_acquisition_1D
 from ..learning import cook_estimator, GaussianProcessRegressor, has_gradients
-from ..space import Categorical, Integer
+from ..space import Categorical, Integer, Task
 from ..space import Space, normalize_dimensions
 from ..space.constraints import Constraints, SumEquals
 from ..utils import check_x_in_space
@@ -175,16 +176,26 @@ class Optimizer(object):
         lhs=True,
         acq_func="EI",
         acq_optimizer="auto",
-        random_state=None,
+        random_state=42,
         acq_func_kwargs=None,
         acq_optimizer_kwargs=None,
         n_objectives=1,
         objective_name_list: List[str] = None,
+        active_task: bool = False,
     ):
         self.rng = check_random_state(random_state)
 
         # Set the number of objectives
         self.n_objectives = n_objectives
+
+        self.random_state = random_state
+
+        self.active_task_flag = active_task
+
+        # if (not dimensions.is_partly_task and active_task==True):
+        #     warnings.warn(
+        #         f"Active task flag set for the space without any Task dimension."
+        #     )
 
         # Warning to close issue # 326
         if n_objectives > 1:
@@ -315,20 +326,33 @@ class Optimizer(object):
                 "supported. Please use another base estimator, e.g. a random forest "
                 "regressor by initialising Optimizer with the `base_estimator='RF'`."
             )
+
+        if (
+            isinstance(self.base_estimator_, GaussianProcessRegressor)
+            and self.space.is_task
+        ):
+            raise ValueError(
+                "GaussianProcessRegressor on a pure task space is not "
+                "supported. Extend the space with another feature dimensions."
+            )
         # Latin hypercube sampling
+
 
         self._lhs = lhs
         if lhs:
-            self._lhs_samples = self.space.lhs(n_initial_points)
+            self._lhs_samples = self.space.lhs(n_initial_points, seed=self.rng, active_task=self.active_task_flag)
 
         # Default is no constraints
         self._constraints = None
-        # record categorical and non-categorical indices
+        # record categorical,task and non-categorical indices
         self._cat_inds = []
+        self._task_inds = []
         self._non_cat_inds = []
         for ind, dim in enumerate(self.space.dimensions):
             if isinstance(dim, Categorical):
                 self._cat_inds.append(ind)
+            elif isinstance(dim, Task):
+                self._task_inds.append(ind)
             else:
                 self._non_cat_inds.append(ind)
 
@@ -378,8 +402,9 @@ class Optimizer(object):
             acq_optimizer=self.acq_optimizer,
             acq_func_kwargs=self.acq_func_kwargs,
             acq_optimizer_kwargs=self.acq_optimizer_kwargs,
-            random_state=random_state,
+            random_state=self.random_state,
             n_objectives=self.n_objectives,
+            active_task=self.active_task_flag,
         )
 
         # It is important to copy the constraints so that a call to '_tell()' will create a valid _next_x
@@ -395,7 +420,7 @@ class Optimizer(object):
 
         return optimizer
 
-    def ask(self, n_points=None, strategy="stbr_fill"):
+    def ask(self, n_points=None, strategy="stbr_fill", **kwargs):
         """Query point or multiple points at which objective should be evaluated.
 
         * `n_points` [int or None, default=None]:
@@ -577,7 +602,7 @@ class Optimizer(object):
 
             if self._n_initial_points == 0 and self.base_estimator_ is None:
                 # This occurs during runs with dummy minimizer in which base_estimator is None by design
-                return self.space.rvs(random_state=self.rng)[0]
+                return self.space.rvs(random_state=self.rng, active_task=self.active_task_flag)[0]
 
             if self._constraints:
                 # Use one sampling strategy for SumEquals constraints
@@ -599,7 +624,7 @@ class Optimizer(object):
                     len(self._lhs_samples) - self._n_initial_points
                 ]
             else:
-                return self.space.rvs(random_state=self.rng)[0]
+                return self.space.rvs(random_state=self.rng, active_task=self.active_task_flag)[0]
         else:
             if not self.models:
                 raise RuntimeError(
@@ -783,7 +808,7 @@ class Optimizer(object):
                         )
                 else:
                     X = self.space.transform(
-                        self.space.rvs(n_samples=self.n_points, random_state=self.rng)
+                        self.space.rvs(n_samples=self.n_points, random_state=self.rng, active_task=self.active_task_flag)
                     )
 
                 self.next_xs_ = []
@@ -987,10 +1012,11 @@ class Optimizer(object):
         # Check single tell with multiobjective
         elif is_listlike(y):
             # Check if the observation has the correct number of objectives
-            if not len(y) == self.n_objectives:
+            if (not self.active_task_flag and not len(y) == self.n_objectives):
                 raise ValueError(
                     "y does not have the correct number of objective scores"
                 )
+
             # Check if all objective scores are numbers
             for y_value in y:
                 if not isinstance(y_value, Number):
@@ -1130,13 +1156,14 @@ class Optimizer(object):
             bounds.append((0.0, 1.0))
         bounds = tuple(tuple(sub) for sub in bounds)
 
-        # Copy of the optimizer to not append new points to original  self.Xi
-        # Set base estimator to GP so transform always nomalizes
+        # Copy of the optimizer to not append new points to original self.Xi
+        # Set base estimator to GP so transform always normalizes
         copy = Optimizer(
             self.space,
             "GP",
             n_objectives=self.n_objectives,
             n_initial_points=999,
+            active_task=self.active_task_flag
         )
         for i in range(len(self.Xi)):
             if self.n_objectives == 1:
@@ -1153,7 +1180,7 @@ class Optimizer(object):
             loc_min = []
             fun_val = []
             # We use 20 lhs point as initial guesses for minimization
-            x0 = copy.space.lhs(20)
+            x0 = copy.space.lhs(20, self.random_state, active_task=self.active_task_flag)
             x0 = copy.space.transform(x0)
 
             # Loop over each initial guess and find a local minimum

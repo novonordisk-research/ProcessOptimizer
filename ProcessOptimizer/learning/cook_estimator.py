@@ -41,8 +41,8 @@ def cook_estimator(
         Has to be provided if the base_estimator is a gaussian process.
         Ignored otherwise.
     * `length_scale_bounds` [list of tuples]:
-        the length scale bounds for the matern kernel
-    * `length_scale_bounds` [list of floats]:
+        the length scale bounds for the Matern kernel
+    * `length_scale` [list of floats]:
         the length scales for the Matern or Hamming kernel
     * `kwargs` [dict]:
         Extra parameters provided to the base_estimator at init time.

@@ -18,7 +18,7 @@ class MockSuggestor:
         self.suggestions = suggestions
         self.last_input = {}
 
-    def suggest(self, Xi, Yi, n_asked=1):
+    def suggest(self, Xi, Yi, n_asked=1, active_task = False):
         self.last_input = {"Xi": Xi, "Yi": Yi}
         return self.suggestions*n_asked
 

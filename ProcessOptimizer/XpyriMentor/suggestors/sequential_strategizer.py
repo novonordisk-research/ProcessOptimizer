@@ -68,7 +68,7 @@ class SequentialStrategizer():
                     )
         self.suggestors = suggestors
 
-    def suggest(self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = 1):
+    def suggest(self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = 1, active_task: bool=False):
         # We will skip as many points as we have already been told about.
         number_left_to_skip = len(Xi)  # Running tally of points to skip.
         number_left_to_find = n_asked  # Running tally of points to find.
@@ -88,7 +88,7 @@ class SequentialStrategizer():
                 # If we need fewer points than the suggestor can give us, we take the
                 # points we need and stop.
                 number_from_this_suggestor = number_left_to_find
-            suggestions.extend(suggestor.suggest(Xi, Yi, number_from_this_suggestor))
+            suggestions.extend(suggestor.suggest(Xi, Yi, number_from_this_suggestor, active_task))
             number_left_to_find -= number_from_this_suggestor
             if number_left_to_find == 0:
                 # If we have already found all the points we need, we can stop.

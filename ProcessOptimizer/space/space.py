@@ -59,7 +59,8 @@ def check_dimension(dimension, transform=None) -> Dimension:
           dimensions),
         - a `(lower_bound, upper_bound, "prior")` tuple (for `Real`
           dimensions),
-        - as a list of categories (for `Categorical` dimensions), or
+        - a list of categories (for `Categorical` dimensions),
+        - a list of tasks with embedded set to characterise active task: [task1, task2, ..., (active_task1)]
         - an instance of a `Dimension` object (`Real`, `Integer` or
           `Categorical`).
 
@@ -95,15 +96,20 @@ def check_dimension(dimension, transform=None) -> Dimension:
     # for examples.
     if len(dimension) == 1:
         return Categorical(dimension, transform=transform)
+    else:
+        bool_str_check = [isinstance(d, (str, bool)) or isinstance(d, np.bool_) for d in dimension]
+        real_check = [isinstance(dim, numbers.Real) for dim in dimension]
+        int_check = [isinstance(dim, numbers.Integral) for dim in dimension]
+        set_check = [isinstance(d, set) for d in dimension]
 
     if len(dimension) == 2:
-        if any(
-            [isinstance(d, (str, bool)) or isinstance(d, np.bool_) for d in dimension]
-        ):
+        if (any(bool_str_check) and any(set_check)):
+            return Task(dimension[:-1], active_task=list(dimension[-1]).pop(), transform=transform)
+        elif (any(bool_str_check) and not any(set_check)):
             return Categorical(dimension, transform=transform)
-        elif all([isinstance(dim, numbers.Integral) for dim in dimension]):
+        elif all(int_check):
             return Integer(*dimension, transform=transform)
-        elif any([isinstance(dim, numbers.Real) for dim in dimension]):
+        elif any(real_check):
             return Real(*dimension, transform=transform)
         else:
             raise ValueError(
@@ -113,13 +119,19 @@ def check_dimension(dimension, transform=None) -> Dimension:
 
     if len(dimension) == 3:
         if (any([isinstance(dim, (float, int)) for dim in dimension[:2]])
-            and dimension[2] in ["uniform", "log-uniform"]):
+                and dimension[2] in ["uniform", "log-uniform"]):
             return Real(*dimension, transform=transform)
+        elif any(set_check):
+            return Task(dimension[:-1], active_task=list(dimension[-1]).pop(), transform=transform)
         else:
             return Categorical(dimension, transform=transform)
 
     if len(dimension) > 3:
-        return Categorical(dimension, transform=transform)
+        if any(set_check):
+            return Task(dimension[:-1], active_task=list(dimension[-1]).pop(), transform=transform)
+        else:
+            return Categorical(dimension, transform=transform)
+
 
     raise ValueError(
         "Invalid dimension {}. Read the documentation for "
@@ -170,8 +182,7 @@ class Dimension(ABC):
             raise ValueError("Dimension's name must be either string or None.")
 
     def sample(
-        self, points: Union[float, Iterable[float]], allow_duplicates: bool = True
-    ) -> np.ndarray:
+        self, points: Union[float, Iterable[float]], allow_duplicates: bool = True) -> np.ndarray:
         """Draw points from the dimension.
 
 
@@ -584,6 +595,165 @@ class Categorical(Dimension):
         return np.array([self.categories[index] for index in category_index])
 
 
+class Task(Dimension):
+    def __init__(self, tasks, active_task, prior=None, transform=None, name=None):
+        """Search space dimension that can take on categorical values.
+
+        Parameters
+        ----------
+        * `categories` [list, shape=(n_categories,)]:
+            Sequence of possible categories.
+
+        * `transform` ["onehot", "identity", default="onehot"] :
+            - "identity", the transformed space is the same as the original
+              space.
+            - "onehot", the transformed space is a one-hot encoded
+              representation of the original space.
+
+        * `name` [str or None]:
+            Name associated with dimension, e.g., "colors".
+        """
+        if transform == "identity":
+            self.tasks = tuple([str(t) for t in tasks])
+        else:
+            self.tasks = tuple(tasks)
+
+        self.name = name
+
+        if transform is None:
+            transform = "onehot"
+        self.transform_ = transform
+        if transform not in ["identity", "onehot"]:
+            raise ValueError(
+                "Expected transform to be 'identity' or 'onehot' "
+                "got {}".format(transform)
+            )
+        if transform == "onehot":
+            self.transformer = CategoricalEncoder()
+            self.transformer.fit(self.tasks)
+        else:
+            self.transformer = Identity(dtype=type(tasks[0]))
+
+        if prior is None:
+            self.prior_ = np.tile(1.0 / len(self.tasks), len(self.tasks))
+        else:
+            self.prior_ = prior
+
+        # prior_active_task sets active task probability to 1. and other tasks are set to 0.
+        self.active_task = active_task
+        self.prior_active_task_ = np.zeros(len(self.tasks))
+        self.prior_active_task_[self.tasks.index(self.active_task)] = 1.0
+
+    def __eq__(self, other):
+        return (
+            type(self) is type(other)
+            and self.tasks == other.tasks
+            and np.allclose(self.prior_, other.prior_)
+        )
+
+    def __repr__(self):
+        if len(self.tasks) > 7:
+            tasks_ = self.tasks[:3] + (_Ellipsis(),) + self.tasks[-3:]
+        else:
+            tasks_ = self.tasks
+
+        if self.prior is not None and len(self.prior) > 7:
+            prior = self.prior[:3] + [_Ellipsis()] + self.prior[-3:]
+        else:
+            prior = self.prior
+
+        return "Task(tasks={}, active_task={}, prior={})".format(
+            tasks_, self.active_task, prior)
+
+    @property
+    def transformed_size(self):
+        if self.transform_ == "onehot":
+            size = len(self.tasks)
+            # when len(categories) == 2, CategoricalEncoder outputs a
+            # single value
+            return size if size != 2 else 1
+        return 1
+
+    @property
+    def bounds(self):
+        return self.tasks
+
+    def __contains__(self, point):
+        return point in self.tasks
+
+    @property
+    def transformed_bounds(self):
+        if self.transformed_size == 1:
+            return (0.0, 1.0)
+        else:
+            return [(0.0, 1.0) for i in range(self.transformed_size)]
+
+    def distance(self, a, b):
+        """Compute distance between category `a` and `b`.
+
+        As categories have no order the distance between two points is one
+        if a != b and zero otherwise.
+
+        Parameters
+        ----------
+        * `a` [category]
+            First category.
+
+        * `b` [category]
+            Second category.
+        """
+        if not (a in self and b in self):
+            raise RuntimeError(
+                "Can only compute distance for values within "
+                "the space, not {} and {}.".format(a, b)
+            )
+        return 1 if a != b else 0
+
+    def _sample(self, point_list: Iterable[float], active_task: bool = False) -> np.ndarray:
+        # XXX check that sum(prior) == 1
+        if active_task:
+            cummulative_prior = np.cumsum(self.prior_active_task_)
+        else:
+            cummulative_prior = np.cumsum(self.prior_)
+        # For each point in point_list, find the index of the first element in cummulative_prior that is greater than the point
+        # This is the index of the category that the point corresponds to
+        task_index = [np.argmax(cummulative_prior > point) for point in point_list]
+        return np.array([self.tasks[index] for index in task_index])
+
+    def sample(
+        self, points: Union[float, Iterable[float]], allow_duplicates: bool = True, active_task: bool = False) -> np.ndarray:
+        """Draw points from the dimension.
+
+        Parameters
+        ----------
+        * `points` [float or list[float]]:
+            A single point or a list of points to sample. All must be between 0 and 1.
+
+        * `allow_duplicates` [bool, default=True]:
+            If True, the output will have the same size as `points`. If False, each
+            point in the output will be unique. This means that the output can be
+            shorter than `points`.
+        """
+        if isinstance(points, (int, float)):  # If a single point is given, convert it
+            # to a list.
+            points = [points]
+        if any([point < 0 or point > 1 for point in points]):
+            raise ValueError("Sample points must be between 0 and 1.")
+        sampled_points = self._sample(points, active_task)
+        if not allow_duplicates:
+            # np.unique sorts the inputs, which we do not want, so we have to reinvent
+            # the wheel.
+            seen = set()
+            unique_points = []
+            for point in sampled_points:
+                if point not in seen:
+                    unique_points.append(point)
+                    seen.add(point)
+            sampled_points = unique_points
+        return np.array(sampled_points, dtype=object)
+
+
+
 class Space(object):
     """Search space."""
 
@@ -648,6 +818,12 @@ class Space(object):
                   categories:
                   - a
                   - b
+             - Task:
+                  tasks:
+                  - a
+                  - b
+                  active_task:
+                  - a
               - Real:
                   low: 1.0
                   high: 5.0
@@ -668,6 +844,7 @@ class Space(object):
             "real": Real,
             "integer": Integer,
             "categorical": Categorical,
+            "task": Task
         }
 
         # Extract space options for configuration file
@@ -702,8 +879,7 @@ class Space(object):
         n_samples=1,
         random_state: Union[
             int, np.random.RandomState, np.random.Generator, None
-        ] = None,
-    ):
+        ] = None, **kwargs):
         """Draw random samples.
 
         The samples are in the original space. They need to be transformed
@@ -718,6 +894,9 @@ class Space(object):
             Set random state to something other than None for reproducible
             results.
 
+        * 'kwargs' [dict, default=None]:
+            kwargs['active_task']: this controls the sampling from the active slice
+
         Returns
         -------
         * `points`: [list of lists, shape=(n_points, n_dims)]
@@ -728,9 +907,14 @@ class Space(object):
 
         columns = []
 
+        task_flag = kwargs.get('active_task')
+
         for dim in self.dimensions:
             index_array = rng.uniform(size=n_samples)
-            columns.append(dim.sample(index_array))
+            if isinstance(dim, Task):
+                columns.append(dim.sample(index_array, active_task=task_flag))
+            else:
+                columns.append(dim.sample(index_array))
 
         # Transpose
         rows = []
@@ -905,6 +1089,58 @@ class Space(object):
         """Space contains any categorical dimensions"""
         return any([isinstance(dim, Categorical) for dim in self.dimensions])
 
+    @property
+    def is_task(self):
+        """Space contains exclusively categorical 'Task' dimensions"""
+        return all([isinstance(dim, Task) for dim in self.dimensions])
+
+    @property
+    def is_partly_task(self):
+        """Space contains any categorical 'Task' dimensions"""
+        return any([isinstance(dim, Task) for dim in self.dimensions])
+
+    @property
+    def num_task_dims(self):
+        """Number of categorical 'Task' dimensions"""
+        return sum([isinstance(dim, Task) for dim in self.dimensions])
+
+    @property
+    def task_feature(self):
+        """Position of the 'Task' dimension, provided there is exactly one"""
+        if sum([isinstance(dim, Task) for dim in self.dimensions]) == 1:
+            return [isinstance(dim, Task) for dim in self.dimensions].index(True)
+        else: 
+            return None
+
+    @property
+    def num_tasks(self):
+        """Number of tasks, provided there is exactly one 'Task' dimension"""
+        num_task_dims = sum([isinstance(dim, Task) for dim in self.dimensions])
+        if num_task_dims == 1:
+            task_feature = [isinstance(dim, Task) for dim in self.dimensions].index(True)
+            return len(self.dimensions[task_feature].tasks)
+        else: 
+            return None
+
+    @property
+    def all_tasks(self):
+        """Every value of task, provided there is exactly one 'Task' dimension"""
+        num_task_dims = sum([isinstance(dim, Task) for dim in self.dimensions])
+        if num_task_dims == 1:
+            task_feature = [isinstance(dim, Task) for dim in self.dimensions].index(True)
+            return self.dimensions[task_feature].tasks
+        else: 
+            return None
+
+    @property
+    def active_task(self):
+        """"Provided there is one 'Task' dimension, give the test task"""
+        if sum([isinstance(dim, Task) for dim in self.dimensions]) == 1:
+            task_feature = [isinstance(dim, Task) for dim in self.dimensions].index(True)
+            return self.dimensions[task_feature].active_task
+        else: 
+            return None
+
     def distance(self, point_a, point_b):
         """Compute the L1 (Manhattan or taxicab) distance between two points in this space.
 
@@ -929,7 +1165,7 @@ class Space(object):
     def lhs(
         self,
         n: int,
-        seed: Union[int, float, np.random.RandomState, np.random.Generator, None] = 42,
+        seed: Union[int, float, np.random.RandomState, np.random.Generator, None] = 42, **kwargs
     ):
         """Returns n latin hypercube samples as a list of lists
 
@@ -942,12 +1178,16 @@ class Space(object):
             The seed used by the random number generator. If None, the results are not reproducible.
         """
         rng = get_random_generator(seed)
+        task_flag = kwargs.get('active_task')
         samples = []
         for i in range(self.n_dims):
             lhs_perm = []
             # Get evenly distributed samples from one dimension
             sample_indices = (np.arange(n) + 0.5) / n
-            lhs_aranged = self.dimensions[i].sample(sample_indices)
+            if isinstance(self.dimensions[i], Task):
+                lhs_aranged = self.dimensions[i].sample(sample_indices, active_task=task_flag)
+            else:
+                lhs_aranged = self.dimensions[i].sample(sample_indices)
             perm = rng.permutation(n)
             for p in perm:  # Random permutate the order of the samples
                 lhs_perm.append(lhs_aranged[p])
