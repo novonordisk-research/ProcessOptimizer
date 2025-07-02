@@ -5,13 +5,6 @@ from typing import List, Optional, Union, Dict
 from .model_system import ModelSystem
 from ..space import Real
 
-import torch
-import numpy as np
-
-from typing import List, Optional, Union, Dict, Tuple
-from .model_system import ModelSystem
-from ..space import Real
-
 
 class GPExperiment:
     """Base Class for 1D Gaussian Process experiment."""
@@ -119,7 +112,7 @@ class GPExperiment:
             score = torch.lerp(self.experiment['f_values'][l], self.experiment['f_values'][u], weight)
             return score.tolist()
 
-    def _find_closest_pair_idx(self, x) -> Tuple[int, int]:
+    def _find_closest_pair_idx(self, x) -> tuple[int, int]:
         closest_candidate_idx = torch.argmin(torch.abs(self.experiment['domain'] - x))
         closest_candidate = self.experiment['domain'][closest_candidate_idx]
 

@@ -340,7 +340,7 @@ class Optimizer(object):
 
         self._lhs = lhs
         if lhs:
-            self._lhs_samples = self.space.lhs(n_initial_points, seed=self.random_state, active_task=self.active_task_flag)
+            self._lhs_samples = self.space.lhs(n_initial_points, seed=self.rng, active_task=self.active_task_flag)
 
         # Default is no constraints
         self._constraints = None
