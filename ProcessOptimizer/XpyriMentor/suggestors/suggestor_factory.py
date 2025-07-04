@@ -49,6 +49,9 @@ def suggestor_factory(
         return DefaultSuggestor(space, n_objectives, rng)
     try:
         definition = definition.copy()
+        # We remove the key 'suggestor' from the definition, if it exists, to avoid
+        # passing it to the suggestor. We need to make a copy of the definition
+        # because we don't want to modify the original definition.
         suggestor_type = definition.pop("suggestor_name")
     except KeyError as e:
         raise ValueError(
@@ -100,6 +103,8 @@ def suggestor_factory(
         suggestors = []
         for suggestor in definition["suggestors"]:
             suggestor: dict = suggestor.copy()
+            # We are removing the key suggestor_budget, so we need to make a copy of the
+            # suggestor dict to avoid modifying the original.
             n = suggestor.pop("suggestor_budget")
             if "suggestor" in suggestor:
                 if len(suggestor) > 1:
