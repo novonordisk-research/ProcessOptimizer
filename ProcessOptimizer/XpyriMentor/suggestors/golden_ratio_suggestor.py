@@ -26,7 +26,12 @@ class GoldenRatioSuggestor():
         x = 2.0
         for _ in range(10): 
             x = pow(1+x,1/(d+1))
-        # The above loop converges to the root, but 
+        # The above loop converges to the root, as per the extreme learning
+        # link. Any irrational number works, and the slight suboptimaæity from
+        # not having an exact value is not an issue for our use. We could do
+        # it more directly, eg. with np.polynomial.Polynomial().roots, but this
+        # gives us a list of roots, where we then have to find the unique
+        # positive real root.
         return x
 
     def suggest(
