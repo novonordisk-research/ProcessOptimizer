@@ -1,5 +1,5 @@
 from sklearn.utils import check_random_state
-from .space import Real, Integer, Categorical, Space
+from .space import Real, Integer, Categorical, Space, Task
 import numpy as np
 from scipy import linalg
 from typing import Union, List

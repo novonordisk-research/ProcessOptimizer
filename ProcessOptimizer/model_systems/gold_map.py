@@ -33,12 +33,11 @@ def create_gold_map() -> ModelSystem:
         true_min=-3.09,
     )
 
-
 def create_distance_map(
         camp_coordinates: Sequence[Number] = (4, 10)
 ) -> ModelSystem:
     """
-    Create the mode system that returns the distance from the camp in gold map.
+    Create the model system that returns the distance from the camp in gold map.
 
     Parameters
     ----------
@@ -55,4 +54,37 @@ def create_distance_map(
         space=[(0.0, 15.0), (0.0, 15.0)],
         noise_model=None,
         true_min=0,
+    )
+
+def create_candidate_gold_map(
+        rotate: float = 0.0,
+        shift: Sequence[float] = [0.0, 0.0]
+) -> ModelSystem:
+    """
+    Create the model system that returns linearly transformed gold map, with an anticlockwise rotation and a 2D shift vector.
+
+    Parameters
+    ----------
+    * `rotate` Number[float] representing an anticlockwise rotation angle:
+    * `shift` 2D Sequence[float]:
+
+    """
+    if not hasattr(shift, '__len__'):
+        raise ValueError("Expected a sequence of length 2 for 'shift', got no length")
+    elif len(shift) != 2:
+        raise ValueError(f"Expected sequence of length 2 for 'shift', got {len(shift)}")
+    
+    def candidate_score(coordinates: Sequence[float]):
+        x_transformed = coordinates[0] * np.cos(rotate) - coordinates[1] * np.sin(rotate) + shift[0]
+        y_transformed = coordinates[0] * np.sin(rotate) + coordinates[1] * np.cos(rotate) + shift[1]
+        
+        score_ = score([x_transformed, y_transformed])
+        return score_
+    candidate_min =  -3.09
+
+    return ModelSystem(
+        candidate_score,
+        space=[(0.0, 15.0), (0.0, 15.0), ['explored', 'candidate', {'candidate'}]],
+        noise_model=None,
+        true_min= candidate_min,
     )

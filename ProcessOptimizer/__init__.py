@@ -28,7 +28,7 @@ from .optimizer import gbrt_minimize
 from .optimizer import gp_minimize
 from .optimizer import Optimizer
 from .searchcv import BayesSearchCV
-from .space import Categorical, Integer, Space, space_factory, Real
+from .space import Categorical, Integer, Space, space_factory, Real, Task
 from .utils import dump
 from .utils import expected_minimum
 from .utils import expected_minimum_random_sampling
@@ -40,7 +40,7 @@ from .plots import plot_Pareto, plot_expected_minimum_convergence
 from .samplers.doe import get_optimal_DOE
 from .XpyriMentor import XpyriMentor
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 
 __all__ = (
@@ -66,6 +66,7 @@ __all__ = (
     "BayesSearchCV",
     "Categorical",
     "Integer",
+    "Task",
     "Space",
     "space_factory",
     "Real",

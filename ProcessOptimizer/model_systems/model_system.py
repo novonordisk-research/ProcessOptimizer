@@ -16,7 +16,7 @@ class ModelSystem:
     * `space` [Space]:
         A list of dimension defintions or the parameter space as a Space object.
 
-    * `true_min` [float]:
+    * `true_min` [List or float]:
         The true minimum value of the score function within the parameter space.
 
     * `true_max` [float]:
@@ -24,6 +24,13 @@ class ModelSystem:
 
     * `noise_model` [NoiseModel]:
         Noise model to apply to the score.
+        Possible model type strings are:
+            "constant": The noise level is constant.
+            "proportional": Tne noise level is proportional to the score.
+            "zero": No noise is applied.
+
+    * 'multitask' [bool]:
+        Indicator whether the model supports multiple outputs. If true, the 'true_min' is List of minimum values per task.
     """
 
     def __init__(
@@ -34,6 +41,7 @@ class ModelSystem:
         true_min: Optional[float] = None,
         true_max: Optional[float] = None,
         seed: Union[int, np.random.RandomState, np.random.Generator, None] = 42,
+        multitask: bool = False,
     ):
         """
         Initialize the model system.
@@ -81,7 +89,7 @@ class ModelSystem:
             ndims = self.space.n_dims
             points = self.space.lhs(
                 ndims * 10
-            )  # TODO: This should be many more and shouldnt use LHS
+            )  # TODO: This should be many more and should not use LHS
             scores = [score(point) for point in points]
             true_min = np.min(scores)
         self.true_min = true_min
@@ -89,7 +97,7 @@ class ModelSystem:
             ndims = self.space.n_dims
             points = self.space.lhs(
                 ndims * 10
-            )  # TODO: This should be many more and shouldnt use LHS
+            )  # TODO: This should be many more and should not use LHS
             scores = [score(point) for point in points]
             true_max = np.max(scores)
         self.true_max = true_max
@@ -119,7 +127,7 @@ class ModelSystem:
         # Get the location of the expected minimum
         model_x, _ = expected_minimum(result)
         # Calculate the difference between the score at model_x and the true minimum value
-        loss = self.score(model_x) - self.true_min
+        loss = self.score(model_x) - self.true_min # add some check to cover multitask case
         return loss
 
     def get_score(self, X) -> float:

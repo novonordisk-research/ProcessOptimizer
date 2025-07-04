@@ -54,13 +54,13 @@ def create_result(Xi, yi, space=None, rng=None, specs=None, models=None, constra
      * `results` [list of `OptimizeResult`, scipy object]:
         OptimizeResult instance with the required information.
     """
-    res = OptimizeResult()
+    res = OptimizeResult() # originally inherits from dict
     yi = np.asarray(yi)
     if np.ndim(yi) == 1:
         best = np.argmin(yi)
-        res.x = Xi[best]
-        res.fun = yi[best]
-        res.func_vals = yi
+        res.x = Xi[best] # solution of the optimisation
+        res.fun = yi[best] # value of function at res.x
+        res.func_vals = yi # ?
         res.x_iters = Xi
         res.models = models
         res.space = space
@@ -211,7 +211,7 @@ def check_x_in_space(x, space):
                 "Point (%s) is not within the bounds of "
                 "the space (%s)." % (x, space.bounds)
             )
-        if len(x) != len(space.dimensions):
+        if len(x) != len(space.dimensions) and not space.is_partly_task:
             raise ValueError(
                 "Dimensions of point (%s) and space (%s) do not match"
                 % (x, space.bounds)
