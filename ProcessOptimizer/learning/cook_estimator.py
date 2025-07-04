@@ -17,6 +17,7 @@ def cook_estimator(
     space=None,
     length_scale_bounds=None,
     length_scale=None,
+    noise_level_bounds=None,
     **kwargs,
 ):
     """
@@ -84,8 +85,10 @@ def cook_estimator(
                 length_scale_bounds_transformed.append(length_scale_bounds[i])
                 length_scale_transformed.append(length_scale[i])
 
-        if not kwargs.get("noise_level_bounds", None):
-            kwargs["noise_level_bounds"] = (1e-5, 1e5)
+        if noise_level_bounds is None:
+            if base_estimator != "GP":
+                raise TypeError("noise_level_bounds only supported for GP.")
+            noise_level_bounds = (1e-5, 1e5)
         # Note that this overwrites the (identical) default in our own
         # GaussianProcessRegressor.
         # Also note that this represents the variance of the noise, not the standard
@@ -108,6 +111,7 @@ def cook_estimator(
             normalize_y=True,
             noise="gaussian",
             n_restarts_optimizer=4,
+            noise_level_bounds=noise_level_bounds,
         )
     elif base_estimator == "RF":
         base_estimator = RandomForestRegressor(n_estimators=100, min_samples_leaf=3)
