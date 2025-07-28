@@ -911,7 +911,6 @@ class Space(object):
         random_state: Union[
             int, np.random.RandomState, np.random.Generator, None
         ] = None,
-        **kwargs,
     ):
         """Draw random samples.
 
@@ -926,9 +925,6 @@ class Space(object):
         * `random_state` [int, np.random.RandomState, np.random.Generator, or None, default=None]:
             Set random state to something other than None for reproducible
             results.
-
-        * 'kwargs' [dict, default=None]:
-            kwargs['active_task']: this controls the sampling from the active slice
 
         Returns
         -------

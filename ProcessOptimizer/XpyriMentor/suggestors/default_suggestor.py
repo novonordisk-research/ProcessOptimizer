@@ -4,13 +4,15 @@ import numpy as np
 from ProcessOptimizer.space import Space
 
 
-class DefaultSuggestor():
+class DefaultSuggestor:
     """
     Default suggestor class. It should only be used as a placeholder for use in
     strategizers. It should be replaced with the appropriate suggestor before use.
     """
 
-    def __init__(self, space: Space, n_objectives: int, rng: np.random.Generator, **kwargs):
+    def __init__(
+        self, space: Space, n_objectives: int, rng: np.random.Generator, **kwargs
+    ):
         # Space and random number generator are stored for use when replacing the
         # DefaultSuggestor.
         self.space = space
@@ -31,4 +33,4 @@ class DefaultSuggestor():
 
 
 class NoDefaultSuggestorError(NotImplementedError):
-    """ Raised when a DefaultSuggestor is used when it should have been replaced."""
+    """Raised when a DefaultSuggestor is used when it should have been replaced."""

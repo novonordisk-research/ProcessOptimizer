@@ -20,7 +20,6 @@ def suggestor_factory(
     n_objectives: int = 1,
     rng: Optional[np.random.Generator] = None,
     n_points: Optional[int] = None,
-    active_task: Optional[bool] = None,
 ) -> Suggestor:
     """
     Create a suggestor from a definition dictionary.
@@ -80,9 +79,9 @@ def suggestor_factory(
                         f"{suggestor.keys()}."
                     )
                 suggestor = suggestor["suggestor"]
-            suggestors.append((
-                usage_ratio, suggestor_factory(space, suggestor, n_objectives, rng)
-            ))
+            suggestors.append(
+                (usage_ratio, suggestor_factory(space, suggestor, n_objectives, rng))
+            )
         return RandomStragegizer(suggestors=suggestors, rng=rng)
     elif suggestor_type == "LHS":
         if "n_points" not in definition and n_points is not None:
@@ -107,10 +106,9 @@ def suggestor_factory(
                         f"{', '.join(suggestor.keys())}."
                     )
                 suggestor = suggestor["suggestor"]
-            suggestors.append((
-                n,
-                suggestor_factory(space, suggestor, n_objectives, rng, n_points = n)
-            ))
+            suggestors.append(
+                (n, suggestor_factory(space, suggestor, n_objectives, rng, n_points=n))
+            )
         return SequentialStrategizer(suggestors)
     else:
         raise ValueError(f"Unknown suggestor name: {suggestor_type}")
