@@ -1,6 +1,5 @@
-from .benchmark import BenchmarkInstance, run_benchmark
+from .benchmark import BenchmarkInstance
 
 __all__ = [
     "BenchmarkInstance",
-    "run_benchmark",
 ]

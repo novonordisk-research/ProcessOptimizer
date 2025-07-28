@@ -26,15 +26,15 @@ class BenchmarkInstance:
     xpyrimentor: XpyriMentor = field(init=False, repr=False)
 
     def __init__(
-            self,
-            model_system_name: str,
-            xpyrimentor_definition: dict,
-            experimental_budget: int,
-            expected_random_runtime: float,
-            seed: int,
-            noise_level: float = 1.0,
-            **kwargs
-        ):
+        self,
+        model_system_name: str,
+        xpyrimentor_definition: dict,
+        experimental_budget: int,
+        expected_random_runtime: float,
+        seed: int,
+        noise_level: float = 1.0,
+        **kwargs,
+    ):
         """
         Initialize the benchmark instance.
 
@@ -51,28 +51,32 @@ class BenchmarkInstance:
         * `seed` [int]:
             Random seed to use.
         """
-        self.__dict__.update({
-            "model_system_name": model_system_name,
-            "xpyrimentor_definition":xpyrimentor_definition,
-            "experimental_budget":experimental_budget,
-            "expected_random_runtime":expected_random_runtime,
-            "seed":seed,
-            "noise_level":noise_level,
-        })
+        self.__dict__.update(
+            {
+                "model_system_name": model_system_name,
+                "xpyrimentor_definition": xpyrimentor_definition,
+                "experimental_budget": experimental_budget,
+                "expected_random_runtime": expected_random_runtime,
+                "seed": seed,
+                "noise_level": noise_level,
+            }
+        )
         self.__dict__.update(kwargs)
         self.success_level = find_limits(
             model_system_name, expected_random_runtime, self.noise_level
         )
         self.model = get_model_system(model_system_name, seed=seed)
         self.model.noise_size *= noise_level
-        self.xpyrimentor = XpyriMentor(self.model.space, self.xpyrimentor_definition, seed=seed)
+        self.xpyrimentor = XpyriMentor(
+            self.model.space, self.xpyrimentor_definition, seed=seed
+        )
 
     @property
     def model_system(self) -> ModelSystem:
         model_system = get_model_system(self.model_system_name, seed=self.seed)
-        model_system.noise_size = model_system.noise_size*self.noise_level
+        model_system.noise_size = model_system.noise_size * self.noise_level
         return model_system
-    
+
     def find_estimated_optimum(self) -> float:
         """
         Find the parameter set that is estimated to be the optimum, and the value that is
@@ -88,53 +92,47 @@ class BenchmarkInstance:
         optimizer.update_next()
         optimizer.add_observational_noise()
         result = optimizer.get_result()
-        result_location, [result_value, result_std] = expected_minimum(result, return_std=True)
+        result_location, [result_value, result_std] = expected_minimum(
+            result, return_std=True
+        )
         optimizer.remove_observational_noise()
-        return (result_location, result_value + 2*result_std)
+        return (result_location, result_value + 2 * result_std)
 
-def run_benchmark(benchmark_instance: BenchmarkInstance) -> BenchmarkInstance:
-    """
-    Run the benchmark instance, save the number of evaluations and whether the
-    success level was reached, and return the instance.
-    """
-    success = False
-    while len(benchmark_instance.xpyrimentor.Xi) < benchmark_instance.experimental_budget:
-        x = benchmark_instance.xpyrimentor.ask()
-        y = benchmark_instance.model.get_score(x)
-        benchmark_instance.xpyrimentor.tell(x, [y])
-        # We could restrict testing to only if the point is considered good, but it
-        # doesn't seem to matter much for the runtime.
-        minimum_location, minimum_value = benchmark_instance.find_estimated_optimum()
-        if minimum_value<benchmark_instance.success_level and benchmark_instance.validate:
-            result = benchmark_instance.model.get_score(minimum_location)
-            benchmark_instance.xpyrimentor.tell(minimum_location, result)
-            minimum_location, minimum_value = benchmark_instance.find_estimated_optimum()
-        if minimum_value<benchmark_instance.success_level:
-            # Insert validation here
-            true_quality = find_pesimistic_value(benchmark_instance.model, minimum_location)
-            if true_quality<benchmark_instance.success_level:
-                success = True
-            break
-    benchmark_instance.number_of_evaluations = len(benchmark_instance.xpyrimentor.Xi)
-    benchmark_instance.success = success
-    return benchmark_instance
+    def run(self):
+        self.success = False
+        while len(self.xpyrimentor.Xi) < self.experimental_budget:
+            x = self.xpyrimentor.ask()
+            y = self.model.get_score(x)
+            self.xpyrimentor.tell(x, [y])
+            minimum_location, minimum_value = self.find_estimated_optimum()
+            if minimum_value < self.success_level and self.validate:
+                result = self.model.get_score(minimum_location)
+                self.xpyrimentor.tell(minimum_location, result)
+                minimum_location, minimum_value = self.find_estimated_optimum()
+            if minimum_value < self.success_level:
+                true_quality = find_pesimistic_value(self.model, minimum_location)
+                if true_quality < self.success_level:
+                    self.success = True
+                break
+        self.number_of_evaluations = len(self.xpyrimentor.Xi)
+
 
 @functools.cache
 def find_limits(
-        model_system_name: str,
-        expected_random_runtime: float,
-        noise_level: float,
-    ):
+    model_system_name: str,
+    expected_random_runtime: float,
+    noise_level: float,
+):
     seed = 42
     random_scaling = 100
     model_system = get_model_system(model_system_name, seed=seed)
-    model_system.noise_size = model_system.noise_size*noise_level
+    model_system.noise_size = model_system.noise_size * noise_level
     sampler = XpyriMentor(
         space=model_system.space, suggestor={"suggestor_name": "GoldenRatio"}, seed=seed
     )
     estimated_points = [
         (point, find_pesimistic_value(model_system, point))
-        for point in sampler.ask(expected_random_runtime*random_scaling) 
+        for point in sampler.ask(expected_random_runtime * random_scaling)
     ]
     # Sort the points by score, and find the point that corresponds to the expected
     # random runtime
@@ -142,11 +140,12 @@ def find_limits(
     limit_point = estimated_points[int(random_scaling)]
     return limit_point[1]
 
+
 def find_pesimistic_value(model_system: ModelSystem, x: Iterable):
     """
     Find the value that is 2 standard deviations above the true value at `x`.
     """
-    model_system = model_system.copy() # Copy to avoid changing the original
+    model_system = model_system.copy()  # Copy to avoid changing the original
     # Set the noise model so that we always return two standard deviations above the true
     # value.
     model_system.noise_model.noise_types["constant"] = lambda: 2
