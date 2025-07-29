@@ -15,7 +15,7 @@ from .suggestor import CreatableSuggestor, Suggestor
 
 logger = logging.getLogger(__name__)
 
-SUGGESTORS = {
+SUGGESTORS: dict[str, CreatableSuggestor] = {
     "Constant": ConstantSuggestor,
     "Default": DefaultSuggestor,
     "LHS": LHSSuggestor,
