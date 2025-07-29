@@ -1,4 +1,3 @@
-from .constant_suggestor import ConstantSuggestor
 import warnings
 
 from .constant_suggestor import ConstantSuggestor
