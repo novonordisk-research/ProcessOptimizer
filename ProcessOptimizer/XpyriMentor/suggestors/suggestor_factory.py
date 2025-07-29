@@ -65,6 +65,7 @@ def suggestor_factory(
     elif suggestor_type == "RandomStrategizer" or suggestor_type == "Random":
         logger.debug("Creating RandomStrategizer")
         suggestors = []
+        child_rngs = rng.spawn(len(definition["suggestors"]))
         for suggestor in definition["suggestors"]:
             usage_ratio = suggestor.pop("suggestor_usage_ratio")
             # Note that we are removing the key usage_ratio from the suggestor
@@ -80,7 +81,10 @@ def suggestor_factory(
                     )
                 suggestor = suggestor["suggestor"]
             suggestors.append(
-                (usage_ratio, suggestor_factory(space, suggestor, n_objectives, rng))
+                (
+                    usage_ratio,
+                    suggestor_factory(space, suggestor, n_objectives, child_rngs.pop()),
+                )
             )
         return RandomStragegizer(suggestors=suggestors, rng=rng)
     elif suggestor_type == "LHS":
@@ -95,6 +99,7 @@ def suggestor_factory(
     elif suggestor_type == "Sequential":
         logger.debug("Creating SequentialStrategizer")
         suggestors = []
+        child_rngs = rng.spawn(len(definition["suggestors"]))
         for suggestor in definition["suggestors"]:
             n = suggestor.pop("suggestor_budget")
             if "suggestor" in suggestor:
@@ -107,7 +112,12 @@ def suggestor_factory(
                     )
                 suggestor = suggestor["suggestor"]
             suggestors.append(
-                (n, suggestor_factory(space, suggestor, n_objectives, rng, n_points=n))
+                (
+                    n,
+                    suggestor_factory(
+                        space, suggestor, n_objectives, child_rngs.pop(), n_points=n
+                    ),
+                )
             )
         return SequentialStrategizer(suggestors)
     else:
