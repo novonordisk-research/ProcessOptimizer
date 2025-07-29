@@ -13,7 +13,12 @@ class GoldenRatioSuggestor:
     From https://extremelearning.com.au/unreasonable-effectiveness-of-quasirandom-sequences/
     """
 
-    def __init__(self, space: Space, rng: np.random.Generator):
+    def __init__(
+        self,
+        space: Space,
+        rng: np.random.Generator,
+        **kwargs,  # To catch any additional keyword arguments that might have been added
+    ):
         self.space = space
         self.rng = rng
         self.offset = self.rng.random()

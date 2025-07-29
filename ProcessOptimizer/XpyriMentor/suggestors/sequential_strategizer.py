@@ -22,7 +22,7 @@ class SequentialStrategizer:
     that have already been made.
     """
 
-    def __init__(self, suggestors: list[tuple[int, Suggestor]]):
+    def __init__(self, suggestors: list[tuple[int, Suggestor]], **kwargs):
         """
         Initialize the strategizer with a list of suggestors and their budgets.
 

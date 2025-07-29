@@ -12,7 +12,11 @@ class ConstantSuggestor:
     """
 
     def __init__(
-        self, space: Space, point: Union[list, float] = 0.5, convert: bool = True
+        self,
+        space: Space,
+        point: Union[list, float] = 0.5,
+        convert: bool = True,
+        **kwargs,  # To catch any additional keyword arguments
     ):
         """
         Initialize the suggestor.

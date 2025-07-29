@@ -8,7 +8,13 @@ from .suggestor import IncompatibleNumberAsked
 
 
 class LHSSuggestor:
-    def __init__(self, space: Space, rng: np.random.Generator, n_points: int = 5):
+    def __init__(
+        self,
+        space: Space,
+        rng: np.random.Generator,
+        n_points: int = 5,
+        **kwargs,  # To catch any additional keyword arguments
+    ):
         self.space = space
         self.rng = rng
         self.n_points = n_points

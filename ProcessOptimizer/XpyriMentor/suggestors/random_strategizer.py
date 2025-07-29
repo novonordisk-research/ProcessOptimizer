@@ -11,7 +11,10 @@ from .suggestor import Suggestor
 
 class RandomStragegizer:
     def __init__(
-        self, suggestors: list[tuple[float, Suggestor]], rng: np.random.Generator
+        self,
+        suggestors: list[tuple[float, Suggestor]],
+        rng: np.random.Generator,
+        **kwargs,  # To catch any superfluous arguments, e.g. n_points
     ):
         self.total = sum(item[0] for item in suggestors)
         if float(self.total) != 1.0 and float(self.total) != 100.0:
