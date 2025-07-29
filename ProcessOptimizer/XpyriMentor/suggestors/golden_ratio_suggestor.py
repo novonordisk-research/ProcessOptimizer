@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Iterable
+from typing import Iterable
 
 import numpy as np
 from ProcessOptimizer.space import Space
