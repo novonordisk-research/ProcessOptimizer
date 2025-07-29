@@ -56,10 +56,10 @@ class RandomStragegizer:
     def create_from_definition(
         cls,
         space: Space,
-        suggestor_factory: Callable[[...], Suggestor],
-        definition: Suggestor | dict[str, Any] | None,
+        suggestor_factory: Callable[..., Suggestor],
+        definition: dict[str, Any],
         n_objectives: int = 1,
-        rng: np.random.Generator | None = None,
+        rng: np.random.Generator,
     ) -> RandomStragegizer:
         suggestors = []
         child_rngs = rng.spawn(len(definition["suggestors"]))

@@ -32,7 +32,7 @@ def suggestor_factory(
     definition: Union[Suggestor, dict[str, Any], None],
     n_objectives: int = 1,
     rng: Optional[np.random.Generator] = None,
-    suggestors: dict[str, CreatableSuggestor] | None = None,
+    suggestors: Optional[dict[str, CreatableSuggestor]] = None,
 ) -> Suggestor:
     """
     Create a suggestor from a definition dictionary.

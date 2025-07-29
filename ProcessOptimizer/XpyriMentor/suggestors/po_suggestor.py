@@ -60,8 +60,8 @@ class OptimizerSuggestor:
         space: Space,
         suggestor_factory,
         definition: dict[str, Any],
-        n_objectives: int = 1,
-        rng: np.random.Generator | None = None,
+        n_objectives: int,
+        rng: np.random.Generator,
     ) -> OptimizerSuggestor:
         if definition is None:
             definition = {}

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Iterable, Protocol, runtime_checkable
+from typing import Any, Callable, Iterable, Protocol, runtime_checkable
 
 from ProcessOptimizer.space import Space
 
@@ -47,10 +47,10 @@ class CreatableSuggestor(Protocol):
     def create_from_definition(
         cls,
         space: Space,
-        suggestor_factory: callable[[...], Suggestor],
+        suggestor_factory: Callable[..., Suggestor],
         definition: dict[str, Any],
-        n_objectives: int = 1,
-        rng: np.random.Generator | None = None,
+        n_objectives: int,
+        rng: np.random.Generator,
     ) -> Suggestor: ...
 
 

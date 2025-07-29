@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 import warnings
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable
 
 import numpy as np
 from ProcessOptimizer.space import Space
@@ -118,8 +118,8 @@ class SequentialStrategizer:
     def create_from_definition(
         cls,
         space: Space,
-        suggestor_factory: callable[[...], Suggestor],
-        definition: Suggestor | dict[str, Any] | None,
+        suggestor_factory: Callable[..., Suggestor],
+        definition: dict[str, Any],
         n_objectives: int,
         rng: np.random.Generator,
     ) -> SequentialStrategizer:
