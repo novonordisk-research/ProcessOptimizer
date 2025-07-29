@@ -58,7 +58,7 @@ class RandomStragegizer:
         space: Space,
         suggestor_factory: Callable[..., Suggestor],
         definition: dict[str, Any],
-        n_objectives: int = 1,
+        n_objectives: int,
         rng: np.random.Generator,
     ) -> RandomStragegizer:
         suggestors = []
