@@ -97,15 +97,21 @@ def check_dimension(dimension, transform=None) -> Dimension:
     if len(dimension) == 1:
         return Categorical(dimension, transform=transform)
     else:
-        bool_str_check = [isinstance(d, (str, bool)) or isinstance(d, np.bool_) for d in dimension]
+        bool_str_check = [
+            isinstance(d, (str, bool)) or isinstance(d, np.bool_) for d in dimension
+        ]
         real_check = [isinstance(dim, numbers.Real) for dim in dimension]
         int_check = [isinstance(dim, numbers.Integral) for dim in dimension]
         set_check = [isinstance(d, set) for d in dimension]
 
     if len(dimension) == 2:
-        if (any(bool_str_check) and any(set_check)):
-            return Task(dimension[:-1], active_task=list(dimension[-1]).pop(), transform=transform)
-        elif (any(bool_str_check) and not any(set_check)):
+        if any(bool_str_check) and any(set_check):
+            return Task(
+                dimension[:-1],
+                active_task=list(dimension[-1]).pop(),
+                transform=transform,
+            )
+        elif any(bool_str_check) and not any(set_check):
             return Categorical(dimension, transform=transform)
         elif all(int_check):
             return Integer(*dimension, transform=transform)
@@ -118,24 +124,33 @@ def check_dimension(dimension, transform=None) -> Dimension:
             )
 
     if len(dimension) == 3:
-        if (any([isinstance(dim, (float, int)) for dim in dimension[:2]])
-                and dimension[2] in ["uniform", "log-uniform"]):
+        if any([isinstance(dim, (float, int)) for dim in dimension[:2]]) and dimension[
+            2
+        ] in ["uniform", "log-uniform"]:
             return Real(*dimension, transform=transform)
         elif any(set_check):
-            return Task(dimension[:-1], active_task=list(dimension[-1]).pop(), transform=transform)
+            return Task(
+                dimension[:-1],
+                active_task=list(dimension[-1]).pop(),
+                transform=transform,
+            )
         else:
             return Categorical(dimension, transform=transform)
 
     if len(dimension) > 3:
         if any(set_check):
-            return Task(dimension[:-1], active_task=list(dimension[-1]).pop(), transform=transform)
+            return Task(
+                dimension[:-1],
+                active_task=list(dimension[-1]).pop(),
+                transform=transform,
+            )
         else:
             return Categorical(dimension, transform=transform)
 
-
     raise ValueError(
-        "Invalid dimension {}. Read the documentation for "
-        "supported types.".format(dimension)
+        "Invalid dimension {}. Read the documentation for supported types.".format(
+            dimension
+        )
     )
 
 
@@ -182,7 +197,8 @@ class Dimension(ABC):
             raise ValueError("Dimension's name must be either string or None.")
 
     def sample(
-        self, points: Union[float, Iterable[float]], allow_duplicates: bool = True) -> np.ndarray:
+        self, points: Union[float, Iterable[float]], allow_duplicates: bool = True
+    ) -> np.ndarray:
         """Draw points from the dimension.
 
 
@@ -263,8 +279,9 @@ class Real(Dimension):
         """
         if high <= low:
             raise ValueError(
-                "the lower bound {} has to be less than the"
-                " upper bound {}".format(low, high)
+                "the lower bound {} has to be less than the upper bound {}".format(
+                    low, high
+                )
             )
         self.low = low
         self.high = high
@@ -278,8 +295,9 @@ class Real(Dimension):
 
         if self.transform_ not in ["normalize", "identity"]:
             raise ValueError(
-                "transform should be 'normalize' or 'identity'"
-                " got {}".format(self.transform_)
+                "transform should be 'normalize' or 'identity' got {}".format(
+                    self.transform_
+                )
             )
 
         if self.transform_ == "normalize":
@@ -393,8 +411,9 @@ class Integer(Dimension):
         """
         if high <= low:
             raise ValueError(
-                "The lower bound {} has to be less than the "
-                "upper bound {}".format(low, high)
+                "The lower bound {} has to be less than the upper bound {}".format(
+                    low, high
+                )
             )
         self.low = low
         self.high = high
@@ -407,8 +426,9 @@ class Integer(Dimension):
 
         if transform not in ["normalize", "identity"]:
             raise ValueError(
-                "Transform should be 'normalize' or 'identity' "
-                "got {}".format(self.transform_)
+                "Transform should be 'normalize' or 'identity' got {}".format(
+                    self.transform_
+                )
             )
         if transform == "normalize":
             self.transformer = Normalize(low, high, is_int=True)
@@ -506,8 +526,9 @@ class Categorical(Dimension):
         self.transform_ = transform
         if transform not in ["identity", "onehot"]:
             raise ValueError(
-                "Expected transform to be 'identity' or 'onehot' "
-                "got {}".format(transform)
+                "Expected transform to be 'identity' or 'onehot' got {}".format(
+                    transform
+                )
             )
         if transform == "onehot":
             self.transformer = CategoricalEncoder()
@@ -613,26 +634,24 @@ class Task(Dimension):
         * `name` [str or None]:
             Name associated with dimension, e.g., "colors".
         """
-        if transform == "identity":
-            self.tasks = tuple([str(t) for t in tasks])
-        else:
-            self.tasks = tuple(tasks)
-
-        self.name = name
-
         if transform is None:
             transform = "onehot"
-        self.transform_ = transform
-        if transform not in ["identity", "onehot"]:
-            raise ValueError(
-                "Expected transform to be 'identity' or 'onehot' "
-                "got {}".format(transform)
-            )
-        if transform == "onehot":
+        if transform == "identity":
+            self.tasks = tuple([str(t) for t in tasks])
+            self.transformer = Identity(dtype=type(tasks[0]))
+        elif transform == "onehot":
+            self.tasks = tuple(tasks)
             self.transformer = CategoricalEncoder()
             self.transformer.fit(self.tasks)
         else:
-            self.transformer = Identity(dtype=type(tasks[0]))
+            raise ValueError(
+                "Expected transform to be 'identity' or 'onehot' got {}".format(
+                    transform
+                )
+            )
+
+        self.name = name
+        self.transform_ = transform
 
         if prior is None:
             self.prior_ = np.tile(1.0 / len(self.tasks), len(self.tasks))
@@ -641,8 +660,17 @@ class Task(Dimension):
 
         # prior_active_task sets active task probability to 1. and other tasks are set to 0.
         self.active_task = active_task
+        self.use_active_task = True
+
+    @property
+    def active_task(self):
+        return self._active_task
+
+    @active_task.setter
+    def active_task(self, value):
+        self._active_task = value
         self.prior_active_task_ = np.zeros(len(self.tasks))
-        self.prior_active_task_[self.tasks.index(self.active_task)] = 1.0
+        self.prior_active_task_[self.tasks.index(value)] = 1.0
 
     def __eq__(self, other):
         return (
@@ -663,7 +691,8 @@ class Task(Dimension):
             prior = self.prior
 
         return "Task(tasks={}, active_task={}, prior={})".format(
-            tasks_, self.active_task, prior)
+            tasks_, self.active_task, prior
+        )
 
     @property
     def transformed_size(self):
@@ -709,9 +738,9 @@ class Task(Dimension):
             )
         return 1 if a != b else 0
 
-    def _sample(self, point_list: Iterable[float], active_task: bool = False) -> np.ndarray:
+    def _sample(self, point_list: Iterable[float]) -> np.ndarray:
         # XXX check that sum(prior) == 1
-        if active_task:
+        if self.use_active_task:
             cummulative_prior = np.cumsum(self.prior_active_task_)
         else:
             cummulative_prior = np.cumsum(self.prior_)
@@ -721,7 +750,10 @@ class Task(Dimension):
         return np.array([self.tasks[index] for index in task_index])
 
     def sample(
-        self, points: Union[float, Iterable[float]], allow_duplicates: bool = True, active_task: bool = False) -> np.ndarray:
+        self,
+        points: Union[float, Iterable[float]],
+        allow_duplicates: bool = True,
+    ) -> np.ndarray:
         """Draw points from the dimension.
 
         Parameters
@@ -739,7 +771,7 @@ class Task(Dimension):
             points = [points]
         if any([point < 0 or point > 1 for point in points]):
             raise ValueError("Sample points must be between 0 and 1.")
-        sampled_points = self._sample(points, active_task)
+        sampled_points = self._sample(points)
         if not allow_duplicates:
             # np.unique sorts the inputs, which we do not want, so we have to reinvent
             # the wheel.
@@ -751,7 +783,6 @@ class Task(Dimension):
                     seen.add(point)
             sampled_points = unique_points
         return np.array(sampled_points, dtype=object)
-
 
 
 class Space(object):
@@ -844,7 +875,7 @@ class Space(object):
             "real": Real,
             "integer": Integer,
             "categorical": Categorical,
-            "task": Task
+            "task": Task,
         }
 
         # Extract space options for configuration file
@@ -879,7 +910,8 @@ class Space(object):
         n_samples=1,
         random_state: Union[
             int, np.random.RandomState, np.random.Generator, None
-        ] = None, **kwargs):
+        ] = None,
+    ):
         """Draw random samples.
 
         The samples are in the original space. They need to be transformed
@@ -894,9 +926,6 @@ class Space(object):
             Set random state to something other than None for reproducible
             results.
 
-        * 'kwargs' [dict, default=None]:
-            kwargs['active_task']: this controls the sampling from the active slice
-
         Returns
         -------
         * `points`: [list of lists, shape=(n_points, n_dims)]
@@ -907,14 +936,9 @@ class Space(object):
 
         columns = []
 
-        task_flag = kwargs.get('active_task')
-
         for dim in self.dimensions:
             index_array = rng.uniform(size=n_samples)
-            if isinstance(dim, Task):
-                columns.append(dim.sample(index_array, active_task=task_flag))
-            else:
-                columns.append(dim.sample(index_array))
+            columns.append(dim.sample(index_array))
 
         # Transpose
         rows = []
@@ -1019,13 +1043,13 @@ class Space(object):
             points = [points]
         if any(len(point) != len(self) for point in points):
             raise ValueError(
-                "One or more points does not have the same length as the space " +
-                str(({len(self)}))
+                "One or more points does not have the same length as the space "
+                + str(({len(self)}))
             )
         sampled_points = []
         for i, dim in enumerate(self.dimensions):
             sampled_points.append(dim.sample([p[i] for p in points]))
-        return np.array(sampled_points, dtype = object).transpose()
+        return np.array(sampled_points, dtype=object).transpose()
 
     @property
     def n_dims(self):
@@ -1109,7 +1133,7 @@ class Space(object):
         """Position of the 'Task' dimension, provided there is exactly one"""
         if sum([isinstance(dim, Task) for dim in self.dimensions]) == 1:
             return [isinstance(dim, Task) for dim in self.dimensions].index(True)
-        else: 
+        else:
             return None
 
     @property
@@ -1117,9 +1141,11 @@ class Space(object):
         """Number of tasks, provided there is exactly one 'Task' dimension"""
         num_task_dims = sum([isinstance(dim, Task) for dim in self.dimensions])
         if num_task_dims == 1:
-            task_feature = [isinstance(dim, Task) for dim in self.dimensions].index(True)
+            task_feature = [isinstance(dim, Task) for dim in self.dimensions].index(
+                True
+            )
             return len(self.dimensions[task_feature].tasks)
-        else: 
+        else:
             return None
 
     @property
@@ -1127,18 +1153,22 @@ class Space(object):
         """Every value of task, provided there is exactly one 'Task' dimension"""
         num_task_dims = sum([isinstance(dim, Task) for dim in self.dimensions])
         if num_task_dims == 1:
-            task_feature = [isinstance(dim, Task) for dim in self.dimensions].index(True)
+            task_feature = [isinstance(dim, Task) for dim in self.dimensions].index(
+                True
+            )
             return self.dimensions[task_feature].tasks
-        else: 
+        else:
             return None
 
     @property
     def active_task(self):
-        """"Provided there is one 'Task' dimension, give the test task"""
+        """ "Provided there is one 'Task' dimension, give the test task"""
         if sum([isinstance(dim, Task) for dim in self.dimensions]) == 1:
-            task_feature = [isinstance(dim, Task) for dim in self.dimensions].index(True)
+            task_feature = [isinstance(dim, Task) for dim in self.dimensions].index(
+                True
+            )
             return self.dimensions[task_feature].active_task
-        else: 
+        else:
             return None
 
     def distance(self, point_a, point_b):
@@ -1165,7 +1195,8 @@ class Space(object):
     def lhs(
         self,
         n: int,
-        seed: Union[int, float, np.random.RandomState, np.random.Generator, None] = 42, **kwargs
+        seed: Union[int, float, np.random.RandomState, np.random.Generator, None] = 42,
+        **kwargs,
     ):
         """Returns n latin hypercube samples as a list of lists
 
@@ -1178,16 +1209,12 @@ class Space(object):
             The seed used by the random number generator. If None, the results are not reproducible.
         """
         rng = get_random_generator(seed)
-        task_flag = kwargs.get('active_task')
         samples = []
         for i in range(self.n_dims):
             lhs_perm = []
             # Get evenly distributed samples from one dimension
             sample_indices = (np.arange(n) + 0.5) / n
-            if isinstance(self.dimensions[i], Task):
-                lhs_aranged = self.dimensions[i].sample(sample_indices, active_task=task_flag)
-            else:
-                lhs_aranged = self.dimensions[i].sample(sample_indices)
+            lhs_aranged = self.dimensions[i].sample(sample_indices)
             perm = rng.permutation(n)
             for p in perm:  # Random permutate the order of the samples
                 lhs_perm.append(lhs_aranged[p])

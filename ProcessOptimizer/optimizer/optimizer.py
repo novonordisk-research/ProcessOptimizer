@@ -181,7 +181,6 @@ class Optimizer(object):
         acq_optimizer_kwargs=None,
         n_objectives=1,
         objective_name_list: List[str] = None,
-        active_task: bool = False,
     ):
         self.rng = check_random_state(random_state)
 
@@ -190,18 +189,9 @@ class Optimizer(object):
 
         self.random_state = random_state
 
-        self.active_task_flag = active_task
-
-        # if (not dimensions.is_partly_task and active_task==True):
-        #     warnings.warn(
-        #         f"Active task flag set for the space without any Task dimension."
-        #     )
-
         # Warning to close issue # 326
         if n_objectives > 1:
-            n_dim_int = len(
-                [dim for dim in dimensions if isinstance(dim, Integer)]
-            )
+            n_dim_int = len([dim for dim in dimensions if isinstance(dim, Integer)])
             if n_dim_int > 4:
                 warnings.warn(
                     f"The number of integer dimensions is {n_dim_int}. This"
@@ -238,7 +228,7 @@ class Optimizer(object):
         # Check `n_random_starts` deprecation first
         if n_random_starts is not None:
             warnings.warn(
-                ("n_random_starts will be removed in favour of " "n_initial_points."),
+                ("n_random_starts will be removed in favour of n_initial_points."),
                 DeprecationWarning,
             )
             n_initial_points = n_random_starts
@@ -298,15 +288,16 @@ class Optimizer(object):
 
         if acq_optimizer not in ["lbfgs", "sampling"]:
             raise ValueError(
-                "Expected acq_optimizer to be 'lbfgs' or "
-                "'sampling', got {0}".format(acq_optimizer)
+                "Expected acq_optimizer to be 'lbfgs' or 'sampling', got {0}".format(
+                    acq_optimizer
+                )
             )
 
         if not has_gradients(self.base_estimator_) and acq_optimizer != "sampling":
             raise ValueError(
-                "The regressor {0} should run with "
-                "acq_optimizer"
-                "='sampling'.".format(type(base_estimator))
+                "The regressor {0} should run with acq_optimizer='sampling'.".format(
+                    type(base_estimator)
+                )
             )
         self.acq_optimizer = acq_optimizer
 
@@ -337,10 +328,9 @@ class Optimizer(object):
             )
         # Latin hypercube sampling
 
-
         self._lhs = lhs
         if lhs:
-            self._lhs_samples = self.space.lhs(n_initial_points, seed=self.rng, active_task=self.active_task_flag)
+            self._lhs_samples = self.space.lhs(n_initial_points, seed=self.rng)
 
         # Default is no constraints
         self._constraints = None
@@ -361,9 +351,7 @@ class Optimizer(object):
             if n_objectives == 1:
                 objective_name_list = ["Y"]
             else:
-                objective_name_list = [
-                    f"Y{num+1}" for num in range(n_objectives)
-                ]
+                objective_name_list = [f"Y{num + 1}" for num in range(n_objectives)]
         if len(objective_name_list) != n_objectives:
             raise ValueError(
                 "Objective name list must have length n_objectives "
@@ -404,7 +392,6 @@ class Optimizer(object):
             acq_optimizer_kwargs=self.acq_optimizer_kwargs,
             random_state=self.random_state,
             n_objectives=self.n_objectives,
-            active_task=self.active_task_flag,
         )
 
         # It is important to copy the constraints so that a call to '_tell()' will create a valid _next_x
@@ -508,7 +495,10 @@ class Optimizer(object):
                 + "got %s" % strategy
             )
 
-        if strategy in ["stbr_fill", "stbr_full"] and self.get_constraints() is not None:
+        if (
+            strategy in ["stbr_fill", "stbr_full"]
+            and self.get_constraints() is not None
+        ):
             raise ValueError(
                 "Steinerberger (default setting) sampling can not be used with constraints,\
                 try using another strategy like 'opt.ask(n,strategy='cl_min')'"
@@ -596,13 +586,13 @@ class Optimizer(object):
             # this will not make a copy of `self.rng` and hence keep advancing
             # our random state.
 
-            assert not (
-                self._constraints and self._lhs
-            ), "Constraints can't be used while latin hypercube sampling is not exhausted"
+            assert not (self._constraints and self._lhs), (
+                "Constraints can't be used while latin hypercube sampling is not exhausted"
+            )
 
             if self._n_initial_points == 0 and self.base_estimator_ is None:
                 # This occurs during runs with dummy minimizer in which base_estimator is None by design
-                return self.space.rvs(random_state=self.rng, active_task=self.active_task_flag)[0]
+                return self.space.rvs(random_state=self.rng)[0]
 
             if self._constraints:
                 # Use one sampling strategy for SumEquals constraints
@@ -624,11 +614,11 @@ class Optimizer(object):
                     len(self._lhs_samples) - self._n_initial_points
                 ]
             else:
-                return self.space.rvs(random_state=self.rng, active_task=self.active_task_flag)[0]
+                return self.space.rvs(random_state=self.rng)[0]
         else:
             if not self.models:
                 raise RuntimeError(
-                    "Random evaluations exhausted and no " "model has been fit."
+                    "Random evaluations exhausted and no model has been fit."
                 )
 
             next_x = self._next_x
@@ -808,7 +798,10 @@ class Optimizer(object):
                         )
                 else:
                     X = self.space.transform(
-                        self.space.rvs(n_samples=self.n_points, random_state=self.rng, active_task=self.active_task_flag)
+                        self.space.rvs(
+                            n_samples=self.n_points,
+                            random_state=self.rng,
+                        )
                     )
 
                 self.next_xs_ = []
@@ -922,8 +915,7 @@ class Optimizer(object):
         if self.n_objectives == 1:
             estimation = namedtuple(
                 "estimation",
-                self.objective_name_list
-                + list(single_objective_estimation._fields),
+                self.objective_name_list + list(single_objective_estimation._fields),
             )  # For single objective optimizers, the returned list's elements
             # are namedtuples, with a field named after the objective ("Y" by
             # default), which in turn has the fields "mean" and "std", for
@@ -932,9 +924,9 @@ class Optimizer(object):
             prediction = self_with_observation_noise.models[-1].predict(
                 transformed_x, return_std=True
             )
-            (_, noiseless_predicted_std) = self_without_observation_noise.models[-1].predict(
-                transformed_x, return_std=True
-            )
+            (_, noiseless_predicted_std) = self_without_observation_noise.models[
+                -1
+            ].predict(transformed_x, return_std=True)
             # The estimate is "packed" different than sci-kit learn predictions
             # are. The predictions are a tuple of two arrays, one for the mean
             # and one for the standard deviation; each array has one element
@@ -947,9 +939,9 @@ class Optimizer(object):
                     single_objective_estimation(mean, std, std_model),
                     mean,
                     std,
-                    std_model
-                ) for
-                mean, std, std_model in zip(
+                    std_model,
+                )
+                for mean, std, std_model in zip(
                     prediction[0], prediction[1], noiseless_predicted_std
                 )
             ]
@@ -960,23 +952,28 @@ class Optimizer(object):
             # mean and one for the standard deviation; each array has one
             # element per x.
             predict_list = [
-                model.predict(transformed_x, return_std=True) for
-                model in self_with_observation_noise.models[-1]
+                model.predict(transformed_x, return_std=True)
+                for model in self_with_observation_noise.models[-1]
             ]
             noiseless_predict_list = [
-                model.predict(transformed_x, return_std=True) for
-                model in self_without_observation_noise.models[-1]
+                model.predict(transformed_x, return_std=True)
+                for model in self_without_observation_noise.models[-1]
             ]
             estimate_list = []
             for i in range(len(x)):
                 # For each x and objective, create the
                 # single_objective_estimation and append it to the list of
                 # estimations for that x
-                estimate_list.append([single_objective_estimation(
+                estimate_list.append(
+                    [
+                        single_objective_estimation(
                             predict_list[j][0][i],
                             predict_list[j][1][i],
-                            noiseless_predict_list[j][1][i]
-                        ) for j in range(self.n_objectives)])
+                            noiseless_predict_list[j][1][i],
+                        )
+                        for j in range(self.n_objectives)
+                    ]
+                )
             # Packing the list of estimations for each x into a namedtuple.
             estimate_list = [estimation(*result) for result in estimate_list]
         return estimate_list
@@ -1012,7 +1009,7 @@ class Optimizer(object):
         # Check single tell with multiobjective
         elif is_listlike(y):
             # Check if the observation has the correct number of objectives
-            if (not self.active_task_flag and not len(y) == self.n_objectives):
+            if not len(y) == self.n_objectives:
                 raise ValueError(
                     "y does not have the correct number of objective scores"
                 )
@@ -1059,7 +1056,7 @@ class Optimizer(object):
 
         if self.n_objectives > 1:
             raise RuntimeError(
-            "Can't set constraints for multiobjective optimization. The NSGA-II algorithm \
+                "Can't set constraints for multiobjective optimization. The NSGA-II algorithm \
             used for multiobjective optimization does not support constraints."
             )
 
@@ -1092,7 +1089,7 @@ class Optimizer(object):
     def update_next(self):
         """Updates the value returned by opt.ask(). Useful if a parameter was updated after ask was called."""
         self.cache_ = {}
-        self._n_initial_points = self.n_initial_points_-len(self.Xi)
+        self._n_initial_points = self.n_initial_points_ - len(self.Xi)
         copy = self.copy(random_state=self.rng)
         self.models = copy.models
         # Ask for a new next_x. Usefull if new constraints have been added or lenght_scale has been tweaked.
@@ -1112,7 +1109,7 @@ class Optimizer(object):
             self.space,
             self.rng,
             models=self.models,
-            constraints=self._constraints
+            constraints=self._constraints,
         )
 
     def _check_length_scale_bounds(self, dimensions, bounds):
@@ -1163,7 +1160,6 @@ class Optimizer(object):
             "GP",
             n_objectives=self.n_objectives,
             n_initial_points=999,
-            active_task=self.active_task_flag
         )
         for i in range(len(self.Xi)):
             if self.n_objectives == 1:
@@ -1180,7 +1176,7 @@ class Optimizer(object):
             loc_min = []
             fun_val = []
             # We use 20 lhs point as initial guesses for minimization
-            x0 = copy.space.lhs(20, self.random_state, active_task=self.active_task_flag)
+            x0 = copy.space.lhs(20, self.random_state)
             x0 = copy.space.transform(x0)
 
             # Loop over each initial guess and find a local minimum
@@ -1336,17 +1332,10 @@ class Optimizer(object):
 
     # This function adds the modelled white noise to the regressor to allow predictions including noise
     def add_observational_noise_single_model(self, model):
-        if (
-            isinstance(model.noise, str)
-            and model.noise != "gaussian"
-        ):
-            raise ValueError(
-                "Expected noise to be 'gaussian', got %s" % model.noise
-            )
+        if isinstance(model.noise, str) and model.noise != "gaussian":
+            raise ValueError("Expected noise to be 'gaussian', got %s" % model.noise)
         noise_estimate = model.noise_
-        white_present, white_param = _param_for_white_kernel_in_Sum(
-            model.kernel_
-        )
+        white_present, white_param = _param_for_white_kernel_in_Sum(model.kernel_)
         if white_present:
             model.kernel_.set_params(
                 **{white_param: WhiteKernel(noise_level=noise_estimate)}
@@ -1365,17 +1354,8 @@ class Optimizer(object):
             self.remove_observational_noise_single_model(self.models[-1])
 
     def remove_observational_noise_single_model(self, model):
-        if (
-            isinstance(model.noise, str)
-            and model.noise != "gaussian"
-        ):
-            raise ValueError(
-                "expected noise to be 'gaussian', got %s" % model.noise
-            )
-        white_present, white_param = _param_for_white_kernel_in_Sum(
-            model.kernel_
-        )
+        if isinstance(model.noise, str) and model.noise != "gaussian":
+            raise ValueError("expected noise to be 'gaussian', got %s" % model.noise)
+        white_present, white_param = _param_for_white_kernel_in_Sum(model.kernel_)
         if white_present:
-            model.kernel_.set_params(
-                **{white_param: WhiteKernel(noise_level=0.0)}
-            )
+            model.kernel_.set_params(**{white_param: WhiteKernel(noise_level=0.0)})

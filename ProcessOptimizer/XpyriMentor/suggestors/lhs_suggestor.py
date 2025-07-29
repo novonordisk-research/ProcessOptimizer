@@ -6,18 +6,11 @@ from ProcessOptimizer.space import Space
 from .suggestor import IncompatibleNumberAsked
 
 
-class LHSSuggestor():
-    def __init__(
-            self,
-            space: Space,
-            rng: np.random.Generator,
-            n_points: int = 5,
-            active_task: bool=False
-    ):
+class LHSSuggestor:
+    def __init__(self, space: Space, rng: np.random.Generator, n_points: int = 5):
         self.space = space
         self.rng = rng
         self.n_points = n_points
-        self.active_task_flag = active_task
         self.cache = self.find_lhs_points()
 
     def find_lhs_points(self) -> np.ndarray:
@@ -34,15 +27,14 @@ class LHSSuggestor():
         return self.space.sample(samples_indexed)
 
     def suggest(
-        self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = 1, active_task: bool=False
+        self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = 1
     ) -> np.ndarray:
-        self.active_task_flag = active_task
         if n_asked + len(Xi) > self.n_points:
             raise IncompatibleNumberAsked(
                 "The number of points requested is greater than the number of points "
                 "in the LHS cache."
             )
-        return self.cache[len(Xi):len(Xi) + n_asked]
+        return self.cache[len(Xi) : len(Xi) + n_asked]
 
     def __str__(self):
         return f"Latin Hypercube Suggestor with {self.n_points} points"

@@ -11,6 +11,7 @@ class Suggestor(Protocol):
     space and the already evaluated points. In particular, consecutive calls to the
     suggest method with the same input should ideally return the same output.
     """
+
     def __init__(self, **kwargs):
         """
         Initialize the suggestor with the search space. Suggestors can take other input
@@ -22,7 +23,7 @@ class Suggestor(Protocol):
         """
         pass
 
-    def suggest(self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int, active_task: bool=False) -> np.ndarray:
+    def suggest(self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int) -> np.ndarray:
         """
         Suggest a new point to evaluate.
 
@@ -47,4 +48,5 @@ class IncompatibleNumberAsked(ValueError):
     """
     Exception raised when a suggestor is asked to suggest more points than it can suggest.
     """
+
     pass
