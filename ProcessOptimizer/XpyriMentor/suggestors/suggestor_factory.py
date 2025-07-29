@@ -37,22 +37,36 @@ def suggestor_factory(
     """
     Create a suggestor from a definition dictionary.
 
-    Definition is either a suggestor instance, a dict that specifies the suggestor type
-    and its parameters, or None.
+    Parameters
+    ----------
+    * space [`Space`]:
+        The search space.
+    * definition [`Union[Suggestor, dict[str, Any], None]`]:
+        The definition of the suggestor to create.
 
-    If definiton is a suggestor instance it is returned as is.
+        If it is a suggestor instance, it is returned as is. This is useful for creating
+        suggestors that are composed of other suggestors (strategizers).
 
-    If definition is a dict, it is used to create a suggestor. The dictionary must have
-    a 'name' key that specifies the type of suggestor. The other keys depend on the
-    suggestor type. It can be recursive if the suggestor is a strategizer, that is, a
-    suggestor that delegates ask() to other suggestors.
+        If it is a dict, it is used to create the suggestor. The dictionary must have
+        the key `suggestor_name` that specifies the type of suggestor. The other keys
+        depend on the suggestor type. It can be recursive if the suggestor is a
+        strategizer, that is, a suggestor that delegates ask() to other suggestors.
 
-    If definition is None, a DefaultSuggestor is created. This is useful as a
-    placeholder in strategizers, and should be replaced with a real suggestor before
-    use.
+        If it is None, a DefaultSuggestor is created. This is useful as a placeholder in
+        strategizers, and should be replaced with a real suggestor before use.
+    * n_objectives [`int`]:
+        The number of objectives for the suggestor.
+    * rng [`Optional[np.random.Generator]`]:
+        The random number generator to use. If None, a reproducible RNG is created.
+    * suggestors [`dict[str, CreatableSuggestor] | None`]:
+        A dictionary of available suggestors. The built-in suggestors will be added.
     """
     if suggestors is None:
-        suggestors = SUGGESTORS
+        suggestors = {}
+    # For the keys not present in suggestors, add the built-in suggestors
+    for key, value in SUGGESTORS.items():
+        suggestors.setdefault(key, value)
+        # This also returns the value, which we don't use
     if isinstance(definition, Suggestor):
         return definition
     if rng is None:
