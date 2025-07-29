@@ -1,7 +1,9 @@
+from __future__ import annotations
 import warnings
-from typing import Iterable
+from typing import Any, Callable, Iterable
 
 import numpy as np
+from ProcessOptimizer.space import Space
 
 from .default_suggestor import DefaultSuggestor, NoDefaultSuggestorError
 from .suggestor import Suggestor
@@ -49,3 +51,36 @@ class RandomStragegizer:
         return "Random Strategizer with suggestors: " + ", ".join(
             suggestor.__class__.__name__ for _, suggestor in self.suggestors
         )
+
+    @classmethod
+    def create_from_definition(
+        cls,
+        space: Space,
+        suggestor_factory: Callable[..., Suggestor],
+        definition: dict[str, Any],
+        n_objectives: int,
+        rng: np.random.Generator,
+    ) -> RandomStragegizer:
+        suggestors = []
+        child_rngs = rng.spawn(len(definition["suggestors"]))
+        for suggestor in definition["suggestors"]:
+            usage_ratio = suggestor.pop("suggestor_usage_ratio")
+            # Note that we are removing the key usage_ratio from the suggestor
+            # definition. If any suggestor uses this key, it will have to be redefined in
+            # the suggestor definition.
+            if "suggestor" in suggestor:
+                if len(suggestor) > 1:
+                    raise ValueError(
+                        "If a suggestor definition for a RandomStrategizer has a "
+                        "'suggestor' key, it should only have that key and "
+                        "'usage_ratio', but it has the keys `usage_ratio`, "
+                        f"{suggestor.keys()}."
+                    )
+                suggestor = suggestor["suggestor"]
+            suggestors.append(
+                (
+                    usage_ratio,
+                    suggestor_factory(space, suggestor, n_objectives, child_rngs.pop()),
+                )
+            )
+        return cls(suggestors=suggestors, rng=rng)

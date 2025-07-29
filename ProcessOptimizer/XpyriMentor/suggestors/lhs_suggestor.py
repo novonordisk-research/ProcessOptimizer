@@ -1,4 +1,5 @@
-from typing import Iterable
+from __future__ import annotations
+from typing import Any, Iterable, Optional
 
 import numpy as np
 from ProcessOptimizer.space import Space
@@ -41,3 +42,18 @@ class LHSSuggestor:
 
     def __repr__(self):
         return f"LHSSuggestor(space={self.space}, rng={self.rng}, n_points={self.n_points})"
+
+    @classmethod
+    def create_from_definition(
+        cls,
+        space: Space,
+        suggestor_factory: callable,
+        definition: dict[str, Any],
+        n_objectives: int = 1,
+        rng: Optional[np.random.Generator] = None,
+    ) -> LHSSuggestor:
+        return LHSSuggestor(
+            space=space,
+            rng=rng,
+            **definition,
+        )

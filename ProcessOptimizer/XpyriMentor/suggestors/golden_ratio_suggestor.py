@@ -1,16 +1,19 @@
+from __future__ import annotations
 from typing import Iterable
 
 import numpy as np
 from ProcessOptimizer.space import Space
 
-class GoldenRatioSuggestor():
+
+class GoldenRatioSuggestor:
     """
     A quasi-random, low-discrepancy sequence suggestor based on the generalized golden
     ratio.
 
     From https://extremelearning.com.au/unreasonable-effectiveness-of-quasirandom-sequences/
     """
-    def __init__(self,space: Space, rng: np.random.Generator):
+
+    def __init__(self, space: Space, rng: np.random.Generator):
         self.space = space
         self.rng = rng
         self.offset = self.rng.random()
@@ -24,8 +27,8 @@ class GoldenRatioSuggestor():
         x**(d+1) = 1 + x. If follows that phi(d)**(d+1) = 1 + phi(d).
         """
         x = 2.0
-        for _ in range(10): 
-            x = pow(1+x,1/(d+1))
+        for _ in range(10):
+            x = pow(1 + x, 1 / (d + 1))
         # The above loop converges to the root, as per the extreme learning
         # link. Any irrational number works, and the slight suboptimaæity from
         # not having an exact value is not an issue for our use. We could do
@@ -35,11 +38,11 @@ class GoldenRatioSuggestor():
         return x
 
     def suggest(
-            self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = 1
+        self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = 1
     ) -> np.ndarray:
         """
-        Suggests a new point.  
-        
+        Suggests a new point.
+
         Parameters
         ----------
         * Xi [`Iterable[Iterable]`]:
@@ -58,10 +61,21 @@ class GoldenRatioSuggestor():
         """
         d = self.space.n_dims
         g = self.phi(d)
-        alpha = np.fromiter((pow(1/g, j+1) %1 for j in range(d)), dtype=float)
-        offset = np.array([self.offset]*d + len(Xi)*alpha)
+        alpha = np.fromiter((pow(1 / g, j + 1) % 1 for j in range(d)), dtype=float)
+        offset = np.array([self.offset] * d + len(Xi) * alpha)
         x = np.fromiter(
-            ((offset + alpha*(i+1)) %1 for i in range(n_asked)),
-            dtype = np.dtype((float,d)),
+            ((offset + alpha * (i + 1)) % 1 for i in range(n_asked)),
+            dtype=np.dtype((float, d)),
         )
         return self.space.sample(x)
+
+    @classmethod
+    def create_from_definition(
+        cls,
+        space: Space,
+        suggestor_factory,
+        definition,
+        n_objectives,
+        rng: np.random.Generator,
+    ) -> GoldenRatioSuggestor:
+        return GoldenRatioSuggestor(space=space, rng=rng)

@@ -1,15 +1,19 @@
-from typing import Union, Iterable
+from __future__ import annotations
+from typing import Any, Union, Iterable
 
 import numpy as np
 from ProcessOptimizer.space import Space
 from ProcessOptimizer.utils import is_listlike
 
 
-class ConstantSuggestor():
+class ConstantSuggestor:
     """
     A suggestor that always returns the same point.
     """
-    def __init__(self, space: Space, point: Union[list, float] = 0.5, convert: bool = True):
+
+    def __init__(
+        self, space: Space, point: Union[list, float] = 0.5, convert: bool = True
+    ):
         """
         Initialize the suggestor.
 
@@ -32,7 +36,7 @@ class ConstantSuggestor():
         self.point = np.array(point)
 
     def suggest(
-            self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = 1
+        self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = 1
     ) -> np.ndarray:
         """
         Suggest a new point.
@@ -52,3 +56,14 @@ class ConstantSuggestor():
         dimensions in the search space. The points are all the same, equal to `self.point`.
         """
         return np.tile(self.point, (n_asked, 1))
+
+    @classmethod
+    def create_from_definition(
+        cls,
+        space: Space,
+        suggestor_factory,
+        definition: dict[str, Any],
+        n_objectives,
+        rng: np.random.Generator,
+    ) -> ConstantSuggestor:
+        return ConstantSuggestor(space=space, **definition)
