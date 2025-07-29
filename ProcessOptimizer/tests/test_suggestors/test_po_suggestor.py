@@ -1,5 +1,10 @@
 import numpy as np
-from ProcessOptimizer.XpyriMentor.suggestors import OptimizerSuggestor, suggestor_factory
+from ProcessOptimizer.XpyriMentor.suggestors import (
+    CreatableSuggestor,
+    OptimizerSuggestor,
+    suggestor_factory,
+    Suggestor,
+)
 from ProcessOptimizer.space import space_factory
 
 
@@ -7,6 +12,8 @@ def test_initialization():
     space = space_factory([[0, 1], [0, 1]])
     suggestor = OptimizerSuggestor(space, rng=np.random.default_rng(1))
     assert isinstance(suggestor, OptimizerSuggestor)
+    assert isinstance(suggestor, Suggestor)
+    assert isinstance(suggestor, CreatableSuggestor)
     assert suggestor.optimizer._n_initial_points == 0
     nonstandard_suggestor = OptimizerSuggestor(
         space, rng=np.random.default_rng(1), n_initial_points=5

@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import math
 import warnings
-from typing import Iterable
+from typing import Any, Iterable
 
 import numpy as np
+from ProcessOptimizer.space import Space
 
 from .default_suggestor import DefaultSuggestor
 from .lhs_suggestor import LHSSuggestor
@@ -110,3 +113,37 @@ class SequentialStrategizer:
             for budget, suggestor in self.suggestors
         )
         return f"SequentialStrategizer(suggestors=[{suggestor_list_str}]"
+
+    @classmethod
+    def create_from_definition(
+        cls,
+        space: Space,
+        suggestor_factory: callable[[...], Suggestor],
+        definition: Suggestor | dict[str, Any] | None,
+        n_objectives: int,
+        rng: np.random.Generator,
+    ) -> SequentialStrategizer:
+        suggestors = []
+        child_rngs = rng.spawn(len(definition["suggestors"]))
+        for suggestor in definition["suggestors"]:
+            n = suggestor.pop("suggestor_budget")
+            if "suggestor" in suggestor:
+                if len(suggestor) > 1:
+                    raise ValueError(
+                        "If a suggestor definition for a SequentialStrategizer has a "
+                        "'suggestor' key, it should only have that key and "
+                        "'suggestor_budget', but it has the keys `suggestor_budget`, "
+                        f"{', '.join(suggestor.keys())}."
+                    )
+                suggestor = suggestor["suggestor"]
+            if isinstance(suggestor, dict) and "n_points" not in suggestor:
+                # If the suggestor is to be created (is a dict), it might need to know
+                # how many points it has available.
+                suggestor["n_points"] = n
+            suggestors.append(
+                (
+                    n,
+                    suggestor_factory(space, suggestor, n_objectives, child_rngs.pop()),
+                )
+            )
+        return cls(suggestors=suggestors)

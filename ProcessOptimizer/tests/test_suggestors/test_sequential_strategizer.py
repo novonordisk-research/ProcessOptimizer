@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from ProcessOptimizer.space import space_factory
 from ProcessOptimizer.XpyriMentor.suggestors import (
+    CreatableSuggestor,
     DefaultSuggestor,
     IncompatibleNumberAsked,
     LHSSuggestor,
@@ -36,6 +37,7 @@ def test_protocol():
         suggestors=[(5, MockSuggestor([[1]])), (-1, MockSuggestor([[2]]))],
     )
     assert isinstance(suggestor, Suggestor)
+    assert isinstance(suggestor, CreatableSuggestor)
 
 
 def test_factory():

@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 import warnings
 from ProcessOptimizer.XpyriMentor.suggestors import (
+    CreatableSuggestor,
     RandomStragegizer,
     Suggestor,
     suggestor_factory,
@@ -31,6 +32,7 @@ def test_random_strategizer():
         rng=np.random.default_rng(1),
     )
     assert isinstance(suggestor, Suggestor)
+    assert isinstance(suggestor, CreatableSuggestor)
     # np.random.default_rng(1).random() gives 0.5118216247148916, 0.9504636963259353,
     # and 0.14415961271963373 on the first three calls, so the first three calls
     # should return the suggestors with weights 0.8, 0.2, and 0.8, respectively.
