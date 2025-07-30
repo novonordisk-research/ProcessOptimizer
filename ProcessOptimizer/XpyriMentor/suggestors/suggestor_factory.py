@@ -1,4 +1,5 @@
 import logging
+from functools import partial
 from typing import Any, Union, Optional
 
 import numpy as np
@@ -61,6 +62,9 @@ def suggestor_factory(
     * suggestors [`dict[str, CreatableSuggestor] | None`]:
         A dictionary of available suggestors. The built-in suggestors will be added.
     """
+    # To make sure we supply the correct suggestors when recursing. All other inputs
+    # could conceivably change, so we only fix suggestors.
+    forward_suggestor_factory = partial(suggestor_factory, suggestors=suggestors)
     if suggestors is None:
         suggestors = {}
     # For the keys not present in suggestors, add the built-in suggestors
@@ -84,7 +88,7 @@ def suggestor_factory(
         raise ValueError(f"Unknown suggestor name: {suggestor_type}")
     return suggestors[suggestor_type].create_from_definition(
         space=space,
-        suggestor_factory=suggestor_factory,
+        suggestor_factory=forward_suggestor_factory,
         definition=definition,
         n_objectives=n_objectives,
         rng=rng,
