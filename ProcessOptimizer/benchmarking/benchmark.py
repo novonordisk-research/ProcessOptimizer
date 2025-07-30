@@ -164,9 +164,9 @@ class BenchmarkInstance:
             "expected_random_runtime": self.expected_random_runtime,
             "experimental_budget": self.experimental_budget,
             "noise_level": self.noise_level,
-            "n_initial_points": instance.xpyrimentor.suggestor.suggestors[0][0],
+            "n_initial_points": self.xpyrimentor.suggestor.suggestors[0][0],
             "n_replicates": [number for number, _ in self.replicate_suggestors],
-            "acq_func_kwargs": instance.optimizer.acq_func_kwargs,
+            "acq_func_kwargs": self.optimizer.acq_func_kwargs,
             "noise_level_bounds": self.optimizer.base_estimator_.noise_level_bounds,
             "length_scale_bounds": self.optimizer.base_estimator_.kernel.get_params()[
                 "k2__length_scale_bounds"
@@ -177,7 +177,7 @@ class BenchmarkInstance:
             "success_level": float(self.success_level),
             "number_of_evaluations": self.number_of_evaluations,
             "x": x,
-            "y": [float(y) for y in instance.xpyrimentor.yi],
+            "y": [float(y) for y in self.xpyrimentor.yi],
             "estimated_optima": self.estimated_optima,
             "success": self.success,
         }
