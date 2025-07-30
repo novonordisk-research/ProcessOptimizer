@@ -1,9 +1,8 @@
 import copy
 import logging
-from typing import Any, Iterable, Union, Optional
+from typing import Any, Iterable, Union
 import warnings
 
-import torch
 import numpy as np
 from ProcessOptimizer.space import space_factory, Space
 from ProcessOptimizer.utils import is_2Dlistlike
@@ -78,24 +77,24 @@ class XpyriMentor:
         Ask the suggestor for new points to evaluate. The number of points to ask is
         specified by the argument n. The method returns a list of new points to evaluate.
         """
-        n = int(n) # Ensure that n is an integer
+        n = int(n)  # Ensure that n is an integer
         return self.suggestor.suggest(Xi=self.Xi, Yi=self.yi, n_asked=n)
 
     def tell(self, x: Iterable, y: Any, task: Any = None) -> None:
         # Test whether the input is valid for the suggestor
         if hasattr(self.suggestor, "preprocess_tell"):
             x, y = self.suggestor.preprocess_tell(x, y, task)
-
-        if is_2Dlistlike(x):
-            # If x is a list of points, we assume that y is an iterable of scores of the same
-            # length, and we add the members of x and y to the iterables Xi and yi.
-            self.Xi.extend(x)
-            self.yi.extend(y)
-        else:
-            # If x is a single point, we assume that y is a single score, and we add x
-            # and y to the lists Xi and yi.
-            self.Xi.append(x)
-            self.yi.append(y)
+        if not is_2Dlistlike(x):
+            # If x is not a 2D list-like structure, we wrap it and y in lists so we can
+            # treat them as such.
+            x = [x]
+            y = [y]
+        for point, value in zip(x, y):
+            if not isinstance(point, np.ndarray):
+                # We could get e.g. a list here, and consistency in typing is nice
+                point = np.asarray(point, dtype=object)
+            self.Xi.append(point)
+            self.yi.append(value)
 
         if hasattr(self.suggestor, "get_best_f"):
             self.best_f = self.suggestor.get_best_f(self.Xi, self.yi)
