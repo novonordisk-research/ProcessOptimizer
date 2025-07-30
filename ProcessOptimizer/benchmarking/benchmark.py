@@ -5,6 +5,7 @@ from typing import Any, Iterable
 
 from ProcessOptimizer.model_systems import get_model_system, ModelSystem
 from ProcessOptimizer import Optimizer, XpyriMentor
+from ProcessOptimizer.XpyriMentor.suggestors import ConstantSuggestor
 from ProcessOptimizer.utils import expected_minimum
 
 
@@ -135,6 +136,16 @@ class BenchmarkInstance:
                 break
         self.number_of_evaluations = len(self.xpyrimentor.Xi)
 
+    @property
+    def replicate_suggestors(self) -> list[tuple[int, ConstantSuggestor]]:
+        """All replicate suggestors and how many points each consume."""
+        return [
+            suggestor
+            for suggestor in self.xpyrimentor.suggestor.suggestors
+            if isinstance(suggestor[1], ConstantSuggestor)
+        ]
+
+    @property
     def report(self) -> dict[str, Any]:
         """
         Report the results of the benchmark instance.
@@ -154,7 +165,7 @@ class BenchmarkInstance:
             "experimental_budget": self.experimental_budget,
             "noise_level": self.noise_level,
             "n_initial_points": instance.xpyrimentor.suggestor.suggestors[0][0],
-            "n_replicates": instance.xpyrimentor.suggestor.suggestors[1][0],
+            "n_replicates": [number for number, _ in self.replicate_suggestors],
             "acq_func_kwargs": instance.optimizer.acq_func_kwargs,
             "noise_level_bounds": self.optimizer.base_estimator_.noise_level_bounds,
             "length_scale_bounds": self.optimizer.base_estimator_.kernel.get_params()[
