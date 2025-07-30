@@ -1,9 +1,9 @@
 from __future__ import annotations
 import functools
 from dataclasses import dataclass, field
-from typing import Iterable
+from typing import Any, Iterable
 
-from ..model_systems import get_model_system, ModelSystem
+from ProcessOptimizer.model_systems import get_model_system, ModelSystem
 from ProcessOptimizer import Optimizer, XpyriMentor
 from ProcessOptimizer.utils import expected_minimum
 
@@ -55,7 +55,7 @@ class BenchmarkInstance:
         self.__dict__.update(
             {
                 "model_system_name": model_system_name,
-                "xpyrimentor_definition": xpyrimentor_definition,
+                "xpyrimentor_definition": xpyrimentor_definition.copy(),
                 "experimental_budget": experimental_budget,
                 "expected_random_runtime": expected_random_runtime,
                 "seed": seed,
