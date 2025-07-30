@@ -135,6 +135,42 @@ class BenchmarkInstance:
                 break
         self.number_of_evaluations = len(self.xpyrimentor.Xi)
 
+    def report(self) -> dict[str, Any]:
+        """
+        Report the results of the benchmark instance.
+
+        Returns:
+        -------
+        A dictionary with the results of the benchmark instance.
+        """
+        # Converting sampled points to a list of list of floats or strings. Numpy arrays are not directly serializable.
+        x = [
+            [point if isinstance(point, str) else float(point) for point in x.tolist()]
+            for x in self.xpyrimentor.Xi
+        ]
+        return {
+            "model_system_name": self.model_system_name,
+            "expected_random_runtime": self.expected_random_runtime,
+            "experimental_budget": self.experimental_budget,
+            "noise_level": self.noise_level,
+            "n_initial_points": instance.xpyrimentor.suggestor.suggestors[0][0],
+            "n_replicates": instance.xpyrimentor.suggestor.suggestors[1][0],
+            "acq_func_kwargs": instance.optimizer.acq_func_kwargs,
+            "noise_level_bounds": self.optimizer.base_estimator_.noise_level_bounds,
+            "length_scale_bounds": self.optimizer.base_estimator_.kernel.get_params()[
+                "k2__length_scale_bounds"
+            ],
+            "xpyrimentor_definition": self.xpyrimentor_definition,
+            "seed": self.seed,
+            "validate": self.validate,
+            "success_level": float(self.success_level),
+            "number_of_evaluations": self.number_of_evaluations,
+            "x": x,
+            "y": [float(y) for y in instance.xpyrimentor.yi],
+            "estimated_optima": self.estimated_optima,
+            "success": self.success,
+        }
+
 
 @functools.cache
 def find_limits(
