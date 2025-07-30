@@ -18,6 +18,7 @@ class BenchmarkInstance:
     noise_level: float
     validate: bool = False
     # Results:
+    estimated_optima: list[tuple[float, float, float]] = field(init=False, repr=False)
     number_of_evaluations: int | None = None
     success: bool | None = None
     # Internal variables:
@@ -70,6 +71,7 @@ class BenchmarkInstance:
         self.xpyrimentor = XpyriMentor(
             self.model.space, self.xpyrimentor_definition, seed=seed
         )
+        self.estimated_optima = []
 
     @property
     def model_system(self) -> ModelSystem:
@@ -77,16 +79,32 @@ class BenchmarkInstance:
         model_system.noise_size = model_system.noise_size * self.noise_level
         return model_system
 
-    def find_estimated_optimum(self) -> float:
-        """
-        Find the parameter set that is estimated to be the optimum, and the value that is
-        2 standard deviations above the true value at that point.
-        """
+    @property
+    def optimizer(self) -> Optimizer:
         # This is a bit of a hack, but it works for now. The optimizer is the last
-        # suggestor in the suggestor list of the sequential strategizer. We need the
-        # optimizer since we need to find the expected minimum and the model uncertainty
-        # there.
-        optimizer: Optimizer = self.xpyrimentor.suggestor.suggestors[-1][1].optimizer
+        # suggestor in the suggestor list of the sequential strategizer.
+        return self.xpyrimentor.suggestor.suggestors[-1][1].optimizer
+
+    def tell(self, x: Iterable, y: float) -> tuple[float, float, float]:
+        """
+        Tell the xpyrimentor about a new observation.
+
+        Parameters:
+        -----------
+        x : Iterable
+            The input parameters for the observation.
+        y : float
+            The output value for the observation.
+
+        Returns:
+        --------
+        A tuple containing the estimated location, value, and standard deviation of the
+        estimated optimum after the new point has been added. This is also appended to
+        `self.estimated_optima`, so a full history of the estimated optima is
+        maintained.
+        """
+        self.xpyrimentor.tell(x, [y])
+        optimizer: Optimizer = self.optimizer
         optimizer.Xi = self.xpyrimentor.Xi
         optimizer.yi = self.xpyrimentor.yi
         optimizer.update_next()
@@ -96,20 +114,21 @@ class BenchmarkInstance:
             result, return_std=True
         )
         optimizer.remove_observational_noise()
-        return (result_location, result_value + 2 * result_std)
+        self.estimated_optima.append((result_location, result_value, result_std))
+        return (result_location, result_value, result_std)
 
     def run(self):
         self.success = False
         while len(self.xpyrimentor.Xi) < self.experimental_budget:
             x = self.xpyrimentor.ask()
             y = self.model.get_score(x)
-            self.xpyrimentor.tell(x, [y])
-            minimum_location, minimum_value = self.find_estimated_optimum()
-            if minimum_value < self.success_level and self.validate:
+            minimum_location, minimum_value, minimum_std = self.tell(x, y)
+            if (minimum_value + 2 * minimum_std) < self.success_level and self.validate:
                 result = self.model.get_score(minimum_location)
-                self.xpyrimentor.tell(minimum_location, result)
-                minimum_location, minimum_value = self.find_estimated_optimum()
-            if minimum_value < self.success_level:
+                minimum_location, minimum_value, minimum_std = self.tell(
+                    [minimum_location], result
+                )
+            if (minimum_value + 2 * minimum_std) < self.success_level:
                 true_quality = find_pesimistic_value(self.model, minimum_location)
                 if true_quality < self.success_level:
                     self.success = True
