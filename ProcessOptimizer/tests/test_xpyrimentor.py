@@ -1,6 +1,11 @@
+import numpy as np
 import pytest
 from ProcessOptimizer import XpyriMentor
-from ProcessOptimizer.XpyriMentor.suggestors import OptimizerSuggestor, LHSSuggestor, SequentialStrategizer
+from ProcessOptimizer.XpyriMentor.suggestors import (
+    OptimizerSuggestor,
+    LHSSuggestor,
+    SequentialStrategizer,
+)
 
 
 class MockSuggestor:
@@ -29,21 +34,21 @@ def test_tell_single_objective():
     space = [[0, 1], [0, 1]]
     exp = XpyriMentor(space)
     exp.tell([0.5, 0.5], 1)
-    assert exp.Xi == [[0.5, 0.5]]
+    assert [x.tolist() for x in exp.Xi] == [[0.5, 0.5]]
     assert exp.yi == [1]
     exp.tell([0.6, 0.6], 2)
-    assert exp.Xi == [[0.5, 0.5], [0.6, 0.6]]
+    assert [x.tolist() for x in exp.Xi] == [[0.5, 0.5], [0.6, 0.6]]
     assert exp.yi == [1, 2]
 
 
 def test_tell_multiple_objectives():
     space = [[0, 1], [0, 1]]
-    exp = XpyriMentor(space)
+    exp = XpyriMentor(space, n_objectives=2)
     exp.tell([0.5, 0.5], [1, 2])
-    assert exp.Xi == [[0.5, 0.5]]
+    assert [x.tolist() for x in exp.Xi] == [[0.5, 0.5]]
     assert exp.yi == [[1, 2]]
     exp.tell([0.6, 0.6], [2, 3])
-    assert exp.Xi == [[0.5, 0.5], [0.6, 0.6]]
+    assert [x.tolist() for x in exp.Xi] == [[0.5, 0.5], [0.6, 0.6]]
     assert exp.yi == [[1, 2], [2, 3]]
 
 
@@ -73,10 +78,15 @@ def test_ask_passes_on_values():
     exp.suggestor = MockSuggestor([[0.5, 0.5]])
     exp.tell([0.6, 0.6], 2)
     exp.ask()
-    assert exp.suggestor.last_input == {"Xi": [[0.6, 0.6]], "Yi": [2]}
+    assert [x.tolist() for x in exp.suggestor.last_input["Xi"]] == [[0.6, 0.6]]
+    assert exp.suggestor.last_input["Yi"] == [2]
     exp.tell([0.7, 0.7], 3)
     exp.ask()
-    assert exp.suggestor.last_input == {"Xi": [[0.6, 0.6], [0.7, 0.7]], "Yi": [2, 3]}
+    assert [x.tolist() for x in exp.suggestor.last_input["Xi"]] == [
+        [0.6, 0.6],
+        [0.7, 0.7],
+    ]
+    assert exp.suggestor.last_input["Yi"] == [2, 3]
 
 
 def test_ask_multiple():
