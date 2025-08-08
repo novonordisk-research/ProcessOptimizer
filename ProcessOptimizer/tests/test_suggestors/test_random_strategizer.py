@@ -7,9 +7,11 @@ from ProcessOptimizer.XpyriMentor.suggestors import (
     suggestor_factory,
     OptimizerSuggestor,
     LHSSuggestor,
-    DefaultSuggestor
+    DefaultSuggestor,
 )
-from ProcessOptimizer.XpyriMentor.suggestors.default_suggestor import NoDefaultSuggestorError
+from ProcessOptimizer.XpyriMentor.suggestors.default_suggestor import (
+    NoDefaultSuggestorError,
+)
 from ProcessOptimizer.space import space_factory
 
 
@@ -18,15 +20,15 @@ class MockSuggestor:
         self.suggestions = suggestions
         self.last_input = {}
 
-    def suggest(self, Xi, Yi, n_asked=1, active_task = False):
+    def suggest(self, Xi, Yi, n_asked=1):
         self.last_input = {"Xi": Xi, "Yi": Yi}
-        return self.suggestions*n_asked
+        return self.suggestions * n_asked
 
 
 def test_random_strategizer():
     suggestor = RandomStragegizer(
         suggestors=[(0.8, MockSuggestor([[1]])), (0.2, MockSuggestor([[2]]))],
-        rng=np.random.default_rng(1)
+        rng=np.random.default_rng(1),
     )
     assert isinstance(suggestor, Suggestor)
     # np.random.default_rng(1).random() gives 0.5118216247148916, 0.9504636963259353,
@@ -41,9 +43,13 @@ def test_factory():
     space = space_factory([[0, 1], [0, 1]])
     suggestor = suggestor_factory(
         space=space,
-        definition={"suggestor_name": "Random", "suggestors": [
-            {"suggestor_usage_ratio": 0.8, "suggestor_name": "Optimizer"},
-            {"suggestor_usage_ratio": 0.2, "suggestor_name": "LHS"},]},
+        definition={
+            "suggestor_name": "Random",
+            "suggestors": [
+                {"suggestor_usage_ratio": 0.8, "suggestor_name": "Optimizer"},
+                {"suggestor_usage_ratio": 0.2, "suggestor_name": "LHS"},
+            ],
+        },
     )
     assert isinstance(suggestor, RandomStragegizer)
     assert len(suggestor.suggestors) == 2
@@ -56,7 +62,7 @@ def test_factory():
 def test_random_multiple_ask():
     suggestor = RandomStragegizer(
         suggestors=[(0.8, MockSuggestor([[1]])), (0.2, MockSuggestor([[2]]))],
-        rng=np.random.default_rng(1)
+        rng=np.random.default_rng(1),
     )
     assert all(suggestor.suggest([], [], n_asked=2) == [[1], [2]])
     assert all(suggestor.suggest([], [], n_asked=3) == [[1], [1], [2]])
@@ -67,9 +73,9 @@ def test_default_suggestor():
         RandomStragegizer(
             suggestors=[
                 (0.8, MockSuggestor([[1]])),
-                (0.2, DefaultSuggestor(space=[], n_objectives=1, rng=None))
+                (0.2, DefaultSuggestor(space=[], n_objectives=1, rng=None)),
             ],
-            rng=np.random.default_rng(1)
+            rng=np.random.default_rng(1),
         )
 
 
@@ -78,19 +84,19 @@ def test_wrong_sum():
         # Warning if the sum of usage ratios is not 1 or 100
         RandomStragegizer(
             suggestors=[(0.8, MockSuggestor([[1]])), (0.3, MockSuggestor([[2]]))],
-            rng=np.random.default_rng(1)
+            rng=np.random.default_rng(1),
         )
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         # No warnings if the sum of usage ratios is 1
         RandomStragegizer(
             suggestors=[(0.8, MockSuggestor([[1]])), (0.2, MockSuggestor([[2]]))],
-            rng=np.random.default_rng(1)
+            rng=np.random.default_rng(1),
         )
         # No warnings if the sum of usage ratios is 100
         RandomStragegizer(
             suggestors=[(80, MockSuggestor([[1]])), (20, MockSuggestor([[2]]))],
-            rng=np.random.default_rng(1)
+            rng=np.random.default_rng(1),
         )
 
 
@@ -98,9 +104,13 @@ def test_random_with_suggestor_given():
     space = space_factory([[0, 1], [0, 1]])
     suggestor = suggestor_factory(
         space=space,
-        definition={"suggestor_name": "Random", "suggestors": [
-            {"suggestor_usage_ratio": 0.8, "suggestor": MockSuggestor([[1]])},
-            {"suggestor_usage_ratio": 0.2, "suggestor": MockSuggestor([[2]])},]},
+        definition={
+            "suggestor_name": "Random",
+            "suggestors": [
+                {"suggestor_usage_ratio": 0.8, "suggestor": MockSuggestor([[1]])},
+                {"suggestor_usage_ratio": 0.2, "suggestor": MockSuggestor([[2]])},
+            ],
+        },
     )
     assert isinstance(suggestor, RandomStragegizer)
     assert len(suggestor.suggestors) == 2
@@ -115,11 +125,15 @@ def test_random_with_suggestor_given_wrong_keys():
     with pytest.raises(ValueError):
         suggestor_factory(
             space=space,
-            definition={"name": "Random", "suggestors": [
-                {"suggestor_usage_ratio": 0.8, "suggestor": MockSuggestor([[1]])},
-                {
-                    "suggestor_usage_ratio": 0.2,
-                    "suggestor": MockSuggestor([[2]]),
-                    "additional_key": "Can't have this key",
-                },]},
+            definition={
+                "name": "Random",
+                "suggestors": [
+                    {"suggestor_usage_ratio": 0.8, "suggestor": MockSuggestor([[1]])},
+                    {
+                        "suggestor_usage_ratio": 0.2,
+                        "suggestor": MockSuggestor([[2]]),
+                        "additional_key": "Can't have this key",
+                    },
+                ],
+            },
         )

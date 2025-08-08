@@ -10,7 +10,7 @@ from .po_suggestor import OptimizerSuggestor
 from .suggestor import IncompatibleNumberAsked, Suggestor
 
 
-class SequentialStrategizer():
+class SequentialStrategizer:
     """
     Stratgizer that uses a sequence of suggestors, each with a budget of suggestions to
     make.
@@ -18,6 +18,7 @@ class SequentialStrategizer():
     It uses the suggestors in order, skipping suggestors with a budget of suggestions
     that have already been made.
     """
+
     def __init__(self, suggestors: list[tuple[int, Suggestor]]):
         """
         Initialize the strategizer with a list of suggestors and their budgets.
@@ -41,7 +42,7 @@ class SequentialStrategizer():
                         budget,
                         LHSSuggestor(
                             space=suggestor.space, rng=suggestor.rng, n_points=budget
-                        )
+                        ),
                     )
                 else:
                     suggestors[n] = (
@@ -50,7 +51,8 @@ class SequentialStrategizer():
                             space=suggestor.space,
                             rng=suggestor.rng,
                             n_objectives=suggestor.n_objectives,
-                        ))
+                        ),
+                    )
             if budget < 0:
                 # Interpret negative budgets as infinity
                 suggestors[n] = (float("inf"), suggestors[n][1])
@@ -68,7 +70,7 @@ class SequentialStrategizer():
                     )
         self.suggestors = suggestors
 
-    def suggest(self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = 1, active_task: bool=False):
+    def suggest(self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = 1):
         # We will skip as many points as we have already been told about.
         number_left_to_skip = len(Xi)  # Running tally of points to skip.
         number_left_to_find = n_asked  # Running tally of points to find.
@@ -88,7 +90,7 @@ class SequentialStrategizer():
                 # If we need fewer points than the suggestor can give us, we take the
                 # points we need and stop.
                 number_from_this_suggestor = number_left_to_find
-            suggestions.extend(suggestor.suggest(Xi, Yi, number_from_this_suggestor, active_task))
+            suggestions.extend(suggestor.suggest(Xi, Yi, number_from_this_suggestor))
             number_left_to_find -= number_from_this_suggestor
             if number_left_to_find == 0:
                 # If we have already found all the points we need, we can stop.
@@ -104,8 +106,7 @@ class SequentialStrategizer():
 
     def __repr__(self):
         suggestor_list_str = ", ".join(
-            f"({budget}, {suggestor.__class__.__name__}(...))" for budget, suggestor in self.suggestors
+            f"({budget}, {suggestor.__class__.__name__}(...))"
+            for budget, suggestor in self.suggestors
         )
-        return (
-            f"SequentialStrategizer(suggestors=[{suggestor_list_str}]"
-        )
+        return f"SequentialStrategizer(suggestors=[{suggestor_list_str}]"

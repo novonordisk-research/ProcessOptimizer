@@ -8,7 +8,7 @@ from ProcessOptimizer.XpyriMentor.suggestors import (
     OptimizerSuggestor,
     SequentialStrategizer,
     Suggestor,
-    suggestor_factory
+    suggestor_factory,
 )
 
 
@@ -17,9 +17,9 @@ class MockSuggestor:
         self.suggestions = suggestions
         self.last_input = {}
 
-    def suggest(self, Xi, Yi, n_asked=1, active_task = False):
+    def suggest(self, Xi, Yi, n_asked=1):
         self.last_input = {"Xi": Xi, "Yi": Yi}
-        return self.suggestions*n_asked
+        return self.suggestions * n_asked
 
 
 def test_initialization():
@@ -85,14 +85,14 @@ def test_suggest():
     assert all(suggestor.suggest([], [], n_asked=4) == [[1], [1], [1], [2]])
     assert suggestor_1.last_input == {"Xi": [], "Yi": []}
     assert suggestor_2.last_input == {"Xi": [], "Yi": []}
-    assert suggestor.suggest([[1]]*2, [1, 1]) == [[1]]
-    assert all(suggestor.suggest([[1]]*2, [1, 1], n_asked=2) == [[1], [2]])
-    assert all(suggestor.suggest([[1]]*2, [1, 1], n_asked=4) == [[1], [2], [2], [3]])
+    assert suggestor.suggest([[1]] * 2, [1, 1]) == [[1]]
+    assert all(suggestor.suggest([[1]] * 2, [1, 1], n_asked=2) == [[1], [2]])
+    assert all(suggestor.suggest([[1]] * 2, [1, 1], n_asked=4) == [[1], [2], [2], [3]])
     assert suggestor_1.last_input == {"Xi": [[1], [1]], "Yi": [1, 1]}
     assert suggestor_2.last_input == {"Xi": [[1], [1]], "Yi": [1, 1]}
     assert suggestor_3.last_input == {"Xi": [[1], [1]], "Yi": [1, 1]}
-    assert suggestor.suggest([[1]]*100, [1]*100) == [[3]]
-    assert suggestor_3.last_input == {"Xi": [[1]]*100, "Yi": [1]*100}
+    assert suggestor.suggest([[1]] * 100, [1] * 100) == [[3]]
+    assert suggestor_3.last_input == {"Xi": [[1]] * 100, "Yi": [1] * 100}
 
 
 def test_default_suggestors():
@@ -102,7 +102,7 @@ def test_default_suggestors():
         suggestors=[
             (3, DefaultSuggestor(space=space, n_objectives=1, rng=rng)),
             (2, DefaultSuggestor(space=space, n_objectives=1, rng=rng)),
-            (-1, DefaultSuggestor(space=space, n_objectives=2, rng=rng))
+            (-1, DefaultSuggestor(space=space, n_objectives=2, rng=rng)),
         ],
     )
     assert isinstance(suggestor.suggestors[0][1], LHSSuggestor)
@@ -119,7 +119,8 @@ def test_incompatible_n_points():
             self.n_points = n_points
 
         def suggest(self, Xi, Yi, n_asked=1):
-            return [[self.n_points]]*n_asked
+            return [[self.n_points]] * n_asked
+
     with pytest.warns(UserWarning):
         SequentialStrategizer(suggestors=[(5, NPointsSuggestor(10))])
 
