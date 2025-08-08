@@ -9,6 +9,7 @@ from ProcessOptimizer.utils import is_2Dlistlike
 from ProcessOptimizer.utils.get_rng import get_random_generator
 
 from .suggestors import (
+    CreatableSuggestor,
     DefaultSuggestor,
     Suggestor,
     suggestor_factory,
@@ -41,6 +42,7 @@ class XpyriMentor:
         suggestor: Union[Suggestor, dict, None] = None,
         n_objectives: int = 1,
         seed: Union[int, np.random.RandomState, np.random.Generator, None] = 42,
+        extra_suggestors: Union[dict[str, CreatableSuggestor], None] = None,
     ):
         """
         Initialize the XpyriMentor with the search space and the suggestor. The suggestor
@@ -50,7 +52,13 @@ class XpyriMentor:
         """
         space = space_factory(space)
         rng = get_random_generator(seed)
-        suggestor = suggestor_factory(space, suggestor, n_objectives, rng)
+        suggestor = suggestor_factory(
+            space,
+            suggestor,
+            n_objectives,
+            rng,
+            suggestors=extra_suggestors,
+        )
         if isinstance(suggestor, DefaultSuggestor):
             logger.debug("Replacing DefaultSuggestor with InitialPointSuggestor")
             suggestor = suggestor_factory(
