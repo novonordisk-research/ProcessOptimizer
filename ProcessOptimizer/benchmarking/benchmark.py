@@ -12,7 +12,7 @@ from ProcessOptimizer.utils import expected_minimum
 @dataclass
 class BenchmarkInstance:
     model_system_name: str
-    xpyrimentor_definition: dict
+    suggestor_definition: dict
     experimental_budget: int
     expected_random_runtime: float
     seed: int
@@ -30,7 +30,7 @@ class BenchmarkInstance:
     def __init__(
         self,
         model_system_name: str,
-        xpyrimentor_definition: dict,
+        suggestor_definition: dict,
         experimental_budget: int,
         expected_random_runtime: float,
         seed: int,
@@ -43,8 +43,8 @@ class BenchmarkInstance:
         Needs the following parameters:
         * `model_system_name` [str]:
             Name of the model system to use.
-        * `xpyrimentor_definition` [dict]:
-            Definition of the XpyriMentor object to use.
+        * `suggestor_definition` [dict]:
+            Definition of the suggestor object to use.
         * `experimental_budget` [int]:
             Maximum number of evaluations to run before stopping.
         * `expected_random_runtime` [float]:
@@ -56,7 +56,7 @@ class BenchmarkInstance:
         self.__dict__.update(
             {
                 "model_system_name": model_system_name,
-                "xpyrimentor_definition": xpyrimentor_definition.copy(),
+                "suggestor_definition": suggestor_definition.copy(),
                 "experimental_budget": experimental_budget,
                 "expected_random_runtime": expected_random_runtime,
                 "seed": seed,
@@ -70,7 +70,7 @@ class BenchmarkInstance:
         self.model = get_model_system(model_system_name, seed=seed)
         self.model.noise_size *= noise_level
         self.xpyrimentor = XpyriMentor(
-            self.model.space, self.xpyrimentor_definition, seed=seed
+            self.model.space, self.suggestor_definition, seed=seed
         )
         self.estimated_optima = []
 
@@ -171,7 +171,7 @@ class BenchmarkInstance:
             "length_scale_bounds": self.optimizer.base_estimator_.kernel.get_params()[
                 "k2__length_scale_bounds"
             ],
-            "xpyrimentor_definition": self.xpyrimentor_definition,
+            "suggestor_definition": self.suggestor_definition,
             "seed": self.seed,
             "validate": self.validate,
             "success_level": float(self.success_level),
