@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Iterable, List, Union
+from typing import Any, Generator, Iterable, List, Union
 
 import numbers
 import numpy as np
@@ -618,7 +618,14 @@ class Categorical(Dimension):
 
 
 class Task(Dimension):
-    def __init__(self, tasks, active_task, prior=None, transform=None, name=None):
+    def __init__(
+        self,
+        tasks: Iterable[Any],
+        active_task: Any,
+        prior=None,
+        transform=None,
+        name=None,
+    ):
         """Search space dimension that can take on categorical values.
 
         Parameters
@@ -668,7 +675,9 @@ class Task(Dimension):
         return self._active_task
 
     @active_task.setter
-    def active_task(self, value):
+    def active_task(self, value: Any):
+        if value not in self.tasks:
+            raise ValueError("Invalid task: {}".format(value))
         self._active_task = value
         self.prior_active_task_ = np.zeros(len(self.tasks))
         self.prior_active_task_[self.tasks.index(value)] = 1.0
@@ -1115,19 +1124,24 @@ class Space(object):
         return any([isinstance(dim, Categorical) for dim in self.dimensions])
 
     @property
+    def task_dimensions(self) -> Generator[Task]:
+        """List of all 'Task' dimensions"""
+        return (dim for dim in self.dimensions if isinstance(dim, Task))
+
+    @property
     def is_task(self):
         """Space contains exclusively categorical 'Task' dimensions"""
-        return all([isinstance(dim, Task) for dim in self.dimensions])
+        return self.num_task_dims == len(self.dimensions)
 
     @property
     def is_partly_task(self):
         """Space contains any categorical 'Task' dimensions"""
-        return any([isinstance(dim, Task) for dim in self.dimensions])
+        return self.num_task_dims > 0
 
     @property
     def num_task_dims(self):
         """Number of categorical 'Task' dimensions"""
-        return sum([isinstance(dim, Task) for dim in self.dimensions])
+        return len(list(self.task_dimensions))
 
     @property
     def task_feature(self):
@@ -1138,39 +1152,42 @@ class Space(object):
             return None
 
     @property
+    def task_dimension(self) -> Task | None:
+        """The 'Task' dimension, provided there is exactly one"""
+        if len(list(self.task_dimensions)) == 1:
+            return next(iter(self.task_dimensions))
+        else:
+            return None
+
+    @property
     def num_tasks(self):
         """Number of tasks, provided there is exactly one 'Task' dimension"""
-        num_task_dims = sum([isinstance(dim, Task) for dim in self.dimensions])
-        if num_task_dims == 1:
-            task_feature = [isinstance(dim, Task) for dim in self.dimensions].index(
-                True
-            )
-            return len(self.dimensions[task_feature].tasks)
+        if self.task_dimension is not None:
+            return len(self.task_dimension.tasks)
         else:
             return None
 
     @property
     def all_tasks(self):
         """Every value of task, provided there is exactly one 'Task' dimension"""
-        num_task_dims = sum([isinstance(dim, Task) for dim in self.dimensions])
-        if num_task_dims == 1:
-            task_feature = [isinstance(dim, Task) for dim in self.dimensions].index(
-                True
-            )
-            return self.dimensions[task_feature].tasks
+        if self.num_task_dims == 1:
+            return next(iter(self.task_dimensions)).tasks
         else:
             return None
 
     @property
     def active_task(self):
         """ "Provided there is one 'Task' dimension, give the test task"""
-        if sum([isinstance(dim, Task) for dim in self.dimensions]) == 1:
-            task_feature = [isinstance(dim, Task) for dim in self.dimensions].index(
-                True
-            )
-            return self.dimensions[task_feature].active_task
+        if self.num_task_dims == 1:
+            return next(iter(self.task_dimensions)).active_task
         else:
             return None
+
+    @active_task.setter
+    def active_task(self, value: Any):
+        if self.task_dimension is None:
+            raise ValueError("Invalid task: {}".format(value))
+        self.task_dimension.active_task = value
 
     def distance(self, point_a, point_b):
         """Compute the L1 (Manhattan or taxicab) distance between two points in this space.
