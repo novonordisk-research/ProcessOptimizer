@@ -108,8 +108,12 @@ class ConstantNoise(NoiseModel):
         The size (magnitude) of the noise.
     """
 
-    def __init__(self, noise_size: float = 1, **kwargs):
-        super().__init__(noise_size=noise_size, **kwargs)
+    def __init__(
+        self,
+        noise_size: float = 1,
+        seed: Union[int, np.random.RandomState, np.random.Generator, None] = 42,
+    ):
+        super().__init__(noise_size=noise_size, seed=seed)
 
     def get_noise(self, X, Y: float) -> float:
         return self._sample_noise
@@ -127,8 +131,12 @@ class ProportionalNoise(NoiseModel):
         The size of the noise relative to the signal.
     """
 
-    def __init__(self, noise_size: float = 0.1, **kwargs):
-        super().__init__(noise_size=noise_size, **kwargs)
+    def __init__(
+        self,
+        noise_size: float = 0.1,
+        seed: Union[int, np.random.RandomState, np.random.Generator, None] = 42,
+    ):
+        super().__init__(noise_size=noise_size, seed=seed)
 
     def get_noise(self, X, Y: float) -> float:
         return self._sample_noise * Y
@@ -169,9 +177,9 @@ class DataDependentNoise(NoiseModel):
         self,
         noise_function: Callable[..., NoiseModel],
         overwrite_rng: bool = True,
-        **kwargs,
+        seed: Union[int, np.random.RandomState, np.random.Generator, None] = 42,
     ):
-        super().__init__(noise_size=None, **kwargs)
+        super().__init__(noise_size=None, seed=seed)
         self.noise_function = noise_function
         self.overwrite_rng = overwrite_rng
 
@@ -225,9 +233,9 @@ class SumNoise(NoiseModel):
         self,
         noise_model_list: List[Union[str, dict, NoiseModel]],
         overwrite_rng: bool = True,
-        **kwargs,
+        seed: Union[int, np.random.RandomState, np.random.Generator, None] = 42,
     ):
-        super().__init__(noise_size=None, **kwargs)
+        super().__init__(noise_size=None, seed=seed)
         self.noise_model_list: List[NoiseModel]
         self.overwrite_rng = overwrite_rng
         self.set_noise_model_list(noise_model_list=noise_model_list)
