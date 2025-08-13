@@ -11,8 +11,57 @@ from ProcessOptimizer.utils import expected_minimum
 
 @dataclass
 class BenchmarkInstance:
+    """
+    A benchmark instance for evaluating the performance of a suggestor.
+
+    The evaluation is done in a constant target manner, and the number of evaluations,
+    whether it reached the target is saved.
+
+    Parameters
+    ----------
+    model_system_name [str]: The name of the model system to use. Only internal model
+        systems are usable, since the optimisation target is calculated and cached, and
+        caching doesn't work on instantiated model systems.
+    suggestor_definition [dict[str, Any]]: The definition of the suggestor to use. This
+        is fed to the suggestor factory.
+    experimental_budget [int]: The maximum number of evaluations to run before stopping.
+    expected_random_runtime [float]: How hard the optimization is. Randomly sampling the
+        model system until you find an acceptable configuration takes this many times,
+        on average. On initialization of the `BenchmarkInstance`,
+        `100*expected_random_runtime` random points in the search space are evaluated on
+        what objective would be reached 95% of the times there (2 standard deviations).
+        The 100th lowest objective value is used as the target for the optimization.
+    seed [int]: The random seed to use for the optimization. This ensures that the
+        optimization is reproducible.
+    noise_level [float]: The noise level to use for the optimization. This is multiplied
+        with the noise size of the model system, so it can be used to scale the noise
+        size up or down.
+    validate [bool]: Whether to validate the optimization result. If True, when the
+        benchmark has found a point that is below the success level, it will
+        re-evaluate the point to ensure that it is indeed below the success level.
+
+    Results
+    -------
+    estimated_optima [list[tuple[float, float, float]]]: A list of tuples containing the
+        estimated location, value, and standard deviation of the estimated optimum after
+        each point has been added.
+    number_of_evaluations [int | None]: The number of evaluations that were done during
+        the optimization. This is None if the optimization was not run.
+    success [bool | None]: Whether the optimization was successful. This is None if the
+        optimization was not run.
+
+    Internal variables
+    -------------------
+    success_level [float]: The target objective value that the optimization should reach.
+        This is calculated on initialization of the `BenchmarkInstance`.
+    model [ModelSystem]: The model system to use for the optimization. This is a copy of
+        the model system with the noise size scaled by the noise level.
+    xpyrimentor [XpyriMentor]: The XpyriMentor instance to use for the optimization.
+        This is initialized with the model system and the suggestor definition.
+    """
+
     model_system_name: str
-    suggestor_definition: dict
+    suggestor_definition: dict[str, Any]
     experimental_budget: int
     expected_random_runtime: float
     seed: int
@@ -30,7 +79,7 @@ class BenchmarkInstance:
     def __init__(
         self,
         model_system_name: str,
-        suggestor_definition: dict,
+        suggestor_definition: dict[str, Any],
         experimental_budget: int,
         expected_random_runtime: float,
         seed: int,
