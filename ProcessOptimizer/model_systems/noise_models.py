@@ -111,7 +111,7 @@ class ConstantNoise(NoiseModel):
     def __init__(self, noise_size: float = 1, **kwargs):
         super().__init__(noise_size=noise_size, **kwargs)
 
-    def get_noise(self, _, Y: float) -> float:
+    def get_noise(self, X, Y: float) -> float:
         return self._sample_noise
 
 
@@ -130,7 +130,7 @@ class ProportionalNoise(NoiseModel):
     def __init__(self, noise_size: float = 0.1, **kwargs):
         super().__init__(noise_size=noise_size, **kwargs)
 
-    def get_noise(self, _, Y: float) -> float:
+    def get_noise(self, X, Y: float) -> float:
         return self._sample_noise * Y
 
 
