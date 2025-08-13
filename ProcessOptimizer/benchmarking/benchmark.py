@@ -54,7 +54,7 @@ class BenchmarkInstance:
     -------------------
     success_level [float]: The target objective value that the optimization should reach.
         This is calculated on initialization of the `BenchmarkInstance`.
-    model [ModelSystem]: The model system to use for the optimization. This is a copy of
+    model_system [ModelSystem]: The model system to use for the optimization. This is a copy of
         the model system with the noise size scaled by the noise level.
     xpyrimentor [XpyriMentor]: The XpyriMentor instance to use for the optimization.
         This is initialized with the model system and the suggestor definition.
@@ -73,7 +73,7 @@ class BenchmarkInstance:
     success: bool | None = None
     # Internal variables:
     success_level: float = field(init=False, repr=False)
-    model: ModelSystem = field(init=False, repr=False)
+    model_system: ModelSystem = field(init=False, repr=False)
     xpyrimentor: XpyriMentor = field(init=False, repr=False)
 
     def __init__(
@@ -116,18 +116,12 @@ class BenchmarkInstance:
         self.success_level = find_limits(
             model_system_name, expected_random_runtime, self.noise_level
         )
-        self.model = get_model_system(model_system_name, seed=seed)
-        self.model.noise_size *= noise_level
+        self.model_system = get_model_system(model_system_name, seed=seed)
+        self.model_system.noise_size *= noise_level
         self.xpyrimentor = XpyriMentor(
-            self.model.space, self.suggestor_definition, seed=seed
+            self.model_system.space, self.suggestor_definition, seed=seed
         )
         self.estimated_optima = []
-
-    @property
-    def model_system(self) -> ModelSystem:
-        model_system = get_model_system(self.model_system_name, seed=self.seed)
-        model_system.noise_size = model_system.noise_size * self.noise_level
-        return model_system
 
     @property
     def optimizer(self) -> Optimizer:
@@ -171,15 +165,17 @@ class BenchmarkInstance:
         self.success = False
         while len(self.xpyrimentor.Xi) < self.experimental_budget:
             x = self.xpyrimentor.ask()
-            y = self.model.get_score(x)
+            y = self.model_system.get_score(x)
             minimum_location, minimum_value, minimum_std = self.tell(x, y)
             if (minimum_value + 2 * minimum_std) < self.success_level and self.validate:
-                result = self.model.get_score(minimum_location)
+                result = self.model_system.get_score(minimum_location)
                 minimum_location, minimum_value, minimum_std = self.tell(
                     [minimum_location], result
                 )
             if (minimum_value + 2 * minimum_std) < self.success_level:
-                true_quality = find_pesimistic_value(self.model, minimum_location)
+                true_quality = find_pesimistic_value(
+                    self.model_system, minimum_location
+                )
                 if true_quality < self.success_level:
                     self.success = True
                 break
