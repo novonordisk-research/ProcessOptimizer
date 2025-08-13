@@ -32,7 +32,8 @@ class Suggestor(Protocol):
         Returns
         ----------
         A np.ndarray of size `n_asked` x `n_dim`, where `n_dim` is the number of
-        dimenstion in the search space.
+        dimensions in the search space. The dtype is `object`, to allow for any both
+        categorical and numerical dimensions without converting everything to str.
         """
         pass
 
