@@ -487,8 +487,10 @@ class Integer(Dimension):
 
     def _sample(self, point_list: Iterable[float]) -> np.ndarray:
         point_list = [
-            point * (self.high + 1 - self.low) + self.low for point in point_list
+            min(point * (self.high + 1 - self.low) + self.low, self.high)
+            for point in point_list
         ]
+        # We need to min because it will return self.high + 1 if point = 1
         return np.floor(point_list).astype(int)
 
 
