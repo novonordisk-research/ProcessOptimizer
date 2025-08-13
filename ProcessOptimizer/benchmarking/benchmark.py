@@ -148,6 +148,10 @@ class BenchmarkInstance:
         maintained.
         """
         self.xpyrimentor.tell(x, [y])
+        # To estimate the optimum, we need to update the optimizer with the new data.
+        # We then add observational noise to the optimizer to get the correct standard
+        # deviation, find the position, value, and standard deviation of the expected
+        # minimum, and tell the optimizer to stop including observational noise.
         optimizer: Optimizer = self.optimizer
         optimizer.Xi = self.xpyrimentor.Xi
         optimizer.yi = self.xpyrimentor.yi
