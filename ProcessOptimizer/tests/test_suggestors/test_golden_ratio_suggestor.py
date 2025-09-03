@@ -38,7 +38,7 @@ def test_suggest():
     suggestions = suggestor.suggest([], [])
     assert len(suggestions) == 1
     assert suggestions[0] in space
-    suggestions = suggestor.suggest([], [], n_points_to_suggest == 5)
+    suggestions = suggestor.suggest([], [], n_points_to_suggest=5)
     assert len(suggestions) == 5
     for suggestion in suggestions:
         assert suggestion in space
