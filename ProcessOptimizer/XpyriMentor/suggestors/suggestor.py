@@ -1,4 +1,8 @@
-from typing import Iterable, Protocol, runtime_checkable
+from __future__ import annotations
+
+from typing import Any, Callable, Iterable, Protocol, runtime_checkable
+
+from ProcessOptimizer.space import Space
 
 import numpy as np
 
@@ -12,18 +16,9 @@ class Suggestor(Protocol):
     suggest method with the same input should ideally return the same output.
     """
 
-    def __init__(self, **kwargs):
-        """
-        Initialize the suggestor with the search space. Suggestors can take other input
-        arguments as needed.
-
-        The input key `suggestor` and any keyword starting with `suggestor_` are
-        reserved and should not be used in __init__ of suggestors. They might be removed
-        from the definition dict by the factory before passing it to the suggestor.
-        """
-        pass
-
-    def suggest(self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int) -> np.ndarray:
+    def suggest(
+        self, Xi: Iterable[Iterable], Yi: Iterable, n_points_to_suggest: int
+    ) -> np.ndarray:
         """
         Suggest a new point to evaluate.
 
@@ -33,15 +28,32 @@ class Suggestor(Protocol):
             The input is a list of already evaluated points.
         * Yi [`Iterable`]:
             The results of the evaulations of `Xi`.
-        * n_asked [`int`]:
+        * n_points_to_suggest [`int`]:
             The number of suggested points to return
 
         Returns
         ----------
-        A np.ndarray of size `n_asked` x `n_dim`, where `n_dim` is the number of
+        A np.ndarray of size `n_points_to_suggest` x `n_dim`, where `n_dim` is the number of
         dimenstion in the search space.
         """
         pass
+
+
+@runtime_checkable  # Need to be runtime checkable for the factory to work
+class CreatableSuggestor(Protocol):
+    """
+    Suggestors that are creatable from the factory from dicts
+    """
+
+    @classmethod
+    def create_from_definition(
+        cls,
+        space: Space,
+        suggestor_factory: Callable[..., Suggestor],
+        definition: dict[str, Any],
+        n_objectives: int,
+        rng: np.random.Generator,
+    ) -> Suggestor: ...
 
 
 class IncompatibleNumberAsked(ValueError):

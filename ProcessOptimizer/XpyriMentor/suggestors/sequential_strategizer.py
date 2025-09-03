@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import math
 import warnings
-from typing import Iterable
+from typing import Any, Callable, Iterable
 
 import numpy as np
+from ProcessOptimizer.space import Space
 
 from .default_suggestor import DefaultSuggestor
 from .lhs_suggestor import LHSSuggestor
@@ -17,6 +20,32 @@ class SequentialStrategizer:
 
     It uses the suggestors in order, skipping suggestors with a budget of suggestions
     that have already been made.
+
+    When creating from a definition dictionary, the dictionary should have the key
+    `"suggestors"`, and the corresponding value should be a list of dictionaries
+    (child suggestor dictionaries), each representing a suggestor and its configuration.
+    Each child suggestor dictionary should have the key `suggestor_budget` (the number of
+    suggestions the suggestor can make) and the key `suggestor_name` (the name of the
+    suggestor).
+
+    Example of a valid definition, using different approaches:
+    definition = {
+        "suggestor_name": "Sequential",
+        "suggestors": [
+            {
+                "suggestor_budget": 5,
+                "suggestor": {"suggestor_name": "LHS"},
+            },
+            {
+                "suggestor_budget": 20,
+                "suggestor": {"suggestor_name": "PO", "n_initial_points": 0},
+            },
+            {
+                "suggestor_budget": 10,
+                "suggestor": ConstantSuggestor(space, [42]),
+            },
+        ]
+    }
     """
 
     def __init__(self, suggestors: list[tuple[int, Suggestor]]):
@@ -70,10 +99,12 @@ class SequentialStrategizer:
                     )
         self.suggestors = suggestors
 
-    def suggest(self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = 1):
+    def suggest(
+        self, Xi: Iterable[Iterable], Yi: Iterable, n_points_to_suggest: int = 1
+    ):
         # We will skip as many points as we have already been told about.
         number_left_to_skip = len(Xi)  # Running tally of points to skip.
-        number_left_to_find = n_asked  # Running tally of points to find.
+        number_left_to_find = n_points_to_suggest  # Running tally of points to find.
         # Both of these will be decremented as we go through the suggestors.
         suggestions = []
         for budget, suggestor in self.suggestors:
@@ -95,7 +126,7 @@ class SequentialStrategizer:
             if number_left_to_find == 0:
                 # If we have already found all the points we need, we can stop.
                 break
-        if len(suggestions) < n_asked:
+        if len(suggestions) < n_points_to_suggest:
             raise IncompatibleNumberAsked("Not enough suggestions")
         return np.array(suggestions, dtype=object)
 
@@ -110,3 +141,43 @@ class SequentialStrategizer:
             for budget, suggestor in self.suggestors
         )
         return f"SequentialStrategizer(suggestors=[{suggestor_list_str}]"
+
+    @classmethod
+    def create_from_definition(
+        cls,
+        space: Space,
+        suggestor_factory: Callable[..., Suggestor],
+        definition: dict[str, Any],
+        n_objectives: int,
+        rng: np.random.Generator,
+    ) -> SequentialStrategizer:
+        suggestors = []
+        # To make the child suggestors independent, we spawn a random number generator
+        # for each. This allows them to be fully deterministic based on the original
+        # seed, while what they suggest is not affected by how many times the other
+        # sibling suggestors have been used. If this was not here, for two child
+        # suggestors `A` and `B`, `[A.suggest(), B.suggest(), A.suggest()]` would risk
+        # yielding different points than `[A.suggest(), A.suggest(), B.suggest()]`.
+        child_rngs = rng.spawn(len(definition["suggestors"]))
+        for suggestor in definition["suggestors"]:
+            n = suggestor.pop("suggestor_budget")
+            if "suggestor" in suggestor:
+                if len(suggestor) > 1:
+                    raise ValueError(
+                        "If a suggestor definition for a SequentialStrategizer has a "
+                        "'suggestor' key, it should only have that key and "
+                        "'suggestor_budget', but it has the keys `suggestor_budget`, "
+                        f"{', '.join(suggestor.keys())}."
+                    )
+                suggestor = suggestor["suggestor"]
+            if isinstance(suggestor, dict) and "n_points" not in suggestor:
+                # If the suggestor is to be created (is a dict), it might need to know
+                # how many points it has available.
+                suggestor["n_points"] = n
+            suggestors.append(
+                (
+                    n,
+                    suggestor_factory(space, suggestor, n_objectives, child_rngs.pop()),
+                )
+            )
+        return cls(suggestors=suggestors)

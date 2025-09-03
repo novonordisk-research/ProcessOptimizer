@@ -3,6 +3,8 @@ from typing import Callable, List, Union, Optional
 
 import numpy as np
 
+from ProcessOptimizer.utils import get_random_generator
+
 
 class NoiseModel(ABC):
     """
@@ -12,7 +14,7 @@ class NoiseModel(ABC):
     def __init__(
         self,
         noise_size: Optional[float],
-        seed: Optional[int] = 42,
+        seed: Union[int, np.random.RandomState, np.random.Generator, None] = 42,
     ):
         """
         Parameters
@@ -32,16 +34,29 @@ class NoiseModel(ABC):
         # directly set the size is more intuitive, and that would be complicated if it
         # was just one variable.
         # Note that this has the potential for problems if _noise_distribution does not
-        # have "size" 1, but as long as it is only set by set_noise_type(), it should be
-        # safe.
+        # have "size" 1, but as long as it only uses the ones defined here, you should
+        # be fine.
         self.noise_size = noise_size
-        self._rng = np.random.default_rng(seed)
-        # Change this to ..utils.get_random_genertor once the pull request with that have been merged
-        self.set_noise_type("normal")
+        self._rng = get_random_generator(seed)
+        self.possible_noise_types = {
+            "normal": self.normal,
+            "Gaussian": self.normal,
+            "norm": self.normal,
+            "uniform": self.uniform,
+        }
+        self.noise_type = "normal"
 
     @abstractmethod
     def get_noise(self, X, Y: float) -> float:
         pass
+
+    def uniform(self):
+        """Convinience function to get a uniform distributed noise value."""
+        return self._rng.uniform(low=-1, high=1)
+
+    def normal(self):
+        """Convinience function to get a normal distributed noise value."""
+        return self._rng.normal()
 
     @property
     def _sample_noise(self) -> float:
@@ -52,26 +67,35 @@ class NoiseModel(ABC):
                 f"{self.__class__.__name__} is not supposed to be called."
             )
 
-        return self._noise_distribution() * self.noise_size
+        return self.possible_noise_types[self.noise_type]() * self.noise_size
 
-    def set_noise_type(self, noise_type: str):
-        if noise_type in ["normal", "Gaussian", "norm", "uniform"]:
-            self.noise_type = noise_type
+    @property
+    def noise_type(self) -> str:
+        return self._noise_type
+
+    @noise_type.setter
+    def noise_type(self, value: str):
+        if value in self.possible_noise_types:
+            self._noise_type = value
         else:
-            raise ValueError(f'Noise distribution "{noise_type}" not recognised.')
+            raise ValueError(f'Noise distribution "{value}" not recognised.')
 
     def set_seed(self, seed: Optional[int]):
         # Instantiate the random number generator again
         self._rng = np.random.default_rng(seed)
 
-    @property
-    def _noise_distribution(self) -> Callable[[], float]:
-        if self.noise_type in ["normal", "Gaussian", "norm"]:
-            return self._rng.normal
-        elif self.noise_type == "uniform":
-            return lambda: self._rng.uniform(low=-1, high=1)
-        else:
-            raise ValueError(f'Noise distribution "{self.noise_type}" not recognised.')
+    def copy(self) -> "NoiseModel":
+        """
+        Create a copy of the noise model. This is necessary to avoid the same random
+        seed being used in multiple noise models, which would make the noise correlated.
+        """
+        noise_model_copy = self.__class__(
+            noise_size=self.noise_size, seed=self._rng.spawn(1)[0]
+        )
+        # np.random.Generator.spawn() returns a new generator based on the old one, but
+        # with a different seed. It is deterministic, but not identical to the old one.
+        noise_model_copy.noise_type = self.noise_type
+        return noise_model_copy
 
 
 class ConstantNoise(NoiseModel):
@@ -86,10 +110,14 @@ class ConstantNoise(NoiseModel):
         The size (magnitude) of the noise.
     """
 
-    def __init__(self, noise_size: float = 1, **kwargs):
-        super().__init__(noise_size=noise_size, **kwargs)
+    def __init__(
+        self,
+        noise_size: float = 1,
+        seed: Union[int, np.random.RandomState, np.random.Generator, None] = 42,
+    ):
+        super().__init__(noise_size=noise_size, seed=seed)
 
-    def get_noise(self, _, Y: float) -> float:
+    def get_noise(self, X, Y: float) -> float:
         return self._sample_noise
 
 
@@ -105,10 +133,14 @@ class ProportionalNoise(NoiseModel):
         The size of the noise relative to the signal.
     """
 
-    def __init__(self, noise_size: float = 0.1, **kwargs):
-        super().__init__(noise_size=noise_size, **kwargs)
+    def __init__(
+        self,
+        noise_size: float = 0.1,
+        seed: Union[int, np.random.RandomState, np.random.Generator, None] = 42,
+    ):
+        super().__init__(noise_size=noise_size, seed=seed)
 
-    def get_noise(self, _, Y: float) -> float:
+    def get_noise(self, X, Y: float) -> float:
         return self._sample_noise * Y
 
 
@@ -147,9 +179,9 @@ class DataDependentNoise(NoiseModel):
         self,
         noise_function: Callable[..., NoiseModel],
         overwrite_rng: bool = True,
-        **kwargs,
+        seed: Union[int, np.random.RandomState, np.random.Generator, None] = 42,
     ):
-        super().__init__(noise_size=None, **kwargs)
+        super().__init__(noise_size=None, seed=seed)
         self.noise_function = noise_function
         self.overwrite_rng = overwrite_rng
 
@@ -203,9 +235,9 @@ class SumNoise(NoiseModel):
         self,
         noise_model_list: List[Union[str, dict, NoiseModel]],
         overwrite_rng: bool = True,
-        **kwargs,
+        seed: Union[int, np.random.RandomState, np.random.Generator, None] = 42,
     ):
-        super().__init__(noise_size=None, **kwargs)
+        super().__init__(noise_size=None, seed=seed)
         self.noise_model_list: List[NoiseModel]
         self.overwrite_rng = overwrite_rng
         self.set_noise_model_list(noise_model_list=noise_model_list)
