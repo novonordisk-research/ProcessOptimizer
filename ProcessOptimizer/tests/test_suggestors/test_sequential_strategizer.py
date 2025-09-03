@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from ProcessOptimizer.space import space_factory
 from ProcessOptimizer.XpyriMentor.suggestors import (
+    CreatableSuggestor,
     DefaultSuggestor,
     IncompatibleNumberAsked,
     LHSSuggestor,
@@ -17,9 +18,9 @@ class MockSuggestor:
         self.suggestions = suggestions
         self.last_input = {}
 
-    def suggest(self, Xi, Yi, n_asked=1):
+    def suggest(self, Xi, Yi, n_points_to_suggest=1):
         self.last_input = {"Xi": Xi, "Yi": Yi}
-        return self.suggestions * n_asked
+        return self.suggestions * n_points_to_suggest
 
 
 def test_initialization():
@@ -28,7 +29,9 @@ def test_initialization():
     )
     assert suggestor.suggestors[0][0] == 5
     assert suggestor.suggestors[1][0] == float("inf")
-    assert suggestor.suggestors[0][1].suggest(Xi=None, Yi=None, n_asked=1) == [[1]]
+    assert suggestor.suggestors[0][1].suggest(
+        Xi=None, Yi=None, n_points_to_suggest=1
+    ) == [[1]]
 
 
 def test_protocol():
@@ -36,6 +39,7 @@ def test_protocol():
         suggestors=[(5, MockSuggestor([[1]])), (-1, MockSuggestor([[2]]))],
     )
     assert isinstance(suggestor, Suggestor)
+    assert isinstance(suggestor, CreatableSuggestor)
 
 
 def test_factory():
@@ -65,7 +69,7 @@ def test_budget():
     assert suggestor.suggestors[0][0] == 5
     assert suggestor.suggestors[1][0] == 10
     with pytest.raises(IncompatibleNumberAsked):
-        suggestor.suggest([[1]], [1], n_asked=16)
+        suggestor.suggest([[1]], [1], n_points_to_suggest=16)
     with pytest.raises(ValueError):
         SequentialStrategizer(
             suggestors=[(-1, MockSuggestor([[1]])), (5, MockSuggestor([[2]]))],
@@ -80,14 +84,19 @@ def test_suggest():
         suggestors=[(3, suggestor_1), (2, suggestor_2), (-1, suggestor_3)],
     )
     assert suggestor.suggest([], []) == [[1]]
-    assert all(suggestor.suggest([], [], n_asked=2) == [[1], [1]])
-    assert all(suggestor.suggest([], [], n_asked=3) == [[1], [1], [1]])
-    assert all(suggestor.suggest([], [], n_asked=4) == [[1], [1], [1], [2]])
+    assert all(suggestor.suggest([], [], n_points_to_suggest=2) == [[1], [1]])
+    assert all(suggestor.suggest([], [], n_points_to_suggest=3) == [[1], [1], [1]])
+    assert all(suggestor.suggest([], [], n_points_to_suggest=4) == [[1], [1], [1], [2]])
     assert suggestor_1.last_input == {"Xi": [], "Yi": []}
     assert suggestor_2.last_input == {"Xi": [], "Yi": []}
     assert suggestor.suggest([[1]] * 2, [1, 1]) == [[1]]
-    assert all(suggestor.suggest([[1]] * 2, [1, 1], n_asked=2) == [[1], [2]])
-    assert all(suggestor.suggest([[1]] * 2, [1, 1], n_asked=4) == [[1], [2], [2], [3]])
+    assert all(
+        suggestor.suggest([[1]] * 2, [1, 1], n_points_to_suggest=2) == [[1], [2]]
+    )
+    assert all(
+        suggestor.suggest([[1]] * 2, [1, 1], n_points_to_suggest=4)
+        == [[1], [2], [2], [3]]
+    )
     assert suggestor_1.last_input == {"Xi": [[1], [1]], "Yi": [1, 1]}
     assert suggestor_2.last_input == {"Xi": [[1], [1]], "Yi": [1, 1]}
     assert suggestor_3.last_input == {"Xi": [[1], [1]], "Yi": [1, 1]}
@@ -118,8 +127,8 @@ def test_incompatible_n_points():
         def __init__(self, n_points):
             self.n_points = n_points
 
-        def suggest(self, Xi, Yi, n_asked=1):
-            return [[self.n_points]] * n_asked
+        def suggest(self, Xi, Yi, n_points_to_suggest=1):
+            return [[self.n_points]] * n_points_to_suggest
 
     with pytest.warns(UserWarning):
         SequentialStrategizer(suggestors=[(5, NPointsSuggestor(10))])

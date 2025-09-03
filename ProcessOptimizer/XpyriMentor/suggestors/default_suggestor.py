@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Iterable
 
 import numpy as np
@@ -20,7 +21,7 @@ class DefaultSuggestor:
         self.rng = rng
 
     def suggest(
-        self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = -1
+        self, Xi: Iterable[Iterable], Yi: Iterable, n_points_to_suggest: int = -1
     ) -> np.ndarray:
         """
         SHOULD NOT BE CALLED!
@@ -30,6 +31,19 @@ class DefaultSuggestor:
         which is an error.
         """
         raise NoDefaultSuggestorError("Default suggestor should not be used.")
+
+    @classmethod
+    def create_from_definition(
+        cls,
+        space: Space,
+        suggestor_factory,
+        definition,
+        n_objectives: int,
+        rng: np.random.Generator,
+    ) -> DefaultSuggestor:
+        return cls(
+            space=space, n_objectives=n_objectives, rng=rng or np.random.default_rng()
+        )
 
 
 class NoDefaultSuggestorError(NotImplementedError):

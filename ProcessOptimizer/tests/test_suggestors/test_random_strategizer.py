@@ -2,7 +2,8 @@ import numpy as np
 import pytest
 import warnings
 from ProcessOptimizer.XpyriMentor.suggestors import (
-    RandomStragegizer,
+    CreatableSuggestor,
+    RandomStrategizer,
     Suggestor,
     suggestor_factory,
     OptimizerSuggestor,
@@ -20,17 +21,18 @@ class MockSuggestor:
         self.suggestions = suggestions
         self.last_input = {}
 
-    def suggest(self, Xi, Yi, n_asked=1):
+    def suggest(self, Xi, Yi, n_points_to_suggest=1):
         self.last_input = {"Xi": Xi, "Yi": Yi}
-        return self.suggestions * n_asked
+        return self.suggestions * n_points_to_suggest
 
 
 def test_random_strategizer():
-    suggestor = RandomStragegizer(
+    suggestor = RandomStrategizer(
         suggestors=[(0.8, MockSuggestor([[1]])), (0.2, MockSuggestor([[2]]))],
         rng=np.random.default_rng(1),
     )
     assert isinstance(suggestor, Suggestor)
+    assert isinstance(suggestor, CreatableSuggestor)
     # np.random.default_rng(1).random() gives 0.5118216247148916, 0.9504636963259353,
     # and 0.14415961271963373 on the first three calls, so the first three calls
     # should return the suggestors with weights 0.8, 0.2, and 0.8, respectively.
@@ -51,7 +53,7 @@ def test_factory():
             ],
         },
     )
-    assert isinstance(suggestor, RandomStragegizer)
+    assert isinstance(suggestor, RandomStrategizer)
     assert len(suggestor.suggestors) == 2
     assert suggestor.suggestors[0][0] == 0.8
     assert suggestor.suggestors[1][0] == 0.2
@@ -60,17 +62,17 @@ def test_factory():
 
 
 def test_random_multiple_ask():
-    suggestor = RandomStragegizer(
+    suggestor = RandomStrategizer(
         suggestors=[(0.8, MockSuggestor([[1]])), (0.2, MockSuggestor([[2]]))],
         rng=np.random.default_rng(1),
     )
-    assert all(suggestor.suggest([], [], n_asked=2) == [[1], [2]])
-    assert all(suggestor.suggest([], [], n_asked=3) == [[1], [1], [2]])
+    assert all(suggestor.suggest([], [], n_points_to_suggest=2) == [[1], [2]])
+    assert all(suggestor.suggest([], [], n_points_to_suggest=3) == [[1], [1], [2]])
 
 
 def test_default_suggestor():
     with pytest.raises(NoDefaultSuggestorError):
-        RandomStragegizer(
+        RandomStrategizer(
             suggestors=[
                 (0.8, MockSuggestor([[1]])),
                 (0.2, DefaultSuggestor(space=[], n_objectives=1, rng=None)),
@@ -82,19 +84,19 @@ def test_default_suggestor():
 def test_wrong_sum():
     with pytest.warns(UserWarning):
         # Warning if the sum of usage ratios is not 1 or 100
-        RandomStragegizer(
+        RandomStrategizer(
             suggestors=[(0.8, MockSuggestor([[1]])), (0.3, MockSuggestor([[2]]))],
             rng=np.random.default_rng(1),
         )
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         # No warnings if the sum of usage ratios is 1
-        RandomStragegizer(
+        RandomStrategizer(
             suggestors=[(0.8, MockSuggestor([[1]])), (0.2, MockSuggestor([[2]]))],
             rng=np.random.default_rng(1),
         )
         # No warnings if the sum of usage ratios is 100
-        RandomStragegizer(
+        RandomStrategizer(
             suggestors=[(80, MockSuggestor([[1]])), (20, MockSuggestor([[2]]))],
             rng=np.random.default_rng(1),
         )
@@ -112,7 +114,7 @@ def test_random_with_suggestor_given():
             ],
         },
     )
-    assert isinstance(suggestor, RandomStragegizer)
+    assert isinstance(suggestor, RandomStrategizer)
     assert len(suggestor.suggestors) == 2
     assert suggestor.suggestors[0][0] == 0.8
     assert suggestor.suggestors[1][0] == 0.2
