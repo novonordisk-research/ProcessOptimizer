@@ -17,6 +17,8 @@ class OptimizerSuggestor:
         n_initial_points: int = 0,
         **kwargs: Any,
     ):
+        # `n_points` is added by SequentialStrategizer to its child suggestors, but
+        # OptimizerSuggestor does not need it.
         if "n_points" in kwargs:
             kwargs.pop("n_points")
         # We set the number of initial points to 0 by default, as initial points should
@@ -31,20 +33,20 @@ class OptimizerSuggestor:
         )
 
     def suggest(
-        self, Xi: Iterable[Iterable], yi: Iterable, n_asked: int = 1
+        self, Xi: Iterable[Iterable], yi: Iterable, n_points_to_suggest: int = 1
     ) -> np.ndarray:
         if Xi != self.optimizer.Xi or yi != self.optimizer.yi:
             self.optimizer.Xi = Xi.copy()
             self.optimizer.yi = yi.copy()
             self.optimizer.update_next()
-        point = self.optimizer.ask(n_asked)
+        point = self.optimizer.ask(n_points_to_suggest)
         logger.debug(
             "Given Xi = %s and yi = %s, OptimizerSugggestor suggests the point: %s",
             Xi,
             yi,
             point,
         )
-        return np.array(point, dtype=object).reshape(n_asked, -1)
+        return np.array(point, dtype=object).reshape(n_points_to_suggest, -1)
 
     def __str__(self):
         return "Optimizer Suggestor"

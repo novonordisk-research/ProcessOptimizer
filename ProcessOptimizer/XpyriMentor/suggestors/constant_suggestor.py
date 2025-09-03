@@ -24,7 +24,7 @@ class ConstantSuggestor:
         self.point = np.array(point)
 
     def suggest(
-        self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = 1
+        self, Xi: Iterable[Iterable], Yi: Iterable, n_points_to_suggest: int = 1
     ) -> np.ndarray:
         """
         Suggest a new point.
@@ -36,14 +36,14 @@ class ConstantSuggestor:
         * `Yi` [Iterable]:
             The results of the evaluations of `Xi`. Not used in this suggestor.
             Present for consistency with other suggestors and XPyriMentor.
-        * `n_asked` [int]:
+        * `n_points_to_suggest` [int]:
             The number of suggested points to return. Must be a positive integer.
         Returns:
         -------
-        A np.ndarray of size `n_asked` x `n_dim`, where `n_dim` is the number of
+        A np.ndarray of size `n_points_to_suggest` x `n_dim`, where `n_dim` is the number of
         dimensions in the search space. The points are all the same, equal to `self.point`.
         """
-        return np.tile(self.point, (n_asked, 1))
+        return np.tile(self.point, (n_points_to_suggest, 1))
 
     @classmethod
     def create_from_definition(

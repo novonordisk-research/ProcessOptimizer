@@ -21,7 +21,7 @@ class DefaultSuggestor:
         self.rng = rng
 
     def suggest(
-        self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = -1
+        self, Xi: Iterable[Iterable], Yi: Iterable, n_points_to_suggest: int = -1
     ) -> np.ndarray:
         """
         SHOULD NOT BE CALLED!

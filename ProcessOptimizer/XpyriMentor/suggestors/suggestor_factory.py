@@ -10,7 +10,7 @@ from .default_suggestor import DefaultSuggestor
 from .golden_ratio_suggestor import GoldenRatioSuggestor
 from .lhs_suggestor import LHSSuggestor
 from .po_suggestor import OptimizerSuggestor
-from .random_strategizer import RandomStragegizer
+from .random_strategizer import RandomStrategizer
 from .sequential_strategizer import SequentialStrategizer
 from .suggestor import CreatableSuggestor, Suggestor
 
@@ -22,7 +22,7 @@ SUGGESTORS: dict[str, CreatableSuggestor] = {
     "LHS": LHSSuggestor,
     "PO": OptimizerSuggestor,
     "Optimizer": OptimizerSuggestor,
-    "Random": RandomStragegizer,
+    "Random": RandomStrategizer,
     "Sequential": SequentialStrategizer,
     "GoldenRatio": GoldenRatioSuggestor,
 }
@@ -55,6 +55,15 @@ def suggestor_factory(
 
         If it is None, a DefaultSuggestor is created. This is useful as a placeholder in
         strategizers, and should be replaced with a real suggestor before use.
+
+        An example is the default suggestor definition for XpyriMentor:
+        {
+            "suggestor_name": "Sequential",
+            "suggestors": [
+                {"suggestor_budget": 5, "suggestor_name": "LHS"},
+                {"suggestor_budget": -1, "suggestor_name": "Optimizer"},
+            ],
+        }
     * n_objectives [`int`]:
         The number of objectives for the suggestor.
     * rng [`Optional[np.random.Generator]`]:
@@ -79,6 +88,8 @@ def suggestor_factory(
         suggestor_type = "Default"
     else:
         try:
+            # We pop suggestor type (name), since we only need it to choose the type
+            # of suggestor, and don't want it provided to the suggestor itself.
             suggestor_type = definition.pop("suggestor_name")
         except KeyError as e:
             raise ValueError(

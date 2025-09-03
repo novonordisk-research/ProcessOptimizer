@@ -28,14 +28,14 @@ class LHSSuggestor:
         return self.space.sample(samples_indexed)
 
     def suggest(
-        self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = 1
+        self, Xi: Iterable[Iterable], Yi: Iterable, n_points_to_suggest: int = 1
     ) -> np.ndarray:
-        if n_asked + len(Xi) > self.n_points:
+        if n_points_to_suggest + len(Xi) > self.n_points:
             raise IncompatibleNumberAsked(
                 "The number of points requested is greater than the number of points "
                 "in the LHS cache."
             )
-        return self.cache[len(Xi) : len(Xi) + n_asked]
+        return self.cache[len(Xi) : len(Xi) + n_points_to_suggest]
 
     def __str__(self):
         return f"Latin Hypercube Suggestor with {self.n_points} points"

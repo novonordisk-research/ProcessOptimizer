@@ -20,6 +20,32 @@ class SequentialStrategizer:
 
     It uses the suggestors in order, skipping suggestors with a budget of suggestions
     that have already been made.
+
+    When creating from a definition dictionary, the dictionary should have the key
+    `"suggestors"`, and the corresponding value should be a list of dictionaries
+    (child suggestor dictionaries), each representing a suggestor and its configuration.
+    Each child suggestor dictionary should have the key `suggestor_budget` (the number of
+    suggestions the suggestor can make) and the key `suggestor_name` (the name of the
+    suggestor).
+
+    Example of a valid definition, using different approaches:
+    definition = {
+        "suggestor_name": "Sequential",
+        "suggestors": [
+            {
+                "suggestor_budget": 5,
+                "suggestor": {"suggestor_name": "LHS"},
+            },
+            {
+                "suggestor_budget": 20,
+                "suggestor": {"suggestor_name": "PO", "n_initial_points": 0},
+            },
+            {
+                "suggestor_budget": 10,
+                "suggestor": ConstantSuggestor(space, [42]),
+            },
+        ]
+    }
     """
 
     def __init__(self, suggestors: list[tuple[int, Suggestor]]):
@@ -73,10 +99,12 @@ class SequentialStrategizer:
                     )
         self.suggestors = suggestors
 
-    def suggest(self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = 1):
+    def suggest(
+        self, Xi: Iterable[Iterable], Yi: Iterable, n_points_to_suggest: int = 1
+    ):
         # We will skip as many points as we have already been told about.
         number_left_to_skip = len(Xi)  # Running tally of points to skip.
-        number_left_to_find = n_asked  # Running tally of points to find.
+        number_left_to_find = n_points_to_suggest  # Running tally of points to find.
         # Both of these will be decremented as we go through the suggestors.
         suggestions = []
         for budget, suggestor in self.suggestors:
@@ -98,7 +126,7 @@ class SequentialStrategizer:
             if number_left_to_find == 0:
                 # If we have already found all the points we need, we can stop.
                 break
-        if len(suggestions) < n_asked:
+        if len(suggestions) < n_points_to_suggest:
             raise IncompatibleNumberAsked("Not enough suggestions")
         return np.array(suggestions, dtype=object)
 
@@ -124,6 +152,12 @@ class SequentialStrategizer:
         rng: np.random.Generator,
     ) -> SequentialStrategizer:
         suggestors = []
+        # To make the child suggestors independent, we spawn a random number generator
+        # for each. This allows them to be fully deterministic based on the original
+        # seed, while what they suggest is not affected by how many times the other
+        # sibling suggestors have been used. If this was not here, for two child
+        # suggestors `A` and `B`, `[A.suggest(), B.suggest(), A.suggest()]` would risk
+        # yielding different points than `[A.suggest(), A.suggest(), B.suggest()]`.
         child_rngs = rng.spawn(len(definition["suggestors"]))
         for suggestor in definition["suggestors"]:
             n = suggestor.pop("suggestor_budget")

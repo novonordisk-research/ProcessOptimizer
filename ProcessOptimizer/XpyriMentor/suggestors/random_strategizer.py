@@ -9,7 +9,46 @@ from .default_suggestor import DefaultSuggestor, NoDefaultSuggestorError
 from .suggestor import Suggestor
 
 
-class RandomStragegizer:
+class RandomStrategizer:
+    """
+    Strategizer that randomly selects one of its child suggestors to suggest each
+    point, based on a usage ratio for each suggestor.
+
+    When creating from a definition dictionary, the dictionary should have the key
+    `"suggestors"`, and the corresponding value should be a list of dictionaries
+    (child suggestor dictionaries), each representing a suggestor and its configuration.
+    Each child suggestor dictionary should have the key `"suggestor_usage_ratio"` (the
+    usage ratio for the suggestor). In addition, each child suggestor dictionary should
+    either only have the key `"suggestor"`, with the value being interpretetable by the
+    `suggestor_factory`, or it should be directly interpretable by the suggestor factory
+    when the key `"suggestor_usage_ratio"` has been removed.
+
+    Example of a valid definition, using different approaches:
+    definition = {
+        "suggestor_name": "Random",
+        "suggestors": [
+            {
+                "suggestor_usage_ratio": 70,
+                "suggestor": {
+                    "suggestor_name": "LHS",
+                    "n_points": 5,
+                },
+            },
+            {
+                "suggestor_usage_ratio": 20,
+                "suggestor": {
+                    "suggestor_name": "PO",
+                    "n_initial_points": 10,
+                },
+            },
+            {
+                "suggestor_usage_ratio": 10,
+                "suggestor": ConstantSuggestor(space, [42]),
+            },
+        ]
+    }
+    """
+
     def __init__(
         self, suggestors: list[tuple[float, Suggestor]], rng: np.random.Generator
     ):
@@ -26,14 +65,14 @@ class RandomStragegizer:
         self.rng = rng
 
     def suggest(
-        self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = 1
+        self, Xi: Iterable[Iterable], Yi: Iterable, n_points_to_suggest: int = 1
     ) -> np.ndarray:
-        # Creating n_asked random indices in the range [0, total)
+        # Creating n_points_to_suggest random indices in the range [0, total)
         selector_indices = [
             relative_index * self.total
-            for relative_index in self.rng.random(size=n_asked)
+            for relative_index in self.rng.random(size=n_points_to_suggest)
         ]
-        suggested_points = []
+        suggested_points: list[np.ndarray] = []
         # Iterating over the suggestors, finding the number of suggested points for each
         # suggestor, and suggesting them.
         # Note that this will order the points in the order of the suggestors, the
@@ -60,8 +99,14 @@ class RandomStragegizer:
         definition: dict[str, Any],
         n_objectives: int,
         rng: np.random.Generator,
-    ) -> RandomStragegizer:
+    ) -> RandomStrategizer:
         suggestors = []
+        # To make the child suggestors independent, we spawn a random number generator
+        # for each. This allows them to be fully deterministic based on the original
+        # seed, while what they suggest is not affected by how many times the other
+        # sibling suggestors have been used. If this was not here, for two child
+        # suggestors `A` and `B`, `[A.suggest(), B.suggest(), A.suggest()]` would risk
+        # yielding different points than `[A.suggest(), A.suggest(), B.suggest()]`.
         child_rngs = rng.spawn(len(definition["suggestors"]))
         for suggestor in definition["suggestors"]:
             usage_ratio = suggestor.pop("suggestor_usage_ratio")
@@ -73,8 +118,8 @@ class RandomStragegizer:
                     raise ValueError(
                         "If a suggestor definition for a RandomStrategizer has a "
                         "'suggestor' key, it should only have that key and "
-                        "'usage_ratio', but it has the keys `usage_ratio`, "
-                        f"{suggestor.keys()}."
+                        "'suggestor_usage_ratio', but it has the keys "
+                        f"`suggestor_usage_ratio`, {suggestor.keys()}."
                     )
                 suggestor = suggestor["suggestor"]
             suggestors.append(

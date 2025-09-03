@@ -86,7 +86,7 @@ class XpyriMentor:
         specified by the argument n. The method returns a list of new points to evaluate.
         """
         n = int(n)  # Ensure that n is an integer
-        return self.suggestor.suggest(Xi=self.Xi, Yi=self.yi, n_asked=n)
+        return self.suggestor.suggest(Xi=self.Xi, Yi=self.yi, n_points_to_suggest=n)
 
     def tell(self, x: Iterable, y: Any, task: Any = None) -> None:
         # Test whether the input is valid for the suggestor

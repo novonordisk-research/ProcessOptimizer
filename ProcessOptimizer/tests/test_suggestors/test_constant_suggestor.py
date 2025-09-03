@@ -23,13 +23,13 @@ def test_protocol():
 def test_given_value():
     space = space_factory([[0.0, 1.0]])
     suggestor = ConstantSuggestor(space=space, point=[0.2])
-    assert suggestor.suggest(Xi=[], Yi=[], n_asked=1) == [[0.2]]
+    assert suggestor.suggest(Xi=[], Yi=[], n_points_to_suggest=1) == [[0.2]]
 
 
 def test_different_given_values():
     space = space_factory([[0.0, 1.0], [0.0, 1.0]])
     suggestor = ConstantSuggestor(space=space, point=[0.2, 0.8])
-    assert all(suggestor.suggest(Xi=[], Yi=[], n_asked=1)[0] == [0.2, 0.8])
+    assert all(suggestor.suggest(Xi=[], Yi=[], n_points_to_suggest=1)[0] == [0.2, 0.8])
 
 
 def test_factory():
@@ -42,4 +42,4 @@ def test_factory():
         },
     )
     assert isinstance(suggestor, ConstantSuggestor)
-    assert all(suggestor.suggest(Xi=[], Yi=[], n_asked=1)[0] == [0.2, 0.8])
+    assert all(suggestor.suggest(Xi=[], Yi=[], n_points_to_suggest=1)[0] == [0.2, 0.8])

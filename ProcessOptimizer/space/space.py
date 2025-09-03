@@ -486,6 +486,8 @@ class Integer(Dimension):
         return abs(a - b)
 
     def _sample(self, point_list: Iterable[float]) -> np.ndarray:
+        # Transform points from [0, 1] to [low, high], so that each possible value in
+        # [low, high] is mapped to from an equally large interval.
         point_list = [
             min(point * (self.high + 1 - self.low) + self.low, self.high)
             for point in point_list

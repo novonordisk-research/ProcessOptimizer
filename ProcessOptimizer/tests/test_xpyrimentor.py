@@ -13,9 +13,9 @@ class MockSuggestor:
         self.suggestions = suggestions
         self.last_input = {}
 
-    def suggest(self, Xi, Yi, n_asked=1):
+    def suggest(self, Xi, Yi, n_points_to_suggest=1):
         self.last_input = {"Xi": Xi, "Yi": Yi}
-        return self.suggestions[:n_asked]
+        return self.suggestions[:n_points_to_suggest]
 
 
 def test_initialization():
