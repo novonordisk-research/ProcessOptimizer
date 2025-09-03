@@ -127,7 +127,9 @@ class ModelSystem:
         # Get the location of the expected minimum
         model_x, _ = expected_minimum(result)
         # Calculate the difference between the score at model_x and the true minimum value
-        loss = self.score(model_x) - self.true_min # add some check to cover multitask case
+        loss = (
+            self.score(model_x) - self.true_min
+        )  # add some check to cover multitask case
         return loss
 
     def get_score(self, X) -> float:
@@ -172,9 +174,9 @@ class ModelSystem:
     def copy(self):
         """
         Returns a copy of the model system.
-        
-        The rng of the copy will a spawn of the original, that is, different in a
-        deterministic way.
+
+        The rng of the copy will a spawn of the original, so calls to the original and
+        copy will yield different points, but be independent.
         """
         return self.__class__(
             score=self.score,

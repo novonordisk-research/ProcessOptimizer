@@ -16,7 +16,9 @@ class Suggestor(Protocol):
     suggest method with the same input should ideally return the same output.
     """
 
-    def suggest(self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int) -> np.ndarray:
+    def suggest(
+        self, Xi: Iterable[Iterable], Yi: Iterable, n_points_to_suggest: int
+    ) -> np.ndarray:
         """
         Suggest a new point to evaluate.
 
@@ -26,14 +28,15 @@ class Suggestor(Protocol):
             The input is a list of already evaluated points.
         * Yi [`Iterable`]:
             The results of the evaulations of `Xi`.
-        * n_asked [`int`]:
+        * n_points_to_suggest [`int`]:
             The number of suggested points to return
 
         Returns
         ----------
-        A np.ndarray of size `n_asked` x `n_dim`, where `n_dim` is the number of
-        dimensions in the search space. The dtype is `object`, to allow for any both
-        categorical and numerical dimensions without converting everything to str.
+        An np.ndarray of size `n_points_to_suggest` x `n_dim`, where `n_dim` is the
+        number of dimensions in the search space. The dtype is `object`, to allow for
+        any both categorical and numerical dimensions without converting everything to
+        str.
         """
         pass
 

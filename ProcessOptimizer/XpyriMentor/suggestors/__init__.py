@@ -5,7 +5,7 @@ from .default_suggestor import DefaultSuggestor
 from .golden_ratio_suggestor import GoldenRatioSuggestor
 from .lhs_suggestor import LHSSuggestor
 from .po_suggestor import OptimizerSuggestor
-from .random_strategizer import RandomStragegizer
+from .random_strategizer import RandomStrategizer
 from .sequential_strategizer import SequentialStrategizer
 from .suggestor import CreatableSuggestor, IncompatibleNumberAsked, Suggestor
 
@@ -25,7 +25,7 @@ __all__ = [
     "IncompatibleNumberAsked",
     "LHSSuggestor",
     "OptimizerSuggestor",
-    "RandomStragegizer",
+    "RandomStrategizer",
     "SequentialStrategizer",
     "MTSuggestor",
     "Suggestor",

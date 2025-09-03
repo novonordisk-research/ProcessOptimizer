@@ -34,16 +34,16 @@ class GoldenRatioSuggestor:
         x = 2.0
         for _ in range(10):
             x = pow(1 + x, 1 / (d + 1))
-        # The above loop converges to the root, as per the extreme learning
-        # link. Any irrational number works, and the slight suboptimaæity from
-        # not having an exact value is not an issue for our use. We could do
-        # it more directly, eg. with np.polynomial.Polynomial().roots, but this
+        # The above loop converges to the root, as per the source (extreme learning
+        # link) in the class docstring. Any irrational number works, and the slight
+        # suboptimality from not having an exact value is not an issue for our use. We
+        # could do it more directly, eg. with np.polynomial.Polynomial().roots, but this
         # gives us a list of roots, where we then have to find the unique
         # positive real root.
         return x
 
     def suggest(
-        self, Xi: Iterable[Iterable], Yi: Iterable, n_asked: int = 1
+        self, Xi: Iterable[Iterable], Yi: Iterable, n_points_to_suggest: int = 1
     ) -> np.ndarray:
         """
         Suggests a new point.
@@ -56,11 +56,11 @@ class GoldenRatioSuggestor:
         * Yi [`Iterable`]:
             The results of the evaluations of `Xi`. Not used in this suggestor.
             Present for consistency with other suggestors and XPyriMentor.
-        * n_asked [`int`]:
+        * n_points_to_suggest [`int`]:
             The number of suggested points to return. Must be a positive integer.
         Returns
         -------
-        A np.ndarray of size `n_asked` x `n_dim`, where `n_dim` is the number of
+        A np.ndarray of size `n_points_to_suggest` x `n_dim`, where `n_dim` is the number of
         dimensions in the search space. The points are sampled from the search space
         using a quasi-random sequence based on the generalized golden ratio.
         """
@@ -69,7 +69,7 @@ class GoldenRatioSuggestor:
         alpha = np.fromiter((pow(1 / g, j + 1) % 1 for j in range(d)), dtype=float)
         offset = np.array([self.offset] * d + len(Xi) * alpha)
         x = np.fromiter(
-            ((offset + alpha * (i + 1)) % 1 for i in range(n_asked)),
+            ((offset + alpha * (i + 1)) % 1 for i in range(n_points_to_suggest)),
             dtype=np.dtype((float, d)),
         )
         return self.space.sample(x)

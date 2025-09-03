@@ -114,6 +114,7 @@ def test_noise_model_example_1(long_signal_list, magnitude):
     # the following two lines are taken from the docstring of DataDependentNoise
     def noise_choice(X):
         return ConstantNoise(noise_size=X)
+
     noise_model = DataDependentNoise(noise_function=noise_choice)
     data = [magnitude] * len(long_signal_list)
     noise_list = [
@@ -129,6 +130,7 @@ def test_noise_model_example_2(long_signal_list):
             return ZeroNoise()
         else:
             return ConstantNoise()
+
     noise_model = DataDependentNoise(noise_function=noise_choice)
     X = [0, 10, 5]
     noise_list = [noise_model.get_noise(X, signal) for signal in long_signal_list]
@@ -154,6 +156,7 @@ def test_not_reseeding_data_dependent_noise():
             return noise_model_one
         else:
             return noise_model_two
+
     data_dependent_noise_model = DataDependentNoise(
         noise_function=noise_choice, overwrite_rng=False
     )
@@ -175,6 +178,7 @@ def test_reseeding_data_dependent_noise():
             return noise_model_one
         else:
             return noise_model_two
+
     data_dependent_noise_model = DataDependentNoise(
         noise_function=noise_choice, overwrite_rng=True
     )
@@ -209,6 +213,7 @@ def test_sum_noise_raw_noise_error():
 def test_data_dependent_raw_noise_error():
     def noise_choise():
         return ConstantNoise()
+
     noise_model = DataDependentNoise(noise_function=noise_choise)
     with pytest.raises(TypeError):
         noise_model._sample_noise
@@ -282,10 +287,8 @@ def test_unknown_distribution():
     noise_model = ConstantNoise()
     with pytest.raises(ValueError):
         noise_model.noise_type = "not_implemented"
-
-def test_new_distribution():
     noise_model = ConstantNoise()
-    noise_model.noise_types["new_distribution"] = lambda : 2
+    noise_model.possible_noise_types["new_distribution"] = lambda: 2
     noise_model.noise_type = "new_distribution"
     assert noise_model.get_noise(None, 0) == 2
     noise_model.noise_size = 10

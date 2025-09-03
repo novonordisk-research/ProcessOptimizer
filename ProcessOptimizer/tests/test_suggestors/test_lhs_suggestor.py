@@ -38,7 +38,7 @@ def test_suggest():
     assert len(suggestions) == 1
     assert len(suggestions[0]) == 3
     assert suggestions[0] in space
-    suggestions = suggestor.suggest([], [], n_asked=5)
+    suggestions = suggestor.suggest([], [], n_points_to_suggest=5)
     # Testing that the values for each dimension is regularly spaced over the range
     assert set(suggestion[0] for suggestion in suggestions) == {1, 3, 5, 7, 9}
     assert set(suggestion[1] for suggestion in suggestions) == {0.1, 0.3, 0.5, 0.7, 0.9}
@@ -49,12 +49,12 @@ def test_suggest_too_many():
     space = space_factory([[0, 10], [0.0, 1.0], ["cat", "dog"]])
     suggestor = LHSSuggestor(space, rng=np.random.default_rng(1), n_points=5)
     for n_told in range(1, 5):
-        told = suggestor.suggest([], [], n_asked=n_told)
-        suggestor.suggest(told, [0] * n_told, n_asked=1)
+        told = suggestor.suggest([], [], n_points_to_suggest=n_told)
+        suggestor.suggest(told, [0] * n_told, n_points_to_suggest=1)
     with pytest.raises(IncompatibleNumberAsked):
-        suggestor.suggest([], [], n_asked=6)
+        suggestor.suggest([], [], n_points_to_suggest=6)
     with pytest.raises(IncompatibleNumberAsked):
-        suggestor.suggest([[1, 0.0, "cat"]], [1], n_asked=5)
+        suggestor.suggest([[1, 0.0, "cat"]], [1], n_points_to_suggest=5)
 
 
 def test_n():
