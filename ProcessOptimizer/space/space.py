@@ -924,7 +924,7 @@ class Space(object):
         random_state: Union[
             int, np.random.RandomState, np.random.Generator, None
         ] = None,
-    ):
+    ) -> List[List[Any]]:
         """Draw random samples.
 
         The samples are in the original space. They need to be transformed
