@@ -21,7 +21,7 @@ class GoldenRatioSuggestor:
     ):
         self.space = space
         self.rng = rng
-        self.offset = self.rng.random()
+        self.offset = rng.uniform(0, 1, size=space.n_dims)
 
     @staticmethod
     def phi(d: int) -> float:
@@ -67,7 +67,8 @@ class GoldenRatioSuggestor:
         d = self.space.n_dims
         g = self.phi(d)
         alpha = np.fromiter((pow(1 / g, j + 1) % 1 for j in range(d)), dtype=float)
-        offset = np.array([self.offset] * d + len(Xi) * alpha)
+        # Disregarding the already sampled points
+        offset = np.array(self.offset + len(Xi) * alpha)
         x = np.fromiter(
             ((offset + alpha * (i + 1)) % 1 for i in range(n_points_to_suggest)),
             dtype=np.dtype((float, d)),
