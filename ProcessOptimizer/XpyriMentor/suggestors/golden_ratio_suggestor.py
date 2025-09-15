@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Iterable
+from typing import Collection, Iterable
 
 import numpy as np
 from ProcessOptimizer.space import Space
@@ -43,7 +43,7 @@ class GoldenRatioSuggestor:
         return x
 
     def suggest(
-        self, Xi: Iterable[Iterable], Yi: Iterable, n_points_to_suggest: int = 1
+        self, Xi: Collection[Iterable], Yi: Iterable, n_points_to_suggest: int = 1
     ) -> np.ndarray:
         """
         Suggests a new point.

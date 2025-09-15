@@ -1,6 +1,6 @@
 from __future__ import annotations
 import warnings
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Collection, Iterable
 
 import numpy as np
 from ProcessOptimizer.space import Space
@@ -68,7 +68,7 @@ class RandomStrategizer:
         self.rng = rng
 
     def suggest(
-        self, Xi: Iterable[Iterable], Yi: Iterable, n_points_to_suggest: int = 1
+        self, Xi: Collection[Iterable], Yi: Iterable, n_points_to_suggest: int = 1
     ) -> np.ndarray:
         # Creating n_points_to_suggest random indices in the range [0, total)
         selector_indices = [

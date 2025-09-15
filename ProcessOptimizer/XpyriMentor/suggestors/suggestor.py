@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable, Protocol, runtime_checkable
+from typing import Any, Callable, Iterable, Protocol, Collection, runtime_checkable
 
 from ProcessOptimizer.space import Space
 
@@ -17,17 +17,17 @@ class Suggestor(Protocol):
     """
 
     def suggest(
-        self, Xi: Iterable[Iterable], Yi: Iterable, n_points_to_suggest: int
+        self, Xi: Collection[Iterable], Yi: Iterable, n_points_to_suggest: int
     ) -> np.ndarray:
         """
         Suggest a new point to evaluate.
 
         Parameters
         ----------
-        * Xi [`Iterable[Iterable]`]:
+        * Xi [`Sized[Iterable]`]:
             The input is a list of already evaluated points.
         * Yi [`Iterable`]:
-            The results of the evaulations of `Xi`.
+            The results of the evaluations of `Xi`.
         * n_points_to_suggest [`int`]:
             The number of suggested points to return
 

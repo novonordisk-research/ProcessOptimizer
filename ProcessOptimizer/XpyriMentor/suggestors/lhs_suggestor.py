@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Iterable, Optional
+from typing import Any, Collection, Iterable, Optional
 
 import numpy as np
 from ProcessOptimizer.space import Space
@@ -34,7 +34,7 @@ class LHSSuggestor:
         return self.space.sample(samples_indexed)
 
     def suggest(
-        self, Xi: Iterable[Iterable], Yi: Iterable, n_points_to_suggest: int = 1
+        self, Xi: Collection[Iterable], Yi: Iterable, n_points_to_suggest: int = 1
     ) -> np.ndarray:
         if n_points_to_suggest + len(Xi) > self.n_points:
             raise IncompatibleNumberAsked(
