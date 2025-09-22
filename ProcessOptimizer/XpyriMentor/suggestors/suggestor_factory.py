@@ -85,16 +85,17 @@ def suggestor_factory(
     if rng is None:
         rng = np.random.default_rng(1)
     if not definition:  # If definition is None or empty, return DefaultSuggestor.
-        suggestor_type = "Default"
-    else:
-        try:
-            # We pop suggestor type (name), since we only need it to choose the type
-            # of suggestor, and don't want it provided to the suggestor itself.
-            suggestor_type = definition.pop("suggestor_name")
-        except KeyError as e:
-            raise ValueError(
-                f"Missing 'suggestor_name' key in suggestor definition: {definition}"
-            ) from e
+        definition = {"suggestor_name": "Default"}
+    definition = definition.copy()
+    # Copying to preserve original before we start popping keys
+    try:
+        # We pop suggestor type (name), since we only need it to choose the type
+        # of suggestor, and don't want it provided to the suggestor itself.
+        suggestor_type = definition.pop("suggestor_name")
+    except KeyError as e:
+        raise ValueError(
+            f"Missing 'suggestor_name' key in suggestor definition: {definition}"
+        ) from e
     if suggestor_type not in suggestors:
         raise ValueError(f"Unknown suggestor name: {suggestor_type}")
     return suggestors[suggestor_type].create_from_definition(

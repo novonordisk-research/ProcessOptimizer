@@ -112,7 +112,9 @@ def test_zero_noise(signal_list):
 @pytest.mark.parametrize("magnitude", (1, 2, 3))
 def test_noise_model_example_1(long_signal_list, magnitude):
     # the following two lines are taken from the docstring of DataDependentNoise
-    noise_choice = lambda X: ConstantNoise(noise_size=X)
+    def noise_choice(X):
+        return ConstantNoise(noise_size=X)
+
     noise_model = DataDependentNoise(noise_function=noise_choice)
     data = [magnitude] * len(long_signal_list)
     noise_list = [
@@ -123,7 +125,12 @@ def test_noise_model_example_1(long_signal_list, magnitude):
 
 def test_noise_model_example_2(long_signal_list):
     # the following two lines are taken from the docstring of DataDependentNoise
-    noise_choice = lambda X: ZeroNoise() if X[0] == 0 else ConstantNoise()
+    def noise_choice(X):
+        if X[0] == 0:
+            return ZeroNoise()
+        else:
+            return ConstantNoise()
+
     noise_model = DataDependentNoise(noise_function=noise_choice)
     X = [0, 10, 5]
     noise_list = [noise_model.get_noise(X, signal) for signal in long_signal_list]
@@ -143,7 +150,13 @@ def test_not_reseeding_data_dependent_noise():
     # are identical.
     noise_model_one = ConstantNoise()
     noise_model_two = ConstantNoise()
-    noise_choice = lambda X: noise_model_one if X == 0 else noise_model_two
+
+    def noise_choice(X):
+        if X == 0:
+            return noise_model_one
+        else:
+            return noise_model_two
+
     data_dependent_noise_model = DataDependentNoise(
         noise_function=noise_choice, overwrite_rng=False
     )
@@ -159,7 +172,13 @@ def test_reseeding_data_dependent_noise():
     # reseeded.
     noise_model_one = ConstantNoise()
     noise_model_two = ConstantNoise()
-    noise_choice = lambda X: noise_model_one if X == 0 else noise_model_two
+
+    def noise_choice(X):
+        if X == 0:
+            return noise_model_one
+        else:
+            return noise_model_two
+
     data_dependent_noise_model = DataDependentNoise(
         noise_function=noise_choice, overwrite_rng=True
     )
@@ -192,7 +211,9 @@ def test_sum_noise_raw_noise_error():
 # _sample_noise of DataDependentNoise should not be accesible, since it is a composite
 # NoiseModel, and should ot have "its own" noise.
 def test_data_dependent_raw_noise_error():
-    noise_choise = lambda: ConstantNoise()
+    def noise_choise():
+        return ConstantNoise()
+
     noise_model = DataDependentNoise(noise_function=noise_choise)
     with pytest.raises(TypeError):
         noise_model._sample_noise
@@ -266,6 +287,12 @@ def test_unknown_distribution():
     noise_model = ConstantNoise()
     with pytest.raises(ValueError):
         noise_model.noise_type = "not_implemented"
+    noise_model = ConstantNoise()
+    noise_model.possible_noise_types["new_distribution"] = lambda: 2
+    noise_model.noise_type = "new_distribution"
+    assert noise_model.get_noise(None, 0) == 2
+    noise_model.noise_size = 10
+    assert noise_model.get_noise(None, 0) == 20
 
 
 # set_noise_model_list did not reset the list. This test verifies that this bug has been

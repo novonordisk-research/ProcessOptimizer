@@ -30,3 +30,32 @@ def test_create_from_definition():
         rng=np.random.default_rng(1),
     )
     assert isinstance(suggestor, GoldenRatioSuggestor)
+
+
+def test_suggest():
+    space = space_factory([[0, 10], [0.0, 1.0], ["cat", "dog"]])
+    suggestor = GoldenRatioSuggestor(space, rng=np.random.default_rng(1))
+    suggestions = suggestor.suggest([], [])
+    assert len(suggestions) == 1
+    assert suggestions[0] in space
+    suggestions = suggestor.suggest([], [], n_points_to_suggest=5)
+    assert len(suggestions) == 5
+    for suggestion in suggestions:
+        assert suggestion in space
+        assert len(suggestion) == 3
+
+
+def test_repeatability():
+    space = space_factory([[0, 10], [0.0, 1.0], ["cat", "dog"]])
+    suggestor = GoldenRatioSuggestor(space, rng=np.random.default_rng(1))
+    first_suggestion = suggestor.suggest([], [])
+    second_suggestion = suggestor.suggest([], [])
+    assert (first_suggestion == second_suggestion).all()
+
+
+def test_continue():
+    space = space_factory([[0, 10], [0.0, 1.0], ["cat", "dog"]])
+    suggestor = GoldenRatioSuggestor(space, rng=np.random.default_rng(1))
+    first_suggestion = suggestor.suggest([], [])
+    second_suggestion = suggestor.suggest(first_suggestion, [3])
+    assert (first_suggestion != second_suggestion).any()

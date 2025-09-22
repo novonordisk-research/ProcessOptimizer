@@ -29,6 +29,9 @@ def hart3_score(x):
     * 'score' [float]:
         The score of the system at x.
     """
+    # Xpytimentor outputs numpy arrays with dtype object. We need to convert to
+    # floats for the math to work.
+    x = np.array(x, dtype=np.float64)
     # Define the constants that are canonically used with this function.
     alpha = np.asarray([1.0, 1.2, 3.0, 3.2])
     P = 10**-4 * np.asarray(
@@ -40,13 +43,14 @@ def hart3_score(x):
     return -np.sum(alpha * np.exp(-np.sum(A * (np.array(x) - P) ** 2, axis=1)))
 
 
-def create_hart3(noise=bool)-> ModelSystem:
+def create_hart3(noise=bool, **kwargs) -> ModelSystem:
     hart3 = ModelSystem(
         hart3_score,
         [(0.0, 1.0), (0.0, 1.0), (0.0, 1.0)],
         noise_model="constant",
         true_max=0.0,
         true_min=-3.863,
+        **kwargs,
     )
     if noise:
         return hart3

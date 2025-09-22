@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Iterable
+from typing import Collection, Iterable
 
 import numpy as np
 from ProcessOptimizer.space import Space
@@ -13,10 +13,15 @@ class GoldenRatioSuggestor:
     From https://extremelearning.com.au/unreasonable-effectiveness-of-quasirandom-sequences/
     """
 
-    def __init__(self, space: Space, rng: np.random.Generator):
+    def __init__(
+        self,
+        space: Space,
+        rng: np.random.Generator,
+        **kwargs,  # To catch any additional keyword arguments that might have been added
+    ):
         self.space = space
         self.rng = rng
-        self.offset = self.rng.random()
+        self.offset = rng.uniform(0, 1, size=space.n_dims)
 
     @staticmethod
     def phi(d: int) -> float:
@@ -38,7 +43,7 @@ class GoldenRatioSuggestor:
         return x
 
     def suggest(
-        self, Xi: Iterable[Iterable], Yi: Iterable, n_points_to_suggest: int = 1
+        self, Xi: Collection[Iterable], Yi: Iterable, n_points_to_suggest: int = 1
     ) -> np.ndarray:
         """
         Suggests a new point.
@@ -62,7 +67,8 @@ class GoldenRatioSuggestor:
         d = self.space.n_dims
         g = self.phi(d)
         alpha = np.fromiter((pow(1 / g, j + 1) % 1 for j in range(d)), dtype=float)
-        offset = np.array([self.offset] * d + len(Xi) * alpha)
+        # Disregarding the already sampled points
+        offset = np.array(self.offset + len(Xi) * alpha)
         x = np.fromiter(
             ((offset + alpha * (i + 1)) % 1 for i in range(n_points_to_suggest)),
             dtype=np.dtype((float, d)),

@@ -1,6 +1,6 @@
 from __future__ import annotations
 import warnings
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Collection, Iterable
 
 import numpy as np
 from ProcessOptimizer.space import Space
@@ -50,7 +50,10 @@ class RandomStrategizer:
     """
 
     def __init__(
-        self, suggestors: list[tuple[float, Suggestor]], rng: np.random.Generator
+        self,
+        suggestors: list[tuple[float, Suggestor]],
+        rng: np.random.Generator,
+        **kwargs,  # To catch any superfluous arguments, e.g. n_points
     ):
         self.total = sum(item[0] for item in suggestors)
         if float(self.total) != 1.0 and float(self.total) != 100.0:
@@ -65,7 +68,7 @@ class RandomStrategizer:
         self.rng = rng
 
     def suggest(
-        self, Xi: Iterable[Iterable], Yi: Iterable, n_points_to_suggest: int = 1
+        self, Xi: Collection[Iterable], Yi: Iterable, n_points_to_suggest: int = 1
     ) -> np.ndarray:
         # Creating n_points_to_suggest random indices in the range [0, total)
         selector_indices = [
@@ -107,8 +110,11 @@ class RandomStrategizer:
         # sibling suggestors have been used. If this was not here, for two child
         # suggestors `A` and `B`, `[A.suggest(), B.suggest(), A.suggest()]` would risk
         # yielding different points than `[A.suggest(), A.suggest(), B.suggest()]`.
+        # This probably wouldn't cause an issue in production, but it would be annoying
+        # when debugging.
         child_rngs = rng.spawn(len(definition["suggestors"]))
         for suggestor in definition["suggestors"]:
+            suggestor = suggestor.copy()  # Copying to avoid modifying the original
             usage_ratio = suggestor.pop("suggestor_usage_ratio")
             # Note that we are removing the key usage_ratio from the suggestor
             # definition. If any suggestor uses this key, it will have to be redefined in

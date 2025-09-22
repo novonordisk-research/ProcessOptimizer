@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 import warnings
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Collection, Iterable
 
 import numpy as np
 from ProcessOptimizer.space import Space
@@ -48,7 +48,7 @@ class SequentialStrategizer:
     }
     """
 
-    def __init__(self, suggestors: list[tuple[int, Suggestor]]):
+    def __init__(self, suggestors: list[tuple[int, Suggestor]], **kwargs):
         """
         Initialize the strategizer with a list of suggestors and their budgets.
 
@@ -100,7 +100,7 @@ class SequentialStrategizer:
         self.suggestors = suggestors
 
     def suggest(
-        self, Xi: Iterable[Iterable], Yi: Iterable, n_points_to_suggest: int = 1
+        self, Xi: Collection[Iterable], Yi: Iterable, n_points_to_suggest: int = 1
     ):
         # We will skip as many points as we have already been told about.
         number_left_to_skip = len(Xi)  # Running tally of points to skip.
@@ -158,8 +158,11 @@ class SequentialStrategizer:
         # sibling suggestors have been used. If this was not here, for two child
         # suggestors `A` and `B`, `[A.suggest(), B.suggest(), A.suggest()]` would risk
         # yielding different points than `[A.suggest(), A.suggest(), B.suggest()]`.
+        # This probably wouldn't cause an issue in production, but it would be annoying
+        # when debugging.
         child_rngs = rng.spawn(len(definition["suggestors"]))
         for suggestor in definition["suggestors"]:
+            suggestor = suggestor.copy()  # Preserving the input dict
             n = suggestor.pop("suggestor_budget")
             if "suggestor" in suggestor:
                 if len(suggestor) > 1:

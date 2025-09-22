@@ -69,6 +69,9 @@ class OptimizerSuggestor:
     ) -> OptimizerSuggestor:
         if definition is None:
             definition = {}
+        # Delete the key "n_points" if it exists. It can be added by a sequential
+        # strategizer.
+        definition.pop("n_points", None)
         return OptimizerSuggestor(
             space=space,
             n_objectives=n_objectives,
