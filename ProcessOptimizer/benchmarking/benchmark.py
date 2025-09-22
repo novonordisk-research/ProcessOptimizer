@@ -91,7 +91,9 @@ class BenchmarkInstance:
 
         Needs the following parameters:
         * `model_system_name` [str]:
-            Name of the model system to use.
+            Name of the model system to use. Has to be a name of an internal
+            ModelSystem. Examples are 'hart3' or 'hart6'. You can see the full list in
+            ProcessOptimizer\\model_systems\\model_system_getter.py
         * `suggestor_definition` [dict]:
             Definition of the suggestor object to use.
         * `experimental_budget` [int]:
@@ -113,15 +115,19 @@ class BenchmarkInstance:
             }
         )
         self.__dict__.update(kwargs)
+        # Translating the difficulty level (expected random runtime) to a value of the
+        # objective.
         self.success_level = find_limits(
             model_system_name, expected_random_runtime, self.noise_level
         )
+        # TODO: Nicer error if the model system is not found
         self.model_system = get_model_system(model_system_name, seed=seed)
         self.model_system.noise_size *= noise_level
         self.xpyrimentor = XpyriMentor(
             self.model_system.space, self.suggestor_definition, seed=seed
         )
-        self.estimated_optima = []
+        self.estimated_optima = []  # This will end up with one point per evaluation.
+        # Each entry is the estimated optimum when we only have the points suggested "so far".
 
     @property
     def optimizer(self) -> Optimizer:
@@ -129,7 +135,7 @@ class BenchmarkInstance:
         # suggestor in the suggestor list of the sequential strategizer.
         return self.xpyrimentor.suggestor.suggestors[-1][1].optimizer
 
-    def tell(self, x: Iterable, y: float) -> tuple[float, float, float]:
+    def tell_benchmark(self, x: Iterable, y: float) -> tuple[float, float, float]:
         """
         Tell the xpyrimentor about a new observation.
 
@@ -152,6 +158,8 @@ class BenchmarkInstance:
         # We then add observational noise to the optimizer to get the correct standard
         # deviation, find the position, value, and standard deviation of the expected
         # minimum, and tell the optimizer to stop including observational noise.
+        # Updating with the points so far makes this not a pure function. But since
+        # the OptimizerSuggestor does the same, we should be good.
         optimizer: Optimizer = self.optimizer
         optimizer.Xi = self.xpyrimentor.Xi
         optimizer.yi = self.xpyrimentor.yi
@@ -170,14 +178,16 @@ class BenchmarkInstance:
         while len(self.xpyrimentor.Xi) < self.experimental_budget:
             x = self.xpyrimentor.ask()
             y = self.model_system.get_score(x)
-            minimum_location, minimum_value, minimum_std = self.tell(x, y)
-            if (minimum_value + 2 * minimum_std) < self.success_level and self.validate:
+            minimum_location, minimum_value, minimum_std = self.tell_benchmark(x, y)
+            # If the validation is enabled, we do an extra experiment when it seems good
+            # enough, to be more sure that we have a good point.
+            if self.validate and (minimum_value + 2 * minimum_std) < self.success_level:
                 result = self.model_system.get_score(minimum_location)
-                minimum_location, minimum_value, minimum_std = self.tell(
+                minimum_location, minimum_value, minimum_std = self.tell_benchmark(
                     [minimum_location], result
                 )
             if (minimum_value + 2 * minimum_std) < self.success_level:
-                true_quality = find_pesimistic_value(
+                true_quality = find_pessimistic_value(
                     self.model_system, minimum_location
                 )
                 if true_quality < self.success_level:
@@ -208,6 +218,9 @@ class BenchmarkInstance:
             [point if isinstance(point, str) else float(point) for point in x.tolist()]
             for x in self.xpyrimentor.Xi
         ]
+        # This format assumes we have an Optimizer. If we don't, we should probably just
+        # return the suggestor definition, it contains all information about the
+        # suggestor.
         return {
             "model_system_name": self.model_system_name,
             "expected_random_runtime": self.expected_random_runtime,
@@ -238,31 +251,48 @@ def find_limits(
     expected_random_runtime: float,
     noise_level: float,
 ):
+    """
+    Find the limits for the given model system, expected random runtime, and noise level.
+
+    The limit is the objective value that a point in the `model_system.space` has a
+    probability of `1/expected_random_runtime` of having a pessimistic objective value
+    lower than.
+
+    The pessimistic objective value of a point is 2 standard deviations above the mean
+    value.
+    """
+    # Special seed since multiple benchmark instances has the same limit.
     seed = 42
     random_scaling = 100
     model_system = get_model_system(model_system_name, seed=seed)
     model_system.noise_size = model_system.noise_size * noise_level
+    # Use Generalised golden ratio sampler to find points in the space.
     sampler = XpyriMentor(
         space=model_system.space, suggestor={"suggestor_name": "GoldenRatio"}, seed=seed
     )
+    # Find the values for sampled points
     estimated_points = [
-        (point, find_pesimistic_value(model_system, point))
+        find_pessimistic_value(model_system, point)
         for point in sampler.ask(expected_random_runtime * random_scaling)
     ]
-    # Sort the points by score, and find the point that corresponds to the expected
-    # random runtime
-    estimated_points.sort(key=lambda x: x[1])
+    # Sort the objective values of the points
+    estimated_points.sort()
     limit_point = estimated_points[int(random_scaling)]
-    return limit_point[1]
+    return limit_point
 
 
-def find_pesimistic_value(model_system: ModelSystem, x: Iterable):
+def find_pessimistic_value(model_system: ModelSystem, x: Iterable):
     """
     Find the value that is 2 standard deviations above the true value at `x`.
+
+    We use this for our goal since a solution is only relevant in production if the
+    quality is good enough the vast majority of the time. So the 2.2th percentile of the
+    quality has to be above a certain threshold. Since we are minimizing, this turns
+    into a demand on the value two standard deviations above the mean quality.
     """
     model_system = model_system.copy()  # Copy to avoid changing the original
     # Set the noise model so that we always return two standard deviations above the true
     # value.
-    model_system.noise_model.possible_noise_types["constant"] = lambda: 2
-    model_system.noise_model.noise_type = "constant"
+    model_system.noise_model.possible_noise_types["pessimistic"] = lambda: 2
+    model_system.noise_model.noise_type = "pessimistic"
     return model_system.get_score(x)

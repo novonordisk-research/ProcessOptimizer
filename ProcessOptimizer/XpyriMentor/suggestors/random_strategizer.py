@@ -110,8 +110,11 @@ class RandomStrategizer:
         # sibling suggestors have been used. If this was not here, for two child
         # suggestors `A` and `B`, `[A.suggest(), B.suggest(), A.suggest()]` would risk
         # yielding different points than `[A.suggest(), A.suggest(), B.suggest()]`.
+        # This probably wouldn't cause an issue in production, but it would be annoying
+        # when debugging.
         child_rngs = rng.spawn(len(definition["suggestors"]))
         for suggestor in definition["suggestors"]:
+            suggestor = suggestor.copy()  # Copying to avoid modifying the original
             usage_ratio = suggestor.pop("suggestor_usage_ratio")
             # Note that we are removing the key usage_ratio from the suggestor
             # definition. If any suggestor uses this key, it will have to be redefined in

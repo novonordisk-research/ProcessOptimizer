@@ -158,8 +158,11 @@ class SequentialStrategizer:
         # sibling suggestors have been used. If this was not here, for two child
         # suggestors `A` and `B`, `[A.suggest(), B.suggest(), A.suggest()]` would risk
         # yielding different points than `[A.suggest(), A.suggest(), B.suggest()]`.
+        # This probably wouldn't cause an issue in production, but it would be annoying
+        # when debugging.
         child_rngs = rng.spawn(len(definition["suggestors"]))
         for suggestor in definition["suggestors"]:
+            suggestor = suggestor.copy()  # Preserving the input dict
             n = suggestor.pop("suggestor_budget")
             if "suggestor" in suggestor:
                 if len(suggestor) > 1:
