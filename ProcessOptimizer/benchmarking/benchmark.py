@@ -3,6 +3,8 @@ import functools
 from dataclasses import dataclass, field
 from typing import Any, Iterable
 
+import numpy as np
+
 from ProcessOptimizer.model_systems import get_model_system, ModelSystem
 from ProcessOptimizer import Optimizer, XpyriMentor
 from ProcessOptimizer.XpyriMentor.suggestors import ConstantSuggestor
@@ -167,7 +169,7 @@ class BenchmarkInstance:
         optimizer.add_observational_noise()
         result = optimizer.get_result()
         result_location, [result_value, result_std] = expected_minimum(
-            result, return_std=True
+            result, return_std=True, random_state=np.random.RandomState(self.seed)
         )
         optimizer.remove_observational_noise()
         self.estimated_optima.append((result_location, result_value, result_std))
