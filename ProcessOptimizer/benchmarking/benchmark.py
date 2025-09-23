@@ -172,7 +172,13 @@ class BenchmarkInstance:
             result, return_std=True, random_state=np.random.RandomState(self.seed)
         )
         optimizer.remove_observational_noise()
-        self.estimated_optima.append((result_location, result_value, result_std))
+        self.estimated_optima.append(
+            (
+                [float(coor) for coor in result_location],
+                float(result_value),
+                float(result_std),
+            )
+        )
         return (result_location, result_value, result_std)
 
     def run(self):
