@@ -1,12 +1,14 @@
 # Benchmarks
 
-This folder contains the different benchmarks we have run.
+This folder contains the different benchmarks we have performed. The framework for making
+model systems and benchmarks are in the `ProcessOptimizer/model_systems` and
+`ProcessOptimizer/benchmarking` folders, respectively.
 
 ## Structure
 
-Each benchmark run or family of benchmark runs has its own folder, with the python file needed to
-run the benchmark and the putput .csv file. Each such folder should have a paragrap in the
-[Benchmarks](#benchmarks) paragraph, detailing what the purpose of the benchamrk is, what
+Each benchmark run or family of benchmark runs has its own folder, with the python file(s) needed to
+run the benchmark and the output .csv file(s). Each such folder should have a paragraph in the
+[Benchmarks](#benchmarks) section, detailing what the purpose of the benchmark is, what
 parameters were varied (and which weren't), and what the conclusions were.
 
 ## Benchmarks
@@ -22,7 +24,7 @@ expected random runtime of 1000. The noise levels are the default noise level (c
 in addition to 5 times lower and 5 times higher noise.
 
 #### Suggestor
-`n+1` and `3n` initial points are found with generalized golden ratio sampling. Then, an `Optimzer`
+`n+1` and `3n` initial points are found with generalized golden ratio sampling. Then, an `Optimizer`
 is used, with length scale bounds `[0.001, 1.0]` and noise level bounds `[0.0001, 1.0]`,
 corresponding to a noise of 0.01 to 1, since the noise level bounds define the variance, not the
 standard deviation.

@@ -1,3 +1,10 @@
+"""
+This is the benchmarking module for the ProcessOptimizer. It provides the tools
+necessary for evaluating the performance of different suggestors in the optimization.
+For concrete examples of how to use it, see the benchmarks folder in the root of the
+repository.
+"""
+
 from __future__ import annotations
 import functools
 from dataclasses import dataclass, field
