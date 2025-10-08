@@ -1,7 +1,16 @@
+"""
+This is the benchmarking module for the ProcessOptimizer. It provides the tools
+necessary for evaluating the performance of different suggestors in the optimization.
+For concrete examples of how to use it, see the benchmarks folder in the root of the
+repository.
+"""
+
 from __future__ import annotations
 import functools
 from dataclasses import dataclass, field
 from typing import Any, Iterable
+
+import numpy as np
 
 from ProcessOptimizer.model_systems import get_model_system, ModelSystem
 from ProcessOptimizer import Optimizer, XpyriMentor
@@ -167,10 +176,16 @@ class BenchmarkInstance:
         optimizer.add_observational_noise()
         result = optimizer.get_result()
         result_location, [result_value, result_std] = expected_minimum(
-            result, return_std=True
+            result, return_std=True, random_state=np.random.RandomState(self.seed)
         )
         optimizer.remove_observational_noise()
-        self.estimated_optima.append((result_location, result_value, result_std))
+        self.estimated_optima.append(
+            (
+                [float(coor) for coor in result_location],
+                float(result_value),
+                float(result_std),
+            )
+        )
         return (result_location, result_value, result_std)
 
     def run(self):

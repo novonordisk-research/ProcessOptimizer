@@ -27,6 +27,7 @@
  * [Installation](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#installation)
  * [How to get started](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#how-to-get-started)
  * [Examples](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#examples)
+ * [Benchmarks and benchmarking](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#benchmarks)
  * [Contributions](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#contributions)
  * [Related work](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#related-work)
  * [Citation](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/README.md#Citation)
@@ -137,6 +138,10 @@ po.plot_objective(result)
 ## Examples
 An introductory walkthough of the package can be found [here](https://github.com/novonordisk-research/ProcessOptimizer/blob/develop/examples/walkthrough/readme.md)<br>
 Various examples on use and functionality can be found [here](https://github.com/novonordisk-research/ProcessOptimizer/tree/develop/examples).
+
+## Benchmarks
+The package also contains model systems and benchmark tools to facilitate evaluation of different optimization strategies. See the `benchmarks` folder for concrete examples,
+including data from the benchmarks performed.
 
 ## Contributions
 
