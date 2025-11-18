@@ -70,3 +70,24 @@ def test_Pareto_reproducible():
     pop2, logbook, front2 = opt.NSGAII()
     assert_equal(pop1, pop2)
     assert_equal(front1, front2)
+
+
+@pytest.mark.fast_test
+def test_multiobjective_ask_reproducible():
+    gold_model_system = get_model_system('gold_map')
+    distance_model_system = get_model_system('distance_map', camp_coordinates=(4,10))
+
+    opt1 = Optimizer(gold_model_system.space, n_initial_points=4, n_objectives=2)
+    opt2 = Optimizer(gold_model_system.space, n_initial_points=4, n_objectives=2)
+
+    gold_model_system.noise_model.set_seed(40)
+    distance_model_system.noise_model.set_seed(40)
+    # Check that the two optimizers stay in sync
+    for i in range(40):
+        new_dig_site_1 = opt1.ask()
+        new_dig_site_2 = opt2.ask()
+        assert_equal(new_dig_site_1, new_dig_site_2)
+        gold_found = gold_model_system.get_score(new_dig_site_1)
+        distance = distance_model_system.get_score(new_dig_site_1)
+        opt1.tell(new_dig_site_1, [gold_found, distance])
+        opt2.tell(new_dig_site_2, [gold_found, distance])
