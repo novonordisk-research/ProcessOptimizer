@@ -753,7 +753,7 @@ class Optimizer(object):
                 prob_stbr = 0.25
 
                 # Simulate a random number
-                random_uniform_number = np.random.uniform()
+                random_uniform_number = self.rng.uniform()
 
                 # The random number decides what strategy to use for the next point
                 if random_uniform_number < prob_stbr:
