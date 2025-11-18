@@ -11,6 +11,7 @@ from scipy.optimize import OptimizeResult
 from scipy.stats.mstats import mquantiles
 from scipy.stats import norm
 from scipy.ndimage import gaussian_filter1d
+from scipy.signal import savgol_filter
 from warnings import warn
 from ProcessOptimizer import expected_minimum, expected_minimum_random_sampling
 from .space import Categorical, Integer
@@ -2571,3 +2572,65 @@ def plot_Pareto_bokeh(
             json_item = bh_embed.json_item(p)
             return json_item
 
+
+def get_Brownie_Bee_Pareto(optimizer):
+    """Calculate Pareto front in two dimensions and return its points, as well
+    as uncertainty band around each objective along the front. This function is
+    mainly intended for use with the Brownie Bee user interface.
+
+    Parameters
+    ----------
+    * `optimizer` [`Optimizer`]
+        The optimizer containing data and the multiobjective model
+
+
+    Returns
+    -------
+    * `front_x`: [numpy.ndarray]:
+        Pareto front locations in optimizer X-space
+    * `front_y`: [numpy.ndarray]:
+        Pareto front locations in optimizer Y-space
+    * `objective1_error`: [numpy.ndarray]:
+        Uncertainty (1.96*std) of objective 1 values at the front_y locations
+    """
+    
+    if optimizer.models == []:
+        raise ValueError("No models have been fitted yet")
+
+    if optimizer.n_objectives == 1:
+        raise ValueError(
+            "get_Pareto_points is not possible with single objective optimization"
+        )
+
+    if optimizer.n_objectives > 2:
+        raise ValueError("get_Pareto_points is not possible with >2 objectives")
+    
+    # Estimate the Pareto front of the models in the optimizer object
+    front_x, logbook, front_y = optimizer.NSGAII(MU=100)
+
+    front_x = np.asarray(front_x)
+    front_x = np.asarray(
+        optimizer.space.inverse_transform(
+            front_x.reshape(len(front_x), optimizer.space.transformed_n_dims)
+        )
+    )
+    
+    # Sort the points in ascending order on objective 1
+    idx = np.argsort(front_y[:, 0])
+    front_x = front_x[idx, :]
+    front_y = front_y[idx, :]
+    
+    # Extract estimates of the objective functions along the Pareto front
+    output = optimizer.estimate(front_x)
+    # Grab objective errors and smooth them slightly along the front
+    objective1_error = [1.96*point.Y1.std for point in output]
+    objective1_error = savgol_filter(objective1_error, 11, 1, mode="interp")
+    objective2_error = [1.96*point.Y2.std for point in output]
+    objective2_error = savgol_filter(objective2_error, 11, 1, mode="interp")
+    
+    return (
+        front_x,
+        front_y,
+        objective1_error,
+        objective2_error,
+    )
