@@ -1315,6 +1315,7 @@ class Optimizer(object):
             self.__ObjectiveGP,
             np.array(self.space.transformed_bounds),
             MU=MU,
+            seed=42,
         )
 
         return pop, logbook, front
