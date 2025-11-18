@@ -4,11 +4,13 @@
 
 ### Changes
 
-- 
+- Added the get_Brownie_Bee_Pareto() function to support Pareto front plotting in the Brownie Bee user interface.
 
 ### Bugfixes
 
-- 
+- opt.ask() is now reproducible for multiobjective optimization through seeding of the NSGAII algorithm and
+  a small adjustment to the way optimizer._tell() chooses between Steinerberger and NSGAII sampling.
+- Pareto front calculations are now reproducible.
 
 ## Version 1.1.1 [published]
 
