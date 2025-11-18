@@ -1309,7 +1309,12 @@ class Optimizer(object):
     # This function calls NSGAII to estimate the Pareto Front
     def NSGAII(self, MU=40):
         from ._NSGA2 import NSGAII
-
+        
+        if MU % 4 != 0:
+            raise ValueError(
+                "Number of simulated points must be divisible by 4 for the NSGAII algorithm"
+            )
+            
         pop, logbook, front = NSGAII(
             self.n_objectives,
             self.__ObjectiveGP,
