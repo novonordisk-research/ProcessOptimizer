@@ -583,3 +583,43 @@ def y_coverage(res, return_plot=False, random_state=None, horizontal=False):
             plt.show()
 
     return (observed_min, observed_max), (expected_min, expected_max)
+
+
+def get_Pareto_front_compromise(front_y):
+    """Support function to identify a default compromise between two objectives
+    in a Pareto front. This function is mainly intended for use with the 
+    Brownie Bee user interface.
+
+    Parameters
+    ----------
+    * `front_y` [numpy.ndarray]
+        Pareto front locations in optimizer Y-space
+
+
+    Returns
+    -------
+    * `best_idx`: [int]:
+        The index of the point in front_y that is closest to the normalized
+        ideal solution for both objectives.
+    """
+    if not isinstance(front_y, np.ndarray):
+        raise TypeError("front_y must be a numpy.ndarray, got (%s)." % type(front_y))
+    
+    if front_y.shape[1] != 2:
+        raise ValueError("front_y must have two columns, got (%s)" % front_y.shape[1])
+    
+    # Get the best predicted point for each objective
+    best_obj1 = np.min(front_y[:, 0])
+    best_obj2 = np.min(front_y[:, 1])
+    # Get the span of each objective for normalization
+    span1 = np.ptp(front_y[:, 0])
+    span2 = np.ptp(front_y[:, 1])
+
+    # Calculate distance from ideal solution to points along the front
+    dist = np.sqrt(
+          ((front_y[:, 0] - best_obj1)/span1)**2 
+        + ((front_y[:, 1] - best_obj2)/span2)**2 
+    )
+    best_idx = np.argmin(dist)
+    
+    return best_idx
