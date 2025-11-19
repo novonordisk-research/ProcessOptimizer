@@ -1515,6 +1515,94 @@ def plot_objective_1d(
         ax, space, ylabel=ylabel, dim_labels=dimensions
     )
 
+
+def get_Brownie_Bee_1d_plot(
+        result,
+        x_eval=None,
+        n_points=60,
+        n_samples=250,
+):
+    """Returns the information needed to produce single factor dependence plots
+    of the model in `result`. This utility function is mainly intended for use 
+    with the Brownie Bee user interface.
+    
+    The data returned allows visualization of how Y depends on dimension `i` 
+    when all other factor values are locked to those provided in x_eval.
+    
+    Parameters
+    ----------
+    * `result` [`OptimizeResult`]
+        The result for which to create the plotting data.
+    
+    * `x_eval` [list or np.ndarray of floats, ints and/or strings, default=None] 
+        [x[0], x[1], ..., x[n]] - Factor settings to create the dependency plot 
+        at, defined by the values in this list. Depending on the system, this 
+        list can contain a mixture of floats, ints and strings. If no settings 
+        are provided the function defaults to using expected_minimum on the 
+        model.
+        
+    * `n_points` [int, default=60]
+        Number of points at which to evaluate the partial dependence
+        along each dimension.
+
+    * `n_samples` [int, default=250]
+        Number of random samples to use for averaging the model function
+        at each of the `n_points`.
+
+
+    Returns
+    -------
+    * `plot_list`: [`list of lists`]:
+        A list of lists that provide the necessary data for creating dependency
+        plots along each dimension of the space. Each list contains three lists
+        and a float of the x-axis value to highlight in the same plot: 
+        [[x-axis], [y_low], [y_high], x_highlight] 
+    """
+    space = result.space
+    model = result.models[-1]
+    
+    if x_eval is None:
+        # Identify the location of the expected minimum, and its mean and std
+        x_eval, [res_mean, res_std] = expected_minimum(
+            result,
+            n_random_starts=20,
+            random_state=42,
+            return_std=True,
+        )
+    elif isinstance(x_eval, list) or isinstance(x_eval, np.ndarray):
+        assert len(x_eval) == len(space), "Input settings must have same length as number of features"
+        res_mean, res_std = model.predict(np.array(x_eval).reshape(1, -1), return_std=True)
+    else:
+        raise TypeError("x_eval must be a list of settings, or None")
+    
+    rvs_transformed = space.transform(space.rvs(n_samples=n_samples))
+    # Map the settings to highlight so we automatically take care of 
+    # categorical factors that use 1-hot encoding
+    _, highlight, _ = _map_categories(space, result.x_iters, x_eval)
+    
+    # Gather all data relevant for plotting
+    plot_list = []
+    
+    for i in range(space.n_dims):
+        xi, yi, stddevs = dependence(
+            space,
+            model,
+            i,
+            j=None,
+            sample_points=rvs_transformed,
+            n_points=n_points,
+            x_eval=x_eval,
+        )
+        plot_list.append([
+            xi.tolist(),
+            (yi-1.96*stddevs).tolist(),
+            (yi+1.96*stddevs).tolist(),
+            highlight[i],
+        ])
+
+    return plot_list
+
+
 def plot_brownie_bee_frontend(
     result,
     n_points=60,
