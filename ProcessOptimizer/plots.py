@@ -2591,7 +2591,11 @@ def get_Brownie_Bee_Pareto(optimizer):
     * `front_y`: [numpy.ndarray]:
         Pareto front locations in optimizer Y-space
     * `objective1_error`: [numpy.ndarray]:
-        Uncertainty (1.96*std) of objective 1 values at the front_y locations
+        Uncertainty (1.96*std) of objective 1 values at the front_y locations,
+        including observational noise
+    * `objective2_error`: [numpy.ndarray]:
+        Uncertainty (1.96*std) of objective 2 values at the front_y locations,
+        including observational noise
     """
     
     if optimizer.models == []:
