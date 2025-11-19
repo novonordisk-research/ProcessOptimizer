@@ -2661,7 +2661,7 @@ def plot_Pareto_bokeh(
             return json_item
 
 
-def get_Brownie_Bee_Pareto(optimizer):
+def get_Brownie_Bee_Pareto(optimizer, n_points=100):
     """Calculate Pareto front in two dimensions and return its points, as well
     as uncertainty band around each objective along the front. This function is
     mainly intended for use with the Brownie Bee user interface.
@@ -2670,7 +2670,9 @@ def get_Brownie_Bee_Pareto(optimizer):
     ----------
     * `optimizer` [`Optimizer`]
         The optimizer containing data and the multiobjective model
-
+    * `n_points` [int, default=100]
+        The number of points to simulate for the Pareto front. Must be a 
+        multiple of 4 for the NSGAII algorithm.
 
     Returns
     -------
@@ -2697,8 +2699,13 @@ def get_Brownie_Bee_Pareto(optimizer):
     if optimizer.n_objectives > 2:
         raise ValueError("get_Pareto_points is not possible with >2 objectives")
     
+    if n_points % 4 != 0:
+        raise ValueError(
+            "Number of simulated points must be divisible by 4 for the NSGAII algorithm"
+        )
+    
     # Estimate the Pareto front of the models in the optimizer object
-    front_x, logbook, front_y = optimizer.NSGAII(MU=100)
+    front_x, logbook, front_y = optimizer.NSGAII(MU=n_points)
 
     front_x = np.asarray(front_x)
     front_x = np.asarray(
