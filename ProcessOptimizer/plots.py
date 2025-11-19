@@ -1556,7 +1556,11 @@ def get_Brownie_Bee_1d_plot(
         A list of lists that provide the necessary data for creating dependency
         plots along each dimension of the space. Each list contains three lists
         and a float of the x-axis value to highlight in the same plot: 
-        [[x-axis], [y_low], [y_high], x_highlight] 
+        [[x-axis], [y_low], [y_high], x_highlight].
+        
+        The last entry in plot_list contains information on the mean and std of
+        the model predictions at x_eval. This data allows the user to build a
+        histogram of expected results at these settings.
     """
     space = result.space
     model = result.models[-1]
@@ -1583,6 +1587,7 @@ def get_Brownie_Bee_1d_plot(
     # Gather all data relevant for plotting
     plot_list = []
     
+    # Generate 1D plot information for each dimension in space
     for i in range(space.n_dims):
         xi, yi, stddevs = dependence(
             space,
@@ -1599,6 +1604,9 @@ def get_Brownie_Bee_1d_plot(
             (yi+1.96*stddevs).tolist(),
             highlight[i],
         ])
+    
+    # Add information about the expected results at x_eval
+    plot_list.append([res_mean, res_std])
 
     return plot_list
 
