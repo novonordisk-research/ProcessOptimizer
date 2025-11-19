@@ -5,6 +5,8 @@
 ### Changes
 
 - Added the get_Brownie_Bee_Pareto() function to support Pareto front plotting in the Brownie Bee user interface.
+- Added the get_Pareto_front_compromise() function to facilitate a default highlighted compromise in the Pareto plot.
+- Added the get_Brownie_Bee_1d_plot() function to support custom 1D dependency plots in the Brownie Bee user interface.
 
 ### Bugfixes
 
