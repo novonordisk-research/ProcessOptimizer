@@ -1454,9 +1454,9 @@ def plot_objective_1d(
                     highlight_label = "Expected minimum"
                 elif pars == "expected_minimum_random":
                     highlight_label = "Simulated minimum"
-                elif isinstance(pars, list):
-                    # The case where the user specifies [x[0], x[1], ...]
-                    highlight_label = "Point: " + str(pars)
+            elif isinstance(pars, list):
+                # The case where the user specifies [x[0], x[1], ...]
+                highlight_label = "Point: " + str(pars)
             # Legend icon for the highlighted value
             legend_hl = mpl.lines.Line2D(
                 [],
