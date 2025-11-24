@@ -13,6 +13,8 @@
 - opt.ask() is now reproducible for multiobjective optimization through seeding of the NSGAII algorithm and
   a small adjustment to the way optimizer._tell() chooses between Steinerberger and NSGAII sampling.
 - Pareto front calculations are now reproducible.
+- Fixes small error in legend generation of plot_objective_1d for the case where the user specifies a
+  specific set of settings to create the plot at
 
 ## Version 1.1.1 [published]
 
