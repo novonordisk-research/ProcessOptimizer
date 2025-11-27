@@ -4,11 +4,17 @@
 
 ### Changes
 
-- 
+- Added the get_Brownie_Bee_Pareto() function to support Pareto front plotting in the Brownie Bee user interface.
+- Added the get_Pareto_front_compromise() function to facilitate a default highlighted compromise in the Pareto plot.
+- Added the get_Brownie_Bee_1d_plot() function to support custom 1D dependency plots in the Brownie Bee user interface.
 
 ### Bugfixes
 
-- 
+- opt.ask() is now reproducible for multiobjective optimization through seeding of the NSGAII algorithm and
+  a small adjustment to the way optimizer._tell() chooses between Steinerberger and NSGAII sampling.
+- Pareto front calculations are now reproducible.
+- Fixes small error in legend generation of plot_objective_1d for the case where the user specifies a
+  specific set of settings to create the plot at
 
 ## Version 1.1.1 [published]
 

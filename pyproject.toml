@@ -53,6 +53,7 @@ browniebee = [
     "scipy==1.13.0",
     "six==1.16.0",
     "patsy==1.0.1",
+	"torch==2.8.0",
 ]
 release = [
     "build==1.2.2.post1"

@@ -11,6 +11,7 @@ from scipy.optimize import OptimizeResult
 from scipy.stats.mstats import mquantiles
 from scipy.stats import norm
 from scipy.ndimage import gaussian_filter1d
+from scipy.signal import savgol_filter
 from warnings import warn
 from ProcessOptimizer import expected_minimum, expected_minimum_random_sampling
 from .space import Categorical, Integer
@@ -1453,9 +1454,9 @@ def plot_objective_1d(
                     highlight_label = "Expected minimum"
                 elif pars == "expected_minimum_random":
                     highlight_label = "Simulated minimum"
-                elif isinstance(pars, list):
-                    # The case where the user specifies [x[0], x[1], ...]
-                    highlight_label = "Point: " + str(pars)
+            elif isinstance(pars, list):
+                # The case where the user specifies [x[0], x[1], ...]
+                highlight_label = "Point: " + str(pars)
             # Legend icon for the highlighted value
             legend_hl = mpl.lines.Line2D(
                 [],
@@ -1513,6 +1514,102 @@ def plot_objective_1d(
     return _format_1d_dependency_axes(
         ax, space, ylabel=ylabel, dim_labels=dimensions
     )
+
+
+def get_Brownie_Bee_1d_plot(
+        result,
+        x_eval=None,
+        n_points=60,
+        n_samples=250,
+):
+    """Returns the information needed to produce single factor dependence plots
+    of the model in `result`. This utility function is mainly intended for use 
+    with the Brownie Bee user interface.
+    
+    The data returned allows visualization of how Y depends on dimension `i` 
+    when all other factor values are locked to those provided in x_eval.
+    
+    Parameters
+    ----------
+    * `result` [`OptimizeResult`]
+        The result for which to create the plotting data.
+    
+    * `x_eval` [list or np.ndarray of floats, ints and/or strings, default=None] 
+        [x[0], x[1], ..., x[n]] - Factor settings to create the dependency plot 
+        at, defined by the values in this list. Depending on the system, this 
+        list can contain a mixture of floats, ints and strings. If no settings 
+        are provided the function defaults to using expected_minimum on the 
+        model.
+        
+    * `n_points` [int, default=60]
+        Number of points at which to evaluate the partial dependence
+        along each dimension.
+
+    * `n_samples` [int, default=250]
+        Number of random samples to use for averaging the model function
+        at each of the `n_points`.
+
+
+    Returns
+    -------
+    * `plot_list`: [`list of lists`]:
+        A list of lists that provide the necessary data for creating dependency
+        plots along each dimension of the space. Each list contains three lists
+        and a float of the x-axis value to highlight in the same plot: 
+        [[x-axis], [y_low], [y_high], x_highlight].
+        
+        The last entry in plot_list contains information on the mean and std of
+        the model predictions at x_eval. This data allows the user to build a
+        histogram of expected results at these settings.
+    """
+    space = result.space
+    model = result.models[-1]
+    
+    if x_eval is None:
+        # Identify the location of the expected minimum, and its mean and std
+        x_eval, [res_mean, res_std] = expected_minimum(
+            result,
+            n_random_starts=20,
+            random_state=42,
+            return_std=True,
+        )
+    elif isinstance(x_eval, list) or isinstance(x_eval, np.ndarray):
+        assert len(x_eval) == len(space), "Input settings must have same length as number of features"
+        res_mean, res_std = model.predict(np.array(x_eval).reshape(1, -1), return_std=True)
+    else:
+        raise TypeError("x_eval must be a list of settings, or None")
+    
+    rvs_transformed = space.transform(space.rvs(n_samples=n_samples))
+    # Map the settings to highlight so we automatically take care of 
+    # categorical factors that use 1-hot encoding
+    _, highlight, _ = _map_categories(space, result.x_iters, x_eval)
+    
+    # Gather all data relevant for plotting
+    plot_list = []
+    
+    # Generate 1D plot information for each dimension in space
+    for i in range(space.n_dims):
+        xi, yi, stddevs = dependence(
+            space,
+            model,
+            i,
+            j=None,
+            sample_points=rvs_transformed,
+            n_points=n_points,
+            x_eval=x_eval,
+        )
+        plot_list.append([
+            xi.tolist(),
+            (yi-1.96*stddevs).tolist(),
+            (yi+1.96*stddevs).tolist(),
+            highlight[i],
+        ])
+    
+    # Add information about the expected results at x_eval
+    plot_list.append([res_mean, res_std])
+
+    return plot_list
+
 
 def plot_brownie_bee_frontend(
     result,
@@ -2571,3 +2668,76 @@ def plot_Pareto_bokeh(
             json_item = bh_embed.json_item(p)
             return json_item
 
+
+def get_Brownie_Bee_Pareto(optimizer, n_points=100):
+    """Calculate Pareto front in two dimensions and return its points, as well
+    as uncertainty band around each objective along the front. This function is
+    mainly intended for use with the Brownie Bee user interface.
+
+    Parameters
+    ----------
+    * `optimizer` [`Optimizer`]
+        The optimizer containing data and the multiobjective model
+    * `n_points` [int, default=100]
+        The number of points to simulate for the Pareto front. Must be a 
+        multiple of 4 for the NSGAII algorithm.
+
+    Returns
+    -------
+    * `front_x`: [numpy.ndarray]:
+        Pareto front locations in optimizer X-space
+    * `front_y`: [numpy.ndarray]:
+        Pareto front locations in optimizer Y-space
+    * `objective1_error`: [numpy.ndarray]:
+        Uncertainty (1.96*std) of objective 1 values at the front_y locations,
+        including observational noise
+    * `objective2_error`: [numpy.ndarray]:
+        Uncertainty (1.96*std) of objective 2 values at the front_y locations,
+        including observational noise
+    """
+    
+    if optimizer.models == []:
+        raise ValueError("No models have been fitted yet")
+
+    if optimizer.n_objectives == 1:
+        raise ValueError(
+            "get_Pareto_points is not possible with single objective optimization"
+        )
+
+    if optimizer.n_objectives > 2:
+        raise ValueError("get_Pareto_points is not possible with >2 objectives")
+    
+    if n_points % 4 != 0:
+        raise ValueError(
+            "Number of simulated points must be divisible by 4 for the NSGAII algorithm"
+        )
+    
+    # Estimate the Pareto front of the models in the optimizer object
+    front_x, logbook, front_y = optimizer.NSGAII(MU=n_points)
+
+    front_x = np.asarray(front_x)
+    front_x = np.asarray(
+        optimizer.space.inverse_transform(
+            front_x.reshape(len(front_x), optimizer.space.transformed_n_dims)
+        )
+    )
+    
+    # Sort the points in ascending order on objective 1
+    idx = np.argsort(front_y[:, 0])
+    front_x = front_x[idx, :]
+    front_y = front_y[idx, :]
+    
+    # Extract estimates of the objective functions along the Pareto front
+    output = optimizer.estimate(front_x)
+    # Grab objective errors and smooth them slightly along the front
+    objective1_error = [1.96*point.Y1.std for point in output]
+    objective1_error = savgol_filter(objective1_error, 11, 1, mode="interp")
+    objective2_error = [1.96*point.Y2.std for point in output]
+    objective2_error = savgol_filter(objective2_error, 11, 1, mode="interp")
+    
+    return (
+        front_x,
+        front_y,
+        objective1_error,
+        objective2_error,
+    )
