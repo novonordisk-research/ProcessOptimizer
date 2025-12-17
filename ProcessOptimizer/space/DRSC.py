@@ -81,9 +81,12 @@ class DRSCGenerator:
         This maximizes sampling efficiency by leaving flexible dimensions
         to absorb variation from random sampling.
         
-        Returns:
-            sort_order: Indices to sort dimensions by width (ascending)
-            inverse_order: Indices to restore original dimension order
+        Returns
+        -------
+            `sort_order` [np.ndarray]: 
+                Indices to sort dimensions by width (ascending)
+            `inverse_order`[np.ndarray]: 
+                Indices to restore original dimension order
         """
         widths = self.original_bounds[:, 1] - self.original_bounds[:, 0]
         sort_order = np.argsort(widths)
@@ -128,7 +131,8 @@ class DRSCGenerator:
         
         Returns
         -------
-        Array of theta values for each dimension
+            `thetas` [np.ndarray]:
+                Array of theta values for each dimension
         """
         thetas = np.zeros(self.n)
         
@@ -159,14 +163,14 @@ class DRSCGenerator:
         
         Parameters
         ----------
-            dim : int
+            `dim` [int]:
                 Current dimension index (in sorted order)
-            previous_thetas : np.ndarray
+            `previous_thetas` [np.ndarray]:
                 Array of theta values from previous dimensions
             
         Returns
         -------
-            theta_i: float
+            `theta_i` [float]:
                 theta_i value for the induced simplex
         """
         # Objective: maximize x_i (we'll negate for minimization)
@@ -278,12 +282,12 @@ class DRSCGenerator:
         
         Parameters
         ----------
-        x : np.ndarray
+        * `x` [np.ndarray]:
             Point to check (in sorted dimension order)
             
         Returns
         -------
-        bool
+        * bool
             True if all constraints are satisfied
         """
         # Check box bounds - ESSENTIAL
@@ -312,8 +316,9 @@ class DRSCGenerator:
         """
         Check if x is in any induced simplex.
         
-        Returns:
-            Index of the induced simplex, or None if not in any
+        Returns
+        -------
+            * Index of the induced simplex, or None if not in any
         """
         for idx, (theta, vertices, dim) in enumerate(self.induced_simplices):
             if x[dim] >= theta:
@@ -331,7 +336,7 @@ class DRSCGenerator:
         
         Returns
         -------
-            Index of the induced simplex containing x, or None if not in any
+            * Index of the induced simplex containing x, or None if not in any
         """
         for i in range(self.n):
             if self._thetas[i] > 0 and x[i] >= self._thetas[i]:
@@ -345,12 +350,15 @@ class DRSCGenerator:
         
         Parameters
         ----------
-            x: Point in induced simplex (sorted order)
-            dim: Index of the induced simplex dimension
+            * `x` [np.ndarray]: 
+                Point in induced simplex (sorted order)
+            * `dim` [int]: 
+                Index of the induced simplex dimension
             
         Returns
         -------
-            Transformed point in standard simplex (sorted order)
+            * `x_new` [np.ndarray]:
+                Transformed point in standard simplex (sorted order)
         """
         theta = self._thetas[dim]
         
@@ -373,8 +381,9 @@ class DRSCGenerator:
         
         Returns
         -------
-            n-dimensional vector with sum=1 satisfying all constraints.
-            Vector is returned in ORIGINAL dimension order
+            * `x` [np.ndarray]:
+                n-dimensional vector with sum=1 satisfying all constraints. 
+                Vector is returned in ORIGINAL dimension order.
         """
         restarts = 0
         
@@ -409,10 +418,11 @@ class DRSCGenerator:
         
         Parameters
         ----------
-            size: Number of vectors to generate
+            * `size`[int]: 
+                Number of vectors to generate
             
         Returns
         -------
-            Array of shape (size, n) with vectors in ORIGINAL dimension order
+            * Array of shape (size, n) with vectors in ORIGINAL dimension order
         """
         return np.array([self.generate() for _ in range(size)])
