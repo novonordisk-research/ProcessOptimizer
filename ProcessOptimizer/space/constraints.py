@@ -1,12 +1,17 @@
-from sklearn.utils import check_random_state
-from .space import Real, Integer, Categorical, Space, Task
+from typing import Union, List, Optional, Callable, Tuple
+
 import numpy as np
+
+from sklearn.utils import check_random_state
 from scipy import linalg
-from typing import Union, List
+
+from .space import Real, Integer, Categorical, Space, Task
+from .DRSC import DRSCGenerator
+
 
 class Constraints:
     def __init__(self, constraints_list, space):
-        """Constraints used when sampling for the aqcuisiiton function
+        """Constraints used when sampling for the aqcuisition function
 
         Parameters
         ----------
@@ -138,6 +143,8 @@ class Constraints:
 
         The samples are in the original space. They need to be transformed
         before being passed to a model or minimizer by `space.transform()`.
+        
+        Uses DRSC algorithm if available, falls back to null-space method.
 
         Parameters
         ----------
@@ -154,6 +161,76 @@ class Constraints:
            Points sampled from the space.
         """
         
+        # Check if we should use DRSC
+        if (len(self.sum_equals) == 1 and 
+            self.sum_equals[0].sampler == 'DRSC'):
+            
+            return self._drsc_sampling(n_samples, random_state)
+        else:
+            # Use existing null-space method
+            return self._nullspace_sampling(n_samples, random_state)
+        
+    def _drsc_sampling(self, n_samples, random_state):
+        """Sample using DRSC algorithm."""
+        rng = check_random_state(random_state)
+        constraint = self.sum_equals[0]
+        constrained_dims = constraint.dimensions
+        d = len(constrained_dims)
+        # Get bounds for constrained dimensions
+        bounds = np.array([self.space.bounds[dim] for dim in constrained_dims])
+        
+        # Get or create DRSC generator (handles sorting internally)
+        drsc_gen = constraint.get_drsc_generator(self.space)
+        
+        # Set numpy random seed for DRSC
+        np.random.seed(rng.randint(0, 2**31))
+        
+        samples = []
+        # Tolerance for clipping
+        eps = 1e-10
+        
+        for _ in range(n_samples):
+            # Generate sample on simplex
+            x_simplex = drsc_gen.generate()
+            
+            # Convert to original space
+            x_constrained = x_simplex * constraint.value
+            
+            # Clip to bounds (handles numerical tolerance)
+            x_clipped = np.clip(x_constrained, bounds[:, 0] - eps, bounds[:, 1] + eps)
+            
+            # Ensure exact bounds (remove the epsilon slack)
+            x_clipped = np.clip(x_clipped, bounds[:, 0], bounds[:, 1])
+            
+            # Verify sum constraint is still approximately satisfied
+            current_sum = np.sum(x_clipped)
+            if not np.isclose(current_sum, constraint.value, rtol=1e-6):
+                # Rescale proportionally to restore sum
+                x_clipped = x_clipped * (constraint.value / current_sum)
+                
+            # Final clip to ensure we are in bounds
+            x_constrained = np.clip(x_clipped, bounds[:, 0], bounds[:, 1])        
+                        
+            # Build full sample
+            if d < self.space.n_dims:
+                # Generate random settings across all factors
+                full_sample = self.space.rvs(n_samples=1, random_state=rng)[0]
+                
+                # Overwrite the random setting values for the constrained factors
+                for i, dim_idx in enumerate(constrained_dims):
+                    full_sample[dim_idx] = x_constrained[i]
+                    
+                samples.append(full_sample)
+            else:
+                samples.append(x_constrained.tolist())
+        
+        return samples
+        
+    def _nullspace_sampling(self, n_samples, random_state):
+        """
+        Original null-space based sampling method. Consider deprecating
+        immediately before the full pull request.
+        """
         def null_space(A, rcond=None) -> np.ndarray:
             """Helper function to calculate the null space of a matrix
 
@@ -663,7 +740,14 @@ class Sum():
             return False
 
 class SumEquals():
-    def __init__(self, dimensions: List[int], value: Union[float, int]):
+    def __init__(
+        self, 
+        dimensions: List[int], 
+        value: Union[float, int],
+        sampler: str = "DRSC",
+        linear_constraints: Optional[List[Tuple[np.ndarray, float]]] = None,
+        nonlinear_constraints: Optional[List[Callable]] = None,
+    ):
         """Constraint class of type SumEquals.
 
         This constraint enforces that the sum of all values drawn for the
@@ -678,6 +762,17 @@ class SumEquals():
 
         * `value` [float or int]:
             The value for which the sum should be equal to.
+        
+        * `sampler` [str, default='DRSC']:
+            Sampling algorithm to use. Options:
+            - 'DRSC': Dirichlet-Rescale-Constraints (fast, handles additional constraints)
+            - 'nullspace': Original null-space based sampler
+            
+        * `linear_constraints` [list of (a, b) tuples, optional]:
+            Additional linear constraints a^T x <= b (only used with DRSC)
+            
+        * `nonlinear_constraints` [list of callables, optional]:
+            Additional nonlinear constraints f(x) <= 0 (only used with DRSC)
 
         """
 
@@ -694,9 +789,105 @@ class SumEquals():
 
         self.dimensions = tuple(dimensions)
         self.value = value
+        self.sampler = sampler
+        self.linear_constraints = linear_constraints or []
+        self.nonlinear_constraints = nonlinear_constraints or []
+        # Lazy initialization of DRSC generator
+        self._drsc_generator = None
 
         self.validate_sample = self._validate_sample
-
+        
+    def get_drsc_generator(self, space) -> DRSCGenerator:
+        """
+        Get or create DRSC generator with space information.
+        
+        Parameters
+        ----------
+            space: Space object containing dimension bounds
+            
+        Returns
+        -------
+            DRSCGenerator instance configured for this constraint
+        """
+        if self._drsc_generator is None and self.sampler == 'DRSC':
+            # Extract bounds for constrained dimensions
+            bounds = [space.bounds[dim] for dim in self.dimensions]
+            
+            # Normalize bounds to simplex (sum=1)
+            normalized_bounds = [(low / self.value, high / self.value)  for low, high in bounds]
+            
+            # Create DRSC generator
+            self._drsc_generator = DRSCGenerator(
+                n=len(self.dimensions),
+                bounds=normalized_bounds,
+                linear_constraints=self._convert_linear_constraints(bounds),
+                nonlinear_constraints=self._wrap_nonlinear_constraints(bounds),
+            )
+        return self._drsc_generator
+    
+    def _convert_linear_constraints(self, bounds):
+        """
+        Convert user-provided linear constraints to normalized form for use 
+        in the DRSC format.
+        """
+        # DRSC works on unit simplex, need to normalize constraints
+        converted = []
+        
+        # Add box constraints from dimension bounds
+        for i, (low, high) in enumerate(bounds):
+            # x_i >= low becomes constraint on simplex
+            # After scaling: x_simplex[i] * value >= low
+            # In simplex coords: -x[i] <= -low/value
+            a = np.zeros(len(self.dimensions))
+            a[i] = -1.0
+            b = -low / self.value
+            converted.append((a, b))
+            
+            # x_i <= high becomes: x[i] <= high/value
+            a = np.zeros(len(self.dimensions))
+            a[i] = 1.0
+            b = high / self.value
+            converted.append((a, b))
+        
+        # Add user-provided linear constraints (if any)
+        for a, b in self.linear_constraints:
+            # Extract only the constrained dimensions
+            a_constrained = np.array([a[dim] for dim in self.dimensions])
+            # Normalize by the sum value
+            a_normalized = a_constrained / self.value
+            b_normalized = b / self.value
+            converted.append((a_normalized, b_normalized))
+        
+        return converted
+    
+    def _wrap_nonlinear_constraints(self, bounds):
+        """Wrap nonlinear constraints to work on simplex."""
+        if not self.nonlinear_constraints:
+            return []
+        
+        wrapped = []
+        for f in self.nonlinear_constraints:
+            def wrapped_f(x_simplex):
+                # Convert from simplex to original space
+                x_original = self._simplex_to_original(x_simplex, bounds)
+                return f(x_original)
+            wrapped.append(wrapped_f)
+        return wrapped
+    
+    def _simplex_to_original(self, x_simplex, bounds):
+        """Convert from unit simplex coordinates to original space."""
+        x_original = np.zeros(len(self.dimensions))
+        for i, (low, high) in enumerate(bounds):
+            # Scale from simplex (sums to 1) to original space (sums to value)
+            scaled_value = x_simplex[i] * self.value
+            # Clip to dimension bounds to handle numerical tolerance and avoid errors
+            x_original[i] = np.clip(scaled_value, low, high)
+        return x_original
+    
+    def _original_to_simplex(self, x_original):
+        """Convert from original space to unit simplex."""
+        return np.array(x_original) / self.value
+    
     def _validate_sample(self, sample: List[int]) -> bool:
         # Returns True if sample does not violate the constraints aside from 
         # floating point errors
