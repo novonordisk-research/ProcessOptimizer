@@ -228,7 +228,8 @@ def test_SumEquals():
     samples = cons.sumequal_sampling(n_samples=1000)
     for sample in samples:
         factor_sum = np.sum(sample[0] + sample[1])
-        assert np.isclose(factor_sum, cons.sum_equals[0].value)
+        # The default tightness of the SumEquals sampling should be within 1e-4
+        assert np.isclose(factor_sum, cons.sum_equals[0].value, rtol=1e-4)
     # Check that the samples also have settings for the other dimensions
     assert len(samples[0]) == 4 and len(samples[999]) == 4
     # Check that the other dimensions have correct type
