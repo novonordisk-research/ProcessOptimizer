@@ -216,7 +216,7 @@ def test_SumEquals():
     assert not cons.validate_sample([3.00006, 2.0, "A"])    
     
     # Check again that only valid samples are drawn
-    samples = cons.sumequal_sampling(n_samples=1000)
+    samples = cons.sumequal_sampling(n_samples=10000)
     for sample in samples:
         factor_sum = np.sum(sample[0] + sample[1])
         assert np.isclose(factor_sum, cons.sum_equals[0].value)
@@ -225,7 +225,7 @@ def test_SumEquals():
     space = Space([[10.0, 20.0], [1000.0, 2000.0], [1, 5], ["A", "B"]])
     cons = Constraints([SumEquals((0, 1), 1234)], space)
     # Check again that only valid samples are drawn
-    samples = cons.sumequal_sampling(n_samples=1000)
+    samples = cons.sumequal_sampling(n_samples=10000)
     for sample in samples:
         factor_sum = np.sum(sample[0] + sample[1])
         # The default tightness of the SumEquals sampling should be within 1e-4
@@ -317,8 +317,8 @@ def test_SumEquals():
     constraint1 = opt1.get_constraints()
     constraint2 = opt2.get_constraints()
     # Ask for lots of points
-    x1 = constraint1.sumequal_sampling(n_samples=1000, random_state=31031988)
-    x2 = constraint2.sumequal_sampling(n_samples=1000, random_state=31031988)
+    x1 = constraint1.sumequal_sampling(n_samples=10000, random_state=31031988)
+    x2 = constraint2.sumequal_sampling(n_samples=10000, random_state=31031988)
     assert x1 == x2
 
 @pytest.mark.fast_test
