@@ -341,7 +341,7 @@ class DRSCGenerator:
         # Create the transformed point
         x_new = x.copy()
         x_new[dim] = x[dim] - theta
-        
+    
         # Rescale to sum to 1
         # The sum is now 1 - theta, so we divide by (1 - theta)
         scale = 1.0 - theta
@@ -362,12 +362,14 @@ class DRSCGenerator:
                 Vector is returned in ORIGINAL dimension order.
         """
         restarts = 0
+        max_transforms_per_sample = 1000
         
         while restarts < self.max_restarts:
             # Line 2: Sample from flat Dirichlet (in sorted dimension space)
             x = self._sample_flat_dirichlet()
+            transforms = 0
 
-            while True:
+            while transforms < max_transforms_per_sample:
                 # Line 3: Check if all constraints satisfied
                 if self._check_all_constraints(x):
                     return x[self._inverse_order]
@@ -378,6 +380,12 @@ class DRSCGenerator:
                 if simplex_idx is not None:
                     # Line 6: Apply affine transformation
                     x = self._affine_transform_to_standard_simplex(x, simplex_idx)
+                    transforms += 1
+                    
+                    # Safety check: if values are getting too large, restart
+                    if np.any(np.abs(x) > 1e6):
+                        restarts += 1
+                        break  # Will trigger restart
                 else:
                     # Line 8: Restart - violated constraint but not in any induced simplex
                     restarts += 1
