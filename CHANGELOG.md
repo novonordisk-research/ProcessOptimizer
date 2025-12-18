@@ -1,5 +1,15 @@
 # Release history
 
+## Version 1.1.3 [unpublished]
+
+### Changes
+
+- Implemented the DRSC algorithm for SumEquals constraints. A side-effect of this implementation is that you can now
+  ask for multiple points with opt.ask() while using this type of constraint (previously you could only ask for one).
+
+### Bugfixes
+
+
 ## Version 1.1.2 [unpublished]
 
 ### Changes
