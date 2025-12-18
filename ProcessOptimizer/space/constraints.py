@@ -186,46 +186,84 @@ class Constraints:
         np.random.seed(rng.randint(0, 2**31))
         
         samples = []
-        # Tolerance for clipping
-        eps = 1e-10
         
         for _ in range(n_samples):
-            # Generate sample on simplex
+            # Generate sample on simplex, then convert to original space
             x_simplex = drsc_gen.generate()
+            x_constrained = x_simplex * constraint.value              
             
-            # Convert to original space
-            x_constrained = x_simplex * constraint.value
-            
-            # Clip to bounds (handles numerical tolerance)
-            x_clipped = np.clip(x_constrained, bounds[:, 0] - eps, bounds[:, 1] + eps)
-            
-            # Ensure exact bounds (remove the epsilon slack)
-            x_clipped = np.clip(x_clipped, bounds[:, 0], bounds[:, 1])
-            
-            # Verify sum constraint is still approximately satisfied
-            current_sum = np.sum(x_clipped)
-            if not np.isclose(current_sum, constraint.value, rtol=1e-6):
-                # Rescale proportionally to restore sum
-                x_clipped = x_clipped * (constraint.value / current_sum)
-                
-            # Final clip to ensure we are in bounds
-            x_constrained = np.clip(x_clipped, bounds[:, 0], bounds[:, 1])        
+            # If the dimensions in the space have very different widths we risk 
+            # violating the space bounds due to the numerical tolerance of the
+            # DRSC algorithm. Fix this, while preserving the sum
+            x_constrained = self._fix_bounds_preserving_sum(
+                x_constrained, 
+                bounds, 
+                constraint.value
+            )
                         
             # Build full sample
             if d < self.space.n_dims:
                 # Generate random settings across all factors
                 full_sample = self.space.rvs(n_samples=1, random_state=rng)[0]
-                
                 # Overwrite the random setting values for the constrained factors
                 for i, dim_idx in enumerate(constrained_dims):
-                    full_sample[dim_idx] = x_constrained[i]
-                    
+                    full_sample[dim_idx] = x_constrained[i]   
                 samples.append(full_sample)
             else:
                 samples.append(x_constrained.tolist())
         
         return samples
+    
+   
+    def _fix_bounds_preserving_sum(self, x, bounds, target_sum, max_iterations=100):
+        """
+        Adjust x to satisfy bounds while preserving the sum constraint.
         
+        When a value exceeds its bounds, the excess is redistributed to other
+        dimensions that have room to absorb it.
+        """
+        x = x.copy()
+        # Rescale proportionally to restore sum of x to target value
+        x = x * (target_sum / np.sum(x))
+        
+        for _ in range(max_iterations):
+            all_satisfied = True
+            
+            for i in range(len(x)):
+                if x[i] < bounds[i, 0]:
+                    deficit = bounds[i, 0] - x[i]
+                    x[i] = bounds[i, 0]
+                    
+                    # Subtract from other dimensions that have room
+                    for j in range(len(x)):
+                        if j != i and deficit > 0:
+                            room = x[j] - bounds[j, 0]
+                            transfer = min(room, deficit)
+                            x[j] -= transfer
+                            deficit -= transfer
+                    
+                    all_satisfied = False
+                    
+                elif x[i] > bounds[i, 1]:
+                    excess = x[i] - bounds[i, 1]
+                    x[i] = bounds[i, 1]
+                    
+                    # Add to other dimensions that have room
+                    for j in range(len(x)):
+                        if j != i and excess > 0:
+                            room = bounds[j, 1] - x[j]
+                            transfer = min(room, excess)
+                            x[j] += transfer
+                            excess -= transfer
+                    
+                    all_satisfied = False
+            
+            if all_satisfied:
+                break
+        
+        return x
+
+    
     def _nullspace_sampling(self, n_samples, random_state):
         """
         Original null-space based sampling method. Consider deprecating
