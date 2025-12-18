@@ -289,7 +289,7 @@ def test_SumEquals():
         x = opt.ask()
         opt.tell(x, y)
         y -= 0.1
-    assert opt.ask(3)
+    assert opt.ask(3, strategy="cl_min")
     
     # Test that different seeds of the Optimizer provides different initial points
     space = [
