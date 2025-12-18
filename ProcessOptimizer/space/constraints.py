@@ -11,7 +11,7 @@ from .DRSC import DRSCGenerator
 
 class Constraints:
     def __init__(self, constraints_list, space):
-        """Constraints used when sampling for the aqcuisition function
+        """Constraints used when sampling for the acquisition function
 
         Parameters
         ----------
@@ -123,7 +123,7 @@ class Constraints:
 
             n_samples_candidates += n_samples
             if n_samples_candidates > 100000 and len(rows) < 100:
-                # If we have less than a 1/10.000 succes rate on the sampling
+                # If we have less than a 1/10.000 success rate on the sampling
                 # we throw an error
                 raise RuntimeError(
                     '''Could not find valid samples in constrained space.
@@ -435,7 +435,7 @@ class Constraints:
         """
 
         # We iterate through all the dimensions and check the the type of
-        # constriants that are applied to a single dimensions, i.e Single,
+        # constraints that are applied to a single dimensions, i.e Single,
         # Exclusive and Inclusive
         #
         # We iterate through all samples which corresponds to number of
@@ -449,7 +449,7 @@ class Constraints:
             # Inclusive constraints.
             # Check if there is a least one inclusive constraint:
             if self.inclusive[dim]:
-                # We go through all inlcusive constraints for this dimension
+                # We go through all inclusive constraints for this dimension
                 # and if the value is not found to be included in any of the
                 # bounds of the inclusive constraints we return false.
                 value_is_valid = False
@@ -467,11 +467,11 @@ class Constraints:
                 if not constraint.validate_constraint(sample[dim]):
                     return False
 
-        # We iterate through sum constriants
+        # We iterate through sum constraints
         for constraint in self.sum:
             if not constraint.validate_sample(sample):
                 return False
-        # We iterate through sum_equals constriants
+        # We iterate through sum_equals constraints
         for constraint in self.sum_equals:
             if not constraint.validate_sample(sample):
                 return False
@@ -479,8 +479,7 @@ class Constraints:
         for constraint in self.conditional:
             if not constraint.validate_sample(sample):
                 return False
-        # If we we did not find any violaiton of the constraints we return
-        # True.
+        # If we did not find any violation of the constraints we return True
         return True
 
     def __repr__(self):
@@ -611,7 +610,7 @@ class Inclusive(Bound_constraint):
             consist of floats.
 
             For 'categorical' dimensions the tuple must be of length < number
-            of dimensions and lenght > 1.
+            of dimensions and length > 1.
 
             The tuple can contain any combination of str, int or float
 
@@ -678,7 +677,7 @@ class Exclusive(Bound_constraint):
             consist of floats.
 
             For 'categorical' dimensions the tuple must be of length < number
-            of dimensions and lenght > 1.
+            of dimensions and length > 1.
 
             The tuple can contain any combination of str, int or float
 
@@ -731,7 +730,7 @@ class Sum():
         Parameters
         ----------
         * `dimensions` [list of ints]:
-            A list of integers coresponding to the index of the dimensions that
+            A list of integers corresponding to the index of the dimensions that
             should be summed
 
         * `value` [float or int]:
@@ -1068,7 +1067,7 @@ def check_constraints(space, constraints):
                 raise IndexError('Dimension index exceeds number of dimensions')
             for ind_dim in constraint.dimensions:
                 if isinstance(space.dimensions[ind_dim], Categorical):
-                    raise ValueError('Sum constraint can not be applid to categorical dimension: {}'.format(space.dimensions[ind_dim]))
+                    raise ValueError('Sum constraint can not be applied to categorical dimension: {}'.format(space.dimensions[ind_dim]))
         elif isinstance(constraint, SumEquals):
             # Check that there is only one SumEquals constraint being applied
             if len(constraints) > 1:
@@ -1103,7 +1102,9 @@ def check_constraints(space, constraints):
                 for constraint_if_false in constraint.if_false:
                     check_constraints(space, [constraint_if_false])
         else:
-            raise TypeError('Constraints must be of type "Single", "Exlusive", "Inclusive", "Sum", "SumEquals" or "Conditional". Got {}'.format(type(constraint)))
+            raise TypeError(
+                'Constraints must be of type "Single", "Exclusive", "Inclusive", "Sum", "SumEquals" or "Conditional". Got {}'.format(type(constraint))
+            )
 
 
 def check_dim_and_space(space, constraint):
@@ -1170,7 +1171,7 @@ def check_value(dim, value):
             raise ValueError('Value {} exceeds bounds of space {}'.format(value, [dim.low, dim.high]))
     else:  # Categorical dimension.
         if value not in dim.categories:
-            raise ValueError('Categorical value {} is not in space with categoreis {}'.format(value, dim.categories))
+            raise ValueError('Categorical value {} is not in space with categories {}'.format(value, dim.categories))
 
 
 def check_is_constraint(constraint):
@@ -1180,4 +1181,4 @@ def check_is_constraint(constraint):
     if not (isinstance(constraint, Single) or isinstance(constraint, Inclusive)
             or isinstance(constraint, Exclusive) or isinstance(constraint, Sum)
             or isinstance(constraint, Conditional)):
-        raise TypeError('Constraint must be of type Inclusive, Exlusive, Single, Sum or Conditional. Got {}'.format(type(constraint)))
+        raise TypeError('Constraint must be of type Inclusive, Exclusive, Single, Sum or Conditional. Got {}'.format(type(constraint)))
