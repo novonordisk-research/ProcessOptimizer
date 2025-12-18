@@ -239,30 +239,6 @@ class DRSCGenerator:
             return 0.0
     
     
-    def _get_simplex_vertices(self, dim: int, theta: float) -> np.ndarray:
-        """
-        Get vertices of the induced simplex for dimension dim with threshold theta.
-        
-        The induced simplex is defined by x_dim >= theta and sum(x) = 1, 0 <= x <= 1.
-        """        
-        induced_vertices = []
-        
-        # Vertex where x_dim = 1, all others = 0
-        v = np.zeros(self.n)
-        v[dim] = 1.0
-        induced_vertices.append(v)
-        
-        # Vertices where x_dim = theta, distributed among other dimensions
-        for j in range(self.n):
-            if j != dim:
-                v = np.zeros(self.n)
-                v[dim] = theta
-                v[j] = 1.0 - theta
-                induced_vertices.append(v)
-        
-        return np.array(induced_vertices)
-    
-    
     def _sample_flat_dirichlet(self) -> np.ndarray:
         """
         Sample from flat Dirichlet distribution (uniform on standard simplex).
