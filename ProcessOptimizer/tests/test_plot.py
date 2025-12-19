@@ -14,6 +14,7 @@ from ProcessOptimizer.plots import (
     plot_objective,
     plot_objective_1d,
     plot_brownie_bee_frontend,
+    get_Brownie_Bee_Pareto,
 )
 from ProcessOptimizer.space import Categorical
 
@@ -317,3 +318,30 @@ def test_plot_Pareto_bokeh_return_json():
     opt, x, y = build_Pareto_opt()
     json_object = plot_Pareto_bokeh(opt, return_type_bokeh="json")
     assert validateJSON(json_object)
+
+
+@pytest.mark.fast_test
+def test_get_Brownie_Bee_Pareto_with_mixed_numeric_and_categorical():
+    space = [(0, 10), (0.0, 1.0), ["A", "B"]]
+    n_objectives = 2
+    Xi = [[1, 0.9, "A"], [3, 0.7, "A"], [2, 0.4, "A"], [4, 0.1, "B"]]
+    Yi = [[0.2, 0.8], [0.3, 0.6], [0.6, 0.4], [0.8, 0.2]]
+
+    process_optimizer = Optimizer.Optimizer(
+        space,
+        base_estimator="GP",
+        acq_func="EI",
+        n_initial_points=1,
+        acq_func_kwargs={"kappa": 1.0, "xi": 0.01},
+        n_objectives=2,
+    )
+    process_optimizer.tell(Xi, Yi)
+    (
+        front_x,
+        front_y,
+        _,
+        _,
+    ) = get_Brownie_Bee_Pareto(process_optimizer)
+
+    assert front_y.shape[1] == n_objectives
+    assert front_x.shape[1] == len(space)
