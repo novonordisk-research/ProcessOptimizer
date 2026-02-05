@@ -2719,7 +2719,8 @@ def get_Brownie_Bee_Pareto(optimizer, n_points=100):
     front_x = np.asarray(
         optimizer.space.inverse_transform(
             front_x.reshape(len(front_x), optimizer.space.transformed_n_dims)
-        )
+        ),
+        dtype=object,
     )
     
     # Sort the points in ascending order on objective 1
