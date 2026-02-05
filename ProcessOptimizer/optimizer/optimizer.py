@@ -269,9 +269,11 @@ class Optimizer(object):
             )
 
         # check if regressor
-        if base_estimator is not None and not is_regressor(base_estimator):
-            raise ValueError("%s has to be a regressor." % base_estimator)
-
+        try:
+            if base_estimator is not None and not is_regressor(base_estimator):
+                raise ValueError("%s has to be a regressor." % base_estimator)
+        except AttributeError as me:
+            raise ValueError("%s has to be a regressor." % base_estimator) from me
         # treat per second acqusition function specially
         is_multi_regressor = isinstance(base_estimator, MultiOutputRegressor)
         if "ps" in self.acq_func and not is_multi_regressor:
