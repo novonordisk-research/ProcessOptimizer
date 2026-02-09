@@ -9,6 +9,7 @@
 
 ### Bugfixes
 
+- Fixed TypeError when combining categorical and numerical dimensions in get_Brownie_Bee_Pareto
 
 ## Version 1.1.2 [unpublished]
 
