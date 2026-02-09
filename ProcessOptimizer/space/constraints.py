@@ -675,7 +675,7 @@ class SumEquals():
         -------
             DRSCGenerator instance configured for this constraint
         """
-        if self._drsc_generator is None and self.sampler == 'DRSC':
+        if self._drsc_generator is None:
             # Extract bounds for constrained dimensions
             bounds = [space.bounds[dim] for dim in self.dimensions]
             
