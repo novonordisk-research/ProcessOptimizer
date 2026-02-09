@@ -3,7 +3,7 @@
 A script demonstrating the features of the DRSC algorithm for use with the
 SumEquals constraint in ProcessOptimizer.
 
-Author: Morten Bormann Nielsen
+Author: Morten Bormann Nielsen, Danish Technological Institute
 December 2025
 """
 
@@ -15,14 +15,15 @@ import matplotlib as mpl
 
 from ProcessOptimizer import Optimizer
 from ProcessOptimizer.space import Real
-from ProcessOptimizer.space.constraints import Constraints, SumEquals
-
-from ProcessOptimizer.space.DRSC import DRSCGenerator
+from ProcessOptimizer.space.constraints import SumEquals
 
 from ProcessOptimizer.model_systems import hart3
 from ProcessOptimizer.plots import plot_objective_1d
 
-#%% Demonstrate speed of generator
+#%% Setup of SumEquals sampling for very oblong space
+
+# The DRSC generator for SumEquals sampling is able to generate valid points
+# extremely fast
 space = [
     (52.9, 96.3),
     (0.1, 0.5),
@@ -30,20 +31,23 @@ space = [
     (1.0, 5.0),
     (1.0, 35.0),        
 ]
-cons = [SumEquals(dimensions=[0, 1, 2, 3, 4], value=100.0, sampler="DRSC")]
+# Define the constraint as all factor settings adding up to 100
+cons = [SumEquals(dimensions=[0, 1, 2, 3, 4], value=100.0)]
 opt = Optimizer(space, lhs=False, n_initial_points=10)
 opt.set_constraints(cons)
 
+# Extract the generator itself
 constraint = opt.get_constraints().sum_equals[0]
-
 drsc_gen = constraint.get_drsc_generator(opt.space)
-# Demonstrate speed of algorithm by generating 10,000 points. Takes about 5 seconds.
+# Demonstrate speed of algorithm by generating 10,000 points. This call takes
+# about 12 seconds on an Intel i7-12850HX.
 start_time = time.time()
 x_simplex = drsc_gen.generate_sample(10000)
 print("Generated 10,000 points in the space in %s seconds" % (time.time() - start_time))
 
-#%% Use the new sampling method to generate a set of initial samples
+#%% Demonstrate typical use for a real user with fewer points
 
+# Define the space
 space = [
     (52.9, 96.3),
     (0.1, 0.5),
@@ -51,17 +55,16 @@ space = [
     (1.0, 5.0),
     (1.0, 35.0),        
 ]
-
-cons = [SumEquals(dimensions=[0, 1, 2, 3, 4], value=100.0, sampler="DRSC")]
+# Set up the constraint
+cons = [SumEquals(dimensions=[0, 1, 2, 3, 4], value=100.0)]
 opt = Optimizer(space, lhs=False, n_initial_points=10, random_state=31031988)
 opt.set_constraints(cons)
-
-print(time.strftime("Starting opt.ask calculation with new method at:") + " " + time.strftime("%H:%M:%S"))
+# Ask for settings for the initial experiments
+print(time.strftime("Starting opt.ask calculation with DRSC method at:") + " " + time.strftime("%H:%M:%S"))
 x = opt.ask(10, strategy="cl_min")
-print(time.strftime("Finished opt.ask calculation with new method at:") + " " + time.strftime("%H:%M:%S"))
+print(time.strftime("Finished opt.ask calculation with DRSC method at:") + " " + time.strftime("%H:%M:%S"))
 
-#%% Generate a new optimizer with the same seed and constraint
-
+#%% Demonstrate that different seeds lead to different points
 
 opt1 = Optimizer(space, lhs=False, n_initial_points=10, random_state=1)
 opt1.set_constraints(cons)
@@ -73,7 +76,7 @@ x2 = opt2.ask(10, strategy="cl_min")
 
 x!=x2
 
-#%% Test MANY more points
+#%% Demonstrate that identical seeds lead to identical points
 
 constraint1 = opt1.get_constraints()
 constraint2 = opt2.get_constraints()
@@ -81,9 +84,9 @@ constraint2 = opt2.get_constraints()
 x1 = constraint1.sumequal_sampling(n_samples=1000, random_state=31031988)
 x2 = constraint2.sumequal_sampling(n_samples=1000, random_state=31031988)
 
-# You can now test for x1 == x2
+x1 == x2
 
-#%% Test with categorical dimensions and integer dimensions present
+#%% Demonstrate how to use SumEqual constraints when categoricals are present
 space = [
     ("A", "B"),
     (52.9, 96.3),
@@ -94,13 +97,13 @@ space = [
     ("C", "D", "E"),
     (1, 5),
 ]
-cons = [SumEquals(dimensions=[1, 2, 3, 4, 5], value=100.0, sampler="DRSC")]
+cons = [SumEquals(dimensions=[1, 2, 3, 4, 5], value=100.0)]
 opt = Optimizer(space, lhs=False, n_initial_points=10)
 opt.set_constraints(cons)
 
-print(time.strftime("Starting opt.ask calculation with new method at:") + " " + time.strftime("%H:%M:%S"))
+print(time.strftime("Starting opt.ask calculation with DRSC method at:") + " " + time.strftime("%H:%M:%S"))
 x = opt.ask(10, strategy="cl_min")
-print(time.strftime("Finished opt.ask calculation with new method at:") + " " + time.strftime("%H:%M:%S"))
+print(time.strftime("Finished opt.ask calculation with DRSC method at:") + " " + time.strftime("%H:%M:%S"))
 
 #%% Use the new sampling method with simulated data
 
@@ -113,7 +116,7 @@ space = [
     Real(0., 1., name='x2'),
 ]
 
-cons = [SumEquals(dimensions=[0, 1, 2], value=1.0, sampler="DRSC")]
+cons = [SumEquals(dimensions=[0, 1, 2], value=1.0)]
 opt = Optimizer(space, lhs=False, n_initial_points=20)
 opt.set_constraints(cons)
 
@@ -123,10 +126,10 @@ for _ in range(30):
     y = [hart3_model.get_score(x) for x in x]
     res = opt.tell(x, y)
 
-# res = opt.get_result()
+# Show the system
 plot_objective_1d(res, pars="expected_minimum")
 
-#%% Plot points
+# Show the location of the sampled points in this experiment
 fig = plt.figure(figsize=(8,6))
 ax = fig.add_subplot(projection='3d')
 cmap = mpl.colormaps["viridis"].resampled(len(opt.Xi))
@@ -140,17 +143,9 @@ ax.scatter(x[:,0], x[:, 1], x[:, 2], c=idx, cmap=cmap, alpha=1)
 ax.set_xlim(0, 1)
 ax.set_ylim(0, 1)
 ax.set_zlim(0, 1)
-#% Manual check for speed of generating valid samples outside of debug mode
-
-# constraint = opt.get_constraints().sum_equals[0]
-
-# drsc_gen = constraint.get_drsc_generator(opt.space)
-# print(time.strftime("Generation 1000 points in the space. Starting calculation at:") + " " + time.strftime("%H:%M:%S"))
-# x_simplex = drsc_gen.generate_sample(1000)
-# print(time.strftime("Finished calculation at:") + " " + time.strftime("%H:%M:%S"))
 
 
-#%% Testing of a non-linear constraint 
+#%% Demonstrate the use of a non-linear SumEquals constraint 
 
 # Define space
 space = [
@@ -191,6 +186,7 @@ samples = drsc_gen.generate_sample(1000)
 samples_original = samples * sum_value
 
 x = samples_original
+# Create a plot showing where the samples lie in the space
 fig = plt.figure(figsize=(8,6))
 ax = fig.add_subplot(projection='3d')
 ax.scatter(x[:, 0], x[:, 1], x[:, 2],)
@@ -199,19 +195,7 @@ ax.set_ylim(0, 1)
 ax.set_zlim(0, 1)
 
 
-#%% Asking for an initial set of points with the old method
-
-# cons = [SumEquals(dimensions=[0, 1, 2, 3, 4], value=100.0, sampler="nullspace")]
-# opt = Optimizer(space, lhs=False, n_initial_points=10)
-# opt.set_constraints(cons)
-
-# # This takes about 25 seconds on MON's laptop
-# print(time.strftime("Starting opt.ask calculation with old method at:") + " " + time.strftime("%H:%M:%S"))
-# x = opt.ask(5, strategy="cl_min")
-# print(time.strftime("Finished opt.ask calculation with old method at:") + " " + time.strftime("%H:%M:%S"))
-
-
-#%% Create an example with three constrained dimensions
+#%% Demonstrate the use of three constrained dimensions and a categorical
 
 # Sample 1000 points and plot them to show it works
 space = [
@@ -219,9 +203,9 @@ space = [
     (0., 10.),
     (0., 10.),
     ("A", "B", "C"),
-    ]
+]
 
-cons = [SumEquals(dimensions=[0, 1, 2], value=15.0, sampler="DRSC")]
+cons = [SumEquals(dimensions=[0, 1, 2], value=15.0)]
 opt = Optimizer(space, lhs=False, n_initial_points=100)
 opt.set_constraints(cons)
 
@@ -237,39 +221,10 @@ for xx in x:
     else:
         colors.append("b")
     
-#%%
-
+# Create a plot showing the distribution of points in this space
 fig = plt.figure(figsize=(8,6))
 ax = fig.add_subplot(projection='3d')
 [ax.scatter(x[0], x[1], x[2], c=colors[i]) for i, x in enumerate(x)]
 ax.set_xlim(0, 10)
 ax.set_ylim(0, 10)
 ax.set_zlim(0, 10)
-
-
-#%%
-
-space = [
-    (0., 7.0),
-    (0., 7.0),
-    (0., 7.0),
-    (0., 7.0),
-    (0., 7.0),
-    (0., 7.0),
-    (0., 7.0),
-    (5.0, 20.0),
-    (4.0, 10.0),
-]
-
-cons = [SumEquals(dimensions=[0, 1, 2, 3, 4, 5, 6], value=7.0)]
-
-opt = Optimizer(space, lhs=False, n_initial_points=10,)
-opt.set_constraints(cons)
-start_time = time.time()
-x = opt.ask(10, strategy="cl_min")
-print("Generated 10 points in the space in %s seconds" % (time.time() - start_time))
-
-x = np.array(x)
-fig = plt.figure(figsize=(8,6))
-for i in range(7):
-    plt.scatter(np.arange(10), x[:, i])
