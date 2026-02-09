@@ -3,7 +3,6 @@ from typing import Union, List, Optional, Callable, Tuple
 import numpy as np
 
 from sklearn.utils import check_random_state
-from scipy import linalg
 
 from .space import Real, Integer, Categorical, Space, Task
 from .DRSC import DRSCGenerator
@@ -139,12 +138,11 @@ class Constraints:
             n_samples: int = 1,
             random_state: Union[int, np.random.RandomState, None] = None,
         ) -> List:
-        """Draw samples that respect SumEquals constraints.
+        """Draw samples that respect SumEquals constraints using the DRSC
+        algorithm.
 
         The samples are in the original space. They need to be transformed
         before being passed to a model or minimizer by `space.transform()`.
-        
-        Uses DRSC algorithm if available, falls back to null-space method.
 
         Parameters
         ----------
@@ -160,15 +158,8 @@ class Constraints:
         * `points`: [list of lists, shape=(n_points, n_dims)]
            Points sampled from the space.
         """
-        
-        # Check if we should use DRSC
-        if (len(self.sum_equals) == 1 and 
-            self.sum_equals[0].sampler == 'DRSC'):
-            
-            return self._drsc_sampling(n_samples, random_state)
-        else:
-            # Use existing null-space method
-            return self._nullspace_sampling(n_samples, random_state)
+        return self._drsc_sampling(n_samples, random_state)
+
         
     def _drsc_sampling(self, n_samples, random_state):
         """Sample using DRSC algorithm."""
@@ -263,161 +254,6 @@ class Constraints:
         
         return x
 
-    
-    def _nullspace_sampling(self, n_samples, random_state):
-        """
-        Original null-space based sampling method. Consider deprecating
-        immediately before the full pull request.
-        """
-        def null_space(A, rcond=None) -> np.ndarray:
-            """Helper function to calculate the null space of a matrix
-
-            Parameters
-            ----------
-            A : numpy array
-                The matrix to calculate the null space of
-            rcond : float, optional
-                The tolerance for determining the effective rank of A.
-
-            Returns
-            -------
-            Q : numpy array
-                The null space of A, as a matrix with orthonormal columns.
-            """
-            
-            u, s, vh = np.linalg.svd(A, full_matrices=True) # A = u*s*vh
-            M, N = u.shape[0], vh.shape[1] # M = number of rows, N = number of columns
-            if rcond is None: # default value of rcond
-                rcond = np.finfo(s.dtype).eps * max(M, N) # machine precision times max dimension
-            tol = np.amax(s) * rcond # tolerance for singular values
-            num = np.sum(s > tol, dtype=int) # number of singular values greater than tol
-            Q = vh[num:,:].T.conj() # columns of vh corresponding to singular values greater than tol
-            return Q # return the null space of A
-
-        rng = check_random_state(random_state)
-                
-        # Find a point on the plane defined by the SumEquals constraint where
-        # A + B + ... = value. We do this by asking where the diagonal between
-        # the origin and A_max, B_max, ... intersects the plane.
-        d = len(self.sum_equals[0].dimensions)
-        origin = np.array(
-            [self.space.bounds[dim][0] 
-             for dim in self.sum_equals[0].dimensions]
-        )
-        delta = np.array(
-            [self.space.bounds[dim][1] - self.space.bounds[dim][0] 
-             for dim in self.sum_equals[0].dimensions]
-        )
-        
-        A = np.zeros((d,d))
-        B = np.zeros(d)
-        # Row representing the sum constraint
-        A[0,:] = 1
-        B[0] = self.sum_equals[0].value
-        # Rows that define the linear equation for the diagonal along the 
-        # constrained dimensions
-        for i in range(1,d):
-            A[i, 0] = -delta[i]/delta[0]
-            A[i, i] = 1
-            B[i] = origin[i]
-        # Identify the point that lies on the constraint plane and on the diagonal
-        point = np.linalg.solve(A, B)
-        # Use the fact that the vector [1, 1, ...] (a 1 for each constrained 
-        # dimension) is normal to the plane defined by A + B + ... to build
-        # basis-vectors inside the plane, using the null_space function
-        N = np.array(np.ones(d))
-        ns = null_space(N[np.newaxis, :])
-        # We only need to simulate points up to a distance of half the diagonal
-        # from the origin to A_max, B_max, etc.
-        sim_distance = np.sqrt(np.sum(delta**2)) / 2
-        
-        # To avoid "clustering" of points in the constrained plane, we will 
-        # create samples using low discrepancy quasirandom sequences, see:
-        # http://extremelearning.com.au/unreasonable-effectiveness-of-quasirandom-sequences/
-        # for background on this method
-        
-        # Helper function for calculating the generalized golden ratio
-        def phi(d):
-            x = 2.0
-            for i in range(10): 
-                x = pow(1+x,1/(d+1)) 
-            return x
-        # Golden ratio for our present dimensionality (the constrained space)
-        g = phi(d-1)
-        alpha = np.zeros(d-1)
-        for j in range(d-1):
-            alpha[j] = pow(1/g, j+1) %1
-        vec_comp = np.zeros((1, d-1))
-        # Choose seed (starting location) in the normalized space
-        seed = 0.5
-        
-        # Build a list of samples
-        samples = []
-        j = 0
-        while len(samples) < n_samples:
-            # Generate next step in the sequence
-            vec_comp = (seed + alpha*(j+1)) %1
-            j += 1
-            # Center these components on zero
-            vec_comp = vec_comp - 0.5
-            # Simulate lengths of each null_space vector to add to our point
-            vec_comp = vec_comp * sim_distance * 2
-            sample_candidate = point[:, None].T + ns @ vec_comp.T
-            # Generate the correct shape 
-            sample_candidate = sample_candidate[0]
-            # Check that the candidate is inside the original parameter space
-            inspace = [
-                (sample_candidate[i] >= self.space.bounds[dim][0]) and
-                (sample_candidate[i] <= self.space.bounds[dim][1])
-                for i, dim in enumerate(self.sum_equals[0].dimensions)
-            ]
-            # Only accept the candidate if it is in our space
-            if all(inspace):
-                samples.append(sample_candidate)      
-        # Convert the list of arrays to a list of lists
-        samples = [arr.tolist() for arr in samples]
-        
-        # Create settings for the dimensions that are not part of the constraint
-        if d < self.space.n_dims:
-            remaining_dimensions = [
-                i for i in range(self.space.n_dims) 
-                if i not in self.sum_equals[0].dimensions
-            ]
-            # Convert our list of samples to an array
-            samples = np.array(samples)
-            # Expand the sample array to make space for settings of the 
-            # unconstrained dimensions
-            for i in remaining_dimensions:
-                samples = np.insert(
-                    samples,
-                    i, 
-                    np.zeros(len(samples)), 
-                    axis=1
-                )
-            # Convert back to list of lists
-            samples = samples.tolist()
-            
-            # Generate random settings across all factors
-            full_sample = self.space.rvs(n_samples=n_samples, random_state=rng)
-            # Sort the settings in each column, which will ensure that the
-            # unconstrained settings are distributed in a space-filling way too
-            transposed_sample = list(zip(*full_sample))
-            sort_trans_sample = [sorted(inner_tuple) for inner_tuple in transposed_sample]
-            # Place the settings back in a list of lists
-            full_sample = list(map(list, zip(*sort_trans_sample)))
-            
-            # Overwrite the random setting values for the constrained factors
-            for j in remaining_dimensions:
-                for i in range(len(samples)):
-                    samples[i][j] = full_sample[i][j]
-            
-            # Shuffle the order of the samples, otherwise the unconstrained
-            # settings will be returned in a sorted order. Use seeding to 
-            # provide consistent initial samples
-            rng2 = np.random.default_rng(seed=42)
-            rng2.shuffle(samples)
-                    
-        return samples
 
     def validate_sample(self, sample: List) -> bool:
         """ Validates a sample of parameter values in regards to the
@@ -781,7 +617,6 @@ class SumEquals():
         self, 
         dimensions: List[int], 
         value: Union[float, int],
-        sampler: str = "DRSC",
         linear_constraints: Optional[List[Tuple[np.ndarray, float]]] = None,
         nonlinear_constraints: Optional[List[Callable]] = None,
     ):
@@ -799,11 +634,6 @@ class SumEquals():
 
         * `value` [float or int]:
             The value for which the sum should be equal to.
-        
-        * `sampler` [str, default='DRSC']:
-            Sampling algorithm to use. Options:
-            - 'DRSC': Dirichlet-Rescale-Constraints (fast, handles additional constraints)
-            - 'nullspace': Original null-space based sampler
             
         * `linear_constraints` [list of (a, b) tuples, optional]:
             Additional linear constraints a^T x <= b (only used with DRSC)
@@ -826,7 +656,6 @@ class SumEquals():
 
         self.dimensions = tuple(dimensions)
         self.value = value
-        self.sampler = sampler
         self.linear_constraints = linear_constraints or []
         self.nonlinear_constraints = nonlinear_constraints or []
         # Lazy initialization of DRSC generator

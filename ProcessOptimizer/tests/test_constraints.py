@@ -301,7 +301,7 @@ def test_SumEquals():
         ("A", "B", "C"),
         (1, 10),
     ]
-    cons = [SumEquals(dimensions=[0, 1, 2, 3, 4], value=100.0, sampler="DRSC")]
+    cons = [SumEquals(dimensions=[0, 1, 2, 3, 4], value=100.0)]
     # Build optimziers with different seeds
     opt1 = Optimizer(space, lhs=False, n_initial_points=10, random_state=1)
     opt1.set_constraints(cons)
