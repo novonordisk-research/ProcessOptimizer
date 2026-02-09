@@ -6,6 +6,7 @@
 
 - Implemented the DRSC algorithm for SumEquals constraints. A side-effect of this implementation is that you can now
   ask for multiple points with opt.ask() while using this type of constraint (previously you could only ask for one).
+- Dropped support for Python 3.9
 
 ### Bugfixes
 
