@@ -269,9 +269,11 @@ class Optimizer(object):
             )
 
         # check if regressor
-        if not is_regressor(base_estimator) and base_estimator is not None:
-            raise ValueError("%s has to be a regressor." % base_estimator)
-
+        try:
+            if base_estimator is not None and not is_regressor(base_estimator):
+                raise ValueError("%s has to be a regressor." % base_estimator)
+        except AttributeError as me:
+            raise ValueError("%s has to be a regressor." % base_estimator) from me
         # treat per second acqusition function specially
         is_multi_regressor = isinstance(base_estimator, MultiOutputRegressor)
         if "ps" in self.acq_func and not is_multi_regressor:
@@ -1309,12 +1311,12 @@ class Optimizer(object):
     # This function calls NSGAII to estimate the Pareto Front
     def NSGAII(self, MU=40):
         from ._NSGA2 import NSGAII
-        
+
         if MU % 4 != 0:
             raise ValueError(
                 "Number of simulated points must be divisible by 4 for the NSGAII algorithm"
             )
-            
+
         pop, logbook, front = NSGAII(
             self.n_objectives,
             self.__ObjectiveGP,

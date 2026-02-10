@@ -1,12 +1,16 @@
-from sklearn.utils import check_random_state
-from .space import Real, Integer, Categorical, Space, Task
+from typing import Union, List, Optional, Callable, Tuple
+
 import numpy as np
-from scipy import linalg
-from typing import Union, List
+
+from sklearn.utils import check_random_state
+
+from .space import Real, Integer, Categorical, Space, Task
+from .DRSC import DRSCGenerator
+
 
 class Constraints:
     def __init__(self, constraints_list, space):
-        """Constraints used when sampling for the aqcuisiiton function
+        """Constraints used when sampling for the acquisition function
 
         Parameters
         ----------
@@ -118,7 +122,7 @@ class Constraints:
 
             n_samples_candidates += n_samples
             if n_samples_candidates > 100000 and len(rows) < 100:
-                # If we have less than a 1/10.000 succes rate on the sampling
+                # If we have less than a 1/10.000 success rate on the sampling
                 # we throw an error
                 raise RuntimeError(
                     '''Could not find valid samples in constrained space.
@@ -134,7 +138,8 @@ class Constraints:
             n_samples: int = 1,
             random_state: Union[int, np.random.RandomState, None] = None,
         ) -> List:
-        """Draw samples that respect SumEquals constraints.
+        """Draw samples that respect SumEquals constraints using the DRSC
+        algorithm.
 
         The samples are in the original space. They need to be transformed
         before being passed to a model or minimizer by `space.transform()`.
@@ -153,156 +158,102 @@ class Constraints:
         * `points`: [list of lists, shape=(n_points, n_dims)]
            Points sampled from the space.
         """
+        return self._drsc_sampling(n_samples, random_state)
+
         
-        def null_space(A, rcond=None) -> np.ndarray:
-            """Helper function to calculate the null space of a matrix
-
-            Parameters
-            ----------
-            A : numpy array
-                The matrix to calculate the null space of
-            rcond : float, optional
-                The tolerance for determining the effective rank of A.
-
-            Returns
-            -------
-            Q : numpy array
-                The null space of A, as a matrix with orthonormal columns.
-            """
-            
-            u, s, vh = np.linalg.svd(A, full_matrices=True) # A = u*s*vh
-            M, N = u.shape[0], vh.shape[1] # M = number of rows, N = number of columns
-            if rcond is None: # default value of rcond
-                rcond = np.finfo(s.dtype).eps * max(M, N) # machine precision times max dimension
-            tol = np.amax(s) * rcond # tolerance for singular values
-            num = np.sum(s > tol, dtype=int) # number of singular values greater than tol
-            Q = vh[num:,:].T.conj() # columns of vh corresponding to singular values greater than tol
-            return Q # return the null space of A
-
+    def _drsc_sampling(self, n_samples, random_state):
+        """Sample using DRSC algorithm."""
         rng = check_random_state(random_state)
-                
-        # Find a point on the plane defined by the SumEquals constraint where
-        # A + B + ... = value. We do this by asking where the diagonal between
-        # the origin and A_max, B_max, ... intersects the plane.
-        d = len(self.sum_equals[0].dimensions)
-        origin = np.array(
-            [self.space.bounds[dim][0] 
-             for dim in self.sum_equals[0].dimensions]
-        )
-        delta = np.array(
-            [self.space.bounds[dim][1] - self.space.bounds[dim][0] 
-             for dim in self.sum_equals[0].dimensions]
-        )
+        constraint = self.sum_equals[0]
+        constrained_dims = constraint.dimensions
+        d = len(constrained_dims)
+        # Get bounds for constrained dimensions
+        bounds = np.array([self.space.bounds[dim] for dim in constrained_dims])
         
-        A = np.zeros((d,d))
-        B = np.zeros(d)
-        # Row representing the sum constraint
-        A[0,:] = 1
-        B[0] = self.sum_equals[0].value
-        # Rows that define the linear equation for the diagonal along the 
-        # constrained dimensions
-        for i in range(1,d):
-            A[i, 0] = -delta[i]/delta[0]
-            A[i, i] = 1
-            B[i] = origin[i]
-        # Identify the point that lies on the constraint plane and on the diagonal
-        point = np.linalg.solve(A, B)
-        # Use the fact that the vector [1, 1, ...] (a 1 for each constrained 
-        # dimension) is normal to the plane defined by A + B + ... to build
-        # basis-vectors inside the plane, using the null_space function
-        N = np.array(np.ones(d))
-        ns = null_space(N[np.newaxis, :])
-        # We only need to simulate points up to a distance of half the diagonal
-        # from the origin to A_max, B_max, etc.
-        sim_distance = np.sqrt(np.sum(delta**2)) / 2
+        # Get or create DRSC generator (handles sorting internally)
+        drsc_gen = constraint.get_drsc_generator(self.space)
         
-        # To avoid "clustering" of points in the constrained plane, we will 
-        # create samples using low discrepancy quasirandom sequences, see:
-        # http://extremelearning.com.au/unreasonable-effectiveness-of-quasirandom-sequences/
-        # for background on this method
+        # Set numpy random seed for DRSC
+        np.random.seed(rng.randint(0, 2**31))
         
-        # Helper function for calculating the generalized golden ratio
-        def phi(d):
-            x = 2.0
-            for i in range(10): 
-                x = pow(1+x,1/(d+1)) 
-            return x
-        # Golden ratio for our present dimensionality (the constrained space)
-        g = phi(d-1)
-        alpha = np.zeros(d-1)
-        for j in range(d-1):
-            alpha[j] = pow(1/g, j+1) %1
-        vec_comp = np.zeros((1, d-1))
-        # Choose seed (starting location) in the normalized space
-        seed = 0.5
-        
-        # Build a list of samples
         samples = []
-        j = 0
-        while len(samples) < n_samples:
-            # Generate next step in the sequence
-            vec_comp = (seed + alpha*(j+1)) %1
-            j += 1
-            # Center these components on zero
-            vec_comp = vec_comp - 0.5
-            # Simulate lengths of each null_space vector to add to our point
-            vec_comp = vec_comp * sim_distance * 2
-            sample_candidate = point[:, None].T + ns @ vec_comp.T
-            # Generate the correct shape 
-            sample_candidate = sample_candidate[0]
-            # Check that the candidate is inside the original parameter space
-            inspace = [
-                (sample_candidate[i] >= self.space.bounds[dim][0]) and
-                (sample_candidate[i] <= self.space.bounds[dim][1])
-                for i, dim in enumerate(self.sum_equals[0].dimensions)
-            ]
-            # Only accept the candidate if it is in our space
-            if all(inspace):
-                samples.append(sample_candidate)      
-        # Convert the list of arrays to a list of lists
-        samples = [arr.tolist() for arr in samples]
         
-        # Create settings for the dimensions that are not part of the constraint
-        if d < self.space.n_dims:
-            remaining_dimensions = [
-                i for i in range(self.space.n_dims) 
-                if i not in self.sum_equals[0].dimensions
-            ]
-            # Convert our list of samples to an array
-            samples = np.array(samples)
-            # Expand the sample array to make space for settings of the 
-            # unconstrained dimensions
-            for i in remaining_dimensions:
-                samples = np.insert(
-                    samples,
-                    i, 
-                    np.zeros(len(samples)), 
-                    axis=1
-                )
-            # Convert back to list of lists
-            samples = samples.tolist()
+        for _ in range(n_samples):
+            # Generate sample on simplex, then convert to original space
+            x_simplex = drsc_gen.generate()
+            x_constrained = x_simplex * constraint.value              
             
-            # Generate random settings across all factors
-            full_sample = self.space.rvs(n_samples=n_samples, random_state=rng)
-            # Sort the settings in each column, which will ensure that the
-            # unconstrained settings are distributed in a space-filling way too
-            transposed_sample = list(zip(*full_sample))
-            sort_trans_sample = [sorted(inner_tuple) for inner_tuple in transposed_sample]
-            # Place the settings back in a list of lists
-            full_sample = list(map(list, zip(*sort_trans_sample)))
-            
-            # Overwrite the random setting values for the constrained factors
-            for j in remaining_dimensions:
-                for i in range(len(samples)):
-                    samples[i][j] = full_sample[i][j]
-            
-            # Shuffle the order of the samples, otherwise the unconstrained
-            # settings will be returned in a sorted order. Use seeding to 
-            # provide consistent initial samples
-            rng2 = np.random.default_rng(seed=42)
-            rng2.shuffle(samples)
-                    
+            # If the dimensions in the space have very different widths we risk 
+            # violating the space bounds due to the numerical tolerance of the
+            # DRSC algorithm. Fix this, while preserving the sum
+            x_constrained = self._fix_bounds_preserving_sum(
+                x_constrained, 
+                bounds, 
+                constraint.value
+            )
+                        
+            # Build full sample
+            if d < self.space.n_dims:
+                # Generate random settings across all factors
+                full_sample = self.space.rvs(n_samples=1, random_state=rng)[0]
+                # Overwrite the random setting values for the constrained factors
+                for i, dim_idx in enumerate(constrained_dims):
+                    full_sample[dim_idx] = x_constrained[i]   
+                samples.append(full_sample)
+            else:
+                samples.append(x_constrained.tolist())
+        
         return samples
+    
+   
+    def _fix_bounds_preserving_sum(self, x, bounds, target_sum, max_iterations=100):
+        """
+        Adjust x to satisfy bounds while preserving the sum constraint.
+        
+        When a value exceeds its bounds, the excess is redistributed to other
+        dimensions that have room to absorb it.
+        """
+        x = x.copy()
+        # Rescale proportionally to restore sum of x to target value
+        x = x * (target_sum / np.sum(x))
+        
+        for _ in range(max_iterations):
+            all_satisfied = True
+            
+            for i in range(len(x)):
+                if x[i] < bounds[i, 0]:
+                    deficit = bounds[i, 0] - x[i]
+                    x[i] = bounds[i, 0]
+                    
+                    # Subtract from other dimensions that have room
+                    for j in range(len(x)):
+                        if j != i and deficit > 0:
+                            room = x[j] - bounds[j, 0]
+                            transfer = min(room, deficit)
+                            x[j] -= transfer
+                            deficit -= transfer
+                    
+                    all_satisfied = False
+                    
+                elif x[i] > bounds[i, 1]:
+                    excess = x[i] - bounds[i, 1]
+                    x[i] = bounds[i, 1]
+                    
+                    # Add to other dimensions that have room
+                    for j in range(len(x)):
+                        if j != i and excess > 0:
+                            room = bounds[j, 1] - x[j]
+                            transfer = min(room, excess)
+                            x[j] += transfer
+                            excess -= transfer
+                    
+                    all_satisfied = False
+            
+            if all_satisfied:
+                break
+        
+        return x
+
 
     def validate_sample(self, sample: List) -> bool:
         """ Validates a sample of parameter values in regards to the
@@ -320,7 +271,7 @@ class Constraints:
         """
 
         # We iterate through all the dimensions and check the the type of
-        # constriants that are applied to a single dimensions, i.e Single,
+        # constraints that are applied to a single dimensions, i.e Single,
         # Exclusive and Inclusive
         #
         # We iterate through all samples which corresponds to number of
@@ -334,7 +285,7 @@ class Constraints:
             # Inclusive constraints.
             # Check if there is a least one inclusive constraint:
             if self.inclusive[dim]:
-                # We go through all inlcusive constraints for this dimension
+                # We go through all inclusive constraints for this dimension
                 # and if the value is not found to be included in any of the
                 # bounds of the inclusive constraints we return false.
                 value_is_valid = False
@@ -352,11 +303,11 @@ class Constraints:
                 if not constraint.validate_constraint(sample[dim]):
                     return False
 
-        # We iterate through sum constriants
+        # We iterate through sum constraints
         for constraint in self.sum:
             if not constraint.validate_sample(sample):
                 return False
-        # We iterate through sum_equals constriants
+        # We iterate through sum_equals constraints
         for constraint in self.sum_equals:
             if not constraint.validate_sample(sample):
                 return False
@@ -364,8 +315,7 @@ class Constraints:
         for constraint in self.conditional:
             if not constraint.validate_sample(sample):
                 return False
-        # If we we did not find any violaiton of the constraints we return
-        # True.
+        # If we did not find any violation of the constraints we return True
         return True
 
     def __repr__(self):
@@ -496,7 +446,7 @@ class Inclusive(Bound_constraint):
             consist of floats.
 
             For 'categorical' dimensions the tuple must be of length < number
-            of dimensions and lenght > 1.
+            of dimensions and length > 1.
 
             The tuple can contain any combination of str, int or float
 
@@ -563,7 +513,7 @@ class Exclusive(Bound_constraint):
             consist of floats.
 
             For 'categorical' dimensions the tuple must be of length < number
-            of dimensions and lenght > 1.
+            of dimensions and length > 1.
 
             The tuple can contain any combination of str, int or float
 
@@ -616,7 +566,7 @@ class Sum():
         Parameters
         ----------
         * `dimensions` [list of ints]:
-            A list of integers coresponding to the index of the dimensions that
+            A list of integers corresponding to the index of the dimensions that
             should be summed
 
         * `value` [float or int]:
@@ -663,7 +613,13 @@ class Sum():
             return False
 
 class SumEquals():
-    def __init__(self, dimensions: List[int], value: Union[float, int]):
+    def __init__(
+        self, 
+        dimensions: List[int], 
+        value: Union[float, int],
+        linear_constraints: Optional[List[Tuple[np.ndarray, float]]] = None,
+        nonlinear_constraints: Optional[List[Callable]] = None,
+    ):
         """Constraint class of type SumEquals.
 
         This constraint enforces that the sum of all values drawn for the
@@ -678,6 +634,12 @@ class SumEquals():
 
         * `value` [float or int]:
             The value for which the sum should be equal to.
+            
+        * `linear_constraints` [list of (a, b) tuples, optional]:
+            Additional linear constraints a^T x <= b (only used with DRSC)
+            
+        * `nonlinear_constraints` [list of callables, optional]:
+            Additional nonlinear constraints f(x) <= 0 (only used with DRSC)
 
         """
 
@@ -694,9 +656,104 @@ class SumEquals():
 
         self.dimensions = tuple(dimensions)
         self.value = value
+        self.linear_constraints = linear_constraints or []
+        self.nonlinear_constraints = nonlinear_constraints or []
+        # Lazy initialization of DRSC generator
+        self._drsc_generator = None
 
         self.validate_sample = self._validate_sample
-
+        
+    def get_drsc_generator(self, space) -> DRSCGenerator:
+        """
+        Get or create DRSC generator with space information.
+        
+        Parameters
+        ----------
+            space: Space object containing dimension bounds
+            
+        Returns
+        -------
+            DRSCGenerator instance configured for this constraint
+        """
+        if self._drsc_generator is None:
+            # Extract bounds for constrained dimensions
+            bounds = [space.bounds[dim] for dim in self.dimensions]
+            
+            # Normalize bounds to simplex (sum=1)
+            normalized_bounds = [(low / self.value, high / self.value)  for low, high in bounds]
+            
+            # Create DRSC generator
+            self._drsc_generator = DRSCGenerator(
+                n=len(self.dimensions),
+                bounds=normalized_bounds,
+                linear_constraints=self._convert_linear_constraints(bounds),
+                nonlinear_constraints=self._wrap_nonlinear_constraints(bounds),
+            )
+        return self._drsc_generator
+    
+    def _convert_linear_constraints(self, bounds):
+        """
+        Convert user-provided linear constraints to normalized form for use 
+        in the DRSC format.
+        """
+        # DRSC works on unit simplex, need to normalize constraints
+        converted = []
+        
+        # Add box constraints from dimension bounds
+        for i, (low, high) in enumerate(bounds):
+            # x_i >= low becomes constraint on simplex
+            # After scaling: x_simplex[i] * value >= low
+            # In simplex coords: -x[i] <= -low/value
+            a = np.zeros(len(self.dimensions))
+            a[i] = -1.0
+            b = -low / self.value
+            converted.append((a, b))
+            
+            # x_i <= high becomes: x[i] <= high/value
+            a = np.zeros(len(self.dimensions))
+            a[i] = 1.0
+            b = high / self.value
+            converted.append((a, b))
+        
+        # Add user-provided linear constraints (if any)
+        for a, b in self.linear_constraints:
+            # Extract only the constrained dimensions
+            a_constrained = np.array([a[dim] for dim in self.dimensions])
+            # Normalize by the sum value
+            a_normalized = a_constrained / self.value
+            b_normalized = b / self.value
+            converted.append((a_normalized, b_normalized))
+        
+        return converted
+    
+    def _wrap_nonlinear_constraints(self, bounds):
+        """Wrap nonlinear constraints to work on simplex."""
+        if not self.nonlinear_constraints:
+            return []
+        
+        wrapped = []
+        for f in self.nonlinear_constraints:
+            def wrapped_f(x_simplex):
+                # Convert from simplex to original space
+                x_original = self._simplex_to_original(x_simplex, bounds)
+                return f(x_original)
+            wrapped.append(wrapped_f)
+        return wrapped
+    
+    def _simplex_to_original(self, x_simplex, bounds):
+        """Convert from unit simplex coordinates to original space."""
+        x_original = np.zeros(len(self.dimensions))
+        for i, (low, high) in enumerate(bounds):
+            # Scale from simplex (sums to 1) to original space (sums to value)
+            scaled_value = x_simplex[i] * self.value
+            # Clip to dimension bounds to handle numerical tolerance and avoid errors
+            x_original[i] = np.clip(scaled_value, low, high)
+        return x_original
+    
+    def _original_to_simplex(self, x_original):
+        """Convert from original space to unit simplex."""
+        return np.array(x_original) / self.value
+    
     def _validate_sample(self, sample: List[int]) -> bool:
         # Returns True if sample does not violate the constraints aside from 
         # floating point errors
@@ -839,7 +896,7 @@ def check_constraints(space, constraints):
                 raise IndexError('Dimension index exceeds number of dimensions')
             for ind_dim in constraint.dimensions:
                 if isinstance(space.dimensions[ind_dim], Categorical):
-                    raise ValueError('Sum constraint can not be applid to categorical dimension: {}'.format(space.dimensions[ind_dim]))
+                    raise ValueError('Sum constraint can not be applied to categorical dimension: {}'.format(space.dimensions[ind_dim]))
         elif isinstance(constraint, SumEquals):
             # Check that there is only one SumEquals constraint being applied
             if len(constraints) > 1:
@@ -874,7 +931,9 @@ def check_constraints(space, constraints):
                 for constraint_if_false in constraint.if_false:
                     check_constraints(space, [constraint_if_false])
         else:
-            raise TypeError('Constraints must be of type "Single", "Exlusive", "Inclusive", "Sum", "SumEquals" or "Conditional". Got {}'.format(type(constraint)))
+            raise TypeError(
+                'Constraints must be of type "Single", "Exclusive", "Inclusive", "Sum", "SumEquals" or "Conditional". Got {}'.format(type(constraint))
+            )
 
 
 def check_dim_and_space(space, constraint):
@@ -941,7 +1000,7 @@ def check_value(dim, value):
             raise ValueError('Value {} exceeds bounds of space {}'.format(value, [dim.low, dim.high]))
     else:  # Categorical dimension.
         if value not in dim.categories:
-            raise ValueError('Categorical value {} is not in space with categoreis {}'.format(value, dim.categories))
+            raise ValueError('Categorical value {} is not in space with categories {}'.format(value, dim.categories))
 
 
 def check_is_constraint(constraint):
@@ -951,4 +1010,4 @@ def check_is_constraint(constraint):
     if not (isinstance(constraint, Single) or isinstance(constraint, Inclusive)
             or isinstance(constraint, Exclusive) or isinstance(constraint, Sum)
             or isinstance(constraint, Conditional)):
-        raise TypeError('Constraint must be of type Inclusive, Exlusive, Single, Sum or Conditional. Got {}'.format(type(constraint)))
+        raise TypeError('Constraint must be of type Inclusive, Exclusive, Single, Sum or Conditional. Got {}'.format(type(constraint)))
