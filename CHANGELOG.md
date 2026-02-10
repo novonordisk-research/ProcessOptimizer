@@ -1,5 +1,17 @@
 # Release history
 
+## Version 1.1.3 [unpublished]
+
+### Changes
+
+- Implemented the DRSC algorithm for SumEquals constraints. A side-effect of this implementation is that you can now
+  ask for multiple points with opt.ask() while using this type of constraint (previously you could only ask for one).
+- Dropped support for Python 3.9
+
+### Bugfixes
+
+- Fixed TypeError when combining categorical and numerical dimensions in get_Brownie_Bee_Pareto
+
 ## Version 1.1.2 [unpublished]
 
 ### Changes

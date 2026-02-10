@@ -216,7 +216,7 @@ def test_SumEquals():
     assert not cons.validate_sample([3.00006, 2.0, "A"])    
     
     # Check again that only valid samples are drawn
-    samples = cons.sumequal_sampling(n_samples=1000)
+    samples = cons.sumequal_sampling(n_samples=10000)
     for sample in samples:
         factor_sum = np.sum(sample[0] + sample[1])
         assert np.isclose(factor_sum, cons.sum_equals[0].value)
@@ -225,10 +225,11 @@ def test_SumEquals():
     space = Space([[10.0, 20.0], [1000.0, 2000.0], [1, 5], ["A", "B"]])
     cons = Constraints([SumEquals((0, 1), 1234)], space)
     # Check again that only valid samples are drawn
-    samples = cons.sumequal_sampling(n_samples=1000)
+    samples = cons.sumequal_sampling(n_samples=10000)
     for sample in samples:
         factor_sum = np.sum(sample[0] + sample[1])
-        assert np.isclose(factor_sum, cons.sum_equals[0].value)
+        # The default tightness of the SumEquals sampling should be within 1e-4
+        assert np.isclose(factor_sum, cons.sum_equals[0].value, rtol=1e-4)
     # Check that the samples also have settings for the other dimensions
     assert len(samples[0]) == 4 and len(samples[999]) == 4
     # Check that the other dimensions have correct type
@@ -276,6 +277,49 @@ def test_SumEquals():
     # The values suggested for the constrained dimensions should be the same 
     # irrespective of their order in the dimension list
     assert x1[:3] == x2[1:]
+    
+    # Test that we can ask for all initial points as long as we use strategy=cl_min
+    assert opt.ask(5, strategy="cl_min")
+    # We can also ask for points beyond the initial ones without data
+    assert opt.ask(6, strategy="cl_min")
+    # Give the optimizer some data and test that we can ask for multiple points
+    # after we have data
+    y = 0
+    for _ in range(10):
+        x = opt.ask()
+        opt.tell(x, y)
+        y -= 0.1
+    assert opt.ask(3, strategy="cl_min")
+    
+    # Test that different seeds of the Optimizer provides different initial points
+    space = [
+        (50., 100.),
+        (1., 5.),
+        (3., 6.),
+        (1., 35.),
+        (1., 5.),
+        ("A", "B", "C"),
+        (1, 10),
+    ]
+    cons = [SumEquals(dimensions=[0, 1, 2, 3, 4], value=100.0)]
+    # Build optimziers with different seeds
+    opt1 = Optimizer(space, lhs=False, n_initial_points=10, random_state=1)
+    opt1.set_constraints(cons)
+    opt2 = Optimizer(space, lhs=False, n_initial_points=10, random_state=2)
+    opt2.set_constraints(cons)
+    # Ask for the initial points
+    x1 = opt1.ask(10, strategy="cl_min")
+    x2 = opt2.ask(10, strategy="cl_min")
+    assert not x1 == x2
+    
+    # Check that seeding the generator directly inside each optimizer produces
+    # consistent points, despite the optimizers having different random states
+    constraint1 = opt1.get_constraints()
+    constraint2 = opt2.get_constraints()
+    # Ask for lots of points
+    x1 = constraint1.sumequal_sampling(n_samples=10000, random_state=31031988)
+    x2 = constraint2.sumequal_sampling(n_samples=10000, random_state=31031988)
+    assert x1 == x2
 
 @pytest.mark.fast_test
 def test_Conditional():
