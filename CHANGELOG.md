@@ -4,18 +4,21 @@
 
 ### Changes
 
-- Implemented the DRSC algorithm for SumEquals constraints. A side-effect of this implementation is that you can now
-  ask for multiple points with opt.ask() while using this type of constraint (previously you could only ask for one).
-- Dropped support for Python 3.9
+-
+-
 
 ### Bugfixes
 
-- Fixed TypeError when combining categorical and numerical dimensions in get_Brownie_Bee_Pareto
+-
+-
 
-## Version 1.1.2 [unpublished]
+## Version 1.1.2 [published]
 
 ### Changes
 
+- Implemented the DRSC algorithm for SumEquals constraints. A side-effect of this implementation is that you can now
+  ask for multiple points with opt.ask() while using this type of constraint (previously you could only ask for one).
+- Dropped support for Python 3.9
 - Added the get_Brownie_Bee_Pareto() function to support Pareto front plotting in the Brownie Bee user interface.
 - Added the get_Pareto_front_compromise() function to facilitate a default highlighted compromise in the Pareto plot.
 - Added the get_Brownie_Bee_1d_plot() function to support custom 1D dependency plots in the Brownie Bee user interface.
@@ -27,6 +30,7 @@
 - Pareto front calculations are now reproducible.
 - Fixes small error in legend generation of plot_objective_1d for the case where the user specifies a
   specific set of settings to create the plot at
+- Fixed TypeError when combining categorical and numerical dimensions in get_Brownie_Bee_Pareto
 
 ## Version 1.1.1 [published]
 
