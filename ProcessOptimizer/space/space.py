@@ -496,7 +496,121 @@ class Integer(Dimension):
         return np.floor(point_list).astype(int)
 
 
-class Categorical(Dimension):
+class _BaseCategorical(Dimension):
+    _values_attribute = None
+
+    @property
+    def _values(self):
+        return getattr(self, self._values_attribute)
+
+    def _init_categorical(self, values, prior, transform, name):
+        if transform == "identity":
+            values_ = tuple([str(value) for value in values])
+        else:
+            values_ = tuple(values)
+
+        setattr(self, self._values_attribute, values_)
+
+        self.name = name
+
+        if transform is None:
+            transform = "onehot"
+        self.transform_ = transform
+        if transform not in ["identity", "onehot"]:
+            raise ValueError(
+                "Expected transform to be 'identity' or 'onehot' got {}".format(
+                    transform
+                )
+            )
+        if transform == "onehot":
+            self.transformer = CategoricalEncoder()
+            self.transformer.fit(self._values)
+        else:
+            self.transformer = Identity(dtype=type(values[0]))
+
+        self.prior = prior
+
+        if prior is None:
+            self.prior_ = np.tile(1.0 / len(self._values), len(self._values))
+        else:
+            self.prior_ = prior
+
+    def __eq__(self, other):
+        return (
+            type(self) is type(other)
+            and self._values == other._values
+            and np.allclose(self.prior_, other.prior_)
+        )
+
+    def _repr_values(self):
+        if len(self._values) > 7:
+            return self._values[:3] + (_Ellipsis(),) + self._values[-3:]
+        else:
+            return self._values
+
+    def _repr_prior(self):
+        if self.prior is not None and len(self.prior) > 7:
+            return self.prior[:3] + [_Ellipsis()] + self.prior[-3:]
+        else:
+            return self.prior
+
+    @property
+    def transformed_size(self):
+        if self.transform_ == "onehot":
+            size = len(self._values)
+            # when len(categories) == 2, CategoricalEncoder outputs a
+            # single value
+            return size if size != 2 else 1
+        return 1
+
+    @property
+    def bounds(self):
+        return self._values
+
+    def __contains__(self, point):
+        return point in self._values
+
+    @property
+    def transformed_bounds(self):
+        if self.transformed_size == 1:
+            return (0.0, 1.0)
+        else:
+            return [(0.0, 1.0) for i in range(self.transformed_size)]
+
+    def distance(self, a, b):
+        """Compute distance between values `a` and `b`.
+
+        As categorical values have no order the distance between two points is one
+        if a != b and zero otherwise.
+
+        Parameters
+        ----------
+        * `a`
+            First value.
+
+        * `b`
+            Second value.
+        """
+        if not (a in self and b in self):
+            raise RuntimeError(
+                "Can only compute distance for values within "
+                "the space, not {} and {}.".format(a, b)
+            )
+        return 1 if a != b else 0
+
+    def _sample_from_prior(self, point_list: Iterable[float], prior) -> np.ndarray:
+        # XXX check that sum(prior) == 1
+        cummulative_prior = np.cumsum(prior)
+        value_index = [np.argmax(cummulative_prior > point) for point in point_list]
+        return np.array([self._values[index] for index in value_index])
+
+    def _sample(self, point_list: Iterable[float]) -> np.ndarray:
+        return self._sample_from_prior(point_list, self.prior_)
+
+
+class Categorical(_BaseCategorical):
+    _values_attribute = "categories"
+
     def __init__(self, categories, prior=None, transform=None, name=None):
         """Search space dimension that can take on categorical values.
 
@@ -518,109 +632,17 @@ class Categorical(Dimension):
         * `name` [str or None]:
             Name associated with dimension, e.g., "colors".
         """
-        if transform == "identity":
-            self.categories = tuple([str(c) for c in categories])
-        else:
-            self.categories = tuple(categories)
-
-        self.name = name
-
-        if transform is None:
-            transform = "onehot"
-        self.transform_ = transform
-        if transform not in ["identity", "onehot"]:
-            raise ValueError(
-                "Expected transform to be 'identity' or 'onehot' got {}".format(
-                    transform
-                )
-            )
-        if transform == "onehot":
-            self.transformer = CategoricalEncoder()
-            self.transformer.fit(self.categories)
-        else:
-            self.transformer = Identity(dtype=type(categories[0]))
-
-        self.prior = prior
-
-        if prior is None:
-            self.prior_ = np.tile(1.0 / len(self.categories), len(self.categories))
-        else:
-            self.prior_ = prior
-
-    def __eq__(self, other):
-        return (
-            type(self) is type(other)
-            and self.categories == other.categories
-            and np.allclose(self.prior_, other.prior_)
-        )
+        self._init_categorical(categories, prior, transform, name)
 
     def __repr__(self):
-        if len(self.categories) > 7:
-            cats = self.categories[:3] + (_Ellipsis(),) + self.categories[-3:]
-        else:
-            cats = self.categories
-
-        if self.prior is not None and len(self.prior) > 7:
-            prior = self.prior[:3] + [_Ellipsis()] + self.prior[-3:]
-        else:
-            prior = self.prior
-
-        return "Categorical(categories={}, prior={})".format(cats, prior)
-
-    @property
-    def transformed_size(self):
-        if self.transform_ == "onehot":
-            size = len(self.categories)
-            # when len(categories) == 2, CategoricalEncoder outputs a
-            # single value
-            return size if size != 2 else 1
-        return 1
-
-    @property
-    def bounds(self):
-        return self.categories
-
-    def __contains__(self, point):
-        return point in self.categories
-
-    @property
-    def transformed_bounds(self):
-        if self.transformed_size == 1:
-            return (0.0, 1.0)
-        else:
-            return [(0.0, 1.0) for i in range(self.transformed_size)]
-
-    def distance(self, a, b):
-        """Compute distance between category `a` and `b`.
-
-        As categories have no order the distance between two points is one
-        if a != b and zero otherwise.
-
-        Parameters
-        ----------
-        * `a` [category]
-            First category.
-
-        * `b` [category]
-            Second category.
-        """
-        if not (a in self and b in self):
-            raise RuntimeError(
-                "Can only compute distance for values within "
-                "the space, not {} and {}.".format(a, b)
-            )
-        return 1 if a != b else 0
-
-    def _sample(self, point_list: Iterable[float]) -> np.ndarray:
-        # XXX check that sum(prior) == 1
-        cummulative_prior = np.cumsum(self.prior_)
-        # For each point in point_list, find the index of the first element in cummulative_prior that is greater than the point
-        # This is the index of the category that the point corresponds to
-        category_index = [np.argmax(cummulative_prior > point) for point in point_list]
-        return np.array([self.categories[index] for index in category_index])
+        return "Categorical(categories={}, prior={})".format(
+            self._repr_values(), self._repr_prior()
+        )
 
 
-class Task(Dimension):
+class Task(_BaseCategorical):
+    _values_attribute = "tasks"
+
     def __init__(
         self,
         tasks: Iterable[Any],
@@ -645,29 +667,7 @@ class Task(Dimension):
         * `name` [str or None]:
             Name associated with dimension, e.g., "colors".
         """
-        if transform is None:
-            transform = "onehot"
-        if transform == "identity":
-            self.tasks = tuple([str(t) for t in tasks])
-            self.transformer = Identity(dtype=type(tasks[0]))
-        elif transform == "onehot":
-            self.tasks = tuple(tasks)
-            self.transformer = CategoricalEncoder()
-            self.transformer.fit(self.tasks)
-        else:
-            raise ValueError(
-                "Expected transform to be 'identity' or 'onehot' got {}".format(
-                    transform
-                )
-            )
-
-        self.name = name
-        self.transform_ = transform
-
-        if prior is None:
-            self.prior_ = np.tile(1.0 / len(self.tasks), len(self.tasks))
-        else:
-            self.prior_ = prior
+        self._init_categorical(tasks, prior, transform, name)
 
         # prior_active_task sets active task probability to 1. and other tasks are set to 0.
         self.active_task = active_task
@@ -685,117 +685,17 @@ class Task(Dimension):
         self.prior_active_task_ = np.zeros(len(self.tasks))
         self.prior_active_task_[self.tasks.index(value)] = 1.0
 
-    def __eq__(self, other):
-        return (
-            type(self) is type(other)
-            and self.tasks == other.tasks
-            and np.allclose(self.prior_, other.prior_)
-        )
-
     def __repr__(self):
-        if len(self.tasks) > 7:
-            tasks_ = self.tasks[:3] + (_Ellipsis(),) + self.tasks[-3:]
-        else:
-            tasks_ = self.tasks
-
-        if self.prior is not None and len(self.prior) > 7:
-            prior = self.prior[:3] + [_Ellipsis()] + self.prior[-3:]
-        else:
-            prior = self.prior
-
         return "Task(tasks={}, active_task={}, prior={})".format(
-            tasks_, self.active_task, prior
+            self._repr_values(), self.active_task, self._repr_prior()
         )
-
-    @property
-    def transformed_size(self):
-        if self.transform_ == "onehot":
-            size = len(self.tasks)
-            # when len(categories) == 2, CategoricalEncoder outputs a
-            # single value
-            return size if size != 2 else 1
-        return 1
-
-    @property
-    def bounds(self):
-        return self.tasks
-
-    def __contains__(self, point):
-        return point in self.tasks
-
-    @property
-    def transformed_bounds(self):
-        if self.transformed_size == 1:
-            return (0.0, 1.0)
-        else:
-            return [(0.0, 1.0) for i in range(self.transformed_size)]
-
-    def distance(self, a, b):
-        """Compute distance between category `a` and `b`.
-
-        As categories have no order the distance between two points is one
-        if a != b and zero otherwise.
-
-        Parameters
-        ----------
-        * `a` [category]
-            First category.
-
-        * `b` [category]
-            Second category.
-        """
-        if not (a in self and b in self):
-            raise RuntimeError(
-                "Can only compute distance for values within "
-                "the space, not {} and {}.".format(a, b)
-            )
-        return 1 if a != b else 0
 
     def _sample(self, point_list: Iterable[float]) -> np.ndarray:
-        # XXX check that sum(prior) == 1
         if self.use_active_task:
-            cummulative_prior = np.cumsum(self.prior_active_task_)
+            prior = self.prior_active_task_
         else:
-            cummulative_prior = np.cumsum(self.prior_)
-        # For each point in point_list, find the index of the first element in cummulative_prior that is greater than the point
-        # This is the index of the category that the point corresponds to
-        task_index = [np.argmax(cummulative_prior > point) for point in point_list]
-        return np.array([self.tasks[index] for index in task_index])
-
-    def sample(
-        self,
-        points: Union[float, Iterable[float]],
-        allow_duplicates: bool = True,
-    ) -> np.ndarray:
-        """Draw points from the dimension.
-
-        Parameters
-        ----------
-        * `points` [float or list[float]]:
-            A single point or a list of points to sample. All must be between 0 and 1.
-
-        * `allow_duplicates` [bool, default=True]:
-            If True, the output will have the same size as `points`. If False, each
-            point in the output will be unique. This means that the output can be
-            shorter than `points`.
-        """
-        if isinstance(points, (int, float)):  # If a single point is given, convert it
-            # to a list.
-            points = [points]
-        if any([point < 0 or point > 1 for point in points]):
-            raise ValueError("Sample points must be between 0 and 1.")
-        sampled_points = self._sample(points)
-        if not allow_duplicates:
-            # np.unique sorts the inputs, which we do not want, so we have to reinvent
-            # the wheel.
-            seen = set()
-            unique_points = []
-            for point in sampled_points:
-                if point not in seen:
-                    unique_points.append(point)
-                    seen.add(point)
-            sampled_points = unique_points
-        return np.array(sampled_points, dtype=object)
+            prior = self.prior_
+        return self._sample_from_prior(point_list, prior)
 
 
 class Space(object):
