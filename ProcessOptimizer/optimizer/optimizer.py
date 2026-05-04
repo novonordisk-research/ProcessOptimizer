@@ -266,6 +266,7 @@ class Optimizer(object):
                 length_scale_bounds=self._length_scale_bounds,
                 length_scale=self._length_scale,
                 noise_level_bounds=noise_level_bounds,
+                n_restarts_optimizer=self.n_restarts_optimizer,
             )
 
         # check if regressor
